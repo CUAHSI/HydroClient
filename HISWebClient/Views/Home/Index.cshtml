@@ -1,0 +1,152 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+    //Layout = null;
+}
+@section styles
+{
+<link href="~/Content/Sidebar.css" rel="stylesheet" />
+}
+
+<!-- HTML code from Bootply.com editor -->
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <ul class="nav nav-tabs" id="myTab">
+                <li class="active"><a href="#map" data-toggle="tab">Map</a></li>
+                <li><a href="#home" data-toggle="tab">Home</a></li>
+                <li><a href="#messages" data-toggle="tab">Messages</a></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="map">
+                    <div class="content-header">
+                        <div id="wrapper">
+                            <h1 id="home">
+                                <a id="menu-toggle" href="#" class="glyphicon glyphicon-align-justify btn-menu toggle">
+                                    <i class="fa fa-bars"></i>
+                                </a>
+                                Sidebar Navigation Template
+                            </h1>
+                            <div id="sidebar-wrapper">
+                                <nav id="spy">
+                                    
+                                       
+                                            <form id="Search" class="navbar-form navbar-left"  role="search">
+                                                <!-- Button trigger modal -->
+                                                <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectDateModal">Select Date</button>
+                                                <button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#SelectVariableModal">Select Variable(s)</button>
+                                               
+                                                <div id="SelectedDateRange">
+                                                    
+                                                    
+                                               </div>
+                                                <button type="submit" class="btn btn-default">Submit</button>
+                                            </form>
+                                       
+                                       
+                                          
+                                    
+                                    
+                                </nav>
+                            </div>
+                            <div id="map-canvas"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="home">Home content...</div>
+                <div class="tab-pane" id="messages">Messages...</div>                
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="SelectDateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+
+            </div>
+            <div class="modal-body">
+                <div class="col-md-12">
+                    <div class="row">
+                        <div class="input-daterange">
+                            <input id="startDate" value="02/12/2009" />
+                            <span class="add-on">to</span>
+                            <input id="endDate" value="12/12/2014" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Save</button>
+                </div>
+            
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    </div>
+<!-- Modal -->
+<div class="modal fade" id="SelectVariableModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+
+            </div>
+            <div class="modal-body">
+                <div class="col-md-12">
+                    <div class="row">
+                        <div class="">
+                            <div class="controls span2">
+                                <label class="checkbox">
+                                    <input type="checkbox" name="keywords" value="All" id="inlineCheckbox1"> All
+                                </label>
+                                <label class="checkbox">
+                                    <input type="checkbox" name="keywords" value="Temperature" id="inlineCheckbox2"> Temperature
+                                </label>
+                                <label class="checkbox">
+                                    <input type="checkbox" name="keywords" value="Precipitation" id="inlineCheckbox3"> Precipitation
+                                </label>
+                                <label class="checkbox">
+                                    <input type="checkbox" name="keywords" value="Salinity" id="inlineCheckbox3"> Salinity
+                                </label>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Save</button>
+            </div>
+
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+</div>
+    <!-- /.modal -->
+    @*<script type='text/javascript' src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+
+        <script type='text/javascript' src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>*@
+
+
+    <script type='text/javascript' src="http://maps.googleapis.com/maps/api/js?sensor=false&extension=.js&output=embed"></script>
+
+
+    <!-- JavaScript jQuery code from Bootply.com editor  -->
+
+<script src="~/Scripts/bootstrap-datepicker.js"></script>
+    <script src="~/Scripts/custom/webclient.js"></script>
+
+
+    <script>
+
+    </script>
