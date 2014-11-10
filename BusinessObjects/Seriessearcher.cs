@@ -45,7 +45,38 @@ namespace HISWebClient.DataLayer
             //bgWorker.ReportProgress(100, "Search Finished. " + message);
             return resultFs;
         }
-        
+
+        public List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart> GetSeriesInRectangle(Box extentBox, string[] keywords, double tileWidth, double tileHeight,
+                                                       DateTime startDate, DateTime endDate, WebServiceNode[] serviceIDs)//, BusinessObjects.Models.IProgressHandler bgWorker)
+        {
+            if (extentBox == null) throw new ArgumentNullException("extentBox");
+            if (serviceIDs == null) throw new ArgumentNullException("serviceIDs");
+            //if (bgWorker == null) throw new ArgumentNullException("bgWorker");
+
+            if (keywords == null || keywords.Length == 0)
+            {
+                keywords = new[] { String.Empty };
+            }
+
+            //bgWorker.CheckForCancel();
+            var extent = new Extent(extentBox.XMin, extentBox.YMin, extentBox.XMax, extentBox.YMax);
+            var fullSeriesList = GetSeriesListForExtent(extent, keywords, tileWidth, tileHeight, startDate, endDate,
+                                                        serviceIDs, //bgWorker, 
+                                                        series => true);
+            //SearchResult resultFs = null;
+            //if (fullSeriesList.Count > 0)
+            //{
+            //    //bgWorker.ReportMessage("Calculating Points...");
+            //    resultFs = SearchHelper.ToFeatureSetsByDataSource(fullSeriesList);
+            //}
+
+            //bgWorker.CheckForCancel();
+            //var message = string.Format("{0} Series found.", totalSeriesCount);
+            //bgWorker.ReportProgress(100, "Search Finished. " + message);
+            return fullSeriesList;
+        }
+      
+
         public SearchResult GetSeriesCatalogInPolygon(IList<IFeature> polygons, string[] keywords, double tileWidth, double tileHeight,
                                                       DateTime startDate, DateTime endDate, WebServiceNode[] serviceIDs, BusinessObjects.Models.IProgressHandler bgWorker)
         {

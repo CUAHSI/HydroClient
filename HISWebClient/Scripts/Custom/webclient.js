@@ -1,7 +1,9 @@
-﻿$(document).ready(function () {
+﻿var map;
 
-    var map;
-    var myCenter = new google.maps.LatLng(41.6, -111.85);
+$(document).ready(function () {
+
+    
+    var myCenter = new google.maps.LatLng(41.6, -101.85);
     var marker = new google.maps.Marker({
         position: myCenter
     });
@@ -10,7 +12,7 @@
     function initialize() {
         var mapProp = {
             center: myCenter,
-            zoom: 15,
+            zoom: 4,
             draggable: false,
             scrollwheel: false,
             mapTypeId: google.maps.MapTypeId.ROADMAP
@@ -26,17 +28,18 @@
 
         });
     };
-    $(document).on("click", ".alert", function (e) {
-        bootbox.alert("Hello world!", function () {
-            console.log("Alert Callback");
-        });
-    });
+    //$(document).on("click", ".alert", function (e) {
+    //    bootbox.alert("Hello world!", function () {
+    //        console.log("Alert Callback");
+    //    });
+    //});
     $('.input-daterange').datepicker()
 
     $("#Search").submit(function (e) {
 
         //prevent Default functionality
         e.preventDefault();
+        e.stopImmediatePropagation();
 
         //get the action-url of the form
         var actionurl = '/home/SearchSubmit';
@@ -50,7 +53,7 @@
         var keywords = new Array();
         //variable.push  = $("#variable").val()
         var services = new Array();
-        services.push(-1);
+       // services.push(181);
         var selectedKeywords = $("input[name='keywords']:checked").map(function () {
             return $(this).val();
         }).get();
@@ -67,12 +70,14 @@
         var xMax = Math.max(ne.lng(), sw.lng())
         var yMin = Math.min(ne.lat(), sw.lat())
         var yMax = Math.max(ne.lat(), sw.lat())
+        var zoomLevel = map.getZoom();
         //formdata.push({ name: "bounds", value: xMin + ',' + xMax + ',' + yMin + ',' + yMax });
         //Extent
         formdata.push({ name: "xMin", value: xMin});
         formdata.push({ name: "xMax", value: xMax});
         formdata.push({ name: "yMin", value: yMin});
-        formdata.push({ name: "yMax", value: yMax});
+        formdata.push({ name: "yMax", value: yMax });
+        formdata.push({ name: "zoomLevel", value: zoomLevel})
         //Date range
         formdata.push({ name: "startDate", value: startDate });
         formdata.push({ name: "endDate", value: endDate });

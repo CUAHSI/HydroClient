@@ -21,7 +21,7 @@ namespace HISWebClient.DataLayer
             webServicesFilename = "HisServicesList.xml";
         }
 
-        public void getData(Box extentBox, string[] keywords, double tileWidth, double tileHeight,
+        public List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart> getSeriesData(Box extentBox, string[] keywords, double tileWidth, double tileHeight,
                                                         DateTime startDate, DateTime endDate, List<int> serviceIDs)
         {
             
@@ -33,9 +33,9 @@ namespace HISWebClient.DataLayer
            
 
             var webserviceNodeList = getWebserviceNodeList(xmlData);
-
+           
             //filter list allways contains initial element
-            if (serviceIDs.Count != 1)
+            if (serviceIDs != null)
             {
                 webserviceNodeList = (from p in webserviceNodeList
                          where serviceIDs.Contains(p.ServiceID)
@@ -44,14 +44,16 @@ namespace HISWebClient.DataLayer
             }
 
             SeriesSearcher seriesSearcher = new HISCentralSearcher(hisCentralUrl);
-            
 
 
-            var series = seriesSearcher.GetSeriesCatalogInRectangle(extentBox, keywords.ToArray(), tileWidth, tileHeight,
+
+            var series = seriesSearcher.GetSeriesInRectangle(extentBox, keywords.ToArray(), tileWidth, tileHeight,
                                                               startDate,
                                                               endDate,
                                                               webserviceNodeList.ToArray());
+            
 
+            return series;
         }
         private List<WebServiceNode> getWebserviceNodeList(string xmlData)
         {
@@ -167,6 +169,8 @@ namespace HISWebClient.DataLayer
             return list;
 
         }
+
+        
     }
 
 }
