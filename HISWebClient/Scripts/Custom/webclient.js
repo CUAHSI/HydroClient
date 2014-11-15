@@ -1,4 +1,6 @@
 ﻿var map;
+var clusteredMarkersArray = [];
+
 
 $(document).ready(function () {
 
@@ -19,7 +21,30 @@ $(document).ready(function () {
         };
 
         map = new google.maps.Map(document.getElementById("map-canvas"), mapProp);
-        marker.setMap(map);
+        //marker.setMap(map);
+
+        //triger update of map on these events
+        //google.maps.event.addListener(map, 'dblclick', function () {
+        //    if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
+        //        updateMap(true)
+
+        //    }
+
+        //});
+        //google.maps.event.addListener(map, 'dragend', function () {
+        //    if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
+        //        updateMap(true)
+
+        //    }
+
+        //});
+        //google.maps.event.addListener(map, 'zoom_changed', function () {
+        //    if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
+        //        updateMap(true)
+
+        //    }
+
+        //});
 
         google.maps.event.addListener(marker, 'click', function () {
 
@@ -53,7 +78,7 @@ $(document).ready(function () {
         var keywords = new Array();
         //variable.push  = $("#variable").val()
         var services = new Array();
-       // services.push(181);
+        services.push(181);
         var selectedKeywords = $("input[name='keywords']:checked").map(function () {
             return $(this).val();
         }).get();
@@ -92,13 +117,12 @@ $(document).ready(function () {
             dataType: 'json',
             data: formdata,
             success: function(data) {
-                
-            }
+                processMarkers(data)
+            },
+            error:serviceFailed
         });
 
     });
-
-
 
 });
 
@@ -125,5 +149,60 @@ $('a[href*=#]:not([href=#])').click(function () {
         }
     }
 });
+function processMarkers(geoJson)
+{
+    //map.data.loadGeoJson('https://storage.googleapis.com/maps-devrel/google.json');
 
+    var geojson = JSON.parse(geoJson);
+    map.data.addGeoJson(geojson);
+    //zoom(map);
 
+}
+
+//upddate map wit new clusters
+function updateMap() {
+        deleteClusteredMarkersOverlays()
+    //$("#timeOfLastRefresh").html("Last refresh: " + getTimeStamp());
+
+}
+// Deletes all markers in the array by removing references to them.
+function deleteClusteredMarkersOverlays() {
+    clearOverlays();
+    clusteredMarkersArray.length = 0;
+}
+// Removes the overlays from the map, but keeps them in the array.
+function clearOverlays() {
+    setAllMap(null);
+}
+// Sets the map on all markers in the array.
+function setAllMap(map) {
+    for (var i = 0; i < clusteredMarkersArray.length; i++) {
+        clusteredMarkersArray[i].setMap(map);
+    }
+}
+// Deletes all markers in the array by removing references to them
+function deleteOverlays(arrayName) {
+    if (arrayName) {
+        for (i in arrayName) {
+            //google.maps.event.clearInstanceListeners(arrayName[i]);
+            arrayName[i].setMap(null);
+
+        }
+        arrayName.length = [];
+    }
+}function serviceFailed(result) 
+{
+    //hideLoadingImage();
+    //setup initial map
+    var Latlng = new google.maps.LatLng(0, 0);
+    zoomlevel = 6
+    //AddMainMap(zoomlevel, Latlng)
+    if (retryAttempts <= 3) {
+        updateMap(true);
+        retryAttempts++;
+    }
+    else 
+    {
+        alert('Service call failed. Please refresh page: ' + result.status + '' + result.statusText);
+    }
+}

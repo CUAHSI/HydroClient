@@ -42,7 +42,7 @@ namespace HISWebClient.Controllers
 
             return View();
         }
-        public ActionResult SearchSubmit(FormCollection collection)
+        public  ActionResult SearchSubmit(FormCollection collection)
         {
             var searchSettings = new SearchSettings();
 
@@ -81,19 +81,28 @@ namespace HISWebClient.Controllers
                                                              webServiceIds);
             var markerClustererHelper = new MarkerClustererHelper();
 
-            int CLUSTERWIDTH = 5; //Cluster region width, all pin within this area are clustered
-            int CLUSTERHEIGHT = 5; //Cluster region height, all pin within this area are clustered
+            int CLUSTERWIDTH = 50; //Cluster region width, all pin within this area are clustered
+            int CLUSTERHEIGHT = 50; //Cluster region height, all pin within this area are clustered
             int CLUSTERINCREMENT = 5; //increment for clusterwidth 
             int MINCLUSTERDISTANCE = 25;
             int MAXCLUSTERCOUNT = Convert.ToInt32(ConfigurationSettings.AppSettings["MaxClustercount"].ToString()); //maximum ammount of clustered markers
 
-            clusteredpins = MarkerClustererHelper.clusterPins(series, CLUSTERWIDTH, CLUSTERHEIGHT, CLUSTERINCREMENT, zoomLevel, MAXCLUSTERCOUNT, MINCLUSTERDISTANCE);
-            HISWebClient.
+            //save list for later
             Session["Series"] = series;
+
+            markerClustererHelper = new MarkerClustererHelper();
+            //transform list int clusteredpins
+            var clusteredPins = markerClustererHelper.transformSeriesDataCartIntoClusteredPin(series);
+
+            var clusteredpins = markerClustererHelper.clusterPins(clusteredPins, CLUSTERWIDTH, CLUSTERHEIGHT, CLUSTERINCREMENT, zoomLevel, MAXCLUSTERCOUNT, MINCLUSTERDISTANCE);
+
+
+            var centerPoint =  new LatLong(0,0);
+            var markerjSON = markerClustererHelper.createMarkersGEOJSON(clusteredPins, zoomLevel, centerPoint, "");
 
             var session2 =(List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>) Session["Series"];
 
-            return View();
+            return Json(markerjSON);
 
         }
     }
