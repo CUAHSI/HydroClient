@@ -73,7 +73,8 @@ namespace HISWebClient.DataLayer
             //bgWorker.CheckForCancel();
             //var message = string.Format("{0} Series found.", totalSeriesCount);
             //bgWorker.ReportProgress(100, "Search Finished. " + message);
-            return fullSeriesList;
+            List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart> orderedList = fullSeriesList.OrderBy(x => x.ServCode).ToList();
+            return orderedList;
         }
       
 

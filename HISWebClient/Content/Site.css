@@ -24,5 +24,31 @@
     width: 100%;
     height: 600px;
 }
+.full-screen {
+    width: 90%;
+    height: 100%;
+    margin: 0;
+    top: 0;
+    left: 5%;
+    right: 5%;
+    background-color:azure;
+}
+div.GblueLabel16, div.GblueLabel20, div.GblueLabel22,div.GblueLabel24,div.GblueLabel26,div.GblueLabel28,div.GblueLabel30,div.GblueLabel32,div.GblueLabel36,div.GblueLabel40,div.GblueLabel42,div.GblueLabel44,div.GblueLabel48,div.GblueLabel56,div.GblueLabel64 
+{  display: block;  text-align: center;  color: white;  letter-spacing: 0;  font-weight: normal;  font-family: Arial;}
+div.GblueLabel16 {  padding-top: 0px;  width: 44px;  font-size: 10px;}
+div.GblueLabel20 {  padding-top: 0px;  width: 44px;  font-size: 10px;}
+div.GblueLabel22 {  padding-top: 0px;  width: 44px;  font-size: 10px;}
+div.GblueLabel24 {  padding-top: 0px;  width: 44px;  font-size: 11px;}
+div.GblueLabel26 {  padding-top: 0px;  width: 44px;  font-size: 11px;}
+div.GblueLabel28 {  padding-top: 0px;  width: 44px;  font-size: 11px;}
+div.GblueLabel30 {  padding-top: 0px;  width: 44px;  font-size: 11px;}
+div.GblueLabel32 {  padding-top: 0px;  width: 44px;  font-size: 11px;}
+div.GblueLabel36 {  padding-top: 0px;  width: 44px;  font-size: 12px;}
+div.GblueLabel40 {  padding-top: 0px;  width: 44px;  font-size: 12px;}
+div.GblueLabel42 {  padding-top: 0px;  width: 44px;  font-size: 12px;}
+div.GblueLabel44 {  padding-top: 0px;  width: 44px;  font-size: 12px;}
+div.GblueLabel48 {  padding-top: 0px;  width: 48px;  font-size: 13px;}
+div.GblueLabel56 {  padding-top: 0px;  width: 56px;  font-size: 13px;}
+div.GblueLabel64 {  padding-top: 0px;  width: 64px;  font-size: 13px;} 
 
 

@@ -4,20 +4,19 @@
 }
 @section styles
 {
-<link href="~/Content/Sidebar.css" rel="stylesheet" />
+@*<link href="~/Content/Sidebar.css" rel="stylesheet" />*@
 }
 
 <!-- HTML code from Bootply.com editor -->
 
-
 <div class="container">
     <div class="row">
         <div class="col-sm-12">
-            <ul class="nav nav-tabs" id="myTab">
+            @*<ul class="nav nav-tabs" id="myTab">
                 <li class="active"><a href="#map" data-toggle="tab">Map</a></li>
                 <li><a href="#home" data-toggle="tab">Home</a></li>
                 <li><a href="#messages" data-toggle="tab">Messages</a></li>
-            </ul>
+            </ul>*@
             <div class="tab-content">
                 <div class="tab-pane active" id="map">
                     <div class="content-header">
@@ -54,7 +53,7 @@
         </div>
     </div>
 </div>
-
+-->
 <!-- Modal -->
 <div class="modal fade" id="SelectDateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -125,6 +124,55 @@
         <!-- /.modal-dialog -->
     </div>
 </div>
+<!-- Modal -->
+<div id="TaskListDialog" class="modal fade full-screen" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-header">
+        <h3>Task List</h3>
+    </div>
+    <div class="modal-body">
+        <ul class="nav nav-tabs" id="tabContent">
+            <li class="active"><a href="#details" data-toggle="tab">Details</a></li>
+            <li><a href="#access-security" data-toggle="tab">Access / Security</a></li>
+            <li><a href="#networking" data-toggle="tab">Networking</a></li>
+        </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane active" id="details">
+
+                Details tab
+
+                <div class="control-group">
+                    <label class="control-label">Instance Name</label>
+                </div>
+            </div>
+
+            <div class="tab-pane" id="access-security">
+                content 0
+            </div>
+
+
+            <div class="tab-pane" id="networking">
+                content 1
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <a href="#" class="btn btn-primary" onclick="CloseTaskList();">Close</a>
+    </div>
+</div>
+<div class="modal fade full-screen" id="SelectDateModaltest" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">×</button>
+        <h3 ng-hide="newUser">Heading</h3>
+    </div>
+
+
+   
+</div>
+
+
+<div id="ajax-modal" class="modal hide fade" tabindex="-1"></div>
+
     <!-- /.modal -->
     @*<script type='text/javascript' src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 
@@ -138,7 +186,8 @@
     <!-- JavaScript jQuery code from Bootply.com editor  -->
 
 <script src="~/Scripts/bootstrap-datepicker.js"></script>
-    <script src="~/Scripts/custom/webclient.js"></script>
+<script src="~/Scripts/Google/markerwithlabel.js"></script>
+<script src="~/Scripts/custom/webclient.js"></script>
 
 
     <script>

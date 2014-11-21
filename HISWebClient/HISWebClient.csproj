@@ -204,7 +204,27 @@
     <Compile Include="Startup.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\bootstrap-modal-bs3patch.css" />
+    <Content Include="Content\bootstrap-modal.css" />
     <Content Include="Content\datepicker3.css" />
+    <Content Include="Content\Images\ajax-loader.gif" />
+    <Content Include="Content\Images\Markers\ClusterIcons\blue-20.png" />
+    <Content Include="Content\Images\Markers\ClusterIcons\blue-22.png" />
+    <Content Include="Content\Images\Markers\ClusterIcons\blue-24.png" />
+    <Content Include="Content\Images\Markers\ClusterIcons\blue-28.png" />
+    <Content Include="Content\Images\Markers\ClusterIcons\blue-32.png" />
+    <Content Include="Content\Images\Markers\ClusterIcons\blue-36.png" />
+    <Content Include="Content\Images\Markers\ClusterIcons\blue-40.png" />
+    <Content Include="Content\Images\Markers\ClusterIcons\blue-44.png" />
+    <Content Include="Content\Images\Markers\ClusterIcons\blue-48.png" />
+    <Content Include="Content\Images\Markers\ClusterIcons\m1.png" />
+    <Content Include="Content\Images\Markers\ClusterIcons\m2.png" />
+    <Content Include="Content\Images\Markers\ClusterIcons\m3.png" />
+    <Content Include="Content\Images\Markers\ClusterIcons\m4.png" />
+    <Content Include="Content\Images\Markers\ClusterIcons\m5.png" />
+    <Content Include="modal_ajax_test.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Scripts\bootstrap-datepicker.js" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
@@ -251,11 +271,15 @@
     <Content Include="Scripts\ai.min.js" />
     <Content Include="Scripts\bootbox.js" />
     <Content Include="Scripts\bootbox.min.js" />
+    <Content Include="Scripts\bootstrap-modal.js" />
+    <Content Include="Scripts\bootstrap-modalmanager.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="ApplicationInsights.config" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\Custom\webclient.js" />
+    <Content Include="Scripts\Google\markerwithlabel.js" />
+    <Content Include="Scripts\Google\markerwithlabel_packed.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />
     <None Include="Scripts\jquery.validate-vsdoc.js" />

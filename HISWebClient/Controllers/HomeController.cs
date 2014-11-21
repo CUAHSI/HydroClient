@@ -42,14 +42,20 @@ namespace HISWebClient.Controllers
 
             return View();
         }
-        public  ActionResult SearchSubmit(FormCollection collection)
+        public  ActionResult updateMarkers(FormCollection collection)
         {
             var searchSettings = new SearchSettings();
-
-           
-            bool canConvert = false;
+            string markerjSON = string.Empty;
+            //get map geometry
             double xMin, xMax, yMin, yMax;
             int zoomLevel;
+
+            int CLUSTERWIDTH = 50; //Cluster region width, all pin within this area are clustered
+            int CLUSTERHEIGHT = 50; //Cluster region height, all pin within this area are clustered
+            int CLUSTERINCREMENT = 5; //increment for clusterwidth 
+            int MINCLUSTERDISTANCE = 25;
+            int MAXCLUSTERCOUNT = Convert.ToInt32(ConfigurationSettings.AppSettings["MaxClustercount"].ToString()); //maximum ammount of clustered markers
+
 
             UniversalTypeConverter.TryConvertTo<double>(collection["xMin"], out xMin);
             UniversalTypeConverter.TryConvertTo<double>(collection["xMax"], out xMax);
@@ -58,52 +64,87 @@ namespace HISWebClient.Controllers
             Box box = new Box(xMin, xMax, yMin, yMax);
             UniversalTypeConverter.TryConvertTo<int>(collection["zoomLevel"], out zoomLevel);
 
-            var keywords = collection["keywords"].Split(','); 
-            var tileWidth = 1; 
-            var tileHeight =  1;
-            List<int> webServiceIds = null;
-            searchSettings.DateSettings.StartDate = Convert.ToDateTime(collection["startDate"]);
-            searchSettings.DateSettings.EndDate = Convert.ToDateTime(collection["endDate"]);
-            //Convert to int Array
-            if (collection["services"].Length > 0)
+            //if it is a new request
+            if (collection["isNewRequest"] != null)
             {
-                webServiceIds = collection["services"].Split(',').Select(s => Convert.ToInt32(s)).ToList();
+
+                bool canConvert = false;
+               
+
+               
+
+                var keywords = collection["keywords"].Split(',');
+                var tileWidth = 1;
+                var tileHeight = 1;
+                List<int> webServiceIds = null;
+                searchSettings.DateSettings.StartDate = Convert.ToDateTime(collection["startDate"]);
+                searchSettings.DateSettings.EndDate = Convert.ToDateTime(collection["endDate"]);
+                //Convert to int Array
+                if (collection["services"].Length > 0)
+                {
+                    webServiceIds = collection["services"].Split(',').Select(s => Convert.ToInt32(s)).ToList();
+                }
+                //for test
+                //int[] test = new int[] { 162, 81, 171 };
+                // webServiceIds.AddRange(test);
+
+                //var progressHandler = new ProgressHandler(this);
+                var dataWorker = new DataWorker();
+                var series = dataWorker.getSeriesData(box, keywords.ToArray(), tileWidth, tileHeight,
+                                                                 searchSettings.DateSettings.StartDate,
+                                                                  searchSettings.DateSettings.EndDate,
+                                                                 webServiceIds);
+                var markerClustererHelper = new MarkerClustererHelper();
+
+              
+                //save list for later
+                Session["Series"] = series;
+               // Session["test"] = "test";// series;
+
+                //transform list int clusteredpins
+                var pins = markerClustererHelper.transformSeriesDataCartIntoClusteredPin(series);
+
+                var clusteredPins = markerClustererHelper.clusterPins(pins, CLUSTERWIDTH, CLUSTERHEIGHT, CLUSTERINCREMENT, zoomLevel, MAXCLUSTERCOUNT, MINCLUSTERDISTANCE);
+                Session["ClusteredPins"] = clusteredPins;
+
+                var centerPoint = new LatLong(0, 0);
+                markerjSON = markerClustererHelper.createMarkersGEOJSON(clusteredPins, zoomLevel, centerPoint, "");
+
+                //var session2 =(List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>) Session["Series"];
             }
-            //for test
-            //int[] test = new int[] { 162, 81, 171 };
-            // webServiceIds.AddRange(test);
+            else
+            {
+                //var s = (string)Session["test"];             
+                var retrievedSeries =(List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>) Session["Series"];
 
-            //var progressHandler = new ProgressHandler(this);
-            var dataWorker = new DataWorker();
-            var series = dataWorker.getSeriesData(box, keywords.ToArray(), tileWidth, tileHeight,
-                                                             searchSettings.DateSettings.StartDate,
-                                                              searchSettings.DateSettings.EndDate,
-                                                             webServiceIds);
-            var markerClustererHelper = new MarkerClustererHelper();
+                var markerClustererHelper = new MarkerClustererHelper();
+                //transform list int clusteredpins
+                var pins = markerClustererHelper.transformSeriesDataCartIntoClusteredPin(retrievedSeries);
 
-            int CLUSTERWIDTH = 50; //Cluster region width, all pin within this area are clustered
-            int CLUSTERHEIGHT = 50; //Cluster region height, all pin within this area are clustered
-            int CLUSTERINCREMENT = 5; //increment for clusterwidth 
-            int MINCLUSTERDISTANCE = 25;
-            int MAXCLUSTERCOUNT = Convert.ToInt32(ConfigurationSettings.AppSettings["MaxClustercount"].ToString()); //maximum ammount of clustered markers
+                var clusteredPins = markerClustererHelper.clusterPins(pins, CLUSTERWIDTH, CLUSTERHEIGHT, CLUSTERINCREMENT, zoomLevel, MAXCLUSTERCOUNT, MINCLUSTERDISTANCE);
+                Session["ClusteredPins"] = clusteredPins;
 
-            //save list for later
-            Session["Series"] = series;
+                var centerPoint = new LatLong(0, 0);
+                markerjSON = markerClustererHelper.createMarkersGEOJSON(clusteredPins, zoomLevel, centerPoint, "");
 
-            markerClustererHelper = new MarkerClustererHelper();
-            //transform list int clusteredpins
-            var clusteredPins = markerClustererHelper.transformSeriesDataCartIntoClusteredPin(series);
-
-            var clusteredpins = markerClustererHelper.clusterPins(clusteredPins, CLUSTERWIDTH, CLUSTERHEIGHT, CLUSTERINCREMENT, zoomLevel, MAXCLUSTERCOUNT, MINCLUSTERDISTANCE);
-
-
-            var centerPoint =  new LatLong(0,0);
-            var markerjSON = markerClustererHelper.createMarkersGEOJSON(clusteredPins, zoomLevel, centerPoint, "");
-
-            var session2 =(List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>) Session["Series"];
-
+            }
             return Json(markerjSON);
 
         }
+
+        public ActionResult getTabsForMarker(int id)
+        {
+           string content = "test";
+           var clusteredPins = (List<ClusteredPin>)Session["ClusteredPins"];
+           var currentCluster = clusteredPins[id];
+
+           var retrievedSeries = (List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>)Session["Series"];
+           foreach (var i in clusteredPins)
+           {
+              // var s
+           }
+           return Json(content);
+        }
+       
     }
 }

@@ -10,6 +10,7 @@ namespace HISWebClient.BusinessObjects.Models
         /// <summary>
         /// Basic information about the series as returned by HIS Central
         /// </summary>
+        [Serializable]
         public class SeriesDataCart
         {
             /// <summary>
