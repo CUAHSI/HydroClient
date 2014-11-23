@@ -9,6 +9,7 @@ namespace HISWebClient.BusinessObjects
     /// <summary>
     /// Represents a latitude / longitude bounding box.
     /// </summary>
+    [Serializable]
     public class Box
     {
         /// <summary>

@@ -9,6 +9,10 @@ using HISWebClient.DataLayer;
 using TB.ComponentModel;
 using HISWebClient.MarkerClusterer;
 using System.Configuration;
+using System.Text;
+using System.Web.Script.Serialization;
+using Newtonsoft.Json;
+using System.Net;
 
 
 
@@ -54,7 +58,7 @@ namespace HISWebClient.Controllers
             int CLUSTERHEIGHT = 50; //Cluster region height, all pin within this area are clustered
             int CLUSTERINCREMENT = 5; //increment for clusterwidth 
             int MINCLUSTERDISTANCE = 25;
-            int MAXCLUSTERCOUNT = Convert.ToInt32(ConfigurationSettings.AppSettings["MaxClustercount"].ToString()); //maximum ammount of clustered markers
+            int MAXCLUSTERCOUNT = Convert.ToInt32(ConfigurationManager.AppSettings["MaxClustercount"].ToString()); //maximum ammount of clustered markers
 
 
             UniversalTypeConverter.TryConvertTo<double>(collection["xMin"], out xMin);
@@ -63,52 +67,69 @@ namespace HISWebClient.Controllers
             UniversalTypeConverter.TryConvertTo<double>(collection["yMax"], out yMax);
             Box box = new Box(xMin, xMax, yMin, yMax);
             UniversalTypeConverter.TryConvertTo<int>(collection["zoomLevel"], out zoomLevel);
-
+            var activeWebservices = new List<WebServiceNode>();
             //if it is a new request
             if (collection["isNewRequest"] != null)
             {
 
                 bool canConvert = false;
-               
-
-               
-
+       
                 var keywords = collection["keywords"].Split(',');
                 var tileWidth = 1;
                 var tileHeight = 1;
                 List<int> webServiceIds = null;
-                searchSettings.DateSettings.StartDate = Convert.ToDateTime(collection["startDate"]);
-                searchSettings.DateSettings.EndDate = Convert.ToDateTime(collection["endDate"]);
-                //Convert to int Array
-                if (collection["services"].Length > 0)
+                try
                 {
-                    webServiceIds = collection["services"].Split(',').Select(s => Convert.ToInt32(s)).ToList();
+                    searchSettings.DateSettings.StartDate = Convert.ToDateTime(collection["startDate"]);
+                    searchSettings.DateSettings.EndDate = Convert.ToDateTime(collection["endDate"]);
+                    //Convert to int Array
+                    if (collection["services"].Length > 0)
+                    {
+                        webServiceIds = collection["services"].Split(',').Select(s => Convert.ToInt32(s)).ToList();
+                    }
+                    //for test
+                    //int[] test = new int[] { 162, 81, 171 };
+                    // webServiceIds.AddRange(test);
+
+                    //var progressHandler = new ProgressHandler(this);
+                    var dataWorker = new DataWorker();
+
+                    var allWebservices = dataWorker.getWebServiceList();
+                  
+
+                    
+                    //filter list
+                    if (webServiceIds != null)
+                    {
+                        activeWebservices = dataWorker.filterWebservices(allWebservices, webServiceIds);
+                    }
+                    Session["webServiceList"] = allWebservices;
+
+                    var series = dataWorker.getSeriesData(box, keywords.ToArray(), tileWidth, tileHeight,
+                                                                     searchSettings.DateSettings.StartDate,
+                                                                      searchSettings.DateSettings.EndDate,
+                                                                      activeWebservices);
+                    var markerClustererHelper = new MarkerClustererHelper();
+
+
+                    //save list for later
+                    Session["Series"] = series;
+                    // Session["test"] = "test";// series;
+
+                    //transform list int clusteredpins
+                    var pins = markerClustererHelper.transformSeriesDataCartIntoClusteredPin(series);
+
+                    var clusteredPins = markerClustererHelper.clusterPins(pins, CLUSTERWIDTH, CLUSTERHEIGHT, CLUSTERINCREMENT, zoomLevel, MAXCLUSTERCOUNT, MINCLUSTERDISTANCE);
+                    Session["ClusteredPins"] = clusteredPins;
+
+                    var centerPoint = new LatLong(0, 0);
+                    markerjSON = markerClustererHelper.createMarkersGEOJSON(clusteredPins, zoomLevel, centerPoint, "");
                 }
-                //for test
-                //int[] test = new int[] { 162, 81, 171 };
-                // webServiceIds.AddRange(test);
-
-                //var progressHandler = new ProgressHandler(this);
-                var dataWorker = new DataWorker();
-                var series = dataWorker.getSeriesData(box, keywords.ToArray(), tileWidth, tileHeight,
-                                                                 searchSettings.DateSettings.StartDate,
-                                                                  searchSettings.DateSettings.EndDate,
-                                                                 webServiceIds);
-                var markerClustererHelper = new MarkerClustererHelper();
-
-              
-                //save list for later
-                Session["Series"] = series;
-               // Session["test"] = "test";// series;
-
-                //transform list int clusteredpins
-                var pins = markerClustererHelper.transformSeriesDataCartIntoClusteredPin(series);
-
-                var clusteredPins = markerClustererHelper.clusterPins(pins, CLUSTERWIDTH, CLUSTERHEIGHT, CLUSTERINCREMENT, zoomLevel, MAXCLUSTERCOUNT, MINCLUSTERDISTANCE);
-                Session["ClusteredPins"] = clusteredPins;
-
-                var centerPoint = new LatLong(0, 0);
-                markerjSON = markerClustererHelper.createMarkersGEOJSON(clusteredPins, zoomLevel, centerPoint, "");
+                catch (Exception ex)
+                {
+                    Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                    return Json(new { success = false });
+                }
 
                 //var session2 =(List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>) Session["Series"];
             }
@@ -132,18 +153,34 @@ namespace HISWebClient.Controllers
 
         }
 
-        public ActionResult getTabsForMarker(int id)
+        public string getDetailsForMarker(int id)
         {
-           string content = "test";
+           //get all clustered pins form cache
            var clusteredPins = (List<ClusteredPin>)Session["ClusteredPins"];
-           var currentCluster = clusteredPins[id];
-
-           var retrievedSeries = (List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>)Session["Series"];
-           foreach (var i in clusteredPins)
-           {
-              // var s
+           if (clusteredPins != null)
+           { 
+               var currentCluster = clusteredPins[id];
+               var sb = new StringBuilder();
+               var retrievedSeries = (List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>)Session["Series"];
+               //var seriesInCluster = retrievedSeries.
+               //var w = (List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>)retrievedSeries.Select((value, index) => new { value, index }).Where(x => x.index > 50).Select(x=>x);
+               var seriesInCluster = new List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>();
+               foreach (int i in currentCluster.assessmentids)         
+               {             
+               
+                   seriesInCluster.Add(retrievedSeries.ElementAt(i));
+               }
+               //var json = new JavaScriptSerializer().Serialize(seriesInCluster);
+               var json = JsonConvert.SerializeObject(seriesInCluster);
+               json = "{ \"data\":" + json + "}";
+                    return json;
            }
-           return Json(content);
+           else
+           {
+               throw new NullReferenceException();
+           }
+
+          
         }
        
     }

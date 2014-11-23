@@ -6,13 +6,14 @@
 #sidebar-wrapper {
   margin-left: -250px;
   left: 250px;
-  width: 200px;
+  width: 240px;
   background: #999999;
   position: fixed;
   height: 100%;
   overflow-y: auto;
   z-index: 1000;
   transition: all 0.4s ease 0s;
+  border:groove;
 }
 
 #wrapper.active {
@@ -102,6 +103,9 @@
 
 #menu-toggle {
     text-decoration: none;
+    position:relative;
+    float:left;
+    z-index:100000;
 }
 
 .btn-menu {
@@ -128,14 +132,15 @@
 }
 
 #wrapper.active #sidebar-wrapper {
-  left: 250px;
+  left:0px;
   width: 250px;
   transition: all 0.4s ease 0s;
 }
 
 #menu-toggle {
-  display: inline-block;
-}
+  /*display: inline-block;*/
+
+   }
 
 .inset {
   padding: 15px;

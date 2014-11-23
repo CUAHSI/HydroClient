@@ -5,55 +5,41 @@
 @section styles
 {
 @*<link href="~/Content/Sidebar.css" rel="stylesheet" />*@
+
+    <link href="//cdn.datatables.net/1.10.4/css/jquery.dataTables.min.css" rel="stylesheet" />
+
 }
 
 <!-- HTML code from Bootply.com editor -->
 
 <div class="container">
     <div class="row">
-        <div class="col-sm-12">
-            @*<ul class="nav nav-tabs" id="myTab">
-                <li class="active"><a href="#map" data-toggle="tab">Map</a></li>
-                <li><a href="#home" data-toggle="tab">Home</a></li>
-                <li><a href="#messages" data-toggle="tab">Messages</a></li>
-            </ul>*@
-            <div class="tab-content">
-                <div class="tab-pane active" id="map">
-                    <div class="content-header">
-                        <div id="wrapper">
-                            <h1 id="home">
-                                <a id="menu-toggle" href="#" class="glyphicon glyphicon-align-justify btn-menu toggle">
-                                    <i class="fa fa-bars"></i>
-                                </a>
-                                Sidebar Navigation Template
-                            </h1>
-                            <div id="sidebar-wrapper">
-                                <nav id="spy">                                    
-                                       
-                                            <form id="Search" class="navbar-form navbar-left"  role="search">
-                                                <!-- Button trigger modal -->
-                                                <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectDateModal">Select Date</button>
-                                                <button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#SelectVariableModal">Select Variable(s)</button>
-                                               
-                                                <div id="SelectedDateRange">                                                    
-                                                    
-                                               </div>
-                                                <button type="submit" class="btn btn-default">Submit</button>
-                                            </form>
-                                    
-                                </nav>
-                            </div>
-                            <div id="map-canvas"></div>
-                        </div>
+        <div class="">
+            <div id="map-canvas"></div>
+            <div id="menu">
+
+                <form id="Search" class="navbar-form navbar-left" role="search">
+                    <!-- Button trigger modal -->
+                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectDateModal">Select Date</button>
+                    <button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#SelectVariableModal">Select Variable(s)</button>
+
+                    <div id="SelectedDateRange">
+
                     </div>
-                </div>
-                <div class="tab-pane" id="home">Home content...</div>
-                <div class="tab-pane" id="messages">Messages...</div>                
+                    <button type="submit" class="btn btn-default">Submit</button>
+                </form>
             </div>
+            @*<h1 id="home">
+                <a id="menu-toggle" href="#" class="glyphicon glyphicon-align-justify ">
+                    <i class="fa fa-bars"></i>
+                </a>
+
+            </h1>*@
         </div>
+
     </div>
 </div>
--->
+
 <!-- Modal -->
 <div class="modal fade" id="SelectDateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -124,42 +110,7 @@
         <!-- /.modal-dialog -->
     </div>
 </div>
-<!-- Modal -->
-<div id="TaskListDialog" class="modal fade full-screen" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-header">
-        <h3>Task List</h3>
-    </div>
-    <div class="modal-body">
-        <ul class="nav nav-tabs" id="tabContent">
-            <li class="active"><a href="#details" data-toggle="tab">Details</a></li>
-            <li><a href="#access-security" data-toggle="tab">Access / Security</a></li>
-            <li><a href="#networking" data-toggle="tab">Networking</a></li>
-        </ul>
 
-        <div class="tab-content">
-            <div class="tab-pane active" id="details">
-
-                Details tab
-
-                <div class="control-group">
-                    <label class="control-label">Instance Name</label>
-                </div>
-            </div>
-
-            <div class="tab-pane" id="access-security">
-                content 0
-            </div>
-
-
-            <div class="tab-pane" id="networking">
-                content 1
-            </div>
-        </div>
-    </div>
-    <div class="modal-footer">
-        <a href="#" class="btn btn-primary" onclick="CloseTaskList();">Close</a>
-    </div>
-</div>
 <div class="modal fade full-screen" id="SelectDateModaltest" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal">×</button>
@@ -170,8 +121,80 @@
    
 </div>
 
+<div class="modal fade full-screen" id="testModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog-full">
+        <div class="modal-content-full">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+            </div>             
+            <div class="modal-body-full">
+                <table id="example" class="display" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>ServCode</th>
+                            <th>ServURL</th>
+                            <th>SiteCode</th>
+                            <th>VariableCode</th>
+                            <th>VariableName</th>
+                            <th>BeginDate</th>
+                            <th>EndDate</th>
+                            <th>ValueCount</th>
+                            <th>SiteName</th>
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                            <th>DataType</th>
+                            <th>ValueType</th>
+                            <th>SampleMedium</th>
+                            <th>TimeUnit</th>
+                            <th>GeneralCategory</th>
+                            <th>TimeSupport</th>
+                            <th>ConceptKeyword</th>
+                            <th>IsRegular</th>
+                            <th>VariableUnits</th>
+                            <th>Citation</th>
+                        </tr>
+                    </thead>
 
-<div id="ajax-modal" class="modal hide fade" tabindex="-1"></div>
+                    <tfoot>
+                        <tr>
+                            <th>ServCode</th>
+                            <th>ServURL</th>
+                            <th>SiteCode</th>
+                            <th>VariableCode</th>
+                            <th>VariableName</th>
+                            <th>BeginDate</th>
+                            <th>EndDate</th>
+                            <th>ValueCount</th>
+                            <th>SiteName</th>
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                            <th>DataType</th>
+                            <th>ValueType</th>
+                            <th>SampleMedium</th>
+                            <th>TimeUnit</th>
+                            <th>GeneralCategory</th>
+                            <th>TimeSupport</th>
+                            <th>ConceptKeyword</th>
+                            <th>IsRegular</th>
+                            <th>VariableUnits</th>
+                            <th>Citation</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" >Save</button>
+            </div>
+
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+</div>
+
+
+
 
     <!-- /.modal -->
     @*<script type='text/javascript' src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
@@ -187,6 +210,9 @@
 
 <script src="~/Scripts/bootstrap-datepicker.js"></script>
 <script src="~/Scripts/Google/markerwithlabel.js"></script>
+<script src="//cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js"></script>
+@*<script src="//cdn.datatables.net/plug-ins/9dcbecd42ad/integration/bootstrap/3/dataTables.bootstrap.js"></script>*@
+
 <script src="~/Scripts/custom/webclient.js"></script>
 
 

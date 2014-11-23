@@ -65,6 +65,10 @@
     <Reference Include="Microsoft.Web.RedisSessionStateProvider">
       <HintPath>..\packages\Microsoft.Web.RedisSessionStateProvider.1.1.0\lib\net40\Microsoft.Web.RedisSessionStateProvider.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.6\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="StackExchange.Redis.StrongName, Version=1.0.316.0, Culture=neutral, PublicKeyToken=c219ff1ca8c2ce46, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\StackExchange.Redis.StrongName.1.0.371\lib\net45\StackExchange.Redis.StrongName.dll</HintPath>
@@ -136,9 +140,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="EntityFramework">
       <HintPath>..\packages\EntityFramework.6.1.1\lib\net45\EntityFramework.dll</HintPath>
     </Reference>
@@ -208,6 +209,8 @@
     <Content Include="Content\bootstrap-modal.css" />
     <Content Include="Content\datepicker3.css" />
     <Content Include="Content\Images\ajax-loader.gif" />
+    <Content Include="Content\Images\cuahsi_logo.png" />
+    <Content Include="Content\Images\HydroserverLogo.png" />
     <Content Include="Content\Images\Markers\ClusterIcons\blue-20.png" />
     <Content Include="Content\Images\Markers\ClusterIcons\blue-22.png" />
     <Content Include="Content\Images\Markers\ClusterIcons\blue-24.png" />

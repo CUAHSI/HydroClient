@@ -22,7 +22,12 @@
     </script>
 </head>
 <body>
-    <div class="navbar navbar-inverse navbar-fixed-top">
+    
+            
+        <div id="page-header" >
+            <img src="~/Content/Images/HydroserverLogo.png" class="center img-thumbnail" style="border:0px; vertical-align:top" />
+    </div>
+    <div class="navbar hide navbar-inverse navbar-fixed-top">
         <div class="container">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -45,8 +50,7 @@
     </div>
     <div class="container body-content">
         @RenderBody()
-        <hr />
-        <footer>
+        <footer class="hide">
             <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
         </footer>
     </div>

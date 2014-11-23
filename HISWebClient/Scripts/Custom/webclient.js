@@ -3,10 +3,10 @@ var clusteredMarkersArray = [];
 var clusterMarkerPath = "/Content/Images/Markers/ClusterIcons/";
 var markerPath = "/Content/Images/Markers/Services/";
 var infoWindow;
+var myDataTable;
 
 $(document).ready(function () {
 
-    
     var myCenter = new google.maps.LatLng(41.6, -101.85);
     var marker = new google.maps.Marker({
         position: myCenter
@@ -20,11 +20,19 @@ $(document).ready(function () {
         var mapProp = {
             center: myCenter,
             zoom: 11,
-            draggable: false,
-            scrollwheel: false,
-            mapTypeId: google.maps.MapTypeId.ROADMAP
+            draggable: true,
+            scrollwheel: true,
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            mapTypeControl: true,
+            scaleControl: true,
+            mapTypeControlOptions: {
+                style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+                position: google.maps.ControlPosition.TOP_LEFT,
+                mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.SATELLITE, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.TERRAIN, 'topo']
+            },
         };
-
+        $("#map-canvas").height(getMapHeight()) //setMapHeight
+        $("#map-canvas").width(getMapWidth()) //setMapWidth
         map = new google.maps.Map(document.getElementById("map-canvas"), mapProp);
         //marker.setMap(map);
 
@@ -57,7 +65,15 @@ $(document).ready(function () {
             infowindow.open(map, marker);
 
         });
+        google.maps.event.addDomListener(window, "resize", function () {
+            $("#map-canvas").height(getMapHeight()) //setMapHeight
+            $("#map-canvas").width(getMapWidth()) //setMapWidth
+            google.maps.event.trigger(map, "resize");
+           
+        });
+       
     };
+ 
     //$(document).on("click", ".alert", function (e) {
     //    bootbox.alert("Hello world!", function () {
     //        console.log("Alert Callback");
@@ -102,6 +118,17 @@ $('a[href*=#]:not([href=#])').click(function () {
         }
     }
 });
+
+function getMapHeight()
+{
+    var mapHeight = $(window).height() - $("#page-header").height() + "px";
+    return mapHeight;
+}
+function getMapWidth() {
+    var mapWidth = $(window).width() + "px";
+    return mapWidth;
+}
+
 function processMarkers(geoJson)
 {
     //map.data.loadGeoJson('https://storage.googleapis.com/maps-devrel/google.json');
@@ -486,10 +513,12 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             //var c = getDetailforCluster(id, clusterid)
             //infoWindow.setContent(c);
             //infoWindow.open(map, this);
+            //$('#example').DataTable();
+            setUpDatatables(clusterid);
+            $('#testModal').modal('show')
+            //var details = getDetailsForMarker(clusterid)
+            //createInfoWindowContent()
            
-            //$('#TaskListDialog').modal('show')
-            var details = getDetailsForMarker(clusterid)
-            createInfoWindowContent(details)
         });
         //        google.maps.event.addListener(marker, "click", function (e) {
         //            var infoBox = new InfoBox({ latlng: marker.getPosition(), map: map });
@@ -503,9 +532,9 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 }
 function getDetailsForMarker(clusterid)
 {
-    var actionUrl = "/home/getTabsForMarker/" + clusterid
+    var actionUrl = "/home/getDetailsForMarker/" + clusterid
 
-    $('body').modalmanager('loading');
+   // $('body').modalmanager('loading');
      
     
     $.ajax({
@@ -516,7 +545,7 @@ function getDetailsForMarker(clusterid)
         processData: false,
         //data: formData,
         success: function (data) {
-            alert(data)
+           
         },
         error: function (xmlhttprequest, textstatus, message) {
             serviceFailed(xmlhttprequest, textstatus, message)
@@ -528,22 +557,107 @@ function getDetailsForMarker(clusterid)
 
 }
 
-function createInfoWindowContent(details)
+function createInfoWindowContent()
 {
+    $('#example').DataTable();
+   
     var $modal = $('#ajax-modal');
-
-    $modal.on('click', '.update', function () {
-        $modal.modal('loading');
-        setTimeout(function () {
-            $modal
-            .modal('loading')
-            .find('.modal-body')
-              .prepend('<div class="alert alert-info fade in">' +
-                'Updated!<button type="button" class="close" data-dismiss="alert">&times;</button>' +
-              '</div>');
-        }, 1000);
-    });
+    //$modal.show();
+    //$modal.on('click', '.update', function () {
+    //    $modal.modal('loading');
+    //    setTimeout(function () {
+    //        $modal
+    //        .modal('loading')
+    //        .find('.modal-body')
+    //          .prepend('<div class="alert alert-info fade in">' +
+    //            'Updated!<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+    //          '</div>');
+    //    }, 1000);
+    //});
 }
+
+function setUpDatatables(clusterid)
+{
+    
+//    var dataSet = [
+//    ['Trident','Internet Explorer 4.0','Win 95+','4','X'],
+//    ['Trident','Internet Explorer 5.0','Win 95+','5','C'],
+ 
+    //];
+    $.fn.DataTable.isDataTable("#example")
+    {
+        $('#example').DataTable().clear().destroy();
+    }
+    
+
+    //var dataSet = getDetailsForMarker(clusterid)
+    var actionUrl = "/home/getDetailsForMarker/" + clusterid
+   // $('#example').DataTable().clear()
+   // $('#demo').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example"></table>' );
+ 
+    myDataTable = $('#example').dataTable( {
+        "ajax": actionUrl,
+        "columns": [
+            { "data": "ServCode" },
+            { "data": "ServURL" },
+            { "data": "SiteCode" },
+            { "data": "VariableCode"},
+            { "data": "VariableName"},
+            { "data": "BeginDate" },
+            { "data": "EndDate" },
+            { "data": "ValueCount" },
+            { "data": "SiteName" },
+            { "data": "Latitude" },
+            { "data": "Longitude" },
+            { "data": "DataType" },
+            { "data": "ValueType" },
+            { "data": "SampleMedium" },
+            { "data": "TimeUnit" },
+            { "data": "GeneralCategory" },
+            { "data": "TimeSupport" },
+            { "data": "ConceptKeyword" },
+            { "data": "IsRegular" },
+            { "data": "VariableUnits" },
+            { "data": "Citation" }
+        ],
+        "scrollX": true,
+        initComplete: function () {
+            var api = this.api();
+ 
+            api.columns().indexes().flatten().each( function ( i ) {
+                var column = api.column( i );
+                var select = $('<select><option value=""></option></select>')
+                    .appendTo( $(column.footer()).empty() )
+                    .on( 'change', function () {
+                        var val = $.fn.dataTable.util.escapeRegex(
+                            $(this).val()
+                        );
+ 
+                        column
+                            .search( val ? '^'+val+'$' : '', true, false )
+                            .draw();
+                    } );
+ 
+                column.data().unique().sort().each( function ( d, j ) {
+                    select.append( '<option value="'+d+'">'+d+'</option>' )
+                } );
+            } );
+        }
+    
+
+
+        //"retrieve": true
+    });
+
+    $('#example tbody').on('click', 'tr', function () {
+        $(this).toggleClass('selected');
+    });
+
+    $('#button').click(function () {
+        alert(table.rows('.selected').data().length + ' row(s) selected');
+    });
+
+} 
 function serviceFailed(xmlhttprequest, textstatus, message)
 {
     //hideLoadingImage();

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace HISWebClient.BusinessObjects
 {
+    [Serializable]
     public class WebServiceNode
     {
         private WebServiceNode()

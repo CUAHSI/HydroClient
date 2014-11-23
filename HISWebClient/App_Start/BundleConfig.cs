@@ -23,8 +23,8 @@ namespace HISWebClient
                       "~/Scripts/bootstrap.js",
                       "~/Scripts/bootbox.js",
                       "~/Script/moment.js",
-                      "~/Scripts/bootstrap-modal.js",
-                      "~/Scripts/bootstrap-modalmanager.js",
+                     // "~/Scripts/bootstrap-modal.js",
+                     // "~/Scripts/bootstrap-modalmanager.js",
                       "~/Scripts/respond.js"));
 
             bundles.Add(new ScriptBundle("~/bundles/Custom").Include(
@@ -32,11 +32,12 @@ namespace HISWebClient
 
             bundles.Add(new StyleBundle("~/Content/css").Include(
                       "~/Content/bootstrap.css",
-                      "~/Content/sidebar.css",
+                      //"~/Content/sidebar.css",
                       "~/Content/datepicker3.css",
-                      "~/Content/site.css",
-                      "~/Content/bootstrap-modal-bs3patch.css",
-                      "~/Content/bootstrap-modal.css"));
+                      "~/Content/site.css"
+                     // "~/Content/bootstrap-modal-bs3patch.css",
+                     // "~/Content/bootstrap-modal.css"
+                     ));
 
             // Set EnableOptimizations to false for debugging. For more information,
             // visit http://go.microsoft.com/fwlink/?LinkId=301862

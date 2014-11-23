@@ -21,20 +21,23 @@ namespace HISWebClient.DataLayer
             webServicesFilename = "HisServicesList.xml";
         }
 
-        public List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart> getSeriesData(Box extentBox, string[] keywords, double tileWidth, double tileHeight,
-                                                        DateTime startDate, DateTime endDate, List<int> serviceIDs)
+        public List<WebServiceNode> getWebServiceList()
         {
-            
-            var searcher = new HISCentralSearcher(hisCentralUrl);            
+            var searcher = new HISCentralSearcher(hisCentralUrl);
+
             //Create instance
             //var hisCentralWebServicesList = new HisCentralWebServicesList(webServicesFilename);
             //hisCentralWebServicesList.RefreshListFromHisCentral(searcher);
             var xmlData = searcher.GetWebServicesXml(webServicesFilename);
-           
 
             var webserviceNodeList = getWebserviceNodeList(xmlData);
-           
-            //filter list allways contains initial element
+
+            return webserviceNodeList;
+        }
+
+        public List<WebServiceNode> filterWebservices (List<WebServiceNode> webserviceNodeList, List<int> serviceIDs)
+         {
+            var filteredWebserviceNodeList = new List<WebServiceNode>();
             if (serviceIDs != null)
             {
                 webserviceNodeList = (from p in webserviceNodeList
@@ -42,6 +45,19 @@ namespace HISWebClient.DataLayer
                          select p).ToList();
 
             }
+            return filteredWebserviceNodeList;
+
+         }
+
+        public List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart> getSeriesData(Box extentBox, string[] keywords, double tileWidth, double tileHeight,
+                                                        DateTime startDate, DateTime endDate, List<WebServiceNode> serviceList)
+        {
+            
+                       
+            
+           
+            //filter list allways contains initial element
+            
 
             SeriesSearcher seriesSearcher = new HISCentralSearcher(hisCentralUrl);
 
@@ -50,7 +66,7 @@ namespace HISWebClient.DataLayer
             var series = seriesSearcher.GetSeriesInRectangle(extentBox, keywords.ToArray(), tileWidth, tileHeight,
                                                               startDate,
                                                               endDate,
-                                                              webserviceNodeList.ToArray());
+                                                              serviceList.ToArray());
             
 
             return series;
