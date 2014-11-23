@@ -182,6 +182,25 @@ namespace HISWebClient.Controllers
 
           
         }
+
+        public string getServiceList()
+        {
+            var dataWorker = new DataWorker();
+
+            var allWebservices = dataWorker.getWebServiceList();
+            if (allWebservices != null)
+            {
+                //var s = from a in allWebservices select new [a.ServiceID, a.ServiceCode, a.Organization, a.Sites,a.Variables]
+                var json = JsonConvert.SerializeObject(allWebservices);
+                json = "{ \"data\":" + json + "}";
+                return json;
+            }
+            else
+            {
+                throw new NullReferenceException();
+            }
+           
+        }
        
     }
 }

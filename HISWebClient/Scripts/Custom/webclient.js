@@ -81,6 +81,9 @@ $(document).ready(function () {
     //});
     $('.input-daterange').datepicker()
 
+    //init list od datatbles for modal 
+    setupServicesDatatable();
+
     $("#Search").submit(function (e) {
 
        
@@ -576,6 +579,62 @@ function createInfoWindowContent()
     //});
 }
 
+function setupServicesDatatable()
+{
+    var actionUrl = "/home/getServiceList"
+     
+    myDataTable = $('#dtServices').dataTable({
+        "ajax": actionUrl,
+        "columns": [
+            { "data": "ServiceCode" },
+            { "data": "Title" },
+            { "data": "DescriptionUrl" },
+            { "data": "ServiceUrl" },
+            { "data": "Checked" },
+            { "data": "Organization" },
+            { "data": "Sites" },
+            { "data": "Variables" },
+            { "data": "Values" },
+            { "data": "Box" }           
+        ],
+        "scrollX": true,
+        initComplete: function () {
+            var api = this.api();
+
+            api.columns().indexes().flatten().each(function (i) {
+                var column = api.column(i);
+                var select = $('<select><option value=""></option></select>')
+                    .appendTo($(column.footer()).empty())
+                    .on('change', function () {
+                        var val = $.fn.dataTable.util.escapeRegex(
+                            $(this).val()
+                        );
+
+                        column
+                            .search(val ? '^' + val + '$' : '', true, false)
+                            .draw();
+                    });
+
+                column.data().unique().sort().each(function (d, j) {
+                    select.append('<option value="' + d + '">' + d + '</option>')
+                });
+            });
+        }
+
+
+
+        //"retrieve": true
+    });
+
+    $('#example tbody').on('click', 'tr', function () {
+        $(this).toggleClass('selected');
+    });
+
+    $('#button').click(function () {
+        alert(table.rows('.selected').data().length + ' row(s) selected');
+    });
+}
+
 function setUpDatatables(clusterid)
 {
     
@@ -584,9 +643,9 @@ function setUpDatatables(clusterid)
 //    ['Trident','Internet Explorer 5.0','Win 95+','5','C'],
  
     //];
-    $.fn.DataTable.isDataTable("#example")
+    $.fn.DataTable.isDataTable("#dtMarkers")
     {
-        $('#example').DataTable().clear().destroy();
+        $('#dtMarkers').DataTable().clear().destroy();
     }
     
 
@@ -595,7 +654,7 @@ function setUpDatatables(clusterid)
    // $('#example').DataTable().clear()
    // $('#demo').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example"></table>' );
  
-    myDataTable = $('#example').dataTable( {
+    myDataTable = $('#dtMarkers').dataTable({
         "ajax": actionUrl,
         "columns": [
             { "data": "ServCode" },
