@@ -3,130 +3,107 @@ var clusteredMarkersArray = [];
 var clusterMarkerPath = "/Content/Images/Markers/ClusterIcons/";
 var markerPath = "/Content/Images/Markers/Services/";
 var infoWindow;
-var myDataTable;
+var myTimeSeriesList;
+var myTimeSeriesClusterDatatable;
+var myServicesList;
+var myServicesDatatable;
+var mySelectedServices = [];
 
 $(document).ready(function () {
+
+   
+    initialize();
+})
+
+function initialize() {
 
     var myCenter = new google.maps.LatLng(41.6, -101.85);
     var marker = new google.maps.Marker({
         position: myCenter
     });
-    initialize();
 
-    function initialize() {
+    infoWindow = new google.maps.InfoWindow();
 
-        infoWindow = new google.maps.InfoWindow();
+    //init list od datatables for modal 
+    myServicesList = setupServices();
 
-        var mapProp = {
-            center: myCenter,
-            zoom: 11,
-            draggable: true,
-            scrollwheel: true,
-            mapTypeId: google.maps.MapTypeId.ROADMAP,
-            mapTypeControl: true,
-            scaleControl: true,
-            mapTypeControlOptions: {
-                style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-                position: google.maps.ControlPosition.TOP_LEFT,
-                mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.SATELLITE, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.TERRAIN, 'topo']
-            },
-        };
+    var mapProp = {
+        center: myCenter,
+        zoom: 11,
+        draggable: true,
+        scrollwheel: true,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        mapTypeControl: true,
+        scaleControl: true,
+        mapTypeControlOptions: {
+            style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+            position: google.maps.ControlPosition.TOP_LEFT,
+            mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.SATELLITE, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.TERRAIN, 'topo']
+        },
+    };
+    $("#map-canvas").height(getMapHeight()) //setMapHeight
+    $("#map-canvas").width(getMapWidth()) //setMapWidth
+    map = new google.maps.Map(document.getElementById("map-canvas"), mapProp);
+    //marker.setMap(map);
+
+    //triger update of map on these events
+    google.maps.event.addListener(map, 'dblclick', function () {
+        if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
+            updateMap(false)
+
+        }
+
+    });
+    google.maps.event.addListener(map, 'dragend', function () {
+        if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
+            updateMap(false)
+
+        }
+
+    });
+    google.maps.event.addListener(map, 'zoom_changed', function () {
+        if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
+            updateMap(false)
+
+        }
+
+    });
+
+    google.maps.event.addListener(marker, 'click', function () {
+
+        infowindow.setContent(contentString);
+        infowindow.open(map, marker);
+
+    });
+    google.maps.event.addDomListener(window, "resize", function () {
         $("#map-canvas").height(getMapHeight()) //setMapHeight
         $("#map-canvas").width(getMapWidth()) //setMapWidth
-        map = new google.maps.Map(document.getElementById("map-canvas"), mapProp);
-        //marker.setMap(map);
-
-        //triger update of map on these events
-        google.maps.event.addListener(map, 'dblclick', function () {
-            if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
-                updateMap(false)
-
-            }
-
-        });
-        google.maps.event.addListener(map, 'dragend', function () {
-            if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
-                updateMap(false)
-
-            }
-
-        });
-        google.maps.event.addListener(map, 'zoom_changed', function () {
-            if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
-                updateMap(false)
-
-            }
-
-        });
-
-        google.maps.event.addListener(marker, 'click', function () {
-
-            infowindow.setContent(contentString);
-            infowindow.open(map, marker);
-
-        });
-        google.maps.event.addDomListener(window, "resize", function () {
-            $("#map-canvas").height(getMapHeight()) //setMapHeight
-            $("#map-canvas").width(getMapWidth()) //setMapWidth
-            google.maps.event.trigger(map, "resize");
+        google.maps.event.trigger(map, "resize");
            
-        });
-       
-    };
- 
-    //$(document).on("click", ".alert", function (e) {
-    //    bootbox.alert("Hello world!", function () {
-    //        console.log("Alert Callback");
-    //    });
-    //});
+    });
+
     $('.input-daterange').datepicker()
 
-    //init list od datatbles for modal 
-    setupServicesDatatable();
+   
 
-    $("#Search").submit(function (e) {
-
-       
+    $("#Search").submit(function (e) {       
 
         //prevent Default functionality
         e.preventDefault();
         e.stopImmediatePropagation();
-
         updateMap(true)
 
     });
-
-});
-
-/*Menu-toggle*/
-$("#menu-toggle").click(function (e) {
-    e.preventDefault();
-    $("#wrapper").toggleClass("active");
-});
-
-/*Scroll Spy*/
-//$('body').scrollspy({ target: '#spy', offset: 80 });
-
-/*Smooth link animation*/
-$('a[href*=#]:not([href=#])').click(function () {
-    if (location.pathname.replace(/^\//, '') == this.pathname.replace(/^\//, '') || location.hostname == this.hostname) {
-
-        var target = $(this.hash);
-        target = target.length ? target : $('[name=' + this.hash.slice(1) + ']');
-        if (target.length) {
-            $('html,body').animate({
-                scrollTop: target.offset().top
-            }, 1000);
-            return false;
-        }
-    }
-});
+        
+};
+  
 
 function getMapHeight()
 {
     var mapHeight = $(window).height() - $("#page-header").height() + "px";
     return mapHeight;
 }
+
 function getMapWidth() {
     var mapWidth = $(window).width() + "px";
     return mapWidth;
@@ -140,6 +117,11 @@ function processMarkers(geoJson)
     //map.data.addGeoJson(geojson);
     //zoom(map);
     if (json != null) {
+        if (json.features.length == 0)
+        {
+            alert(" No timeseries for specified parameters found.")
+            return;
+        }
         // set title
         //$("#headerlbl").html(programname);
 
@@ -224,6 +206,7 @@ function processMarkers(geoJson)
         }
     }
 }
+
 function getFormData()
 {
     var formdata = $("#Search").serializeArray()
@@ -235,7 +218,10 @@ function getFormData()
     var endDate = $("#endDate").val()
     var keywords = new Array();
     //variable.push  = $("#variable").val()
-    var services = new Array();
+
+   //selected Services
+    var services = mySelectedServices;
+    //alert(myTimeSeriesClusterDatatable.rows('.selected').data().length + ' row(s) selected');
     //services.push(181);
     var selectedKeywords = $("input[name='keywords']:checked").map(function () {
         return $(this).val();
@@ -518,7 +504,7 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             //infoWindow.open(map, this);
             //$('#example').DataTable();
             setUpDatatables(clusterid);
-            $('#testModal').modal('show')
+            $('#SeriesModal').modal('show')
             //var details = getDetailsForMarker(clusterid)
             //createInfoWindowContent()
            
@@ -533,6 +519,7 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
     }
     return marker
 }
+
 function getDetailsForMarker(clusterid)
 {
     var actionUrl = "/home/getDetailsForMarker/" + clusterid
@@ -579,60 +566,79 @@ function createInfoWindowContent()
     //});
 }
 
-function setupServicesDatatable()
+function setupServices()
 {
+
+    $.fn.DataTable.isDataTable("#dtServices")
+    {
+        $('#dtServices').DataTable().clear().destroy();
+    }
+
     var actionUrl = "/home/getServiceList"
-     
-    myDataTable = $('#dtServices').dataTable({
+    // $('#demo').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example"></table>' );
+ 
+    myServicesDatatable = $('#dtServices').dataTable({
         "ajax": actionUrl,
-        "columns": [
+         "columns": [
+            { "data": "ServiceID" },
             { "data": "ServiceCode" },
             { "data": "Title" },
-            { "data": "DescriptionUrl" },
-            { "data": "ServiceUrl" },
-            { "data": "Checked" },
+            { "data": "DescriptionUrl", "visible": false },
+            { "data": "ServiceUrl", "visible": false },
+            { "data": "Checked", "visible": false },
             { "data": "Organization" },
-            { "data": "Sites" },
-            { "data": "Variables" },
-            { "data": "Values" },
-            { "data": "Box" }           
-        ],
-        "scrollX": true,
-        initComplete: function () {
-            var api = this.api();
+            { "data": "Sites", "visible": false },
+            { "data": "Variables", "visible": false },
+            { "data": "Values", "visible": false },
+            { "data": "ServiceBoundingBox" }
+         ],
+         //"rowCallback": function( row, data ) {
+         //    if ( $.inArray(data.DT_RowId, mySelectedServices) !== -1 ) {
+         //        $(row).addClass('selected');
+         //    }
+         //},
 
-            api.columns().indexes().flatten().each(function (i) {
-                var column = api.column(i);
-                var select = $('<select><option value=""></option></select>')
-                    .appendTo($(column.footer()).empty())
-                    .on('change', function () {
-                        var val = $.fn.dataTable.util.escapeRegex(
-                            $(this).val()
-                        );
+         "scrollX": true   
+    })
+    $('a.toggle-vis').on('click', function (e) {
+        e.preventDefault();
 
-                        column
-                            .search(val ? '^' + val + '$' : '', true, false)
-                            .draw();
-                    });
+        // Get the column API object
+        var column = table.column($(this).attr('data-column'));
 
-                column.data().unique().sort().each(function (d, j) {
-                    select.append('<option value="' + d + '">' + d + '</option>')
-                });
-            });
+        // Toggle the visibility
+        column.visible(!column.visible());
+    });
+
+
+    $('#dtServices tbody').on('click', 'tr', function () {
+        $(this).toggleClass('selected');
+        var id = this.cells[0].innerHTML;
+        if ($.inArray(id, mySelectedServices ) == -1)
+        {
+            //add
+            mySelectedServices.push(id);
+        }
+        else {            
+
+            //remove
+            mySelectedServices = $.grep(mySelectedServices, function (element, index) {
+                return element.id == id;
+            })
         }
 
 
-
-        //"retrieve": true
     });
 
-    $('#example tbody').on('click', 'tr', function () {
-        $(this).toggleClass('selected');
+    $('#saveServiceSelection').click(function () {
+       // alert(myServicesDatatable[0].rows('.selected').data().length + ' row(s) selected');
+       
     });
+    $('#cancelServiceSelection').click(function () {
+        mySelectedServices.length = 0;
 
-    $('#button').click(function () {
-        alert(table.rows('.selected').data().length + ' row(s) selected');
     });
+    //return table;
 }
 
 function setUpDatatables(clusterid)
@@ -654,7 +660,7 @@ function setUpDatatables(clusterid)
    // $('#example').DataTable().clear()
    // $('#demo').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example"></table>' );
  
-    myDataTable = $('#dtMarkers').dataTable({
+    myTimeSeriesClusterDatatable = $('#dtMarkers').dataTable({
         "ajax": actionUrl,
         "columns": [
             { "data": "ServCode" },
@@ -708,15 +714,16 @@ function setUpDatatables(clusterid)
         //"retrieve": true
     });
 
-    $('#example tbody').on('click', 'tr', function () {
+    $('#dtMarkers tbody').on('click', 'tr', function () {
         $(this).toggleClass('selected');
     });
 
-    $('#button').click(function () {
-        alert(table.rows('.selected').data().length + ' row(s) selected');
+    $('#DownloadAsCSV').click(function () {
+        alert(myTimeSeriesClusterDatatable.rows('.selected').data().length + ' row(s) selected');
     });
 
-} 
+}
+
 function serviceFailed(xmlhttprequest, textstatus, message)
 {
     //hideLoadingImage();
@@ -730,4 +737,5 @@ function serviceFailed(xmlhttprequest, textstatus, message)
     //{
         alert('Service call failed. Please refresh page: ' + xmlhttprequest.status + '' + xmlhttprequest.statusText);
     //}
-}
+
+};

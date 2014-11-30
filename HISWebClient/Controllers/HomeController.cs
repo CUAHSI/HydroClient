@@ -68,6 +68,9 @@ namespace HISWebClient.Controllers
             Box box = new Box(xMin, xMax, yMin, yMax);
             UniversalTypeConverter.TryConvertTo<int>(collection["zoomLevel"], out zoomLevel);
             var activeWebservices = new List<WebServiceNode>();
+
+           
+
             //if it is a new request
             if (collection["isNewRequest"] != null)
             {

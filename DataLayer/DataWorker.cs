@@ -40,9 +40,10 @@ namespace HISWebClient.DataLayer
             var filteredWebserviceNodeList = new List<WebServiceNode>();
             if (serviceIDs != null)
             {
-                webserviceNodeList = (from p in webserviceNodeList
+                filteredWebserviceNodeList = (from p in webserviceNodeList
                         where serviceIDs.Contains(p.ServiceID)
                         select p).ToList();
+                 
 
             }
             return filteredWebserviceNodeList;

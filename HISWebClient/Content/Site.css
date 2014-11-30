@@ -91,4 +91,6 @@ div.GblueLabel64 {  padding-top: 22px;  width: 64px;  font-size: 13px;}
     opacity: .9; /*for real browsers (Chrome, Firefox, Safari..)*/
     filter:alpha(opacity=60); /* for IE */
     }
-
+.row-background-red{
+    background-color:red;
+}
