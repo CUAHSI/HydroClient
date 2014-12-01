@@ -204,6 +204,36 @@ namespace HISWebClient.Controllers
             }
            
         }
-       
+
+        public PartialViewResult CreatePartialView()
+        {
+            return PartialView("_DownloadTimeseries");
+        }
+
+        [HttpPost]
+        public ActionResult Progress()
+        {
+            string StatusMessage = DateTime.Now.ToLocalTime().ToString();
+
+           
+            return Json(StatusMessage);
+        }
+
+        [HttpPost]
+        public string downloadFile()
+        {
+            var dir = "~/Files/";
+            var filename = "downloadtest.csv";
+            var filePath = Server.MapPath(dir + filename);
+            var fileType = "text/csv";
+            return "downloadtest.csv";
+            //return base.File(filePath, "text/csv", filename);
+            //if (System.IO.File.Exists(filePath))
+                
+            //else
+            //    return Content("Couldn't find file");        
+            
+        }
+
     }
 }

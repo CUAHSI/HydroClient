@@ -8,6 +8,7 @@ var myTimeSeriesClusterDatatable;
 var myServicesList;
 var myServicesDatatable;
 var mySelectedServices = [];
+var mySelectedTimeSeries = [];
 
 $(document).ready(function () {
 
@@ -50,23 +51,17 @@ function initialize() {
     google.maps.event.addListener(map, 'dblclick', function () {
         if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
             updateMap(false)
-
         }
-
     });
     google.maps.event.addListener(map, 'dragend', function () {
         if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
             updateMap(false)
-
         }
-
     });
     google.maps.event.addListener(map, 'zoom_changed', function () {
         if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
             updateMap(false)
-
         }
-
     });
 
     google.maps.event.addListener(marker, 'click', function () {
@@ -660,7 +655,7 @@ function setUpDatatables(clusterid)
    // $('#example').DataTable().clear()
    // $('#demo').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example"></table>' );
  
-    myTimeSeriesClusterDatatable = $('#dtMarkers').dataTable({
+     $('#dtMarkers').dataTable({
         "ajax": actionUrl,
         "columns": [
             { "data": "ServCode" },
@@ -709,17 +704,24 @@ function setUpDatatables(clusterid)
             } );
         }
     
-
+          
 
         //"retrieve": true
     });
 
     $('#dtMarkers tbody').on('click', 'tr', function () {
         $(this).toggleClass('selected');
+
     });
 
+    myTimeSeriesClusterDatatable = $('#dtMarkers').DataTable()
+
     $('#DownloadAsCSV').click(function () {
-        alert(myTimeSeriesClusterDatatable.rows('.selected').data().length + ' row(s) selected');
+       // alert(myTimeSeriesClusterDatatable.rows('.selected').data().length + ' row(s) selected');
+        window.open('/Home/CreatePartialView', '_blank', 'left=100,top=100,width=400,height=300,toolbar=1,resizable=0');
+
+
+
     });
 
 }

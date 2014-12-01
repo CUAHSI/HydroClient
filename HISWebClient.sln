@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30723.0
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HISWebClient", "HISWebClient\HISWebClient.csproj", "{6F894286-05A9-430E-A6C5-4EFD97162E98}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -19,12 +19,27 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataLayer", "DataLayer\Data
 		{70974532-81A7-4224-9F15-DB8A9C63DDBC} = {70974532-81A7-4224-9F15-DB8A9C63DDBC}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydroDesktop.Searcher", "HdroDesktop.Searcher\HydroDesktop.Searcher.csproj", "{491DFE33-9684-4417-8493-4CC0EB3F66FB}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarkerClusterer", "MarkerClusterer\MarkerClusterer.csproj", "{2534AAB3-0FEE-4AD6-BC68-985897415D12}"
 	ProjectSection(ProjectDependencies) = postProject
 		{70974532-81A7-4224-9F15-DB8A9C63DDBC} = {70974532-81A7-4224-9F15-DB8A9C63DDBC}
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CUAHSI.ServerSideHydroDesktop", "ServerSideHydroDesktop\CUAHSI.ServerSideHydroDesktop.csproj", "{5DBA60F1-4292-4EA0-9A78-A03AC3511DC7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CUAHSI.DataExport", "CUAHSI.DataExport\CUAHSI.DataExport.csproj", "{1F515A28-DDDA-48BA-9E51-5839BB0DE3C0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{4E852C81-4FAD-42BC-B752-DE0566DCA952}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\NuGet.Config = .nuget\NuGet.Config
+		.nuget\NuGet.exe = .nuget\NuGet.exe
+		.nuget\NuGet.targets = .nuget\NuGet.targets
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CUAHSIDataStorage", "CUAHSIDataStorage\CUAHSIDataStorage.csproj", "{E13F52A1-D1BF-47DC-A5B4-BC1D0B00ECA8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CUAHSI.Common", "CUAHSI.Common\CUAHSI.Common.csproj", "{11554F4F-1819-48C6-ABEE-CD30CBFA4A5D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CUAHSI.Models", "CUAHSI.Models\CUAHSI.Models.csproj", "{305524F1-528A-4504-84C0-999445E5B148}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,14 +63,30 @@ Global
 		{92675027-99E5-4F6D-938E-907F646DEB22}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{92675027-99E5-4F6D-938E-907F646DEB22}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{92675027-99E5-4F6D-938E-907F646DEB22}.Release|Any CPU.Build.0 = Release|Any CPU
-		{491DFE33-9684-4417-8493-4CC0EB3F66FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{491DFE33-9684-4417-8493-4CC0EB3F66FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{491DFE33-9684-4417-8493-4CC0EB3F66FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{491DFE33-9684-4417-8493-4CC0EB3F66FB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2534AAB3-0FEE-4AD6-BC68-985897415D12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2534AAB3-0FEE-4AD6-BC68-985897415D12}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2534AAB3-0FEE-4AD6-BC68-985897415D12}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2534AAB3-0FEE-4AD6-BC68-985897415D12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DBA60F1-4292-4EA0-9A78-A03AC3511DC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DBA60F1-4292-4EA0-9A78-A03AC3511DC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DBA60F1-4292-4EA0-9A78-A03AC3511DC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DBA60F1-4292-4EA0-9A78-A03AC3511DC7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F515A28-DDDA-48BA-9E51-5839BB0DE3C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F515A28-DDDA-48BA-9E51-5839BB0DE3C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F515A28-DDDA-48BA-9E51-5839BB0DE3C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F515A28-DDDA-48BA-9E51-5839BB0DE3C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E13F52A1-D1BF-47DC-A5B4-BC1D0B00ECA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E13F52A1-D1BF-47DC-A5B4-BC1D0B00ECA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E13F52A1-D1BF-47DC-A5B4-BC1D0B00ECA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E13F52A1-D1BF-47DC-A5B4-BC1D0B00ECA8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11554F4F-1819-48C6-ABEE-CD30CBFA4A5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11554F4F-1819-48C6-ABEE-CD30CBFA4A5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11554F4F-1819-48C6-ABEE-CD30CBFA4A5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11554F4F-1819-48C6-ABEE-CD30CBFA4A5D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{305524F1-528A-4504-84C0-999445E5B148}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{305524F1-528A-4504-84C0-999445E5B148}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{305524F1-528A-4504-84C0-999445E5B148}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{305524F1-528A-4504-84C0-999445E5B148}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

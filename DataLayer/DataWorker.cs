@@ -53,16 +53,12 @@ namespace HISWebClient.DataLayer
         public List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart> getSeriesData(Box extentBox, string[] keywords, double tileWidth, double tileHeight,
                                                         DateTime startDate, DateTime endDate, List<WebServiceNode> serviceList)
         {
-            
-                       
+                              
             
            
-            //filter list allways contains initial element
-            
+            //filter list allways contains initial element            
 
             SeriesSearcher seriesSearcher = new HISCentralSearcher(hisCentralUrl);
-
-
 
             var series = seriesSearcher.GetSeriesInRectangle(extentBox, keywords.ToArray(), tileWidth, tileHeight,
                                                               startDate,
