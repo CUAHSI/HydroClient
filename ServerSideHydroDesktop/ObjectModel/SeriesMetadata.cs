@@ -65,6 +65,8 @@ namespace ServerSideHydroDesktop.ObjectModel
             Variable = original.Variable;
         }
 
+
+
         #endregion
 
         #region Private Variables

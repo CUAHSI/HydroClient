@@ -18,7 +18,7 @@ $(document).ready(function () {
 
 function initialize() {
 
-    var myCenter = new google.maps.LatLng(41.6, -101.85);
+    var myCenter = new google.maps.LatLng(42.2, -71.5);
     var marker = new google.maps.Marker({
         position: myCenter
     });
@@ -30,7 +30,7 @@ function initialize() {
 
     var mapProp = {
         center: myCenter,
-        zoom: 11,
+        zoom: 9,
         draggable: true,
         scrollwheel: true,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
@@ -217,7 +217,7 @@ function getFormData()
    //selected Services
     var services = mySelectedServices;
     //alert(myTimeSeriesClusterDatatable.rows('.selected').data().length + ' row(s) selected');
-    //services.push(181);
+    services.push(181);
     var selectedKeywords = $("input[name='keywords']:checked").map(function () {
         return $(this).val();
     }).get();
@@ -717,15 +717,88 @@ function setUpDatatables(clusterid)
     myTimeSeriesClusterDatatable = $('#dtMarkers').DataTable()
 
     $('#DownloadAsCSV').click(function () {
-       // alert(myTimeSeriesClusterDatatable.rows('.selected').data().length + ' row(s) selected');
-        window.open('/Home/CreatePartialView', '_blank', 'left=100,top=100,width=400,height=300,toolbar=1,resizable=0');
+        if (myTimeSeriesClusterDatatable.rows('.selected').data().length > 0)
+        {
+            var list = new Array();
+            var rows = myTimeSeriesClusterDatatable.rows('.selected').data();
 
+            var list1 = rows.map(function () {
+                return this.text;
+            })
+
+
+            //<th>ServCode</th>
+            //                <th>ServURL</th>
+            //                <th>SiteCode</th>
+            //                <th>VariableCode</th>
+            //                <th>VariableName</th>
+            //                <th>BeginDate</th>
+            //                <th>EndDate</th>
+
+            for (i = 0; i < rows.length; i++)
+            {
+                list[i] = new Array(
+                        rows[i].ServCode,
+                        rows[i].ServURL,
+                        rows[i].SiteCode,
+                        rows[i].VariableCode,
+                        rows[i].SiteName,
+                        rows[i].VariableName,
+                        rows[i].BeginDate,
+                        rows[i].EndDate,
+                        rows[i].ValueCount,                        
+                        rows[i].Latitude,
+                        rows[i].Longitude,
+                        rows[i].DataType,
+                        rows[i].ValueType,
+                        rows[i].SampleMedium,
+                        rows[i].TimeUnit,
+                        rows[i].GeneralCategory,
+                        rows[i].TimeSupport,
+                        rows[i].ConceptKeyword,
+                        rows[i].IsRegular,
+                        rows[i].VariableUnits,
+                        rows[i].Citation
+                    );
+            }
+
+            $.ajax({
+                url: "/Home/GetSeriesValuesAsCSV",
+                type: 'POST',
+                dataType: 'text',
+                timeout: 60000,
+                processData: false,
+                data: list,
+                success: function () {
+                    alert("ys")
+                },
+                error: function (xmlhttprequest, textstatus, message) {
+                    serviceFailed(xmlhttprequest, textstatus, message)
+                }
+            });
+
+            var newWindow = window.open('/Home/CreatePartialView', '_blank', 'left=100,top=100,width=400,height=300,toolbar=1,resizable=0');
+
+
+         
+        }
+        else
+            alert("Please select Series")
 
 
     });
 
 }
 
+function fnGetSelected(oTableLocal) {
+    var aReturn = new Array();
+    oTableLocal.$("tr").filter(".row_selected").each(function (index, row) {
+        aReturn.push(row);// this should work, if not try aReturn.push($(row));
+        //to get the information in the first column 
+        aReturn.push($(row).eq(0).text());
+        return aReturn;
+    })
+}
 function serviceFailed(xmlhttprequest, textstatus, message)
 {
     //hideLoadingImage();

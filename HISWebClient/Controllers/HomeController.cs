@@ -5,7 +5,6 @@ using System.Web;
 using System.Web.Mvc;
 using HISWebClient.BusinessObjects;
 using HISWebClient.DataLayer;
-
 using TB.ComponentModel;
 using HISWebClient.MarkerClusterer;
 using System.Configuration;
@@ -13,6 +12,11 @@ using System.Text;
 using System.Web.Script.Serialization;
 using Newtonsoft.Json;
 using System.Net;
+using ServerSideHydroDesktop;
+using System.Threading.Tasks;
+using System.IO;
+using CUAHSI.Models;
+
 
 
 
@@ -213,8 +217,11 @@ namespace HISWebClient.Controllers
         [HttpPost]
         public ActionResult Progress()
         {
-            string StatusMessage = DateTime.Now.ToLocalTime().ToString();
-
+            string StatusMessage = "Processing started "+ DateTime.Now.ToLocalTime().ToString();
+            if (Session["StatusMessage"] != null)
+            {
+                StatusMessage = Session["StatusMessage"].ToString(); 
+            }           
            
             return Json(StatusMessage);
         }
@@ -233,6 +240,86 @@ namespace HISWebClient.Controllers
             //else
             //    return Content("Couldn't find file");        
             
+        }
+
+        [HttpPost]
+        public string getSeriesValuesAsCSV(FormCollection collection)
+        {
+            //var series = new ServerSideHydroDesktop.ObjectModel.SeriesDataCart();
+            
+            
+            CUAHSI.Models.SeriesMetadata seriesMetaData = null;
+
+            for (int i = 0; i < collection.Count; i++)
+            {
+                var split = collection[i].Split(',');
+                //   list[i] = new Array(rows[i].ServCode, rows[i].ServURL, rows[i].SiteCode, rows[i].VariableCode, rows[i].BeginDate, rows[i].EndDate);
+                object[] metadata = new object[13];
+                metadata[0] = split[0];
+                metadata[1] = split[1];
+                metadata[2] = split[2];
+                metadata[3] = split[3];
+                metadata[4] = split[4];
+                metadata[5] = split[5];
+                metadata[6] = split[6];
+                metadata[7] = split[7];
+                metadata[8] = split[8];
+                metadata[9] = split[9];
+                metadata[10] = split[10];
+                metadata[11] = 0;
+                metadata[12] = 0;
+                //metadata[13] = split[13];
+                seriesMetaData = new SeriesMetadata(metadata);
+            }
+             
+           var stream = DoSeriesDownload(seriesMetaData);
+        
+                          
+               
+                return "";
+        }
+        public async Task<string>  DoSeriesDownload(SeriesMetadata seriesMetaData)
+        {
+            Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>> data =  await SeriesAndStreamOfSeriesID(seriesMetaData);
+            Tuple<Stream, SeriesData> ser = null;
+
+            if (data == null || data.Item2.FirstOrDefault() == null)
+            {
+                throw new KeyNotFoundException();
+            }
+            else
+            {
+                var dataResult = data.Item2.FirstOrDefault();
+                IList<DataValue> dataValues = dataResult.DataValueList.OrderBy(a => a.DateTimeUTC).Select(aa => new DataValue(aa)).ToList();
+                ser =  new Tuple<Stream, SeriesData>(data.Item1, new SeriesData(seriesMetaData.SeriesID, seriesMetaData, dataResult.QualityControlLevel.IsValid, dataValues,
+                    dataResult.Variable.VariableUnit.Name, dataResult.Variable.VariableUnit.Abbreviation, dataResult.Site.VerticalDatum, dataResult.Site.Elevation_m));
+            }
+
+            string nameGuid = Guid.NewGuid().ToString();
+            var dl = wdcStore.PersistSeriesData(data.Item2, nameGuid, requestTime);
+
+            //fire and forget => no reason to require consistency with user download.
+            var persist = wdcStore.PersistSeriesDocumentStream(data.Item1, SeriesID, nameGuid, DateTime.UtcNow);
+
+            await Task.WhenAll(new List<Task>() { dl, persist });
+
+            data.Item2.wdcCache = dl.Result.Uri;
+            return data.Item2;
+
+            return "";
+        }
+
+         
+
+        public async Task<Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>>> SeriesAndStreamOfSeriesID(SeriesMetadata meta)
+        {
+            WaterOneFlowClient client = new WaterOneFlowClient(meta.ServURL);
+            return await client.GetValuesAndRawStreamAsync(
+                    meta.SiteCode,
+                    meta.VarCode,
+                    meta.StartDate,
+                    DateTime.UtcNow,
+                    Convert.ToInt32(10000));
         }
 
     }
