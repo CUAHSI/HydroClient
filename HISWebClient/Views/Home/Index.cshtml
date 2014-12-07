@@ -187,6 +187,7 @@
                 <table id="dtMarkers" class="display" cellspacing="0" width="100%">
                     <thead>
                         <tr>
+                            <th>ClusterId</th>
                             <th>ServCode</th>
                             <th>ServURL</th>
                             <th>SiteCode</th>
@@ -213,6 +214,7 @@
                    
                     <tfoot>
                         <tr>
+                            <th>ClusterId</th>
                             <th>ServCode</th>
                             <th>ServURL</th>
                             <th>SiteCode</th>
@@ -239,6 +241,9 @@
                 </table>
             </div>
             <div class="modal-footer">
+                <span>
+                    @Html.ActionLink("Download as CSV", "downloadFile", "Export", new { id = 1 }, new { @class = "btn btn-info active pull-right", target = "_blank" })
+                </span>
                 <button id="DownloadAsCSV" type="button" class="btn btn-default">Download Selected as CSV</button>
             </div>
 

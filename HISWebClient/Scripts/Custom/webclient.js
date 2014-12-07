@@ -658,6 +658,7 @@ function setUpDatatables(clusterid)
      $('#dtMarkers').dataTable({
         "ajax": actionUrl,
         "columns": [
+            { "data": "ClusterId", },
             { "data": "ServCode" },
             { "data": "ServURL" },
             { "data": "SiteCode" },
@@ -680,6 +681,7 @@ function setUpDatatables(clusterid)
             { "data": "VariableUnits" },
             { "data": "Citation" }
         ],
+       
         "scrollX": true,
         initComplete: function () {
             var api = this.api();
@@ -707,8 +709,17 @@ function setUpDatatables(clusterid)
           
 
         //"retrieve": true
-    });
+     });
 
+     $('#dtMarkers tbody').on('click', 'tr', function () {
+         var name = $('td', this).eq(0).text();
+         var id = this.cells[0].innerHTML;
+         url = "/Export/downloadFile/" + id
+         var _iframe_dl = $('<iframe />')
+                .attr('src', url)
+                .hide()
+                .appendTo('body');                
+     });
     $('#dtMarkers tbody').on('click', 'tr', function () {
         $(this).toggleClass('selected');
 
@@ -722,9 +733,7 @@ function setUpDatatables(clusterid)
             var list = new Array();
             var rows = myTimeSeriesClusterDatatable.rows('.selected').data();
 
-            var list1 = rows.map(function () {
-                return this.text;
-            })
+          
 
 
             //<th>ServCode</th>
@@ -738,6 +747,7 @@ function setUpDatatables(clusterid)
             for (i = 0; i < rows.length; i++)
             {
                 list[i] = new Array(
+                        
                         rows[i].ServCode,
                         rows[i].ServURL,
                         rows[i].SiteCode,
@@ -763,21 +773,24 @@ function setUpDatatables(clusterid)
             }
 
             $.ajax({
-                url: "/Home/GetSeriesValuesAsCSV",
-                type: 'POST',
-                dataType: 'text',
+                url: "/Export/downloadFile/1",
+                //url: "/api/seriesdata?SeriesID=1",
+                type: 'Post',
+                dataType: 'json',
                 timeout: 60000,
                 processData: false,
-                data: list,
-                success: function () {
-                    alert("ys")
-                },
-                error: function (xmlhttprequest, textstatus, message) {
-                    serviceFailed(xmlhttprequest, textstatus, message)
-                }
-            });
+                //data: list,
+                //success: function () {
+                //    //alert("ys")
+                //},
+                //error: function (xmlhttprequest, textstatus, message) {
+                //    serviceFailed(xmlhttprequest, textstatus, message)
+                //}
+            }).done(function (d)
+                { alert(d) }
+            );
 
-            var newWindow = window.open('/Home/CreatePartialView', '_blank', 'left=100,top=100,width=400,height=300,toolbar=1,resizable=0');
+            //var newWindow = window.open('/Home/CreatePartialView', '_blank', 'left=100,top=100,width=400,height=300,toolbar=1,resizable=0');
 
 
          

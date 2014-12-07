@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <system.web>
+    <caching>
+      <outputCache defaultProvider="MyRedisOutputCache">
+        <providers>
+          <!--
+          <add name="MyRedisOutputCache" 
+            host = "127.0.0.1" [String]
+            port = "" [number]
+            accessKey = "" [String]
+            ssl = "false" [true|false]
+            databaseId = "0" [number]
+            applicationName = "" [String]
+            connectionTimeoutInMilliseconds = "5000" [number]
+            operationTimeoutInMilliseconds = "1000" [number]
+          />
+          -->
+          <add name="MyRedisOutputCache" type="Microsoft.Web.Redis.RedisOutputCacheProvider"
+               host="127.0.0.1"
+               accessKey=""
+               ssl="false" />
+        </providers>
+      </outputCache>
+    </caching>
+  </system.web>    
+</configuration>
+
+
+

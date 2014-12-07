@@ -15,6 +15,7 @@ namespace CUAHSI.Common
         public static string SanitizeForFilename(this string fileName)
         {
             foreach (var c in Path.GetInvalidFileNameChars()) { fileName = fileName.Replace(c, '-'); }
+            fileName = fileName.Replace(' ','_');
             return fileName.ToLowerInvariant();
         }
     }
