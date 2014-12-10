@@ -117,15 +117,27 @@ namespace HISWebClient.Controllers
                                                                      searchSettings.DateSettings.StartDate,
                                                                       searchSettings.DateSettings.EndDate,
                                                                       activeWebservices);
+                    var list = new List<TimeSeriesViewModel>();
+
+                    if (series.Count> 0)
+                    {
+                        for (int i=0;i< series.Count; i++)
+                        {
+                            var tvm = new TimeSeriesViewModel();
+                            tvm = mapDataCartToTimeseries(series[i], i);
+                            list.Add(tvm);
+                        }
+                    }
                     var markerClustererHelper = new MarkerClustererHelper();
 
 
+
                     //save list for later
-                    Session["Series"] = series;
+                    Session["Series"] = list;
                     // Session["test"] = "test";// series;
 
                     //transform list int clusteredpins
-                    var pins = markerClustererHelper.transformSeriesDataCartIntoClusteredPin(series);
+                    var pins = transformSeriesDataCartIntoClusteredPin(list);
 
                     var clusteredPins = markerClustererHelper.clusterPins(pins, CLUSTERWIDTH, CLUSTERHEIGHT, CLUSTERINCREMENT, zoomLevel, MAXCLUSTERCOUNT, MINCLUSTERDISTANCE);
                     Session["ClusteredPins"] = clusteredPins;
@@ -144,11 +156,11 @@ namespace HISWebClient.Controllers
             else
             {
                 //var s = (string)Session["test"];             
-                var retrievedSeries = (List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>)Session["Series"];
+                var retrievedSeries = (List<TimeSeriesViewModel>)Session["Series"];
 
                 var markerClustererHelper = new MarkerClustererHelper();
                 //transform list int clusteredpins
-                var pins = markerClustererHelper.transformSeriesDataCartIntoClusteredPin(retrievedSeries);
+                var pins = transformSeriesDataCartIntoClusteredPin(retrievedSeries);
 
                 var clusteredPins = markerClustererHelper.clusterPins(pins, CLUSTERWIDTH, CLUSTERHEIGHT, CLUSTERINCREMENT, zoomLevel, MAXCLUSTERCOUNT, MINCLUSTERDISTANCE);
                 Session["ClusteredPins"] = clusteredPins;
@@ -169,39 +181,21 @@ namespace HISWebClient.Controllers
             {
                 var currentCluster = clusteredPins[id];
                 var sb = new StringBuilder();
-                var retrievedSeries = (List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>)Session["Series"];
+                var allRetrievedSeries = (List<TimeSeriesViewModel>)Session["Series"];
                 //var seriesInCluster = retrievedSeries.
-                //var w = (List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>)retrievedSeries.Select((value, index) => new { value, index }).Where(x => x.index > 50).Select(x=>x);
+                //var w = (List<TimeSeriesViewModel>)retrievedSeries.Select((value, index) => new { value, index }).Where(x => x.index > 50).Select(x => x);
+                
                 var seriesInCluster = new List<TimeSeriesViewModel>();
+                //seriesInCluster = allRetrievedSeries.Where((o=> allRetrievedSeries))
 
-                for(int i=0;i<currentCluster.assessmentids.Count;i++)
+                var allRetrievedSeriesArray = allRetrievedSeries.ToArray();
+
+                foreach(var s in currentCluster.assessmentids)
                 {
-                    var obj = new TimeSeriesViewModel();
-                    var rs = retrievedSeries.ElementAt(i);
-                    obj.ClusterId = i;
-                    obj.ServCode = rs.ServCode;
-                    obj.ServURL = rs.ServURL;
-                    obj.SiteCode = rs.SiteCode;
-                    obj.VariableCode = rs.VariableCode;
-                    obj.SiteName = rs.SiteName;
-                    obj.VariableName = rs.VariableName;
-                    obj.BeginDate = rs.BeginDate;
-                    obj.EndDate = rs.EndDate;
-                    obj.ValueCount = rs.ValueCount;                       
-                    obj.Latitude = rs.Latitude;
-                    obj.Longitude = rs.Longitude;
-                    obj.DataType = rs.DataType;
-                    obj.ValueType = rs.ValueType;
-                    obj.SampleMedium = rs.SampleMedium;
-                    obj.TimeUnit = rs.TimeUnit;
-                    obj.GeneralCategory = rs.GeneralCategory;
-                    obj.TimeSupport = rs.TimeSupport;
-                    obj.ConceptKeyword = rs.ConceptKeyword;
-                    obj.IsRegular = rs.IsRegular;
-                    obj.VariableUnits = rs.VariableUnits;
-                    obj.Citation = rs.Citation;
-
-                    seriesInCluster.Add(obj);
+                    int i = Convert.ToInt32(s);
+                    var obj = (TimeSeriesViewModel)allRetrievedSeriesArray[i];
+                    
+                    if (obj != null) seriesInCluster.Add(obj);
                 }
                 //var json = new JavaScriptSerializer().Serialize(seriesInCluster);
                 var json = JsonConvert.SerializeObject(seriesInCluster);
@@ -214,6 +208,52 @@ namespace HISWebClient.Controllers
             }
 
 
+        }
+        public List<ClusteredPin> transformSeriesDataCartIntoClusteredPin(List<TimeSeriesViewModel> series)
+        {
+            List<ClusteredPin> clusterPins = new List<ClusteredPin>();
+
+            for (int i = 0; i < series.Count; i++)
+            {
+                var cl = new ClusteredPin();
+
+                cl.Loc = new LatLong(series[i].Latitude, series[i].Longitude);
+
+                cl.assessmentids.Add(series[i].SeriesId);
+                cl.PinType = "point";
+                clusterPins.Add(cl);
+            }
+
+            return clusterPins;
+        }
+
+        private TimeSeriesViewModel mapDataCartToTimeseries(BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart dc, int id)
+        {
+            var obj = new TimeSeriesViewModel();           
+            
+                    obj.SeriesId = id;
+                    obj.ServCode = dc.ServCode;
+                    obj.ServURL = dc.ServURL;
+                    obj.SiteCode = dc.SiteCode;
+                    obj.VariableCode = dc.VariableCode;
+                    obj.SiteName = dc.SiteName;
+                    obj.VariableName = dc.VariableName;
+                    obj.BeginDate = dc.BeginDate;
+                    obj.EndDate = dc.EndDate;
+                    obj.ValueCount = dc.ValueCount;
+                    obj.Latitude = dc.Latitude;
+                    obj.Longitude = dc.Longitude;
+                    obj.DataType = dc.DataType;
+                    obj.ValueType = dc.ValueType;
+                    obj.SampleMedium = dc.SampleMedium;
+                    obj.TimeUnit = dc.TimeUnit;
+                    obj.GeneralCategory = dc.GeneralCategory;
+                    obj.TimeSupport = dc.TimeSupport;
+                    obj.ConceptKeyword = dc.ConceptKeyword;
+                    obj.IsRegular = dc.IsRegular;
+                    obj.VariableUnits = dc.VariableUnits;
+                    obj.Citation = dc.Citation;
+            return obj;
         }
 
         public string getServiceList()

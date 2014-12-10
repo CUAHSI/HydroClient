@@ -676,23 +676,7 @@ namespace HISWebClient.MarkerClusterer
             }
         }
 
-        public List<ClusteredPin> transformSeriesDataCartIntoClusteredPin (List<SeriesDataCartModel.SeriesDataCart> series )
-        {
-            List<ClusteredPin> clusterPins = new List<ClusteredPin>();
-
-            for (int i=0;i<series.Count;i++)
-            {
-                var cl = new ClusteredPin();
-
-                cl.Loc = new LatLong(series[i].Latitude, series[i].Longitude);
-                
-                cl.assessmentids.Add(i);
-                cl.PinType = "point";
-                clusterPins.Add(cl);
-            }
-
-            return clusterPins;
-        }
+       
 
     }
 }

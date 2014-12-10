@@ -7,28 +7,36 @@
     @*<link href="~/Content/Sidebar.css" rel="stylesheet" />*@
 
     <link href="//cdn.datatables.net/1.10.4/css/jquery.dataTables.min.css" rel="stylesheet" />
-
+    <link href="//cdn.datatables.net/colvis/1.1.1/css/dataTables.colVis.css" rel="stylesheet" />
+   
 }
 
 <!-- HTML code from Bootply.com editor -->
 
 <div class="container">
+    <div  id="pageloaddiv"></div>
     <div class="row">
         <div class="">
             <div id="map-canvas"></div>
-            <div id="menu">
+            <div id="menu"> 
+                <div><img class="expander" alt="Expand" src="~/Content/Images/closetop.png" /></div>
+                <div class="panel" id="selectors">
+                    <form id="Search" class="navbar-form" role="search">
+                        <!-- Button trigger modal -->
+                        <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectDateModal">Select Date</button>
+                        <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectVariableModal">Select Variable(s)</button>
+                        <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectServicesModal">Select Services(s)</button>
 
-                <form id="Search" class="navbar-form navbar-left" role="search">
-                    <!-- Button trigger modal -->
-                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectDateModal">Select Date</button>
-                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectVariableModal">Select Variable(s)</button>
-                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectServicesModal">Select Services(s)</button>
+                        <div id="SelectedDateRange">
 
-                    <div id="SelectedDateRange">
-
-                    </div>
-                    <button type="submit" class="btn btn-default">Submit</button>
-                </form>
+                        </div>
+                        <br />
+                        <button type="submit" class="btn btn-success btn-block">Submit</button><br />
+                        <button id="clear" type="button" class="btn btn-warning btn-xs btn-group-justified"> Clear map </button>
+                       
+                       
+                    </form>
+                </div>
             </div>
             @*<h1 id="home">
                     <a id="menu-toggle" href="#" class="glyphicon glyphicon-align-justify ">
@@ -47,7 +55,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+                <h4 class="modal-title" id="myModalLabel">Please select your date range</h4>
 
             </div>
             <div class="modal-body">
@@ -76,7 +84,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+                <h4 class="modal-title" id="myModalLabel">Please select your concept/variable( "All" id default)</h4>
 
             </div>
             <div class="modal-body">
@@ -84,9 +92,7 @@
                     <div class="row">
                         <div class="">
                             <div class="controls span2">
-                                <label class="checkbox">
-                                    <input type="checkbox" name="keywords" value="All" id="inlineCheckbox1"> All
-                                </label>
+                                
                                 <label class="checkbox">
                                     <input type="checkbox" name="keywords" value="Temperature" id="inlineCheckbox2"> Temperature
                                 </label>
@@ -179,15 +185,15 @@
 <div class="modal fade full-screen" id="SeriesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog-full">
         <div class="modal-content-full">
-            <div class="modal-header">
+            <div class="modal-header-full">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" id="myModalLabel">Modal title</h4>
             </div>
             <div class="modal-body-full">
                 <table id="dtMarkers" class="display" cellspacing="0" width="100%">
                     <thead>
-                        <tr>
-                            <th>ClusterId</th>
+                        <tr>                            
+                            <th>SeriesId</th>
                             <th>ServCode</th>
                             <th>ServURL</th>
                             <th>SiteCode</th>
@@ -208,13 +214,13 @@
                             <th>ConceptKeyword</th>
                             <th>IsRegular</th>
                             <th>VariableUnits</th>
-                            <th>Citation</th>
+                            <th>Citation</th>                           
                         </tr>
                     </thead>
                    
                     <tfoot>
                         <tr>
-                            <th>ClusterId</th>
+                            <th>SeriesId</th>
                             <th>ServCode</th>
                             <th>ServURL</th>
                             <th>SiteCode</th>
@@ -235,12 +241,12 @@
                             <th>ConceptKeyword</th>
                             <th>IsRegular</th>
                             <th>VariableUnits</th>
-                            <th>Citation</th>
+                            <th>Citation</th>                            
                         </tr>
                     </tfoot>
                 </table>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer-full">
                 <span>
                     @Html.ActionLink("Download as CSV", "downloadFile", "Export", new { id = 1 }, new { @class = "btn btn-info active pull-right", target = "_blank" })
                 </span>
@@ -274,6 +280,8 @@
 <script src="~/Scripts/bootstrap-datepicker.js"></script>
 <script src="~/Scripts/Google/markerwithlabel.js"></script>
 <script src="//cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js"></script>
+<script src="//cdn.datatables.net/colvis/1.1.1/js/dataTables.colVis.min.js"></script>
+<script src="~/Scripts/Google/keydragzoom_packed.js"></script>
 @*<script src="//cdn.datatables.net/plug-ins/9dcbecd42ad/integration/bootstrap/3/dataTables.bootstrap.js"></script>*@
 
 @*<script src="~/Scripts/custom/webclient.js"></script>*@

@@ -30,20 +30,24 @@ namespace HISWebClient.Controllers
 
         public async Task<FileStreamResult> DownloadFile(int id)
         {
-            var dir = "~/Files/";
-            var filename = "downloadtest.csv";
-            var filePath = Server.MapPath(dir + filename);
+           
+           
+            //var filePath = Server.MapPath(dir + filename);
+            
+
+            //cloudStorageAccount = CloudStorageAccount.Parse("DefaultEndpointsProtocol=https;AccountName=cuahsidataexport;AccountKey=yydsRROjUZa9+ShUCS0hIxZqU98vojWbBqAPI22SgGrXGjomphIWxG0cujYrSiyfNU86YeVIXICPAP8IIPuT4Q==");
+
+            var seriesMetaData = getSeriesMetadata(id);
+            var filename = GenerateFileName(seriesMetaData);
             var fileType = "text/csv";
 
-            cloudStorageAccount = CloudStorageAccount.Parse("DefaultEndpointsProtocol=https;AccountName=cuahsidataexport;AccountKey=yydsRROjUZa9+ShUCS0hIxZqU98vojWbBqAPI22SgGrXGjomphIWxG0cujYrSiyfNU86YeVIXICPAP8IIPuT4Q==");
-        
             var result = await this.getStream(id);
             //var memoryStream = new MemoryStream(result);
 
                   
 
             //filestream.Write(result, 0, result.Count);
-            return new FileStreamResult(new MemoryStream(result), "text/csv") { FileDownloadName = filename };
+            return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename };
             //return base.File(filePath, "text/csv", filename);
         }
 
@@ -121,7 +125,7 @@ namespace HISWebClient.Controllers
                     // persist memory stream as blob
                     ms.Position = 0;
                    // CloudStorageAccount cloudstorageAccount = CloudStorageAccount.Parse(CloudConfigurationManager.GetSetting("StorageConnectionString"));
-                    CloudBlockBlob blob = await WriteMemoryStreamToBlobInGuidDirectory(data, ms, cloudStorageAccount);
+                    //CloudBlockBlob blob = await WriteMemoryStreamToBlobInGuidDirectory(data, ms, cloudStorageAccount);
 
                 }           
 
@@ -174,6 +178,10 @@ namespace HISWebClient.Controllers
         private string GenerateBlobName(SeriesData data)
         {
             return string.Format("series-{0}-{1}.csv", data.myMetadata.SiteName.SanitizeForFilename(), data.myMetadata.VariableName.SanitizeForFilename());
+        }
+        private string GenerateFileName(SeriesMetadata meta)
+        {
+            return string.Format("{0}-{1}-{2}.csv", meta.ServCode.SanitizeForFilename(), meta.SiteName.SanitizeForFilename(), meta.VariableName.SanitizeForFilename());
         }
 
         public SeriesMetadata getSeriesMetadata(int SeriesId)

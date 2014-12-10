@@ -23,6 +23,7 @@
     <ApplicationInsightsResourceId>/subscriptions/fbe9ed82-2c21-449e-b0d6-3093522e2459/resourcegroups/Default-ApplicationInsights-CentralUS/providers/microsoft.insights/components/HISWebClient</ApplicationInsightsResourceId>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
+    <NuGetPackageImportStamp>9a632de1</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -292,7 +293,9 @@
     <Content Include="Content\bootstrap-modal-bs3patch.css" />
     <Content Include="Content\bootstrap-modal.css" />
     <Content Include="Content\datepicker3.css" />
+    <Content Include="Content\Images\ajax-loader-blue.gif" />
     <Content Include="Content\Images\ajax-loader.gif" />
+    <Content Include="Content\Images\closetop.png" />
     <Content Include="Content\Images\cuahsi_logo.png" />
     <Content Include="Content\Images\HydroserverLogo.png" />
     <Content Include="Content\Images\Markers\ClusterIcons\blue-20.png" />
@@ -309,9 +312,13 @@
     <Content Include="Content\Images\Markers\ClusterIcons\m3.png" />
     <Content Include="Content\Images\Markers\ClusterIcons\m4.png" />
     <Content Include="Content\Images\Markers\ClusterIcons\m5.png" />
+    <Content Include="Content\Images\Markers\ClusterIcons\m6.png" />
+    <Content Include="Content\Images\pageloader.gif" />
     <Content Include="modal_ajax_test.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Scripts\bootbox.js" />
+    <Content Include="Scripts\bootbox.min.js" />
     <Content Include="Scripts\bootstrap-datepicker.js" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
@@ -356,14 +363,11 @@
     <Content Include="Content\Site.css" />
     <Content Include="Scripts\ai.js" />
     <Content Include="Scripts\ai.min.js" />
-    <Content Include="Scripts\bootbox.js" />
-    <Content Include="Scripts\bootbox.min.js" />
     <Content Include="Scripts\bootstrap-modal.js" />
     <Content Include="Scripts\bootstrap-modalmanager.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="ApplicationInsights.config" />
-    <Content Include="Files\downloadtest.csv" />
     <Content Include="Areas\HelpPage\Views\Web.config" />
     <Content Include="Areas\HelpPage\Views\Shared\_Layout.cshtml" />
     <Content Include="Areas\HelpPage\Views\Help\ResourceModel.cshtml" />
@@ -384,9 +388,12 @@
     <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ApiGroup.cshtml" />
     <Content Include="Areas\HelpPage\Views\Help\Api.cshtml" />
     <Content Include="Areas\HelpPage\Views\_ViewStart.cshtml" />
+    <None Include="Properties\PublishProfiles\hiswebclient.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\Custom\DownloadHelper.js" />
     <Content Include="Scripts\Custom\webclient.js" />
+    <Content Include="Scripts\Google\keydragzoom.js" />
+    <Content Include="Scripts\Google\keydragzoom_packed.js" />
     <Content Include="Scripts\Google\markerwithlabel.js" />
     <Content Include="Scripts\Google\markerwithlabel_packed.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
@@ -448,6 +455,7 @@
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Content\yeti\" />
+    <Folder Include="Files\" />
     <Folder Include="Views\Export\" />
   </ItemGroup>
   <ItemGroup>
@@ -519,11 +527,6 @@
       </FlavorProperties>
     </VisualStudio>
   </ProjectExtensions>
-  <Import Project="..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" />
-  <Target Name="EnsureBclBuildImported" BeforeTargets="BeforeBuild" Condition="'$(BclBuildImported)' == ''">
-    <Error Condition="!Exists('..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" Text="This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=317567." HelpKeyword="BCLBUILD2001" />
-    <Error Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" Text="The build restored NuGet packages. Build the project again to include these packages in the build. For more information, see http://go.microsoft.com/fwlink/?LinkID=317568." HelpKeyword="BCLBUILD2002" />
-  </Target>
   <Import Project="..\packages\Microsoft.ApplicationInsights.0.10.0-build17704\tools\net40\Microsoft.ApplicationInsights.targets" Condition="Exists('..\packages\Microsoft.ApplicationInsights.0.10.0-build17704\tools\net40\Microsoft.ApplicationInsights.targets')" />
   <Target Name="EnsureApplicationInsightsImported" BeforeTargets="BeforeBuild" Condition="'$(ApplicationInsightsImported)' == ''">
     <Error Condition="!Exists('..\packages\Microsoft.ApplicationInsights.0.10.0-build17704\tools\net40\Microsoft.ApplicationInsights.targets')" Text="This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=317567." />
@@ -535,7 +538,9 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets'))" />
   </Target>
+  <Import Project="..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

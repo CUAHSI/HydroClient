@@ -7,7 +7,7 @@ namespace HISWebClient.Models
 {
     public class TimeSeriesViewModel
     {
-        public int ClusterId { get; set; }
+        public int SeriesId { get; set; }
         /// <summary>
         /// code of the web service
         /// </summary>
