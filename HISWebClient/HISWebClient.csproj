@@ -297,7 +297,9 @@
     <Content Include="Content\Images\ajax-loader.gif" />
     <Content Include="Content\Images\closetop.png" />
     <Content Include="Content\Images\cuahsi_logo.png" />
-    <Content Include="Content\Images\HydroserverLogo.png" />
+    <Content Include="Content\Images\HydroserverLogo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Images\Markers\ClusterIcons\blue-20.png" />
     <Content Include="Content\Images\Markers\ClusterIcons\blue-22.png" />
     <Content Include="Content\Images\Markers\ClusterIcons\blue-24.png" />
@@ -313,7 +315,9 @@
     <Content Include="Content\Images\Markers\ClusterIcons\m4.png" />
     <Content Include="Content\Images\Markers\ClusterIcons\m5.png" />
     <Content Include="Content\Images\Markers\ClusterIcons\m6.png" />
+    <Content Include="Content\Images\Markers\Services\blue-20.png" />
     <Content Include="Content\Images\pageloader.gif" />
+    <Content Include="Content\Images\cuahsi_logo_small.png" />
     <Content Include="modal_ajax_test.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

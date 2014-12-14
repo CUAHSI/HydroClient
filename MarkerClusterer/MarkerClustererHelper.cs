@@ -72,14 +72,14 @@ namespace HISWebClient.MarkerClusterer
                         pinsString.Append("\"type\": \"Point\",");
                         pinsString.Append("\"coordinates\": [" + pin.Loc.Lon.ToString() + "," + pin.Loc.Lat.ToString() + "]},");
                         pinsString.Append("\"properties\": {");
-
+                        pinsString.Append("\"clusterid\":\"" + i.ToString() + "\" ");
                         //pinsString.Append("\"guid\":\"" + pin.AssessmentHeaderData["guid"].ToString() + "\", ");
                         //pinsString.Append("\"sector\":\"" + pin.AssessmentHeaderData["sector"].ToString() + "\", ");
                         //pinsString.Append("\"assessment\":\"" + pin.AssessmentHeaderData["assessment"].ToString() + "\", ");
                         //pinsString.Append("\"dateassessed\":\"" + pin.AssessmentHeaderData["dateassessed"].ToString() + "\", ");
                         //pinsString.Append("\"dateposted\":\"" + pin.AssessmentHeaderData["dateposted"].ToString() + "\", ");
                         //pinsString.Append("\"icontype\":\"" + pin.AssessmentHeaderData["icontype"].ToString() + "\" ");
-                        //pinsString.Append("}},");
+                        pinsString.Append("}},");
                         ////if ((pins.Count > 1)) sb.Append(",");
                     }
                     else

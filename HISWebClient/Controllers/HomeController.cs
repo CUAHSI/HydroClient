@@ -209,6 +209,7 @@ namespace HISWebClient.Controllers
 
 
         }
+
         public List<ClusteredPin> transformSeriesDataCartIntoClusteredPin(List<TimeSeriesViewModel> series)
         {
             List<ClusteredPin> clusterPins = new List<ClusteredPin>();

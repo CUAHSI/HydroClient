@@ -18,7 +18,7 @@ $(document).ready(function () {
 
 function initialize() {
 
-    var myCenter = new google.maps.LatLng(42.2, -71.5);
+    var myCenter = new google.maps.LatLng(42.3, -71.1);
     var marker = new google.maps.Marker({
         position: myCenter
     });
@@ -30,12 +30,14 @@ function initialize() {
 
     var mapProp = {
         center: myCenter,
-        zoom: 9,
+        zoom: 11,
         draggable: true,
         scrollwheel: true,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
         mapTypeControl: true,
         scaleControl: true,
+        overviewMapControl: true,
+        overviewMapControlOptions: {opened: true},
         mapTypeControlOptions: {
             style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
             position: google.maps.ControlPosition.TOP_LEFT,
@@ -109,16 +111,15 @@ function initialize() {
         $("#clear").on('click', function()
         {
             deleteClusteredMarkersOverlays()
+            resetUserSelection()
         })
-    });
-        
+    });        
 };
   
-
 function getMapHeight()
 {
     toolbarHeight = $(document).height() - $(window).height();
-    var mapHeight = $(document).height() - toolbarHeight - $("#page-header").height() + "px";
+    var mapHeight = $(document).height() - toolbarHeight-50 - $("#page-header").height() + "px";
     return mapHeight;
 }
 
@@ -249,7 +250,7 @@ function getFormData()
         //keywords.push("All");
     }
     else {
-        keywords.push(keywordsValues);
+        keywords.push(selectedKeywords);
     }
 
     var xMin = Math.min(ne.lng(), sw.lng())
@@ -274,6 +275,11 @@ function getFormData()
 
 
     return formdata;
+}
+
+function resetUserSelection()
+{
+
 }
 //upddate map wit new clusters
 function updateMap(isNewRequest) {
@@ -302,7 +308,7 @@ function updateMap(isNewRequest) {
         url: actionurl,
         type: 'POST',
         dataType: 'json',
-        timeout: 60000,
+        timeout: 30000,
         //processData: false,
         data: formData,
         success: function (data) {
@@ -368,7 +374,8 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
         var marker = new MarkerWithLabel({
             position: point,
-            icon: new google.maps.MarkerImage(markerPath + icontype.split('.')[0] + '.png', new google.maps.Size(32, 32), null, null, new google.maps.Size(28, 28)),
+            icon: new google.maps.MarkerImage(markerPath + 'blue-20.png', new google.maps.Size(32, 32), null, null, new google.maps.Size(28, 28)),
+            //icon: new google.maps.MarkerImage(/Content.png', new google.maps.Size(32, 32), null, null, new google.maps.Size(28, 28)),
             draggable: false,
             raiseOnDrag: true,
             map: map,
@@ -418,9 +425,15 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
         //        });
 
         google.maps.event.addListener(marker, 'click', function () {
-            getTabsForMarker(marker)
+            //var c = getDetailforCluster(id, clusterid)
             //infoWindow.setContent(c);
             //infoWindow.open(map, this);
+            //$('#example').DataTable();
+            setUpDatatables(clusterid);
+            $('#SeriesModal').modal('show')
+            //var details = getDetailsForMarker(clusterid)
+            //createInfoWindowContent()
+
         });
         //var infoBox = new InfoBox({ latlng: marker.getPosition(), map: map });
 
@@ -697,18 +710,18 @@ function setUpDatatables(clusterid)
              exclude: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,16,17,18,19,20,21],
              groups: [
                 {
-                    title: "Core",
-                    columns: [ 0, 4, 5, 6, 8, 22]
+                    title: "Main",
+                    columns: [ 0, 4, 5,6.7]
                 },
                 {
-                    title: "Aux",
-                    columns: [1, 2, 3, 7, 8, 10, 11, 12, 13, 14, 15, 16, 16, 17, 18, 19, 20, 21]
+                    title: "Auxiliary",
+                    columns: [1, 2, 3, 8, 10, 11, 12, 13, 14, 15, 16, 16, 17, 18, 19, 20, 21]
                 }
              ]
          },
          "columns": [
             { "data": "SeriesId" },
-            { "data": "ServCode" },
+            { "data": "ServCode", "sTitle": "Service Name" },
             { "data": "ServURL", "visible": false },
             { "data": "SiteCode", "visible": false },
             { "data": "VariableCode", "visible": false },
@@ -734,8 +747,9 @@ function setUpDatatables(clusterid)
         "scrollX": true,       
         initComplete: function () {
             var api = this.api();
-            this.fnAdjustColumnSizing();
-            api.columns().indexes().flatten().each( function ( i ) {
+           
+            api.columns().indexes().flatten().each(function (i) {
+                if (i > 6 || i == 0) return;
                 var column = api.column( i );
                 var select = $('<select><option value=""></option></select>')
                     .appendTo( $(column.footer()).empty() )
@@ -749,10 +763,12 @@ function setUpDatatables(clusterid)
                             .draw();
                     } );
  
-                column.data().unique().sort().each( function ( d, j ) {
+                column.data().unique().sort().each(function (d, j) {
+                    
                     select.append( '<option value="'+d+'">'+d+'</option>' )
                 } );
-            } );
+            });
+            this.fnAdjustColumnSizing();
         }
     
           
@@ -760,22 +776,30 @@ function setUpDatatables(clusterid)
         //"retrieve": true
      });
    
-     $('#dtMarkers tbody').on('click', 'tr', function () {
+    $('#dtMarkers tbody').on('click', 'tr', function () {
+
          var name = $('td', this).eq(0).text();
          var id = this.cells[0].innerHTML;
          url = "/Export/downloadFile/" + id
-         var _iframe_dl = $('<iframe />')
-                .attr('src', url)
-                .hide()
-                .appendTo('body');                
+
+         //bootbox.confirm("Are you sure?", function (url) {
+
+             var _iframe_dl = $('<iframe />')
+                 .attr('src', url)
+                 .hide()
+                 .appendTo('body');
+         //});
+
+
+
+                         
      });
     $('#dtMarkers tbody').on('click', 'tr', function () {
-        $(this).toggleClass('selected');
+        $(this).addClass('selected');
 
     });
 
-    myTimeSeriesClusterDatatable = $('#dtMarkers').DataTable()
-  
+    myTimeSeriesClusterDatatable = $('#dtMarkers').DataTable()  
 
     $('#DownloadAsCSV').click(function () {
         if (myTimeSeriesClusterDatatable.rows('.selected').data().length > 0)
@@ -837,20 +861,13 @@ function setUpDatatables(clusterid)
                 //    serviceFailed(xmlhttprequest, textstatus, message)
                 //}
             }).done(function (d)
-                { alert(d) }
+            { bootbox.alert(d) }
             );
-
-            //var newWindow = window.open('/Home/CreatePartialView', '_blank', 'left=100,top=100,width=400,height=300,toolbar=1,resizable=0');
-
-
-         
+            //var newWindow = window.open('/Home/CreatePartialView', '_blank', 'left=100,top=100,width=400,height=300,toolbar=1,resizable=0');         
         }
         else
             alert("Please select Series")
-
-
     });
-
 }
 
 function fnGetSelected(oTableLocal) {
@@ -862,6 +879,7 @@ function fnGetSelected(oTableLocal) {
         return aReturn;
     })
 }
+
 function serviceFailed(xmlhttprequest, textstatus, message)
 {
     //hideLoadingImage();
@@ -873,7 +891,7 @@ function serviceFailed(xmlhttprequest, textstatus, message)
     //}
     //else 
     //{
-        alert('Service call failed. Please refresh page: ' + xmlhttprequest.status + '' + xmlhttprequest.statusText);
+    bootbox.alert('Service call failed. Please refresh page: ' + xmlhttprequest.status + '' + xmlhttprequest.statusText);
     //}
 
 };

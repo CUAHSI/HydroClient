@@ -1,5 +1,6 @@
 ﻿using CUAHSI.Common;
 using CUAHSI.Models;
+using HISWebClient.Models;
 using Kent.Boogaart.KBCsv;
 using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.Storage;
@@ -188,7 +189,7 @@ namespace HISWebClient.Controllers
         {
             var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
 
-            var retrievedSeries = (List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>)httpContext.Session["Series"];
+            var retrievedSeries = (List<TimeSeriesViewModel>)httpContext.Session["Series"];
 
             var d = retrievedSeries[SeriesId];
 
