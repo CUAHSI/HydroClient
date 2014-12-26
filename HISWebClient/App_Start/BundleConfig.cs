@@ -28,7 +28,8 @@ namespace HISWebClient
                       "~/Scripts/respond.js"));
 
             bundles.Add(new ScriptBundle("~/bundles/Custom").Include(
-                      "~/Scripts/Custom/webclient.js"));
+                      //"~/Scripts/Custom/webclient.js"
+                      ));
 
             bundles.Add(new StyleBundle("~/Content/css").Include(
                       "~/Content/bootstrap.css",

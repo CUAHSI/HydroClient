@@ -16,6 +16,7 @@ using ServerSideHydroDesktop;
 using System.Threading.Tasks;
 using System.IO;
 using CUAHSI.Models;
+using HISWebClient.Models;
 
 
 
@@ -24,8 +25,8 @@ namespace HISWebClient.Controllers
 {
     public class HomeController : Controller
     {
-      
-        
+        private readonly CUAHSI.DataExport.IExportEngine wdcStore;
+
         public ActionResult Index()
         {
             return View();
@@ -50,7 +51,7 @@ namespace HISWebClient.Controllers
 
             return View();
         }
-        public  ActionResult updateMarkers(FormCollection collection)
+        public ActionResult updateMarkers(FormCollection collection)
         {
             var searchSettings = new SearchSettings();
             string markerjSON = string.Empty;
@@ -73,14 +74,14 @@ namespace HISWebClient.Controllers
             UniversalTypeConverter.TryConvertTo<int>(collection["zoomLevel"], out zoomLevel);
             var activeWebservices = new List<WebServiceNode>();
 
-           
+
 
             //if it is a new request
             if (collection["isNewRequest"] != null)
             {
 
                 bool canConvert = false;
-       
+
                 var keywords = collection["keywords"].Split(',');
                 var tileWidth = 1;
                 var tileHeight = 1;
@@ -102,9 +103,9 @@ namespace HISWebClient.Controllers
                     var dataWorker = new DataWorker();
 
                     var allWebservices = dataWorker.getWebServiceList();
-                  
 
-                    
+
+
                     //filter list
                     if (webServiceIds != null)
                     {
@@ -116,15 +117,27 @@ namespace HISWebClient.Controllers
                                                                      searchSettings.DateSettings.StartDate,
                                                                       searchSettings.DateSettings.EndDate,
                                                                       activeWebservices);
+                    var list = new List<TimeSeriesViewModel>();
+
+                    if (series.Count> 0)
+                    {
+                        for (int i=0;i< series.Count; i++)
+                        {
+                            var tvm = new TimeSeriesViewModel();
+                            tvm = mapDataCartToTimeseries(series[i], i);
+                            list.Add(tvm);
+                        }
+                    }
                     var markerClustererHelper = new MarkerClustererHelper();
 
 
+
                     //save list for later
-                    Session["Series"] = series;
+                    Session["Series"] = list;
                     // Session["test"] = "test";// series;
 
                     //transform list int clusteredpins
-                    var pins = markerClustererHelper.transformSeriesDataCartIntoClusteredPin(series);
+                    var pins = transformSeriesDataCartIntoClusteredPin(list);
 
                     var clusteredPins = markerClustererHelper.clusterPins(pins, CLUSTERWIDTH, CLUSTERHEIGHT, CLUSTERINCREMENT, zoomLevel, MAXCLUSTERCOUNT, MINCLUSTERDISTANCE);
                     Session["ClusteredPins"] = clusteredPins;
@@ -143,11 +156,11 @@ namespace HISWebClient.Controllers
             else
             {
                 //var s = (string)Session["test"];             
-                var retrievedSeries =(List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>) Session["Series"];
+                var retrievedSeries = (List<TimeSeriesViewModel>)Session["Series"];
 
                 var markerClustererHelper = new MarkerClustererHelper();
                 //transform list int clusteredpins
-                var pins = markerClustererHelper.transformSeriesDataCartIntoClusteredPin(retrievedSeries);
+                var pins = transformSeriesDataCartIntoClusteredPin(retrievedSeries);
 
                 var clusteredPins = markerClustererHelper.clusterPins(pins, CLUSTERWIDTH, CLUSTERHEIGHT, CLUSTERINCREMENT, zoomLevel, MAXCLUSTERCOUNT, MINCLUSTERDISTANCE);
                 Session["ClusteredPins"] = clusteredPins;
@@ -162,32 +175,86 @@ namespace HISWebClient.Controllers
 
         public string getDetailsForMarker(int id)
         {
-           //get all clustered pins form cache
-           var clusteredPins = (List<ClusteredPin>)Session["ClusteredPins"];
-           if (clusteredPins != null)
-           { 
-               var currentCluster = clusteredPins[id];
-               var sb = new StringBuilder();
-               var retrievedSeries = (List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>)Session["Series"];
-               //var seriesInCluster = retrievedSeries.
-               //var w = (List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>)retrievedSeries.Select((value, index) => new { value, index }).Where(x => x.index > 50).Select(x=>x);
-               var seriesInCluster = new List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>();
-               foreach (int i in currentCluster.assessmentids)         
-               {             
-               
-                   seriesInCluster.Add(retrievedSeries.ElementAt(i));
-               }
-               //var json = new JavaScriptSerializer().Serialize(seriesInCluster);
-               var json = JsonConvert.SerializeObject(seriesInCluster);
-               json = "{ \"data\":" + json + "}";
-                    return json;
-           }
-           else
-           {
-               throw new NullReferenceException();
-           }
+            //get all clustered pins form cache
+            var clusteredPins = (List<ClusteredPin>)Session["ClusteredPins"];
+            if (clusteredPins != null)
+            {
+                var currentCluster = clusteredPins[id];
+                var sb = new StringBuilder();
+                var allRetrievedSeries = (List<TimeSeriesViewModel>)Session["Series"];
+                //var seriesInCluster = retrievedSeries.
+                //var w = (List<TimeSeriesViewModel>)retrievedSeries.Select((value, index) => new { value, index }).Where(x => x.index > 50).Select(x => x);
+                
+                var seriesInCluster = new List<TimeSeriesViewModel>();
+                //seriesInCluster = allRetrievedSeries.Where((o=> allRetrievedSeries))
 
-          
+                var allRetrievedSeriesArray = allRetrievedSeries.ToArray();
+
+                foreach(var s in currentCluster.assessmentids)
+                {
+                    int i = Convert.ToInt32(s);
+                    var obj = (TimeSeriesViewModel)allRetrievedSeriesArray[i];
+                    
+                    if (obj != null) seriesInCluster.Add(obj);
+                }
+                //var json = new JavaScriptSerializer().Serialize(seriesInCluster);
+                var json = JsonConvert.SerializeObject(seriesInCluster);
+                json = "{ \"data\":" + json + "}";
+                return json;
+            }
+            else
+            {
+                throw new NullReferenceException();
+            }
+
+
+        }
+
+        public List<ClusteredPin> transformSeriesDataCartIntoClusteredPin(List<TimeSeriesViewModel> series)
+        {
+            List<ClusteredPin> clusterPins = new List<ClusteredPin>();
+
+            for (int i = 0; i < series.Count; i++)
+            {
+                var cl = new ClusteredPin();
+
+                cl.Loc = new LatLong(series[i].Latitude, series[i].Longitude);
+
+                cl.assessmentids.Add(series[i].SeriesId);
+                cl.PinType = "point";
+                clusterPins.Add(cl);
+            }
+
+            return clusterPins;
+        }
+
+        private TimeSeriesViewModel mapDataCartToTimeseries(BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart dc, int id)
+        {
+            var obj = new TimeSeriesViewModel();           
+            
+                    obj.SeriesId = id;
+                    obj.ServCode = dc.ServCode;
+                    obj.ServURL = dc.ServURL;
+                    obj.SiteCode = dc.SiteCode;
+                    obj.VariableCode = dc.VariableCode;
+                    obj.SiteName = dc.SiteName;
+                    obj.VariableName = dc.VariableName;
+                    obj.BeginDate = dc.BeginDate;
+                    obj.EndDate = dc.EndDate;
+                    obj.ValueCount = dc.ValueCount;
+                    obj.Latitude = dc.Latitude;
+                    obj.Longitude = dc.Longitude;
+                    obj.DataType = dc.DataType;
+                    obj.ValueType = dc.ValueType;
+                    obj.SampleMedium = dc.SampleMedium;
+                    obj.TimeUnit = dc.TimeUnit;
+                    obj.GeneralCategory = dc.GeneralCategory;
+                    obj.TimeSupport = dc.TimeSupport;
+                    obj.ConceptKeyword = dc.ConceptKeyword;
+                    obj.IsRegular = dc.IsRegular;
+                    obj.VariableUnits = dc.VariableUnits;
+                    obj.Citation = dc.Citation;
+            return obj;
         }
 
         public string getServiceList()
@@ -206,7 +273,7 @@ namespace HISWebClient.Controllers
             {
                 throw new NullReferenceException();
             }
-           
+
         }
 
         public PartialViewResult CreatePartialView()
@@ -217,16 +284,17 @@ namespace HISWebClient.Controllers
         [HttpPost]
         public ActionResult Progress()
         {
-            string StatusMessage = "Processing started "+ DateTime.Now.ToLocalTime().ToString();
-            if (Session["StatusMessage"] != null)
+            string StatusMessage = "Processing started " + DateTime.Now.ToLocalTime().ToString();
+            if (Session["Uri"] != null)
             {
-                StatusMessage = Session["StatusMessage"].ToString(); 
-            }           
-           
+                StatusMessage = Session["Uri"].ToString();
+            }
+
             return Json(StatusMessage);
         }
 
-        [HttpPost]
+       
+        
         public string downloadFile()
         {
             var dir = "~/Files/";
@@ -236,18 +304,18 @@ namespace HISWebClient.Controllers
             return "downloadtest.csv";
             //return base.File(filePath, "text/csv", filename);
             //if (System.IO.File.Exists(filePath))
-                
+
             //else
             //    return Content("Couldn't find file");        
-            
+
         }
 
         [HttpPost]
         public string getSeriesValuesAsCSV(FormCollection collection)
         {
             //var series = new ServerSideHydroDesktop.ObjectModel.SeriesDataCart();
-            
-            
+
+
             CUAHSI.Models.SeriesMetadata seriesMetaData = null;
 
             for (int i = 0; i < collection.Count; i++)
@@ -271,17 +339,26 @@ namespace HISWebClient.Controllers
                 //metadata[13] = split[13];
                 seriesMetaData = new SeriesMetadata(metadata);
             }
-             
-           var stream = DoSeriesDownload(seriesMetaData);
-        
-                          
-               
-                return "";
+
+            var url = DoSeriesDownload(seriesMetaData);
+
+
+
+            return "url";
         }
-        public async Task<string>  DoSeriesDownload(SeriesMetadata seriesMetaData)
+
+        public void setdownloadIds(FormCollection collection)
         {
-            Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>> data =  await SeriesAndStreamOfSeriesID(seriesMetaData);
-            Tuple<Stream, SeriesData> ser = null;
+
+        }
+
+        public async Task<string> DoSeriesDownload(SeriesMetadata seriesMetaData)
+        {
+            Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>> data = await SeriesAndStreamOfSeriesID(seriesMetaData);
+            Tuple<Stream, SeriesData> series = null;
+            DateTimeOffset requestTime = DateTimeOffset.UtcNow;
+
+
 
             if (data == null || data.Item2.FirstOrDefault() == null)
             {
@@ -291,25 +368,24 @@ namespace HISWebClient.Controllers
             {
                 var dataResult = data.Item2.FirstOrDefault();
                 IList<DataValue> dataValues = dataResult.DataValueList.OrderBy(a => a.DateTimeUTC).Select(aa => new DataValue(aa)).ToList();
-                ser =  new Tuple<Stream, SeriesData>(data.Item1, new SeriesData(seriesMetaData.SeriesID, seriesMetaData, dataResult.QualityControlLevel.IsValid, dataValues,
+                series = new Tuple<Stream, SeriesData>(data.Item1, new SeriesData(seriesMetaData.SeriesID, seriesMetaData, dataResult.QualityControlLevel.IsValid, dataValues,
                     dataResult.Variable.VariableUnit.Name, dataResult.Variable.VariableUnit.Abbreviation, dataResult.Site.VerticalDatum, dataResult.Site.Elevation_m));
             }
 
             string nameGuid = Guid.NewGuid().ToString();
-            var dl = wdcStore.PersistSeriesData(data.Item2, nameGuid, requestTime);
+
+            var dl = wdcStore.PersistSeriesData(series.Item2, nameGuid, requestTime);
 
             //fire and forget => no reason to require consistency with user download.
-            var persist = wdcStore.PersistSeriesDocumentStream(data.Item1, SeriesID, nameGuid, DateTime.UtcNow);
+            var persist = wdcStore.PersistSeriesDocumentStream(data.Item1, 0, nameGuid, DateTime.UtcNow);
 
             await Task.WhenAll(new List<Task>() { dl, persist });
 
-            data.Item2.wdcCache = dl.Result.Uri;
-            return data.Item2;
-
-            return "";
+            series.Item2.wdcCache = dl.Result.Uri;
+            //return series.Item2;
+            Session["StatusMessage"] = dl.Result.Uri;
+            return dl.Result.Uri;
         }
-
-         
 
         public async Task<Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>>> SeriesAndStreamOfSeriesID(SeriesMetadata meta)
         {

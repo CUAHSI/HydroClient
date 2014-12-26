@@ -12,13 +12,13 @@ var mySelectedTimeSeries = [];
 
 $(document).ready(function () {
 
-   
+    $("#pageloaddiv").hide();
     initialize();
 })
 
 function initialize() {
 
-    var myCenter = new google.maps.LatLng(42.2, -71.5);
+    var myCenter = new google.maps.LatLng(42.3, -71.1);
     var marker = new google.maps.Marker({
         position: myCenter
     });
@@ -30,22 +30,38 @@ function initialize() {
 
     var mapProp = {
         center: myCenter,
-        zoom: 9,
+        zoom: 11,
         draggable: true,
         scrollwheel: true,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
         mapTypeControl: true,
         scaleControl: true,
+        overviewMapControl: true,
+        overviewMapControlOptions: {opened: true},
         mapTypeControlOptions: {
             style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
             position: google.maps.ControlPosition.TOP_LEFT,
-            mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.SATELLITE, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.TERRAIN, 'topo']
+            mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.SATELLITE, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.TERRAIN]
         },
     };
     $("#map-canvas").height(getMapHeight()) //setMapHeight
     $("#map-canvas").width(getMapWidth()) //setMapWidth
     map = new google.maps.Map(document.getElementById("map-canvas"), mapProp);
     //marker.setMap(map);
+
+    map.enableKeyDragZoom({
+        visualEnabled: true,
+        visualPosition: google.maps.ControlPosition.LEFT,
+        visualPositionOffset: new google.maps.Size(35, 0),
+        visualPositionIndex: null,
+        visualSprite: "http://maps.gstatic.com/mapfiles/ftr/controls/dragzoom_btn.png",
+        visualSize: new google.maps.Size(20, 20),
+        visualTips: {
+            off: "Turn on and drag mouse to zoom",
+            on: "Turn off"
+        }
+    });
+
 
     //triger update of map on these events
     google.maps.event.addListener(map, 'dblclick', function () {
@@ -79,23 +95,31 @@ function initialize() {
 
     $('.input-daterange').datepicker()
 
-   
+    
+    $('.expander').on('click', function () {
+        $('#selectors').slideToggle();
+    });
 
     $("#Search").submit(function (e) {       
 
         //prevent Default functionality
         e.preventDefault();
         e.stopImmediatePropagation();
+        
         updateMap(true)
 
-    });
-        
+        $("#clear").on('click', function()
+        {
+            deleteClusteredMarkersOverlays()
+            resetUserSelection()
+        })
+    });        
 };
   
-
 function getMapHeight()
 {
-    var mapHeight = $(window).height() - $("#page-header").height() + "px";
+    toolbarHeight = $(document).height() - $(window).height();
+    var mapHeight = $(document).height() - toolbarHeight-50 - $("#page-header").height() + "px";
     return mapHeight;
 }
 
@@ -217,7 +241,8 @@ function getFormData()
    //selected Services
     var services = mySelectedServices;
     //alert(myTimeSeriesClusterDatatable.rows('.selected').data().length + ' row(s) selected');
-    services.push(181);
+    //only MuddyRiver
+    //services.push(181);
     var selectedKeywords = $("input[name='keywords']:checked").map(function () {
         return $(this).val();
     }).get();
@@ -225,7 +250,7 @@ function getFormData()
         //keywords.push("All");
     }
     else {
-        keywords.push(keywordsValues);
+        keywords.push(selectedKeywords);
     }
 
     var xMin = Math.min(ne.lng(), sw.lng())
@@ -251,12 +276,17 @@ function getFormData()
 
     return formdata;
 }
+
+function resetUserSelection()
+{
+
+}
 //upddate map wit new clusters
 function updateMap(isNewRequest) {
     
-
+  
     if (clusteredMarkersArray.length == 0 && isNewRequest == false) return;//only map navigation
-
+  $("#pageloaddiv").show();
     var formData = getFormData();
 
     //get the action-url of the form
@@ -272,18 +302,22 @@ function updateMap(isNewRequest) {
     }
    //get Markers
     var actionurl = '/home/updateMarkers';
+    
+
     $.ajax({
         url: actionurl,
         type: 'POST',
         dataType: 'json',
-        timeout: 60000,
+        timeout: 30000,
         //processData: false,
         data: formData,
         success: function (data) {
             processMarkers(data)
+            $("#pageloaddiv").hide();
         },
         error: function (xmlhttprequest, textstatus, message) {
             serviceFailed(xmlhttprequest, textstatus, message)
+            $("#pageloaddiv").hide();
         }
     });
     
@@ -340,7 +374,8 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
         var marker = new MarkerWithLabel({
             position: point,
-            icon: new google.maps.MarkerImage(markerPath + icontype.split('.')[0] + '.png', new google.maps.Size(32, 32), null, null, new google.maps.Size(28, 28)),
+            icon: new google.maps.MarkerImage(markerPath + 'blue-20.png', new google.maps.Size(32, 32), null, null, new google.maps.Size(28, 28)),
+            //icon: new google.maps.MarkerImage(/Content.png', new google.maps.Size(32, 32), null, null, new google.maps.Size(28, 28)),
             draggable: false,
             raiseOnDrag: true,
             map: map,
@@ -390,9 +425,15 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
         //        });
 
         google.maps.event.addListener(marker, 'click', function () {
-            getTabsForMarker(marker)
+            //var c = getDetailforCluster(id, clusterid)
             //infoWindow.setContent(c);
             //infoWindow.open(map, this);
+            //$('#example').DataTable();
+            setUpDatatables(clusterid);
+            $('#SeriesModal').modal('show')
+            //var details = getDetailsForMarker(clusterid)
+            //createInfoWindowContent()
+
         });
         //var infoBox = new InfoBox({ latlng: marker.getPosition(), map: map });
 
@@ -427,7 +468,7 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
         else if (count < 250) {
             icon_choice = 3;
             icon_height = 44;
-            icon_width = 4;
+            icon_width = 44;
         }
         else if (count < 500) {
             icon_choice = 4;
@@ -456,7 +497,7 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
         var marker = new MarkerWithLabel({
             position: point,
-            icon: new google.maps.MarkerImage(clusterMarkerPath + "m1.png", new google.maps.Size(53, 52), null, new google.maps.Point(icon_width / 2, icon_width / 2), new google.maps.Size(icon_width, icon_width)),
+            icon: new google.maps.MarkerImage(clusterMarkerPath + "m6.png", new google.maps.Size(53, 52), null, new google.maps.Point(icon_width / 2, icon_width / 2), new google.maps.Size(icon_width, icon_width)),
             draggable: false,
             raiseOnDrag: true,
             map: map,
@@ -585,7 +626,7 @@ function setupServices()
             { "data": "Sites", "visible": false },
             { "data": "Variables", "visible": false },
             { "data": "Values", "visible": false },
-            { "data": "ServiceBoundingBox" }
+            { "data": "ServiceBoundingBox", "visible": false}
          ],
          //"rowCallback": function( row, data ) {
          //    if ( $.inArray(data.DT_RowId, mySelectedServices) !== -1 ) {
@@ -593,7 +634,10 @@ function setupServices()
          //    }
          //},
 
-         "scrollX": true   
+         "scrollX": true,
+         initComplete: function () {
+             this.fnAdjustColumnSizing();
+         }
     })
     $('a.toggle-vis').on('click', function (e) {
         e.preventDefault();
@@ -655,36 +699,57 @@ function setUpDatatables(clusterid)
    // $('#example').DataTable().clear()
    // $('#demo').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example"></table>' );
  
-     $('#dtMarkers').dataTable({
-        "ajax": actionUrl,
-        "columns": [
-            { "data": "ServCode" },
-            { "data": "ServURL" },
-            { "data": "SiteCode" },
-            { "data": "VariableCode"},
+    var oTable= $('#dtMarkers').dataTable({
+         "ajax": actionUrl,
+         "dom": 'C<"clear">lfrtip',
+         colVis: {
+             restore: "Restore",
+             showAll: "Show all",
+             showNone: "Show none",
+             activate: "mouseover",
+             exclude: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,16,17,18,19,20,21],
+             groups: [
+                {
+                    title: "Main",
+                    columns: [ 0, 4, 5,6.7]
+                },
+                {
+                    title: "Auxiliary",
+                    columns: [1, 2, 3, 8, 10, 11, 12, 13, 14, 15, 16, 16, 17, 18, 19, 20, 21]
+                }
+             ]
+         },
+         "columns": [
+            { "data": "SeriesId" },
+            { "data": "ServCode", "sTitle": "Service Name" },
+            { "data": "ServURL", "visible": false },
+            { "data": "SiteCode", "visible": false },
+            { "data": "VariableCode", "visible": false },
             { "data": "VariableName"},
             { "data": "BeginDate" },
             { "data": "EndDate" },
-            { "data": "ValueCount" },
+            { "data": "ValueCount", "visible": false },
             { "data": "SiteName" },
-            { "data": "Latitude" },
-            { "data": "Longitude" },
-            { "data": "DataType" },
-            { "data": "ValueType" },
-            { "data": "SampleMedium" },
-            { "data": "TimeUnit" },
-            { "data": "GeneralCategory" },
-            { "data": "TimeSupport" },
-            { "data": "ConceptKeyword" },
-            { "data": "IsRegular" },
-            { "data": "VariableUnits" },
-            { "data": "Citation" }
+            { "data": "Latitude", "visible": false },
+            { "data": "Longitude", "visible": false },
+            { "data": "DataType", "visible": false },
+            { "data": "ValueType", "visible": false },
+            { "data": "SampleMedium","visible": false },
+            { "data": "TimeUnit", "visible": false },
+            { "data": "GeneralCategory", "visible": false },
+            { "data": "TimeSupport", "visible": false },
+            { "data": "ConceptKeyword", "visible": false },
+            { "data": "IsRegular", "visible": false },
+            { "data": "VariableUnits","visible": false },
+            { "data": "Citation", "visible": false }            
         ],
-        "scrollX": true,
+        
+        "scrollX": true,       
         initComplete: function () {
             var api = this.api();
- 
-            api.columns().indexes().flatten().each( function ( i ) {
+           
+            api.columns().indexes().flatten().each(function (i) {
+                if (i > 6 || i == 0) return;
                 var column = api.column( i );
                 var select = $('<select><option value=""></option></select>')
                     .appendTo( $(column.footer()).empty() )
@@ -698,23 +763,43 @@ function setUpDatatables(clusterid)
                             .draw();
                     } );
  
-                column.data().unique().sort().each( function ( d, j ) {
+                column.data().unique().sort().each(function (d, j) {
+                    
                     select.append( '<option value="'+d+'">'+d+'</option>' )
                 } );
-            } );
+            });
+            this.fnAdjustColumnSizing();
         }
     
           
 
         //"retrieve": true
-    });
-
+     });
+   
     $('#dtMarkers tbody').on('click', 'tr', function () {
-        $(this).toggleClass('selected');
+
+         var name = $('td', this).eq(0).text();
+         var id = this.cells[0].innerHTML;
+         url = "/Export/downloadFile/" + id
+
+         //bootbox.confirm("Are you sure?", function (url) {
+
+             var _iframe_dl = $('<iframe />')
+                 .attr('src', url)
+                 .hide()
+                 .appendTo('body');
+         //});
+
+
+
+                         
+     });
+    $('#dtMarkers tbody').on('click', 'tr', function () {
+        $(this).addClass('selected');
 
     });
 
-    myTimeSeriesClusterDatatable = $('#dtMarkers').DataTable()
+    myTimeSeriesClusterDatatable = $('#dtMarkers').DataTable()  
 
     $('#DownloadAsCSV').click(function () {
         if (myTimeSeriesClusterDatatable.rows('.selected').data().length > 0)
@@ -722,9 +807,7 @@ function setUpDatatables(clusterid)
             var list = new Array();
             var rows = myTimeSeriesClusterDatatable.rows('.selected').data();
 
-            var list1 = rows.map(function () {
-                return this.text;
-            })
+          
 
 
             //<th>ServCode</th>
@@ -738,6 +821,7 @@ function setUpDatatables(clusterid)
             for (i = 0; i < rows.length; i++)
             {
                 list[i] = new Array(
+                        
                         rows[i].ServCode,
                         rows[i].ServURL,
                         rows[i].SiteCode,
@@ -763,31 +847,27 @@ function setUpDatatables(clusterid)
             }
 
             $.ajax({
-                url: "/Home/GetSeriesValuesAsCSV",
-                type: 'POST',
-                dataType: 'text',
+                url: "/Export/downloadFile/1",
+                //url: "/api/seriesdata?SeriesID=1",
+                type: 'Post',
+                dataType: 'json',
                 timeout: 60000,
                 processData: false,
-                data: list,
-                success: function () {
-                    alert("ys")
-                },
-                error: function (xmlhttprequest, textstatus, message) {
-                    serviceFailed(xmlhttprequest, textstatus, message)
-                }
-            });
-
-            var newWindow = window.open('/Home/CreatePartialView', '_blank', 'left=100,top=100,width=400,height=300,toolbar=1,resizable=0');
-
-
-         
+                //data: list,
+                //success: function () {
+                //    //alert("ys")
+                //},
+                //error: function (xmlhttprequest, textstatus, message) {
+                //    serviceFailed(xmlhttprequest, textstatus, message)
+                //}
+            }).done(function (d)
+            { bootbox.alert(d) }
+            );
+            //var newWindow = window.open('/Home/CreatePartialView', '_blank', 'left=100,top=100,width=400,height=300,toolbar=1,resizable=0');         
         }
         else
             alert("Please select Series")
-
-
     });
-
 }
 
 function fnGetSelected(oTableLocal) {
@@ -799,6 +879,7 @@ function fnGetSelected(oTableLocal) {
         return aReturn;
     })
 }
+
 function serviceFailed(xmlhttprequest, textstatus, message)
 {
     //hideLoadingImage();
@@ -810,7 +891,7 @@ function serviceFailed(xmlhttprequest, textstatus, message)
     //}
     //else 
     //{
-        alert('Service call failed. Please refresh page: ' + xmlhttprequest.status + '' + xmlhttprequest.statusText);
+    bootbox.alert('Service call failed. Please refresh page: ' + xmlhttprequest.status + '' + xmlhttprequest.statusText);
     //}
 
 };
