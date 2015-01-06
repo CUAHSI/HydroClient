@@ -293,10 +293,13 @@
     <Content Include="Content\bootstrap-modal-bs3patch.css" />
     <Content Include="Content\bootstrap-modal.css" />
     <Content Include="Content\datepicker3.css" />
+    <Content Include="Content\Images\cart_remove.png" />
     <Content Include="Content\Images\ajax-loader-blue.gif" />
     <Content Include="Content\Images\ajax-loader.gif" />
+    <Content Include="Content\Images\cart_add.png" />
     <Content Include="Content\Images\closetop.png" />
     <Content Include="Content\Images\cuahsi_logo.png" />
+    <Content Include="Content\Images\download-icon.png" />
     <Content Include="Content\Images\HydroserverLogo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -323,6 +326,7 @@
     </Content>
     <Content Include="Scripts\bootbox.js" />
     <Content Include="Scripts\bootbox.min.js" />
+    <Content Include="Scripts\bootstrap-contextmenu.js" />
     <Content Include="Scripts\bootstrap-datepicker.js" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />

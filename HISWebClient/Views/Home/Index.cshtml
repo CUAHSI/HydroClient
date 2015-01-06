@@ -1,14 +1,18 @@
 ﻿@{
-    ViewBag.Title = "Home Page";
-    //Layout = null;
-}
-@section styles
+    Page.Title = ViewBag.Message;
+    <script>
+        sessionGuid = '@(ViewBag.ThisSessionGuid)';
+    </script>
+        //Layout = null;
+        }
+        @section styles
 {
-    @*<link href="~/Content/Sidebar.css" rel="stylesheet" />*@
+        @*<link href="~/Content/Sidebar.css" rel="stylesheet" />*@
 
     <link href="//cdn.datatables.net/1.10.4/css/jquery.dataTables.min.css" rel="stylesheet" />
     <link href="//cdn.datatables.net/colvis/1.1.1/css/dataTables.colVis.css" rel="stylesheet" />
-   
+    <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/south-street/jquery-ui.min.css" rel="stylesheet" type="text/css" />
+
 }
 
 <!-- HTML code from Bootply.com editor -->
@@ -18,7 +22,7 @@
     <div class="row">
         <div class="">
             <div id="map-canvas"></div>
-            <div id="menu"> 
+            <div id="menu">
                 <div><img class="expander" alt="Expand" src="~/Content/Images/closetop.png" /></div>
                 <div class="" id="selectors">
                     <form id="Search" class="navbar-form" role="search">
@@ -33,8 +37,8 @@
                         <br />
                         <button type="submit" class="btn btn-success btn-block">Search Map</button><br />
                         <button id="clear" type="button" class="btn btn-warning btn-xs btn-group-justified"> Clear map </button>
-                       
-                       
+
+
                     </form>
                 </div>
             </div>
@@ -45,9 +49,9 @@
 
                 </h1>*@
         </div>
-        
+
     </div>
-    
+
 </div>
 
 <!-- Modal -->
@@ -91,7 +95,7 @@
             </div>
             <div class="modal-body">
                 <div class="col-md-12">
-                    <div class="row">                     
+                    <div class="row">
                             <div class="controls col-md-4">
                                 <label class="checkbox">
                                     <input type="checkbox" name="keywords" value="Temperature" id="inlineCheckbox2"> Temperature
@@ -103,7 +107,7 @@
                                     <input type="checkbox" name="keywords" value="Salinity" id="inlineCheckbox3"> Salinity
                                 </label>
                             </div>
-                            <div class="controls col-md-4">                               
+                            <div class="controls col-md-4">
                                 <label class="checkbox">
                                     <input type="checkbox" name="keywords" value="Humidity" id="inlineCheckbox4"> Humidity
                                 </label>
@@ -113,9 +117,9 @@
                                 <label class="checkbox">
                                     <input type="checkbox" name="keywords" value="Lead" id="inlineCheckbox6"> Lead
                                 </label>
-                            </div>   
-                       
-                       
+                            </div>
+
+
                         </div>
                     <div class="modal-footer">
                       <button type="button" class="btn btn-default btn-primary" data-dismiss="modal">Save</button>
@@ -123,7 +127,7 @@
                     </div>
                 </div>
             </div>
-            
+
 
             <!-- /.modal-content -->
         </div>
@@ -136,7 +140,7 @@
     <div class="modal-dialog-full">
         <div class="modal-content-full">
             <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>                
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h3 class="modal-title" id="myModalLabel">Click to select Services (No selection searches all)</h3>
             </div>
             <div class="modal-body-full">
@@ -206,8 +210,8 @@
             <div class="modal-body-full">
                 <table id="dtMarkers" class="display" cellspacing="0" width="100%">
                     <thead>
-                        <tr>                            
-                            <th>SeriesId</th>                            
+                        <tr>
+                            <th>SeriesId</th>
                             <th>ServCode</th>
                             <th>ServURL</th>
                             <th>SiteCode</th>
@@ -216,7 +220,7 @@
                             <th>BeginDate</th>
                             <th>EndDate</th>
                             <th>ValueCount</th>
-                            <th>SiteName</th>                            
+                            <th>SiteName</th>
                             <th>Latitude</th>
                             <th>Longitude</th>
                             <th>DataType</th>
@@ -228,13 +232,13 @@
                             <th>ConceptKeyword</th>
                             <th>IsRegular</th>
                             <th>VariableUnits</th>
-                            <th>Citation</th>                           
+                            <th>Citation</th>
                         </tr>
                     </thead>
-                   
+
                     <tfoot>
                         <tr>
-                            <th>SeriesId</th>                            
+                            <th>SeriesId</th>
                             <th>ServCode</th>
                             <th>ServURL</th>
                             <th>SiteCode</th>
@@ -242,8 +246,8 @@
                             <th>VariableName</th>
                             <th>BeginDate</th>
                             <th>EndDate</th>
-                            <th>ValueCount</th> 
-                            <th>SiteName</th>                          
+                            <th>ValueCount</th>
+                            <th>SiteName</th>
                             <th>Latitude</th>
                             <th>Longitude</th>
                             <th>DataType</th>
@@ -255,7 +259,7 @@
                             <th>ConceptKeyword</th>
                             <th>IsRegular</th>
                             <th>VariableUnits</th>
-                            <th>Citation</th>                            
+                            <th>Citation</th>
                         </tr>
                     </tfoot>
                 </table>
@@ -273,6 +277,19 @@
     </div>
 </div>
 
+<div id="context" data-toggle="context" data-target="#context-menu" style="height:300px;width:650px;border:1px solid #ddd">
+</div>
+
+<!-- Your custom menu with dropdown-menu as default styling -->
+<div id="context-menu">
+    <ul class="dropdown-menu" role="menu">
+        <li><a tabindex="-1">Action</a></li>
+        <li><a tabindex="-1">Another action</a></li>
+        <li><a tabindex="-1">Something else here</a></li>
+        <li class="divider"></li>
+        <li><a tabindex="-1">Separated link</a></li>
+    </ul>
+</div>
 
 
 
@@ -295,11 +312,16 @@
 <script src="~/Scripts/Google/markerwithlabel.js"></script>
 <script src="//cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js"></script>
 <script src="//cdn.datatables.net/colvis/1.1.1/js/dataTables.colVis.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
+
+<script src="//cdn.jsdelivr.net/jquery.ui-contextmenu/1.7.0/jquery.ui-contextmenu.min.js"></script>
+<script src="//cdn.datatables.net/plug-ins/725b2a2115b/api/fnFilterClear.js"></script>
+
 <script src="~/Scripts/Google/keydragzoom_packed.js"></script>
 @*<script src="//cdn.datatables.net/plug-ins/9dcbecd42ad/integration/bootstrap/3/dataTables.bootstrap.js"></script>*@
 <script src="~/Scripts/Custom/webclient.js"></script>
 @*<script src="~/Scripts/custom/webclient.js"></script>*@
-
+@*<script src="~/Scripts/bootstrap-contextmenu.js"></script>*@
 
 <script>
 

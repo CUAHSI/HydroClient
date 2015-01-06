@@ -9,6 +9,7 @@ var myServicesList;
 var myServicesDatatable;
 var mySelectedServices = [];
 var mySelectedTimeSeries = [];
+var sessionGuid;
 
 $(document).ready(function () {
 
@@ -80,12 +81,13 @@ function initialize() {
         }
     });
 
-    google.maps.event.addListener(marker, 'click', function () {
+    //google.maps.event.addListener(marker, 'click', function () {
 
-        infowindow.setContent(contentString);
-        infowindow.open(map, marker);
+    //    infowindow.setContent(contentString);
+    //    infowindow.open(map, marker);
 
-    });
+    //});
+
     google.maps.event.addDomListener(window, "resize", function () {
         $("#map-canvas").height(getMapHeight()) //setMapHeight
         $("#map-canvas").width(getMapWidth()) //setMapWidth
@@ -272,7 +274,7 @@ function getFormData()
     formdata.push({ name: "keywords", value: keywords });
     //Services
     formdata.push({ name: "services", value: services });
-
+    formdata.push({ name: "sessionGuid", value: sessionGuid })
 
     return formdata;
 }
@@ -720,6 +722,7 @@ function setUpDatatables(clusterid)
              ]
          },
          "columns": [
+             
             { "data": "SeriesId" },
             { "data": "ServCode", "sTitle": "Service Name" },
             { "data": "ServURL", "visible": false },
@@ -770,34 +773,81 @@ function setUpDatatables(clusterid)
             });
             this.fnAdjustColumnSizing();
         }
-    
+       
           
 
         //"retrieve": true
-     });
+    });
+    $(document).contextmenu({
+        on: ".dataTable tr",
+        menu: [
+          { title: "Download as CSV", cmd: "DownloadAsCSV", uiIcon: "ui-icon-volume-off ui-icon-filter" },
+          { title: "Add to DataCart", cmd: "AddtoDataCart", uiIcon: "ui-icon-volume-off ui-icon-filter" }
+        ],
+        select: function (event, ui) {
+            var celltext = ui.target.text();
+           
+
+            //var colvindex = ui.target.parent().children().index(ui.target);
+            //var colindex = $('table thead tr th:eq(' + colvindex + ')').data('column-index');
+            switch (ui.cmd) {
+                case "DownloadAsCSV":
+                    var seriesId = ui.target.parent().children()[0].innerText;
+                    var cell = ui.target.parent().children()[0];
+                    cell.cssClass("activeDownload");
+                    //$('.dataTable tr:eq(1)').addClass(".activeDownload")
+                         url = "/Export/downloadFile/" + seriesId
+                         var _iframe_dl = $('<iframe />')
+                                 .attr('src', url)
+                                 .hide()
+                                 .appendTo('body');
+                    break;
+                case "AddtoDataCart":
+                    alert("Datacart")
+                    break;
+            }
+        },
+        beforeOpen: function (event, ui) {
+            var $menu = ui.menu,
+                $target = ui.target,
+                extraData = ui.extraData;
+            ui.menu.zIndex(9999);
+        }
+    });
    
-    $('#dtMarkers tbody').on('click', 'tr', function () {
+    //$('#dtMarkers _tbody').on('click', 'tr', function () {
 
-         var name = $('td', this).eq(0).text();
-         var id = this.cells[0].innerHTML;
-         url = "/Export/downloadFile/" + id
+    //     var name = $('td', this).eq(0).text();
+    //     var id = this.cells[0].innerHTML;
+    //     url = "/Export/downloadFile/" + id
 
-         //bootbox.confirm("Are you sure?", function (url) {
+    //     //bootbox.confirm("Are you sure?", function (url) {
 
-             var _iframe_dl = $('<iframe />')
-                 .attr('src', url)
-                 .hide()
-                 .appendTo('body');
-         //});
+    //         var _iframe_dl = $('<iframe />')
+    //             .attr('src', url)
+    //             .hide()
+    //             .appendTo('body');
+    //     //});
 
 
 
                          
-     });
+    // });
     $('#dtMarkers tbody').on('click', 'tr', function () {
         $(this).addClass('selected');
 
     });
+    $('#dtMarkers tbody').contextmenu({
+        target:'#context-menu', 
+        before: function(e,context) {
+            // execute code before context menu if shown
+        },
+        onItem: function(context,e) {
+            // execute on menu item selection
+        }
+    })
+
+
 
     myTimeSeriesClusterDatatable = $('#dtMarkers').DataTable()  
 

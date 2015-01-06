@@ -29,6 +29,23 @@ namespace HISWebClient.Controllers
 
         public ActionResult Index()
         {
+
+            ViewBag.Message = "CUAHSI Hydrologic Data Services";
+            //ViewBag.ServiceDomain = RoleEnvironment.GetConfigurationSettingValue("ServiceDomain");
+           
+            
+            if (Session["sessionGuid"] == null)
+            {
+                string sessionguid = Guid.NewGuid().ToString();
+                Session["sessionGuid"] = sessionguid;
+                ViewBag.ThisSessionGuid = sessionguid;
+            }
+            else
+            {
+                ViewBag.ThisSessionGuid = Session["sessionGuid"].ToString();
+            }
+            //LogHelper.LogNewAPIUse(sessionguid);
+           
             return View();
         }
 
@@ -55,6 +72,7 @@ namespace HISWebClient.Controllers
         {
             var searchSettings = new SearchSettings();
             string markerjSON = string.Empty;
+           
             //get map geometry
             double xMin, xMax, yMin, yMax;
             int zoomLevel;
@@ -74,7 +92,7 @@ namespace HISWebClient.Controllers
             UniversalTypeConverter.TryConvertTo<int>(collection["zoomLevel"], out zoomLevel);
             var activeWebservices = new List<WebServiceNode>();
 
-
+            var sessionGuid = collection["sessionGuid"].ToString();
 
             //if it is a new request
             if (collection["isNewRequest"] != null)
@@ -105,7 +123,6 @@ namespace HISWebClient.Controllers
                     var allWebservices = dataWorker.getWebServiceList();
 
 
-
                     //filter list
                     if (webServiceIds != null)
                     {
@@ -129,8 +146,6 @@ namespace HISWebClient.Controllers
                         }
                     }
                     var markerClustererHelper = new MarkerClustererHelper();
-
-
 
                     //save list for later
                     Session["Series"] = list;
