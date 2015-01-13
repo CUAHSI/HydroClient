@@ -101,13 +101,14 @@ namespace HISWebClient.Controllers
 
         public async Task<Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>>> SeriesAndStreamOfSeriesID(SeriesMetadata meta)
         {
+            var requestTimeout = 20000;
             WaterOneFlowClient client = new WaterOneFlowClient(meta.ServURL);
             return await client.GetValuesAndRawStreamAsync(
                     meta.SiteCode,
                     meta.VarCode,
                     meta.StartDate,
                     DateTime.UtcNow,
-                    Convert.ToInt32(10000));
+                    Convert.ToInt32(requestTimeout));
         }
 
 

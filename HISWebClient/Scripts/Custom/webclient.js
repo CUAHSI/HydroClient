@@ -50,18 +50,18 @@ function initialize() {
     map = new google.maps.Map(document.getElementById("map-canvas"), mapProp);
     //marker.setMap(map);
 
-    map.enableKeyDragZoom({
-        visualEnabled: true,
-        visualPosition: google.maps.ControlPosition.LEFT,
-        visualPositionOffset: new google.maps.Size(35, 0),
-        visualPositionIndex: null,
-        visualSprite: "http://maps.gstatic.com/mapfiles/ftr/controls/dragzoom_btn.png",
-        visualSize: new google.maps.Size(20, 20),
-        visualTips: {
-            off: "Turn on and drag mouse to zoom",
-            on: "Turn off"
-        }
-    });
+    //map.enableKeyDragZoom({
+    //    visualEnabled: true,
+    //    visualPosition: google.maps.ControlPosition.LEFT,
+    //    visualPositionOffset: new google.maps.Size(35, 0),
+    //    visualPositionIndex: null,
+    //    visualSprite: "http://maps.gstatic.com/mapfiles/ftr/controls/dragzoom_btn.png",
+    //    visualSize: new google.maps.Size(20, 20),
+    //    visualTips: {
+    //        off: "Turn on and drag mouse to zoom",
+    //        on: "Turn off"
+    //    }
+    //});
 
 
     //triger update of map on these events
@@ -230,7 +230,7 @@ function processMarkers(geoJson)
 
 function getFormData()
 {
-    var formdata = $("#Search").serializeArray()
+    var formdata = []//$("#Search").serializeArray()
 
     var bounds = map.getBounds();
     var ne = bounds.getNorthEast(); // LatLng of the north-east corner
@@ -275,6 +275,8 @@ function getFormData()
     //Services
     formdata.push({ name: "services", value: services });
     formdata.push({ name: "sessionGuid", value: sessionGuid })
+
+    //var formdata = $("#Search").serializeArray()
 
     return formdata;
 }
@@ -376,7 +378,7 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
         var marker = new MarkerWithLabel({
             position: point,
-            icon: new google.maps.MarkerImage(markerPath + 'blue-20.png', new google.maps.Size(32, 32), null, null, new google.maps.Size(28, 28)),
+            icon: new google.maps.MarkerImage(markerPath + 'blue-20.png', new google.maps.Size(32, 32), null, null, new google.maps.Size(32, 32)),
             //icon: new google.maps.MarkerImage(/Content.png', new google.maps.Size(32, 32), null, null, new google.maps.Size(28, 28)),
             draggable: false,
             raiseOnDrag: true,
@@ -778,75 +780,77 @@ function setUpDatatables(clusterid)
 
         //"retrieve": true
     });
-    $(document).contextmenu({
-        on: ".dataTable tr",
-        menu: [
-          { title: "Download as CSV", cmd: "DownloadAsCSV", uiIcon: "ui-icon-volume-off ui-icon-filter" },
-          { title: "Add to DataCart", cmd: "AddtoDataCart", uiIcon: "ui-icon-volume-off ui-icon-filter" }
-        ],
-        select: function (event, ui) {
-            var celltext = ui.target.text();
+
+    //##########Context menu
+    //$(document).contextmenu({
+    //    on: ".dataTable tr",
+    //    menu: [
+    //      { title: "Download as CSV", cmd: "DownloadAsCSV", uiIcon: "ui-icon-volume-off ui-icon-filter" },
+    //      { title: "Add to DataCart", cmd: "AddtoDataCart", uiIcon: "ui-icon-volume-off ui-icon-filter" }
+    //    ],
+    //    select: function (event, ui) {
+    //        var celltext = ui.target.text();
            
 
-            //var colvindex = ui.target.parent().children().index(ui.target);
-            //var colindex = $('table thead tr th:eq(' + colvindex + ')').data('column-index');
-            switch (ui.cmd) {
-                case "DownloadAsCSV":
-                    var seriesId = ui.target.parent().children()[0].innerText;
-                    var cell = ui.target.parent().children()[0];
-                    cell.cssClass("activeDownload");
-                    //$('.dataTable tr:eq(1)').addClass(".activeDownload")
-                         url = "/Export/downloadFile/" + seriesId
-                         var _iframe_dl = $('<iframe />')
-                                 .attr('src', url)
-                                 .hide()
-                                 .appendTo('body');
-                    break;
-                case "AddtoDataCart":
-                    alert("Datacart")
-                    break;
-            }
-        },
-        beforeOpen: function (event, ui) {
-            var $menu = ui.menu,
-                $target = ui.target,
-                extraData = ui.extraData;
-            ui.menu.zIndex(9999);
-        }
+    //        //var colvindex = ui.target.parent().children().index(ui.target);
+    //        //var colindex = $('table thead tr th:eq(' + colvindex + ')').data('column-index');
+    //        switch (ui.cmd) {
+    //            case "DownloadAsCSV":
+    //                var seriesId = ui.target.parent().children()[0].innerText;
+    //                var cell = ui.target.parent().children()[0];
+    //                cell.cssClass("activeDownload");
+    //                //$('.dataTable tr:eq(1)').addClass(".activeDownload")
+    //                     url = "/Export/downloadFile/" + seriesId
+    //                     var _iframe_dl = $('<iframe />')
+    //                             .attr('src', url)
+    //                             .hide()
+    //                             .appendTo('body');
+    //                break;
+    //            case "AddtoDataCart":
+    //                alert("Datacart")
+    //                break;
+    //        }
+    //    },
+    //    beforeOpen: function (event, ui) {
+    //        var $menu = ui.menu,
+    //            $target = ui.target,
+    //            extraData = ui.extraData;
+    //        ui.menu.zIndex(9999);
+    //    }
+    //});
+    //////////#################
+
+    $('#dtMarkers tbody').on('click', 'tr', function () {
+
+         var name = $('td', this).eq(0).text();
+         var id = this.cells[0].innerHTML;
+         url = "/Export/downloadFile/" + id
+
+         //bootbox.confirm("Are you sure?", function (url) {
+
+             var _iframe_dl = $('<iframe />')
+                 .attr('src', url)
+                 .hide()
+                 .appendTo('body');
+         //});                         
     });
-   
-    //$('#dtMarkers _tbody').on('click', 'tr', function () {
-
-    //     var name = $('td', this).eq(0).text();
-    //     var id = this.cells[0].innerHTML;
-    //     url = "/Export/downloadFile/" + id
-
-    //     //bootbox.confirm("Are you sure?", function (url) {
-
-    //         var _iframe_dl = $('<iframe />')
-    //             .attr('src', url)
-    //             .hide()
-    //             .appendTo('body');
-    //     //});
 
 
-
-                         
-    // });
     $('#dtMarkers tbody').on('click', 'tr', function () {
         $(this).addClass('selected');
 
     });
-    $('#dtMarkers tbody').contextmenu({
-        target:'#context-menu', 
-        before: function(e,context) {
-            // execute code before context menu if shown
-        },
-        onItem: function(context,e) {
-            // execute on menu item selection
-        }
-    })
-
+    //####
+    //$('#dtMarkers tbody').contextmenu({
+    //    target:'#context-menu', 
+    //    before: function(e,context) {
+    //        // execute code before context menu if shown
+    //    },
+    //    onItem: function(context,e) {
+    //        // execute on menu item selection
+    //    }
+    //})
+    //######
 
 
     myTimeSeriesClusterDatatable = $('#dtMarkers').DataTable()  

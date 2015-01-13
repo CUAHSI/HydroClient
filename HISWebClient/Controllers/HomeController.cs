@@ -101,6 +101,11 @@ namespace HISWebClient.Controllers
                 bool canConvert = false;
 
                 var keywords = collection["keywords"].Split(',');
+                //replace underscore with comma to align spelling 
+                for (var k =0;k<keywords.Length;k++)
+                {
+                    keywords[k] = keywords[k].Replace("_", ",");
+                }
                 var tileWidth = 1;
                 var tileHeight = 1;
                 List<int> webServiceIds = null;
