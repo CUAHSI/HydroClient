@@ -102,7 +102,7 @@ namespace HISWebClient.BusinessObjects
             if (_selectedKeywords == null &&
                 desc.OntoloyTree.Nodes.Count > 0)
             {
-                _selectedKeywords = new[] { desc.OntoloyTree.Nodes[0].Text };
+                _selectedKeywords = new[] { desc.OntoloyTree.Nodes[0].title };
             }
 
             _ontologyDesc = desc;

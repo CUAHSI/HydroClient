@@ -26,10 +26,10 @@ namespace HISWebClient.BusinessObjects
         {
             foreach (var node in nodes)
             {
-                if (string.Equals(node.Text, name, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(node.title, name, StringComparison.OrdinalIgnoreCase))
                     return node;
 
-                var sub = FindNode(name, node.Nodes);
+                var sub = FindNode(name, node.children);
                 if (sub != null)
                 {
                     return sub;

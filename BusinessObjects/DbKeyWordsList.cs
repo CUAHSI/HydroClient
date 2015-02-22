@@ -22,7 +22,7 @@ namespace HISWebClient.BusinessObjects
             var parentNode = new OntologyNode(Constants.RootName);
             foreach (var keyword in keywordsList.Where(keyword => keyword != Constants.RootName))
             {
-                parentNode.Nodes.Add(new OntologyNode(keyword));
+                parentNode.children.Add(new OntologyNode(keyword));
             }
             tree.Nodes.Add(parentNode);
 

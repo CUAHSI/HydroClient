@@ -95,12 +95,45 @@ function initialize() {
            
     });
 
+
+   
+
     $('.input-daterange').datepicker()
 
     
     $('.expander').on('click', function () {
         $('#selectors').slideToggle();
     });
+
+    //$("input[name='keywords']:checked").toggle(function () {
+    //    $("#tree").fancytree("getTree").visit(function (node) {
+    //                node.setSelected(false);
+    //            });
+    //            return false;
+    //})
+
+    //$('.topCategories').click(function () {
+    //    if ($(this).attr('checked')) {
+    //        $('input:checkbox').attr('checked', true);
+    //    }
+    //    else {
+    //        $('input:checkbox').attr('checked', false);
+    //    }
+    //});
+
+    $('#btnTopSelect').click(function () {
+        $("#tree").fancytree("getTree").visit(function (node) {
+                            node.setSelected(false);
+                        });
+                        //return false;
+    })
+    $('#btnHierarchySelect').click(function () {
+        
+                    
+        $("input[name='keywords']:checked").attr('checked', false);
+                
+        //return false;
+    })
 
     $("#Search").submit(function (e) {       
 
@@ -245,15 +278,48 @@ function getFormData()
     //alert(myTimeSeriesClusterDatatable.rows('.selected').data().length + ' row(s) selected');
     //only MuddyRiver
     //services.push(181);
-    var selectedKeywords = $("input[name='keywords']:checked").map(function () {
+    var selectedKeys = $("input[name='keywords']:checked").map(function () {
         return $(this).val();
-    }).get();
-    if (selectedKeywords.length == 0) {
-        //keywords.push("All");
+    }).get().join("##");
+
+   
+
+
+    if (selectedKeys.length != 0) {
+        keywords.push(selectedKeys)
     }
-    else {
-        keywords.push(selectedKeywords);
+    else
+        {
+        var tree = $("#tree").fancytree("getTree");
+
+        var selKeys = $.map(tree.getSelectedNodes(), function (node) {
+            
+            if (node.children !== null)
+            {
+                 $.map(node.children, function (node) {
+                        return  node.title ;
+                    });
+            }
+            else 
+            {
+                return node.title;
+            }
+                       
+
+        }).join("##");
+        //var selKeys = $.map(selNodes, function (node) {
+        //    return  node.title ;
+        //});
+        
+
+        //var selRootNodes  = $.map(tree.getSelectedNodes(true));
+        //var selRootKeys = $.map(selRootNodes, function(node){
+        //    return node.key;
+        //});
+        keywords.push(selKeys)
+                
     }
+ 
 
     var xMin = Math.min(ne.lng(), sw.lng())
     var xMax = Math.max(ne.lng(), sw.lng())

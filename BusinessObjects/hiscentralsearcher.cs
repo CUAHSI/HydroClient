@@ -123,6 +123,69 @@ namespace HISWebClient.DataLayer
             }
         }
 
+        public string GetOntologyTreeXML(string conceptKeyword)
+        {
+            HttpWebResponse response = null;
+            WebClient myWebClient = new WebClient();
+            
+            try
+            {
+                var url = _hisCentralUrl + "/getOntologyTree";
+
+                string data = "conceptKeyword=" + conceptKeyword;
+                byte[] dataStream = Encoding.UTF8.GetBytes(data);
+
+                StringBuilder sb = new StringBuilder();
+
+                byte[] buf = new byte[8192];
+
+                //do get request
+                HttpWebRequest request = (HttpWebRequest)
+                    WebRequest.Create(url);
+
+                request.Method = "POST";
+                request.ContentType = "application/x-www-form-urlencoded";
+                request.ContentLength = dataStream.Length;
+
+                Stream newStream = request.GetRequestStream();
+
+                // Send the data.
+                newStream.Write(dataStream, 0, dataStream.Length);
+                newStream.Close();
+
+                response = (HttpWebResponse)
+                    request.GetResponse();
+
+
+                Stream resStream = response.GetResponseStream();
+
+                string tempString = null;
+                int count = 0;
+                //read the data and print it
+                do
+                {
+                    count = resStream.Read(buf, 0, buf.Length);
+                    if (count != 0)
+                    {
+                        tempString = Encoding.ASCII.GetString(buf, 0, count);
+
+                        sb.Append(tempString);
+                    }
+                }
+                while (count > 0);
+
+                return sb.ToString();
+           
+            }
+            finally
+            {
+                if (response != null)
+                {
+                    response.Close();
+                }
+            }
+        }
+
         #endregion
 
         #region Private methods

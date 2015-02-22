@@ -69,7 +69,7 @@ namespace HISWebClient.BusinessObjects
             keywordsList.Add(Constants.RootName);
             if (tree.Nodes.Count > 0)
             {
-                tree.Nodes[0].Text = Constants.RootName;
+                tree.Nodes[0].title = Constants.RootName;
             }
 
             // Return result
@@ -107,7 +107,7 @@ namespace HISWebClient.BusinessObjects
         {
             var newchildnode = CreateTreeNodeFromXmlNode(node);
             if (parentnode != null) parentnode.Add(newchildnode);
-            return newchildnode.Nodes;
+            return newchildnode.children;
         }
 
         private OntologyNode CreateTreeNodeFromXmlNode(XmlNode node)
@@ -150,7 +150,7 @@ namespace HISWebClient.BusinessObjects
             var allKeywords = desc.Keywords;
 
             // If searching 1st tier keywords, clear the list.
-            var tier1Keywords = ontologyTree.Nodes.Select(d => d.Text);
+            var tier1Keywords = ontologyTree.Nodes.Select(d => d.title);
             if (tier1Keywords.Any(keywords.Contains))
             {
                 keywords.Clear();
@@ -187,16 +187,16 @@ namespace HISWebClient.BusinessObjects
 
             // Replace 2nd tier keywords with their 3rd tier child keywords.
             // 2nd tier keywords cannot be searched at HIS Central.
-            foreach (var tier2Node in ontologyTree.Nodes.SelectMany(node => node.Nodes))
+            foreach (var tier2Node in ontologyTree.Nodes.SelectMany(node => node.children))
             {
-                var tier2keyword = tier2Node.Text;
+                var tier2keyword = tier2Node.title;
                 if (!keywords.Contains(tier2keyword)) continue;
 
                 // Remove 2nd tier keyword
                 keywords.Remove(tier2keyword);
 
                 // Add 3rd tier keywords that are children of the removed 2nd tier keyword.
-                var tier3Keywords = tier2Node.Nodes.Select(d => d.Text);
+                var tier3Keywords = tier2Node.children.Select(d => d.title);
                 foreach (var tier3keyword in tier3Keywords.Where(tier3keyword => !keywords.Contains(tier3keyword)))
                 {
                     keywords.Add(tier3keyword);

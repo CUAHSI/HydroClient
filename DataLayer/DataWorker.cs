@@ -35,6 +35,15 @@ namespace HISWebClient.DataLayer
             return webserviceNodeList;
         }
 
+        public string getOntologyTree(string conceptKeyword)
+        {
+             var searcher = new HISCentralSearcher(hisCentralUrl);
+
+             var xmlData = searcher.GetOntologyTreeXML(conceptKeyword);
+
+             return xmlData;
+        }
+
         public List<WebServiceNode> filterWebservices (List<WebServiceNode> webserviceNodeList, List<int> serviceIDs)
          {
             var filteredWebserviceNodeList = new List<WebServiceNode>();

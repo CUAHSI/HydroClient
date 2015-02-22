@@ -19,7 +19,16 @@ namespace HISWebClient.BusinessObjects
 
         public OntologyNode(string text)
         {
-            Text = text;
+            
+            title = text;           
+            _childs.CollectionChanged += _childs_CollectionChanged;
+        }
+
+        public OntologyNode(string id, string text, bool isFolder)
+        {
+            key = id; 
+            title = text;
+            folder = isFolder;
             _childs.CollectionChanged += _childs_CollectionChanged;
         }
 
@@ -27,27 +36,29 @@ namespace HISWebClient.BusinessObjects
         {
             if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
             {
-                foreach (OntologyNode item in e.NewItems)
-                    item.Parent = this;
+                //foreach (OntologyNode item in e.NewItems)
+                    //item.Parent = this;
             }
         }
 
-        public OntologyNode Parent { get; set; }
-        public string Text { get; set; }
+        //public OntologyNode Parent { get; set; }
+        public string key { get; set; }
+        public string title { get; set; }
+        public bool folder { get; set; }
 
-        public ObservableCollection<OntologyNode> Nodes
+        public ObservableCollection<OntologyNode> children
         {
             get { return _childs; }
         }
 
         public bool HasChild(string name)
         {
-            return OntologyTree.FindNode(name, Nodes) != null;
+            return OntologyTree.FindNode(name, children) != null;
         }
 
         public override string ToString()
         {
-            return Text;
+            return title;
         }
     }
 }

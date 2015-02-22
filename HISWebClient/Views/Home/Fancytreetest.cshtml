@@ -1,0 +1,54 @@
+﻿
+@{
+    ViewBag.Title = "Fancytreetest";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+    <title>Fancytree - Example</title>
+    <script src="~/Scripts/Fancytree/jquery-ui.custom.js"></script>
+    <link href="~/Content/FancyTree/skin-xp/ui.fancytree.css" rel="stylesheet" />
+    <script src="~/Scripts/Fancytree/jquery.fancytree.js"></script>
+    <script src="~/Scripts/Fancytree/jquery.fancytree.filter.js"></script>
+    <script src="~/Scripts/Fancytree/jquery.fancytree.childcounter.js"></script>
+    <script src="~/Scripts/Fancytree/sample.js"></script>
+    <script type="text/javascript">
+	
+    </script>
+</head>
+<body class="example">
+    <p>
+        <label>Filter:</label>
+        <input name="search" placeholder="Filter...">
+        <button id="btnResetSearch">&times;</button>
+        <span id="matches"></span>
+    </p>
+    <p>
+        <label for="hideMode">
+            <input type="checkbox" id="hideMode">
+            Hide unmatched nodes
+        </label>
+        <label for="leavesOnly">
+            <input type="checkbox" id="leavesOnly">
+            Leaves only
+        </label>
+
+        <label for="regex">
+            <input type="checkbox" id="regex">
+            Regular expression
+        </label>
+    </p>
+    <p id="sampleButtons">
+    </p>
+
+   
+       <div id="tree" data-source="ajax" class="sampletree">
+
+    </div>
+ 
+</body>
+</html>
+
+

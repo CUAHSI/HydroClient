@@ -4,55 +4,86 @@
         sessionGuid = '@(ViewBag.ThisSessionGuid)';
     </script>
         //Layout = null;
-        }
-        @section styles
+}
+@section styles
 {
-        @*<link href="~/Content/Sidebar.css" rel="stylesheet" />*@
+    @*<link href="~/Content/Sidebar.css" rel="stylesheet" />*@
 
     <link href="//cdn.datatables.net/1.10.4/css/jquery.dataTables.min.css" rel="stylesheet" />
     <link href="//cdn.datatables.net/colvis/1.1.1/css/dataTables.colVis.css" rel="stylesheet" />
-   @* <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/south-street/jquery-ui.min.css" rel="stylesheet" type="text/css" />*@
+    @* <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/south-street/jquery-ui.min.css" rel="stylesheet" type="text/css" />*@
 
+    <script src="~/Scripts/Fancytree/jquery-ui.custom.js"></script>
+    <link href="~/Content/FancyTree/skin-xp/ui.fancytree.css" rel="stylesheet" />
+    <script src="~/Scripts/Fancytree/jquery.fancytree.js"></script>
+    <script src="~/Scripts/Fancytree/jquery.fancytree.filter.js"></script>
+    <script src="~/Scripts/Fancytree/jquery.fancytree.childcounter.js"></script>
+    <script src="~/Scripts/Fancytree/sample.js"></script>
 }
 
 <!-- HTML code from Bootply.com editor -->
 
 <div class="container">
-    <div  id="pageloaddiv"></div>
     <div class="row">
-        <div class="">
-            <div id="map-canvas"></div>
-            <div id="menu">
-                <div><img class="expander" alt="Expand" src="~/Content/Images/closetop.png" /></div>
-                <div class="" id="selectors">
-                    <form id="Search" class="navbar-form" role="search">
-                        <!-- Button trigger modal -->
-                        <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectDateModal">Select Date</button>
-                        <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectVariableModal">Select Variable(s)</button>
-                        <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectServicesModal">Select Services(s)</button>
+        <div class="col-sm-12">
+            <h1>Google Map Inside Tab Panel</h1>
 
-                        <div id="SelectedDateRange">
+            <ul class="nav nav-tabs" id="myTab">
+                <li class="active"><a href="#home" data-toggle="tab">Home</a></li>
+                <li><a href="#map" data-toggle="tab">Map</a></li>
+                <li><a href="#messages" data-toggle="tab">Messages</a></li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane active" id="home">Home content...</div>
+                <div class="tab-pane" id="map">
+                    <div id="map-canvas">
+
+                        <div class="container">
+                            <div id="pageloaddiv"></div>
+                            <div class="row">
+                                <div class="">
+                                    <div id="map-canvas"></div>
+                                    <div id="menu">
+                                        <div><img class="expander" alt="Expand" src="~/Content/Images/closetop.png" /></div>
+                                        <div class="" id="selectors">
+                                            <form id="Search" class="navbar-form" role="search">
+                                                <!-- Button trigger modal -->
+                                                <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectDateModal">Select Date</button>
+                                                <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectVariableModal">Select Variable(s)</button>
+                                                <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectServicesModal">Select Services(s)</button>
+
+                                                <div id="SelectedDateRange">
+
+                                                </div>
+                                                <br />
+                                                <button type="submit" class="btn btn-success btn-block">Search Map</button><br />
+                                                <button id="clear" type="button" class="btn btn-warning btn-xs btn-group-justified"> Clear map </button>
+
+
+                                            </form>
+                                        </div>
+                                    </div>
+                                    @*<h1 id="home">
+                                            <a id="menu-toggle" href="#" class="glyphicon glyphicon-align-justify ">
+                                                <i class="fa fa-bars"></i>
+                                            </a>
+
+                                        </h1>*@
+                                </div>
+
+                            </div>
 
                         </div>
-                        <br />
-                        <button type="submit" class="btn btn-success btn-block">Search Map</button><br />
-                        <button id="clear" type="button" class="btn btn-warning btn-xs btn-group-justified"> Clear map </button>
 
-
-                    </form>
+                    </div>
                 </div>
+                <div class="tab-pane" id="messages">Messages...</div>
             </div>
-            @*<h1 id="home">
-                    <a id="menu-toggle" href="#" class="glyphicon glyphicon-align-justify ">
-                        <i class="fa fa-bars"></i>
-                    </a>
-
-                </h1>*@
         </div>
-
     </div>
-
 </div>
+
 
 <!-- Modal -->
 <div class="modal fade" id="SelectDateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -95,46 +126,93 @@
             </div>
             <div class="modal-body">
                 <div class="col-md-12">
-                    <div class="row">
-                            <div class="controls col-md-4">
-                                <label class="checkbox">
-                                    <input type="checkbox" name="keywords" value="Temperature" id="inlineCheckbox2"> Temperature
-                                </label>
-                                <label class="checkbox">
-                                    <input type="checkbox" name="keywords" value="Precipitation" id="inlineCheckbox3"> Precipitation
-                                </label>
-                                <label class="checkbox">
-                                    <input type="checkbox" name="keywords" value="Discharge_ stream" id="inlineCheckbox7"> Streamflow
-                                </label>
-                                <label class="checkbox">
-                                    <input type="checkbox" name="keywords" value="Salinity" id="inlineCheckbox3"> Salinity
-                                </label>
+                    <div class="tabbable">
+                        <!-- Only required for left/right tabs -->
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#tab1" data-toggle="tab">Section 1</a></li>
+                            <li><a href="#tab2" data-toggle="tab">Section 2</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="tab1">
+                                <div class="row">
+                                    <div class="controls col-md-4">
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Temperature" id="inlineCheckbox2" class="topCategories"> Temperature
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Precipitation" id="inlineCheckbox3" class="topCategories"> Precipitation
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Discharge, stream" id="inlineCheckbox7" class="topCategories"> Streamflow
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Salinity" id="inlineCheckbox3" class="topCategories"> Salinity
+                                        </label>
+                                    </div>
+                                    <div class="controls col-md-4">
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Humidity" id="inlineCheckbox4" class="topCategories"> Humidity
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Iron" id="inlineCheckbox5" class="topCategories"> Iron
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Lead" id="inlineCheckbox6" class="topCategories"> Lead
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" id="btnTopSelect" class="btn btn-default btn-primary" data-dismiss="modal">Save</button>
+                                </div>
                             </div>
-                            <div class="controls col-md-4">
-                                <label class="checkbox">
-                                    <input type="checkbox" name="keywords" value="Humidity" id="inlineCheckbox4"> Humidity
-                                </label>
-                                <label class="checkbox">
-                                    <input type="checkbox" name="keywords" value="Iron" id="inlineCheckbox5"> Iron
-                                </label>
-                                <label class="checkbox">
-                                    <input type="checkbox" name="keywords" value="Lead" id="inlineCheckbox6"> Lead
-                                </label>
-                            </div>
+                            <div class="tab-pane" id="tab2">
+                                <p>
+                                    <label>Filter:</label>
+                                    <input name="search" placeholder="Filter...">
+                                    <button id="btnResetSearch">&times;</button>
+                                    <span id="matches"></span>
+                                </p>
+                                @*<p>
+                                        <label for="hideMode">
+                                            <input type="checkbox" id="hideMode">
+                                            Hide unmatched nodes
+                                        </label>
+                                        <label for="leavesOnly">
+                                            <input type="checkbox" id="leavesOnly">
+                                            Leaves only
+                                        </label>
+
+                                        <label for="regex">
+                                            <input type="checkbox" id="regex">
+                                            Regular expression
+                                        </label>
+                                    </p>
+                                    <p id="sampleButtons">
+                                    </p>*@
 
 
+                                <div id="tree" data-source="ajax" class="sampletree">
+
+
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" id="btnHierarchySelect" class="btn btn-default btn-primary" data-dismiss="modal">Save</button>
+                                </div>
+                            </div>
                         </div>
-                    <div class="modal-footer">
-                      <button type="button" class="btn btn-default btn-primary" data-dismiss="modal">Save</button>
-                    </div>
                     </div>
                 </div>
+
+
+
             </div>
-
-
-            <!-- /.modal-content -->
         </div>
-        <!-- /.modal-dialog -->
+    </div>
+
+
+    <!-- /.modal-content -->
+</div>
+<!-- /.modal-dialog -->
     </div>
 
 <!-- Modal -->
@@ -143,7 +221,7 @@
     <div class="modal-dialog-full">
         <div class="modal-content-full">
             <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h3 class="modal-title" id="myModalLabel">Click to select Services (No selection searches all)</h3>
             </div>
             <div class="modal-body-full">
@@ -182,7 +260,7 @@
                 </table>
             </div>
             <div class="modal-footer">
-                <button type="button" id ="cancelServiceSelection" class="btn btn-default alert-info" data-dismiss="modal">Cancel</button>
+                <button type="button" id="cancelServiceSelection" class="btn btn-default alert-info" data-dismiss="modal">Cancel</button>
                 <button type="button" id="saveServiceSelection" class="btn btn-default btn-primary" data-dismiss="modal">Save Selection</button>
             </div>
 
@@ -206,7 +284,7 @@
     <div class="modal-dialog-full">
         <div class="modal-content-full">
             <div class="modal-header-full">
-                <button type="button" class="close" data-dismiss="modal" ariaPlease click to start download as CSV filehidden="true">&times;</button>
+                <button type="button" class="close" data-dismiss="modal" ariaplease click to start download as csv filehidden="true">&times;</button>
                 <h3 class="modal-title" id="myModalLabel">List of Timeseries in area</h3>
                 <h5>Clicking the row will start the download of the data as a CSV file</h5>
             </div>
@@ -269,9 +347,9 @@
             </div>
             <div class="modal-footer-full">
                 @*<span>
-                    @Html.ActionLink("Download as CSV", "downloadFile", "Export", new { id = 1 }, new { @class = "btn btn-info active pull-right", target = "_blank" })
-                </span>
-                <button id="DownloadAsCSV" type="button" class="btn btn-default">Download Selected as CSV</button>*@
+                        @Html.ActionLink("Download as CSV", "downloadFile", "Export", new { id = 1 }, new { @class = "btn btn-info active pull-right", target = "_blank" })
+                    </span>
+                    <button id="DownloadAsCSV" type="button" class="btn btn-default">Download Selected as CSV</button>*@
             </div>
 
             <!-- /.modal-content -->

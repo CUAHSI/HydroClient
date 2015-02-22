@@ -238,6 +238,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="App_Start\AppConfig.cs" />
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\IdentityConfig.cs" />
@@ -273,6 +274,7 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
     <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\Class1.cs" />
     <Compile Include="Controllers\ExportController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\IMetadataQuery.cs" />
@@ -284,6 +286,7 @@
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
+    <Compile Include="Models\OntologyHelper.cs" />
     <Compile Include="Models\TimeSeriesViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
@@ -396,10 +399,23 @@
     <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ApiGroup.cshtml" />
     <Content Include="Areas\HelpPage\Views\Help\Api.cshtml" />
     <Content Include="Areas\HelpPage\Views\_ViewStart.cshtml" />
+    <Content Include="ajax-ontologyLazy.json" />
     <None Include="Properties\PublishProfiles\hiswebclient.pubxml" />
+    <Content Include="Content\FancyTree\skin-xp\ui.fancytree.less" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\Custom\DownloadHelper.js" />
     <Content Include="Scripts\Custom\webclient.js" />
+    <Content Include="Scripts\Fancytree\jquery-ui.custom.js" />
+    <Content Include="Scripts\Fancytree\jquery.fancytree.childcounter.js" />
+    <Content Include="Scripts\Fancytree\jquery.fancytree.filter.js" />
+    <Content Include="Scripts\Fancytree\jquery.fancytree.js" />
+    <Content Include="Content\FancyTree\skin-xp\icons-rtl.gif" />
+    <Content Include="Content\FancyTree\skin-xp\icons.gif" />
+    <Content Include="Content\FancyTree\skin-xp\loading.gif" />
+    <Content Include="Content\FancyTree\skin-xp\ui.fancytree.css" />
+    <Content Include="Content\FancyTree\skin-xp\vline-rtl.gif" />
+    <Content Include="Content\FancyTree\skin-xp\vline.gif" />
+    <Content Include="Scripts\Fancytree\sample.js" />
     <Content Include="Scripts\Google\keydragzoom.js" />
     <Content Include="Scripts\Google\keydragzoom_packed.js" />
     <Content Include="Scripts\Google\markerwithlabel.js" />
@@ -459,6 +475,8 @@
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
     <Content Include="Views\Home\Sidebar.cshtml" />
     <Content Include="Views\Home\_DownLoadTimeseries.cshtml" />
+    <Content Include="Views\Home\Fancytreetest.cshtml" />
+    <Content Include="Views\Home\MapTabtest.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

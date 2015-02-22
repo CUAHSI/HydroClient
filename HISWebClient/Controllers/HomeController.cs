@@ -17,6 +17,8 @@ using System.Threading.Tasks;
 using System.IO;
 using CUAHSI.Models;
 using HISWebClient.Models;
+using System.Xml;
+using System.Text.RegularExpressions;
 
 
 
@@ -26,6 +28,7 @@ namespace HISWebClient.Controllers
     public class HomeController : Controller
     {
         private readonly CUAHSI.DataExport.IExportEngine wdcStore;
+      
 
         public ActionResult Index()
         {
@@ -45,7 +48,9 @@ namespace HISWebClient.Controllers
                 ViewBag.ThisSessionGuid = Session["sessionGuid"].ToString();
             }
             //LogHelper.LogNewAPIUse(sessionguid);
-           
+            var conceptKeyword = "";
+            var ontologyHelper = new OntologyHelper();
+            var s = ontologyHelper.getOntology(conceptKeyword);
             return View();
         }
 
@@ -68,6 +73,21 @@ namespace HISWebClient.Controllers
 
             return View();
         }
+
+        public ActionResult Fancytreetest()
+        {
+            ViewBag.Message = "Your application description page.";
+
+            return View();
+        }
+
+        public ActionResult MapTabtest()
+        {
+            ViewBag.Message = "Your application description page.";
+
+            return View();
+        }
+
         public ActionResult updateMarkers(FormCollection collection)
         {
             var searchSettings = new SearchSettings();
@@ -100,12 +120,13 @@ namespace HISWebClient.Controllers
 
                 bool canConvert = false;
 
-                var keywords = collection["keywords"].Split(',');
+                //var keywords = collection["keywords"].Split('#');
+                var keywords = Regex.Split(collection["keywords"], @"##");
                 //replace underscore with comma to align spelling 
-                for (var k =0;k<keywords.Length;k++)
-                {
-                    keywords[k] = keywords[k].Replace("_", ",");
-                }
+                //for (var k =0;k<keywords.Length;k++)
+                //{
+                //    keywords[k] = keywords[k].Replace("_", ",");
+                //}
                 var tileWidth = 1;
                 var tileHeight = 1;
                 List<int> webServiceIds = null;
@@ -191,6 +212,33 @@ namespace HISWebClient.Controllers
             }
             return Json(markerjSON);
 
+        }
+
+
+        
+        public string getOntologyMainCategories()
+        {
+            var sb =  new StringBuilder();
+            sb.Append("[");
+	        sb.Append("{\"key\": \"1\", \"title\": \"Hydrosphere\", \"folder\": \"true\", \"children\": [");
+		    sb.Append("{\"key\": \"2\", \"title\": \"Physical\",\"folder\": true, \"lazy\":true},");
+            sb.Append("{\"key\": \"3\", \"title\": \"Chemical\",\"folder\": true, \"lazy\":true},");
+            sb.Append("{\"key\": \"4\", \"title\": \"Biological\",\"folder\": true, \"lazy\":true}");
+	        sb.Append("]}");	
+            sb.Append("]");
+            //var json = new JsonResult(s);
+            return sb.ToString();
+        }
+
+        public string getOntologyByCategory(string id)
+        {
+            //var json = "[ {\"title\": \"Sub item\", \"lazy\": true }, {\"title\": \"Sub folder\", \"folder\": true, \"lazy\": true } ]";
+            //var json = new JsonResult(s);
+
+            var ontologyHelper = new OntologyHelper();
+            var ontologyJson = ontologyHelper.getOntology(id);
+
+            return ontologyJson;
         }
 
         public string getDetailsForMarker(int id)
@@ -295,6 +343,8 @@ namespace HISWebClient.Controllers
             }
 
         }
+
+       
 
         public PartialViewResult CreatePartialView()
         {
