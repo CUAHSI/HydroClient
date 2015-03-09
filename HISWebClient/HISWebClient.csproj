@@ -477,6 +477,7 @@
     <Content Include="Views\Home\_DownLoadTimeseries.cshtml" />
     <Content Include="Views\Home\Fancytreetest.cshtml" />
     <Content Include="Views\Home\MapTabtest.cshtml" />
+    <Content Include="Views\Home\Index2.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

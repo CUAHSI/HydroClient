@@ -1,36 +1,420 @@
-﻿
+﻿@section styles
+{
+    @*<link href="~/Content/Sidebar.css" rel="stylesheet" />*@
+<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
+<script src="//cdn.jsdelivr.net/jquery.ui-contextmenu/1.7.0/jquery.ui-contextmenu.min.js"></script>
 
-<!DOCTYPE html>
+    <link href="//cdn.datatables.net/1.10.4/css/jquery.dataTables.min.css" rel="stylesheet" />
+    <link href="//cdn.datatables.net/colvis/1.1.1/css/dataTables.colVis.css" rel="stylesheet" />
+    <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/south-street/jquery-ui.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/Content/FancyTree/skin-xp/ui.fancytree.css" rel="stylesheet" />
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title></title>
-</head>
-<body>
-    <div class="container">
-        <div class="row">
-            <div class="col-sm-12">
-                <h1>Google Map Inside Tab Panel</h1>
 
-                <ul class="nav nav-tabs" id="myTab">
-                    <li class="active"><a href="#home" data-toggle="tab">Home</a></li>
-                    <li><a href="#map" data-toggle="tab">Map</a></li>
-                    <li><a href="#messages" data-toggle="tab">Messages</a></li>
-                </ul>
+}
 
-                <div class="tab-content">
-                    <div class="tab-pane active" id="home">Home content...</div>
-                    <div class="tab-pane" id="map">
+<div class="row">
+    <div class="col-md-4 col-md-offset-2"></div>
+
+        <ul class="nav nav-tabs" id="myTab">          
+            <li class="active navbar-custom"><a href="#map" id="mapTab" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> Map</a></li>
+            <li class="navbar-custom"><a href="#graph" id="graphTab" data-toggle="tab" ><span class="glyphicon glyphicon-home"></span> Graph</a></li>
+            <li class="navbar-custom"><a href="#table" id="tableTab" data-toggle="tab"><span class="glyphicon glyphicon-list"></span> Table</a></li>
+        </ul>
+    </div>
+
+    <div class="_container">
+        <div class="tab-content">
+            <div class="tab-pane" id="table">
+                <table id="dtTimeseries" class="hidden" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>SeriesId</th>
+                            <th>ServCode</th>
+                            <th>ServURL</th>
+                            <th>SiteCode</th>
+                            <th>VariableCode</th>
+                            <th>VariableName</th>
+                            <th>BeginDate</th>
+                            <th>EndDate</th>
+                            <th>ValueCount</th>
+                            <th>SiteName</th>
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                            <th>DataType</th>
+                            <th>ValueType</th>
+                            <th>SampleMedium</th>
+                            <th>TimeUnit</th>
+                            <th>GeneralCategory</th>
+                            <th>TimeSupport</th>
+                            <th>ConceptKeyword</th>
+                            <th>IsRegular</th>
+                            <th>VariableUnits</th>
+                            <th>Citation</th>
+                        </tr>
+                    </thead>
+
+                    <tfoot>
+                        <tr>
+                            <th>SeriesId</th>
+                            <th>ServCode</th>
+                            <th>ServURL</th>
+                            <th>SiteCode</th>
+                            <th>VariableCode</th>
+                            <th>VariableName</th>
+                            <th>BeginDate</th>
+                            <th>EndDate</th>
+                            <th>ValueCount</th>
+                            <th>SiteName</th>
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                            <th>DataType</th>
+                            <th>ValueType</th>
+                            <th>SampleMedium</th>
+                            <th>TimeUnit</th>
+                            <th>GeneralCategory</th>
+                            <th>TimeSupport</th>
+                            <th>ConceptKeyword</th>
+                            <th>IsRegular</th>
+                            <th>VariableUnits</th>
+                            <th>Citation</th>
+                        </tr>
+                    </tfoot>
+                </table>
+
+
+
+            </div>
+            <div class="tab-pane active" id="map">
+                <div id="pageloaddiv"></div>
+                <div class="row">
+                    <div class="">
                         <div id="map-canvas"></div>
+                        <div id="menu">
+                            <div><img class="expander" alt="Expand" src="~/Content/Images/closetop.png" /></div>
+                            <div class="" id="selectors">
+                                <form id="Search" class="navbar-form" role="search">
+                                    <!-- Button trigger modal -->
+                                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectDateModal">Select Date</button>
+                                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectVariableModal">Select Variable(s)</button>
+                                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectServicesModal">Select Services(s)</button>
+
+                                    <div id="SelectedDateRange">
+
+                                    </div>
+                                    <br />
+                                    <button type="submit" class="btn btn-success btn-block">Search Map</button><br />
+                                    <button id="clear" type="button" class="btn btn-warning btn-xs btn-group-justified"> Clear map </button>
+
+
+                                </form>
+                            </div>
+                        </div>
+                        @*<h1 id="home">
+                        <a id="menu-toggle" href="#" class="glyphicon glyphicon-align-justify ">
+                            <i class="fa fa-bars"></i>
+                        </a>
+
+                    </h1>*@
                     </div>
-                    <div class="tab-pane" id="messages">Messages...</div>
+
                 </div>
+            </div>
+            <div class="tab-pane" id="graph">Messages...</div>
+        </div>
+    </div>
+@*</div>*@
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="SelectDateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 class="modal-title" id="myModalLabel">Please select your date range:</h3>
+
+            </div>
+            <div class="modal-body">
+                <div class="col-md-12">
+                    <div class="row">
+                        <div class="input-daterange">
+                            <input id="startDate" value="02/12/2000" />
+                            <span class="add-on">to</span>
+                            <input id="endDate" value="12/12/2014" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default btn-primary" data-dismiss="modal">Save</button>
+            </div>
+
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+</div>
+<!-- Modal -->
+<div class="modal fade" id="SelectVariableModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 class="modal-title" id="myModalLabel">Please select your concept/variable(s) </h3>
+                <h6>(No selection searches all)</h6>
+
+            </div>
+            <div class="modal-body">
+                <div class="col-md-12">
+                    <div class="tabbable">
+                        <!-- Only required for left/right tabs -->
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#tab1" data-toggle="tab">Common</a></li>
+                            <li><a href="#tab2" data-toggle="tab">Hierarchy</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="tab1">
+                                <div class="row">
+                                    <div class="controls col-md-4">
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Temperature" id="inlineCheckbox2" class="topCategories"> Temperature
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Precipitation" id="inlineCheckbox3" class="topCategories"> Precipitation
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Discharge, stream" id="inlineCheckbox7" class="topCategories"> Streamflow
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Salinity" id="inlineCheckbox3" class="topCategories"> Salinity
+                                        </label>
+                                    </div>
+                                    <div class="controls col-md-4">
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Humidity" id="inlineCheckbox4" class="topCategories"> Humidity
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Iron" id="inlineCheckbox5" class="topCategories"> Iron
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Lead" id="inlineCheckbox6" class="topCategories"> Lead
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" id="btnTopSelect" class="btn btn-default btn-primary" data-dismiss="modal">Save</button>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="tab2">
+                                <p>
+                                    <label>Filter:</label>
+                                    <input name="search" placeholder="Filter...">
+                                    <button id="btnResetSearch">&times;</button>
+                                    <span id="matches"></span>
+                                </p>
+                                @*<p>
+                                        <label for="hideMode">
+                                            <input type="checkbox" id="hideMode">
+                                            Hide unmatched nodes
+                                        </label>
+                                        <label for="leavesOnly">
+                                            <input type="checkbox" id="leavesOnly">
+                                            Leaves only
+                                        </label>
+
+                                        <label for="regex">
+                                            <input type="checkbox" id="regex">
+                                            Regular expression
+                                        </label>
+                                    </p>
+                                    <p id="sampleButtons">
+                                    </p>*@
+
+
+                                <div id="tree" data-source="ajax" class="sampletree">
+
+
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" id="btnHierarchySelect" class="btn btn-default btn-primary" data-dismiss="modal">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
             </div>
         </div>
     </div>
 
 
+    <!-- /.modal-content -->
+</div>
+<!-- /.modal-dialog -->
+<!-- Modal -->
 
-</body>
-</html>
+<div class="modal fade full-screen" id="SelectServicesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog-full">
+        <div class="modal-content-full">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 class="modal-title" id="myModalLabel">Click to select Services (No selection searches all)</h3>
+            </div>
+            <div class="modal-body-full">
+                <table id="dtServices" class="display" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>ServiceID</th>
+                            <th>ServiceCode</th>
+                            <th>Title</th>
+                            <th>DescriptionUrl</th>
+                            <th>ServiceUrl</th>
+                            <th>Checked</th>
+                            <th>Organization</th>
+                            <th>Sites</th>
+                            <th>Variables</th>
+                            <th>Values</th>
+                            <th>ServiceBoundingBox</th>
+                        </tr>
+                    </thead>
+
+                    <tfoot>
+                        <tr>
+                            <th>ServiceID</th>
+                            <th>ServiceCode</th>
+                            <th>Title</th>
+                            <th>DescriptionUrl</th>
+                            <th>ServiceUrl</th>
+                            <th>Checked</th>
+                            <th>Organization</th>
+                            <th>Sites</th>
+                            <th>Variables</th>
+                            <th>Values</th>
+                            <th>ServiceBoundingBox</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="cancelServiceSelection" class="btn btn-default alert-info" data-dismiss="modal">Cancel</button>
+                <button type="button" id="saveServiceSelection" class="btn btn-default btn-primary" data-dismiss="modal">Save Selection</button>
+            </div>
+
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade full-screen" id="SelectDateModaltest" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">×</button>
+        <h3 ng-hide="newUser">Heading</h3>
+    </div>
+</div>
+
+<div class="modal fade full-screen" id="SeriesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog-full">
+        <div class="modal-content-full">
+            <div class="modal-header-full">
+                <button type="button" class="close" data-dismiss="modal" ariaplease click to start download as csv filehidden="true">&times;</button>
+                <h3 class="modal-title" id="myModalLabel">List of Timeseries in area</h3>
+                <h5>Clicking the row will start the download of the data as a CSV file</h5>
+            </div>
+            <div class="modal-body-full">
+                <table id="dtMarkers" class="display" data-toggle="context" data-target="#context-menu" cellspacing="0" >
+                    <thead>
+                        <tr>
+                            <th>SeriesId</th>
+                            <th>ServCode</th>
+                            <th>ServURL</th>
+                            <th>SiteCode</th>
+                            <th>VariableCode</th>
+                            <th>VariableName</th>
+                            <th>BeginDate</th>
+                            <th>EndDate</th>
+                            <th>ValueCount</th>
+                            <th>SiteName</th>
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                            <th>DataType</th>
+                            <th>ValueType</th>
+                            <th>SampleMedium</th>
+                            <th>TimeUnit</th>
+                            <th>GeneralCategory</th>
+                            <th>TimeSupport</th>
+                            <th>ConceptKeyword</th>
+                            <th>IsRegular</th>
+                            <th>VariableUnits</th>
+                            <th>Citation</th>
+                        </tr>
+                    </thead>
+
+                    <tfoot>
+                        <tr>
+                            <th>SeriesId</th>
+                            <th>ServCode</th>
+                            <th>ServURL</th>
+                            <th>SiteCode</th>
+                            <th>VariableCode</th>
+                            <th>VariableName</th>
+                            <th>BeginDate</th>
+                            <th>EndDate</th>
+                            <th>ValueCount</th>
+                            <th>SiteName</th>
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                            <th>DataType</th>
+                            <th>ValueType</th>
+                            <th>SampleMedium</th>
+                            <th>TimeUnit</th>
+                            <th>GeneralCategory</th>
+                            <th>TimeSupport</th>
+                            <th>ConceptKeyword</th>
+                            <th>IsRegular</th>
+                            <th>VariableUnits</th>
+                            <th>Citation</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="modal-footer-full">
+                @*<span>
+                        @Html.ActionLink("Download as CSV", "downloadFile", "Export", new { id = 1 }, new { @class = "btn btn-info active pull-right", target = "_blank" })
+                    </span>
+                    <button id="DownloadAsCSV" type="button" class="btn btn-default">Download Selected as CSV</button>*@
+            </div>
+
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+</div>
+@*<div id="context-menu">
+    <ul class="dropdown-menu" role="menu">
+        <li><a tabindex="-1" id="DownloadAsCSV" href="#">Download as CSV</a></li>
+        <li><a tabindex="-1" href="#">Add to DataCart</a></li>
+    </ul>
+</div>*@
+
+<script type='text/javascript' src="http://maps.googleapis.com/maps/api/js?sensor=false&extension=.js&output=embed&=3.exp"></script>
+@*<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>*@
+
+<script src="~/Scripts/Google/markerwithlabel.js"></script>
+<script src="//cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js"></script>
+<script src="//cdn.datatables.net/colvis/1.1.1/js/dataTables.colVis.min.js"></script>
+
+
+<script src="~/Scripts/Google/keydragzoom_packed.js"></script>
+@*<script src="~/Scripts/bootstrap-contextmenu.js"></script>*@
+<script src="~/Scripts/Custom/webclient.js"></script>
+<script src="~/Scripts/Fancytree/jquery-ui.custom.js"></script>
+<script src="~/Scripts/Fancytree/jquery.fancytree.js"></script>
+<script src="~/Scripts/Fancytree/jquery.fancytree.filter.js"></script>
+<script src="~/Scripts/Fancytree/jquery.fancytree.childcounter.js"></script>
+<script src="~/Scripts/Fancytree/sample.js"></script>
+<script src="~/Scripts/bootstrap-datepicker.js"></script>

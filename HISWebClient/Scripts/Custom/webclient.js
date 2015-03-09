@@ -38,10 +38,15 @@ function initialize() {
         mapTypeControl: true,
         scaleControl: true,
         overviewMapControl: true,
-        overviewMapControlOptions: {opened: true},
+        zoomControl: true,
+        panControl:false,        
+        zoomControlOptions: {     
+            style: google.maps.ZoomControlStyle.SMALL,
+            position: google.maps.ControlPosition.BOTTOM_LEFT
+        },
         mapTypeControlOptions: {
-            style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-            position: google.maps.ControlPosition.TOP_LEFT,
+            style: google.maps.MapTypeControlStyle.SMALL,
+            position: google.maps.ControlPosition.TOP_CENTER,
             mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.SATELLITE, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.TERRAIN]
         },
     };
@@ -97,29 +102,13 @@ function initialize() {
 
 
    
-
+    //initialize datepicker
     $('.input-daterange').datepicker()
 
-    
+    //initialize show/hide for search box
     $('.expander').on('click', function () {
         $('#selectors').slideToggle();
     });
-
-    //$("input[name='keywords']:checked").toggle(function () {
-    //    $("#tree").fancytree("getTree").visit(function (node) {
-    //                node.setSelected(false);
-    //            });
-    //            return false;
-    //})
-
-    //$('.topCategories').click(function () {
-    //    if ($(this).attr('checked')) {
-    //        $('input:checkbox').attr('checked', true);
-    //    }
-    //    else {
-    //        $('input:checkbox').attr('checked', false);
-    //    }
-    //});
 
     $('#btnTopSelect').click(function () {
         $("#tree").fancytree("getTree").visit(function (node) {
@@ -127,6 +116,7 @@ function initialize() {
                         });
                         //return false;
     })
+
     $('#btnHierarchySelect').click(function () {
         
                     
@@ -141,14 +131,20 @@ function initialize() {
         e.preventDefault();
         e.stopImmediatePropagation();
         
-        updateMap(true)
+        updateMap(true)        
 
         $("#clear").on('click', function()
         {
             deleteClusteredMarkersOverlays()
             resetUserSelection()
         })
-    });        
+    });
+
+    //click event for tab
+    $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
+        if (e.target.id == "tableTab") { setUpTimeseriesDatatable(); }
+        // activated tab
+    })
 };
   
 function getMapHeight()
@@ -347,10 +343,7 @@ function getFormData()
     return formdata;
 }
 
-function resetUserSelection()
-{
 
-}
 //upddate map wit new clusters
 function updateMap(isNewRequest) {
     
@@ -383,6 +376,7 @@ function updateMap(isNewRequest) {
         data: formData,
         success: function (data) {
             processMarkers(data)
+            //setUpTimeseriesDatatable();
             $("#pageloaddiv").hide();
         },
         error: function (xmlhttprequest, textstatus, message) {
@@ -770,24 +764,26 @@ function setUpDatatables(clusterid)
    // $('#demo').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example"></table>' );
  
     var oTable= $('#dtMarkers').dataTable({
-         "ajax": actionUrl,
+        "ajax": actionUrl,
+        "autoWidth": true,
+        "jQueryUI": false,
          "dom": 'C<"clear">lfrtip',
          colVis: {
              restore: "Restore",
              showAll: "Show all",
-             showNone: "Show none",
+             //showNone: "Show none",
              activate: "mouseover",
              exclude: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,16,17,18,19,20,21],
-             groups: [
-                {
-                    title: "Main",
-                    columns: [ 0, 4, 5,6.7]
-                },
-                {
-                    title: "Auxiliary",
-                    columns: [1, 2, 3, 8, 10, 11, 12, 13, 14, 15, 16, 16, 17, 18, 19, 20, 21]
-                }
-             ]
+             //groups: [
+             //   {
+             //       title: "Main",
+             //       columns: [ 0, 4, 5,6.7]
+             //   },
+             //   {
+             //       title: "Auxiliary",
+             //       columns: [1, 2, 3, 8, 10, 11, 12, 13, 14, 15, 16, 16, 17, 18, 19, 20, 21]
+             //   }
+             //]
          },
          "columns": [
              
@@ -820,7 +816,7 @@ function setUpDatatables(clusterid)
             var api = this.api();
            
             api.columns().indexes().flatten().each(function (i) {
-                if (i > 6 || i == 0) return;
+                if (i > 5 || i == 0) return;
                 var column = api.column( i );
                 var select = $('<select><option value=""></option></select>')
                     .appendTo( $(column.footer()).empty() )
@@ -841,65 +837,66 @@ function setUpDatatables(clusterid)
             });
             this.fnAdjustColumnSizing();
         }
-       
+        
           
 
         //"retrieve": true
     });
 
     //##########Context menu
-    //$(document).contextmenu({
-    //    on: ".dataTable tr",
-    //    menu: [
-    //      { title: "Download as CSV", cmd: "DownloadAsCSV", uiIcon: "ui-icon-volume-off ui-icon-filter" },
-    //      { title: "Add to DataCart", cmd: "AddtoDataCart", uiIcon: "ui-icon-volume-off ui-icon-filter" }
-    //    ],
-    //    select: function (event, ui) {
-    //        var celltext = ui.target.text();
+    $(document).contextmenu({
+        on: ".dataTable tr",
+        menu: [
+          { title: "Download as CSV", cmd: "DownloadAsCSV" },
+          { title: "Add to DataCart", cmd: "AddtoDataCart" }
+        ],
+        select: function (event, ui) {
+            var celltext = ui.target.text();
            
 
-    //        //var colvindex = ui.target.parent().children().index(ui.target);
-    //        //var colindex = $('table thead tr th:eq(' + colvindex + ')').data('column-index');
-    //        switch (ui.cmd) {
-    //            case "DownloadAsCSV":
-    //                var seriesId = ui.target.parent().children()[0].innerText;
-    //                var cell = ui.target.parent().children()[0];
-    //                cell.cssClass("activeDownload");
-    //                //$('.dataTable tr:eq(1)').addClass(".activeDownload")
-    //                     url = "/Export/downloadFile/" + seriesId
-    //                     var _iframe_dl = $('<iframe />')
-    //                             .attr('src', url)
-    //                             .hide()
-    //                             .appendTo('body');
-    //                break;
-    //            case "AddtoDataCart":
-    //                alert("Datacart")
-    //                break;
-    //        }
-    //    },
-    //    beforeOpen: function (event, ui) {
-    //        var $menu = ui.menu,
-    //            $target = ui.target,
-    //            extraData = ui.extraData;
-    //        ui.menu.zIndex(9999);
-    //    }
-    //});
+            var colvindex = ui.target.parent().children().index(ui.target);
+            var colindex = $('table thead tr th:eq(' + colvindex + ')').data('column-index');
+            switch (ui.cmd) {
+                case "DownloadAsCSV":
+                    var seriesId = ui.target.parent().children()[0].innerText;
+                    var cell = ui.target.parent().children()[0];
+                    //cell.cssClass("activeDownload");
+                    ui.target.parent().addClass('selected');
+                    $('.dataTable tr:eq(1)').addClass(".activeDownload")
+                         url = "/Export/downloadFile/" + seriesId
+                         var _iframe_dl = $('<iframe  onerror="alert()" />')
+                                 .attr('src', url)
+                                 .hide()                                 
+                                 .appendTo('body');
+                    break;
+                case "AddtoDataCart":
+                    alert("Datacart")
+                    break;
+            }
+        },
+        beforeOpen: function (event, ui) {
+            var $menu = ui.menu,
+                $target = ui.target,
+                extraData = ui.extraData;
+            ui.menu.zIndex(9999);
+        }
+    });
     //////////#################
 
-    $('#dtMarkers tbody').on('click', 'tr', function () {
+    //$('#dtMarkers tbody').on('click', 'tr', function () {
 
-         var name = $('td', this).eq(0).text();
-         var id = this.cells[0].innerHTML;
-         url = "/Export/downloadFile/" + id
+    //     var name = $('td', this).eq(0).text();
+    //     var id = this.cells[0].innerHTML;
+    //     url = "/Export/downloadFile/" + id
 
-         //bootbox.confirm("Are you sure?", function (url) {
+    //     //bootbox.confirm("Are you sure?", function (url) {
 
-             var _iframe_dl = $('<iframe />')
-                 .attr('src', url)
-                 .hide()
-                 .appendTo('body');
-         //});                         
-    });
+    //         var _iframe_dl = $('<iframe />')
+    //             .attr('src', url)
+    //             .hide()
+    //             .appendTo('body');
+    //     //});                         
+    //});
 
 
     $('#dtMarkers tbody').on('click', 'tr', function () {
@@ -907,87 +904,209 @@ function setUpDatatables(clusterid)
 
     });
     //####
-    //$('#dtMarkers tbody').contextmenu({
-    //    target:'#context-menu', 
-    //    before: function(e,context) {
-    //        // execute code before context menu if shown
-    //    },
-    //    onItem: function(context,e) {
-    //        // execute on menu item selection
-    //    }
-    //})
+   
     //######
+    //$('#dtMarkers tbody').contextmenu({
+    //    target: '#context-menu2',
+    //    onItem: function (context, e) {
+    //        alert($(e.target).text());
+    //    }
+    //});
+
+    //$('#context-menu2').on('show.bs.context', function (e) {
+    //    console.log('before show event');
+    //});
+
+    //$('#context-menu2').on('shown.bs.context', function (e) {
+    //    console.log('after show event');
+    //});
+
+    //$('#context-menu2').on('hide.bs.context', function (e) {
+    //    console.log('before hide event');
+    //});
+
+    //$('#context-menu2').on('hidden.bs.context', function (e) {
+    //    console.log('after hide event');
+    //});
 
 
     myTimeSeriesClusterDatatable = $('#dtMarkers').DataTable()  
 
-    $('#DownloadAsCSV').click(function () {
-        if (myTimeSeriesClusterDatatable.rows('.selected').data().length > 0)
-        {
-            var list = new Array();
-            var rows = myTimeSeriesClusterDatatable.rows('.selected').data();
+    //$('#Download').click(function () {
+    //    download();
+    //});
+
+    //$('#DownloadAsCSV').click(function () {
+
+    //    var name = $('td', this).eq(0).text();
+    //    //     var id = this.cells[0].innerHTML;
+
+    //    if (myTimeSeriesClusterDatatable.rows('.selected').data().length > 0)
+    //    {
+    //        var list = new Array();
+    //        var rows = myTimeSeriesClusterDatatable.rows('.selected').data();
 
           
 
 
-            //<th>ServCode</th>
-            //                <th>ServURL</th>
-            //                <th>SiteCode</th>
-            //                <th>VariableCode</th>
-            //                <th>VariableName</th>
-            //                <th>BeginDate</th>
-            //                <th>EndDate</th>
+    //        //<th>ServCode</th>
+    //        //                <th>ServURL</th>
+    //        //                <th>SiteCode</th>
+    //        //                <th>VariableCode</th>
+    //        //                <th>VariableName</th>
+    //        //                <th>BeginDate</th>
+    //        //                <th>EndDate</th>
 
-            for (i = 0; i < rows.length; i++)
-            {
-                list[i] = new Array(
+    //        for (i = 0; i < rows.length; i++)
+    //        {
+    //            list[i] = new Array(
                         
-                        rows[i].ServCode,
-                        rows[i].ServURL,
-                        rows[i].SiteCode,
-                        rows[i].VariableCode,
-                        rows[i].SiteName,
-                        rows[i].VariableName,
-                        rows[i].BeginDate,
-                        rows[i].EndDate,
-                        rows[i].ValueCount,                        
-                        rows[i].Latitude,
-                        rows[i].Longitude,
-                        rows[i].DataType,
-                        rows[i].ValueType,
-                        rows[i].SampleMedium,
-                        rows[i].TimeUnit,
-                        rows[i].GeneralCategory,
-                        rows[i].TimeSupport,
-                        rows[i].ConceptKeyword,
-                        rows[i].IsRegular,
-                        rows[i].VariableUnits,
-                        rows[i].Citation
-                    );
-            }
+    //                    rows[i].ServCode,
+    //                    rows[i].ServURL,
+    //                    rows[i].SiteCode,
+    //                    rows[i].VariableCode,
+    //                    rows[i].SiteName,
+    //                    rows[i].VariableName,
+    //                    rows[i].BeginDate,
+    //                    rows[i].EndDate,
+    //                    rows[i].ValueCount,                        
+    //                    rows[i].Latitude,
+    //                    rows[i].Longitude,
+    //                    rows[i].DataType,
+    //                    rows[i].ValueType,
+    //                    rows[i].SampleMedium,
+    //                    rows[i].TimeUnit,
+    //                    rows[i].GeneralCategory,
+    //                    rows[i].TimeSupport,
+    //                    rows[i].ConceptKeyword,
+    //                    rows[i].IsRegular,
+    //                    rows[i].VariableUnits,
+    //                    rows[i].Citation
+    //                );
+    //        }
 
-            $.ajax({
-                url: "/Export/downloadFile/1",
-                //url: "/api/seriesdata?SeriesID=1",
-                type: 'Post',
-                dataType: 'json',
-                timeout: 60000,
-                processData: false,
-                //data: list,
-                //success: function () {
-                //    //alert("ys")
-                //},
-                //error: function (xmlhttprequest, textstatus, message) {
-                //    serviceFailed(xmlhttprequest, textstatus, message)
-                //}
-            }).done(function (d)
-            { bootbox.alert(d) }
-            );
-            //var newWindow = window.open('/Home/CreatePartialView', '_blank', 'left=100,top=100,width=400,height=300,toolbar=1,resizable=0');         
+    //        $.ajax({
+    //            url: "/Export/downloadFile/1",
+    //            //url: "/api/seriesdata?SeriesID=1",
+    //            type: 'Post',
+    //            dataType: 'json',
+    //            timeout: 60000,
+    //            processData: false,
+    //            //data: list,
+    //            //success: function () {
+    //            //    //alert("ys")
+    //            //},
+    //            //error: function (xmlhttprequest, textstatus, message) {
+    //            //    serviceFailed(xmlhttprequest, textstatus, message)
+    //            //}
+    //        }).done(function (d)
+    //        { bootbox.alert(d) }
+    //        );
+    //        //var newWindow = window.open('/Home/CreatePartialView', '_blank', 'left=100,top=100,width=400,height=300,toolbar=1,resizable=0');         
+    //    }
+    //    else
+    //        alert("Please select Series")
+    //});
+}
+
+function setUpTimeseriesDatatable()
+{
+    if (clusteredMarkersArray.length == 0)
+    {
+        return;
+    }
+    $('#dtTimeseries').is(':visible')
+
+    $.fn.DataTable.isDataTable("#dtTimeseries")
+    {
+        $('#dtTimeseries').DataTable().clear().destroy();
+    }
+
+
+    //var dataSet = getDetailsForMarker(clusterid)
+    var actionUrl = "/home/getTimeseries"
+    // $('#example').DataTable().clear()
+    // $('#demo').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example"></table>' );
+
+    var oTable = $('#dtTimeseries').dataTable({
+        "ajax": actionUrl,
+        "dom": 'C<"clear">lfrtip',
+        colVis: {
+            restore: "Restore",
+            showAll: "Show all",
+            showNone: "Show none",
+            activate: "mouseover",
+            exclude: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 16, 17, 18, 19, 20, 21],
+            groups: [
+               {
+                   title: "Main",
+                   columns: [0, 4, 5, 6.7]
+               },
+               {
+                   title: "Auxiliary",
+                   columns: [1, 2, 3, 8, 10, 11, 12, 13, 14, 15, 16, 16, 17, 18, 19, 20, 21]
+               }
+            ]
+        },
+        "columns": [
+
+           { "data": "SeriesId" },
+           { "data": "ServCode", "sTitle": "Service Name" },
+           { "data": "ServURL", "visible": false },
+           { "data": "SiteCode", "visible": false },
+           { "data": "VariableCode", "visible": false },
+           { "data": "VariableName" },
+           { "data": "BeginDate" },
+           { "data": "EndDate" },
+           { "data": "ValueCount", "visible": false },
+           { "data": "SiteName" },
+           { "data": "Latitude", "visible": false },
+           { "data": "Longitude", "visible": false },
+           { "data": "DataType", "visible": false },
+           { "data": "ValueType", "visible": false },
+           { "data": "SampleMedium", "visible": false },
+           { "data": "TimeUnit", "visible": false },
+           { "data": "GeneralCategory", "visible": false },
+           { "data": "TimeSupport", "visible": false },
+           { "data": "ConceptKeyword", "visible": false },
+           { "data": "IsRegular", "visible": false },
+           { "data": "VariableUnits", "visible": false },
+           { "data": "Citation", "visible": false }
+        ],
+
+        "scrollX": true,
+        initComplete: function () {
+            var api = this.api();
+
+            api.columns().indexes().flatten().each(function (i) {
+                if (i > 6 || i == 0) return;
+                var column = api.column(i);
+                var select = $('<select><option value=""></option></select>')
+                    .appendTo($(column.footer()).empty())
+                    .on('change', function () {
+                        var val = $.fn.dataTable.util.escapeRegex(
+                            $(this).val()
+                        );
+
+                        column
+                            .search(val ? '^' + val + '$' : '', true, false)
+                            .draw();
+                    });
+
+                column.data().unique().sort().each(function (d, j) {
+
+                    select.append('<option value="' + d + '">' + d + '</option>')
+                });
+            });
+            this.fnAdjustColumnSizing();
         }
-        else
-            alert("Please select Series")
+
+
+
+        //"retrieve": true
     });
+
+
 }
 
 function fnGetSelected(oTableLocal) {
@@ -1015,3 +1134,8 @@ function serviceFailed(xmlhttprequest, textstatus, message)
     //}
 
 };
+
+function download()
+{
+    alert()
+}

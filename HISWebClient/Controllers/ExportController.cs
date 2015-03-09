@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -41,14 +42,27 @@ namespace HISWebClient.Controllers
             var seriesMetaData = getSeriesMetadata(id);
             var filename = GenerateFileName(seriesMetaData);
             var fileType = "text/csv";
+            try
+            {
+                var result = await this.getStream(id);
+                //var memoryStream = new MemoryStream(result);
 
-            var result = await this.getStream(id);
-            //var memoryStream = new MemoryStream(result);
 
-                  
 
-            //filestream.Write(result, 0, result.Count);
-            return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename };
+                //filestream.Write(result, 0, result.Count);
+                return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename };
+            }
+            catch
+            {
+                string input = "An error occured downloading file: " + filename;
+
+                byte[] result = Encoding.ASCII.GetBytes(input);
+
+                return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = "ERROR " + filename };
+
+                 
+                
+            }
             //return base.File(filePath, "text/csv", filename);
         }
 

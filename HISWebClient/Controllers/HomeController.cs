@@ -54,7 +54,7 @@ namespace HISWebClient.Controllers
             return View();
         }
 
-        public ActionResult About()
+        public ActionResult Index2()
         {
             ViewBag.Message = "Your application description page.";
 
@@ -87,7 +87,7 @@ namespace HISWebClient.Controllers
 
             return View();
         }
-
+       
         public ActionResult updateMarkers(FormCollection collection)
         {
             var searchSettings = new SearchSettings();
@@ -275,6 +275,30 @@ namespace HISWebClient.Controllers
                 throw new NullReferenceException();
             }
 
+
+        }
+
+        public string getTimeseries()
+        {
+             
+                var sb = new StringBuilder();
+                var allRetrievedSeries = (List<TimeSeriesViewModel>)Session["Series"];
+                //var seriesInCluster = retrievedSeries.
+                //var w = (List<TimeSeriesViewModel>)retrievedSeries.Select((value, index) => new { value, index }).Where(x => x.index > 50).Select(x => x);
+            if (allRetrievedSeries != null)
+            {
+                var allRetrievedSeriesArray = allRetrievedSeries.ToArray();
+
+                
+                //var json = new JavaScriptSerializer().Serialize(seriesInCluster);
+                var json = JsonConvert.SerializeObject(allRetrievedSeriesArray);
+                json = "{ \"data\":" + json + "}";
+                return json;
+            }
+            else
+            {
+                throw new NullReferenceException();
+            }
 
         }
 

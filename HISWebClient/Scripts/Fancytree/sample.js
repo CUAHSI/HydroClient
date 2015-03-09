@@ -94,7 +94,7 @@
         $("input[name=search]").keyup();
     });
 
-    
+
 });
 
     

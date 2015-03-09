@@ -159,6 +159,7 @@
 		    // If context-menu's parent is positioned using absolute or relative positioning,
 		    // the calculated mouse position will be incorrect.
 		    // Adjust the position of the menu by its offset parent position.
+
 		    parentOffset = $menu.offsetParent().offset();
 		    X.left = X.left - parentOffset.left;
 		    Y.top = Y.top - parentOffset.top;

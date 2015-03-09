@@ -24,6 +24,13 @@
 {
     background-color:lightgray;
     height:50px;
+
+}
+.navbar-custom {
+    color:lightgray;
+    background-color: lightgray;
+    border:ridge;
+    padding:3px;
 }
 .expander{
     top:50px;
@@ -35,12 +42,18 @@ selector{
     border-width:thin;
 }
 #map-canvas {
-    top:50px;
+    top:0px;
     width: 100%;
     /*height: 600px;*/
     /*min-height: 100%;*/
     left:0px;
-    position:absolute;
+    /*position:absolute;*/
+    padding:0px;
+}
+#myTab{
+     position:absolute;
+     top:50px;
+     z-index:100000;
 }
 .full-screen {
     /*width: 80%;*/
@@ -52,15 +65,17 @@ selector{
     bottom:2%;*/    
     padding:20px;
     background-color:white;
+    z-index:10000000000; 
 }
 .modal-dialog-full
 {
     width:100%;
- 
+    z-index:10000000000; 
 }
 .modal-content-full
 {
     width:100%;
+
 }
 .modal-body-full
 {
@@ -166,3 +181,8 @@ span.fancytree-childcounter {
   text-align: center;
   font-size: 9px;
 }
+/*.z-index_1100{
+    z-index:1100;
+}*/
+
+.datepicker{z-index:1151 !important;}
