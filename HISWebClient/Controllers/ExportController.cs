@@ -6,6 +6,7 @@ using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.RetryPolicies;
+using MvcDemo.Common;
 using ServerSideHydroDesktop;
 using System;
 using System.Collections.Generic;
@@ -30,6 +31,7 @@ namespace HISWebClient.Controllers
 
         private CloudStorageAccount cloudStorageAccount;
 
+        [HttpGet, FileDownload]
         public async Task<FileStreamResult> DownloadFile(int id)
         {
            
@@ -108,14 +110,16 @@ namespace HISWebClient.Controllers
                     var dataResult = data.Item2.FirstOrDefault();
                     IList<DataValue> dataValues = dataResult.DataValueList.OrderBy(a => a.DateTimeUTC).Select(aa => new DataValue(aa)).ToList();
                     return new Tuple<Stream, SeriesData>(data.Item1, new SeriesData(meta.SeriesID, meta, dataResult.QualityControlLevel.IsValid, dataValues,
-                        dataResult.Variable.VariableUnit.Name, dataResult.Variable.VariableUnit.Abbreviation, dataResult.Site.VerticalDatum, dataResult.Site.Elevation_m));
+                        dataResult.Variable, dataResult.Source));
+                    //return new Tuple<Stream, SeriesData>(data.Item1, new SeriesData(meta.SeriesID, meta, dataValues, (IList < ServerSideHydroDesktop.ObjectModel.Series >) dataResult));
+                
                 }
             }
         }
 
         public async Task<Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>>> SeriesAndStreamOfSeriesID(SeriesMetadata meta)
         {
-            var requestTimeout = 20000;
+            var requestTimeout = 60000;
             WaterOneFlowClient client = new WaterOneFlowClient(meta.ServURL);
             return await client.GetValuesAndRawStreamAsync(
                     meta.SiteCode,
@@ -170,10 +174,73 @@ namespace HISWebClient.Controllers
         {
             using (var csvwrtr = new CsvWriter(ms, Encoding.UTF8, true))
             {
+                //write metadata
                 csvwrtr.ValueSeparator = Char.Parse(",");
+                csvwrtr.WriteRecord(new List<string>() {  
+
+                "Organization",
+                "SourceDescription",
+                "SourceLink",
+                "VariableName",                              
+                "VarUnits",
+                "SampleMedium",
+                "MethodDescription",
+                "QualityControlLevelCode",
+                "DataType",
+                "ValueType",
+                "IsRegular",
+                "TimeSupport",
+                "TimeUnits",
+                "SiteName",
+                "SiteCode",
+                "Latitude",
+                "Longitude",
+                "GeneralCategory",
+                "NoDataValue",
+                "Citation",
+
+
+                });
+                csvwrtr.WriteRecord(new List<string>() {  
+                
+                data.mySource.Organization,
+                data.mySource.Description,
+                data.mySource.Link,
+                data.myMetadata.VariableName,
+                data.myVariable.VariableUnit.Name,
+                "SampleMedium",	
+                "MethodDescription",                            
+                "QualityControlLevelCode",		
+                data.myVariable.DataType,
+                data.myVariable.ValueType,
+                data.myVariable.IsRegular.ToString(),
+                data.myVariable.TimeSupport.ToString(),
+                data.myVariable.TimeUnit.ToString(),
+                data.myMetadata.SiteName,
+                data.myMetadata.SiteCode,
+                data.myMetadata.Latitude.ToString(),
+                data.myMetadata.Longitude.ToString(),
+                "GeneralCategory",
+                data.myVariable.NoDataValue.ToString(),                
+                data.mySource.Citation,
+                //"UTCOffset",                
+                //"ValueAccuracy",
+                //"CensorCode",
+                //"OffsetValue",	
+                //"OffsetDescription",	
+                //"OffsetUnits",	
+                //"QualifierCode",
+
+                });
+
+                //LocalDateTime 
+                //DateTimeUTC
+                //DataValues
+
+                //csvwrtr.ValueSeparator = Char.Parse(",");
                 csvwrtr.WriteRecord(new List<string>() { "TimeStamp"
                         ,"Value","OffsetType","OffsetValue", "ValueAccuracy",
-                        "Qualifier","CensorCode" });
+                        "Qualifier","CensorCode", "UTCOffset" });
 
                 foreach (DataValue value in data.values)
                 {
@@ -185,6 +252,7 @@ namespace HISWebClient.Controllers
                     values.Add(value.ValueAccuracy.ToString());
                     values.Add(value.Qualifier);
                     values.Add(value.CensorCode);
+                    //values.Add(value.);
                     csvwrtr.WriteRecord(values);
                 }
                 await csvwrtr.FlushAsync();

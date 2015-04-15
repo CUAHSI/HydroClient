@@ -273,6 +273,7 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\SampleDirection.cs" />
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
+    <Compile Include="Common\FileDownloadAttribute.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\Class1.cs" />
     <Compile Include="Controllers\ExportController.cs" />
@@ -296,6 +297,7 @@
     <Content Include="Content\bootstrap-modal-bs3patch.css" />
     <Content Include="Content\bootstrap-modal.css" />
     <Content Include="Content\datepicker3.css" />
+    <Content Include="Content\Images\ajax-loader-green.gif" />
     <Content Include="Content\Images\cart_remove.png" />
     <Content Include="Content\Images\ajax-loader-blue.gif" />
     <Content Include="Content\Images\ajax-loader.gif" />
@@ -400,10 +402,14 @@
     <Content Include="Areas\HelpPage\Views\Help\Api.cshtml" />
     <Content Include="Areas\HelpPage\Views\_ViewStart.cshtml" />
     <Content Include="ajax-ontologyLazy.json" />
+    <None Include="Properties\PublishProfiles\dev-hiswebclient - FTP.pubxml" />
+    <None Include="Properties\PublishProfiles\dev-hiswebclient - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\hiswebclient.pubxml" />
     <Content Include="Content\FancyTree\skin-xp\ui.fancytree.less" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\Custom\DownloadHelper.js" />
+    <Content Include="Scripts\Custom\jquery-filedownload.js" />
+    <Content Include="Scripts\Custom\test1.js" />
     <Content Include="Scripts\Custom\webclient.js" />
     <Content Include="Scripts\Fancytree\jquery-ui.custom.js" />
     <Content Include="Scripts\Fancytree\jquery.fancytree.childcounter.js" />
@@ -478,6 +484,8 @@
     <Content Include="Views\Home\Fancytreetest.cshtml" />
     <Content Include="Views\Home\MapTabtest.cshtml" />
     <Content Include="Views\Home\Index2.cshtml" />
+    <Content Include="Views\Home\datatablestest.cshtml" />
+    <Content Include="Views\Home\Maptest.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

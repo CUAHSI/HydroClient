@@ -87,7 +87,20 @@ namespace HISWebClient.Controllers
 
             return View();
         }
-       
+
+
+        public ActionResult Maptest()
+        {
+            ViewBag.Message = "Your application description page.";
+
+            return View();
+        }
+        public ActionResult datatablestest()
+        {
+            ViewBag.Message = "Your application description page.";
+
+            return View();
+        }
         public ActionResult updateMarkers(FormCollection collection)
         {
             var searchSettings = new SearchSettings();
@@ -289,9 +302,18 @@ namespace HISWebClient.Controllers
             {
                 var allRetrievedSeriesArray = allRetrievedSeries.ToArray();
 
+                var seriesInCluster = new List<TimeSeriesViewModel>();
+
+                for (int i = 0; i< allRetrievedSeriesArray.Length ;i++ )
+                {
+                    
+                    var obj = (TimeSeriesViewModel)allRetrievedSeriesArray[i];
+
+                    if (obj != null) seriesInCluster.Add(obj);
+                }
                 
                 //var json = new JavaScriptSerializer().Serialize(seriesInCluster);
-                var json = JsonConvert.SerializeObject(allRetrievedSeriesArray);
+                var json = JsonConvert.SerializeObject(seriesInCluster);
                 json = "{ \"data\":" + json + "}";
                 return json;
             }

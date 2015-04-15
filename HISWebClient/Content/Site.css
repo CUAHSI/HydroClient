@@ -7,7 +7,7 @@
 .body-content {
    
     padding-top: 50px;
-    padding-right: 15px;*/
+    padding-right: 15px;
 }
 
 /* Override the default bootstrap behavior where horizontal description lists 
@@ -30,7 +30,7 @@
     color:lightgray;
     background-color: lightgray;
     border:ridge;
-    padding:3px;
+    padding:2px;
 }
 .expander{
     top:50px;
@@ -41,19 +41,24 @@ selector{
     border:inset;
     border-width:thin;
 }
+
 #map-canvas {
     top:0px;
     width: 100%;
     /*height: 600px;*/
     /*min-height: 100%;*/
-    left:0px;
+    /*//left:0px;*/
     /*position:absolute;*/
     padding:0px;
+    margin:0px;
+    
 }
 #myTab{
      position:absolute;
-     top:50px;
-     z-index:100000;
+     top:100px;
+     z-index:1000;
+     left:0px;
+
 }
 .full-screen {
     /*width: 80%;*/
@@ -119,11 +124,11 @@ div.GblueLabel64 {  padding-top: 22px;  width: 64px;  font-size: 13px;}
 #wrapper {
 }
 #menu {
-   width: 175px; 
+   width: 200px;
    /*height:225px;*/
     position: absolute;/*this will position the div according to its parent div "map"*/
     top: 45px;
-    right: 0px; /*place the div wherever you want with top and left px, em or % values*/
+    right: 15px; /*place the div wherever you want with top and left px, em or % values*/
     float:right;
     
  /*Use this for your trasparency*/
@@ -186,3 +191,51 @@ span.fancytree-childcounter {
 }*/
 
 .datepicker{z-index:1151 !important;}
+
+tr.selected {background: #009900;}
+.downloadFail {background: #CC0000;}
+
+
+/*Google maps searchbar*/
+.controls {
+        margin-top: 16px;
+        border: 1px solid transparent;
+        border-radius: 2px 0 0 2px;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        height: 32px;
+        outline: none;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      }
+
+      #pac-input {
+        background-color: #fff;
+        font-family: Roboto;
+        font-size: 15px;
+        font-weight: 300;
+        margin-left: 12px;
+        padding: 0 11px 0 13px;
+        text-overflow: ellipsis;
+        width: 400px;
+      }
+
+      #pac-input:focus {
+        border-color: #4d90fe;
+      }
+
+      .pac-container {
+        font-family: Roboto;
+      }
+
+      #type-selector {
+        color: #fff;
+        background-color: #4d90fe;
+        padding: 5px 11px 0px 11px;
+      }
+
+      #type-selector label {
+        font-family: Roboto;
+        font-size: 13px;
+        font-weight: 300;
+      }
+

@@ -19,9 +19,11 @@ $(document).ready(function () {
 
 function initialize() {
 
-    var myCenter = new google.maps.LatLng(42.3, -71.1);
+    var myCenter = new google.maps.LatLng(34, -100);
+    
     var marker = new google.maps.Marker({
-        position: myCenter
+        map: map,
+        anchorPoint: new google.maps.Point(0, -29)
     });
 
     infoWindow = new google.maps.InfoWindow();
@@ -31,7 +33,7 @@ function initialize() {
 
     var mapProp = {
         center: myCenter,
-        zoom: 11,
+        zoom: 4,
         draggable: true,
         scrollwheel: true,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
@@ -42,18 +44,20 @@ function initialize() {
         panControl:false,        
         zoomControlOptions: {     
             style: google.maps.ZoomControlStyle.SMALL,
-            position: google.maps.ControlPosition.BOTTOM_LEFT
+            position: google.maps.ControlPosition.RIGHT_BOTTOM
         },
         mapTypeControlOptions: {
-            style: google.maps.MapTypeControlStyle.SMALL,
-            position: google.maps.ControlPosition.TOP_CENTER,
-            mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.SATELLITE, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.TERRAIN]
+            style: google.maps.MapTypeControlStyle.DEFAULT,
+            position: google.maps.ControlPosition.LEFT_BOTTOM,
+            mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.TERRAIN]
         },
     };
     $("#map-canvas").height(getMapHeight()) //setMapHeight
     $("#map-canvas").width(getMapWidth()) //setMapWidth
     map = new google.maps.Map(document.getElementById("map-canvas"), mapProp);
     //marker.setMap(map);
+
+
 
     //map.enableKeyDragZoom({
     //    visualEnabled: true,
@@ -67,6 +71,71 @@ function initialize() {
     //        on: "Turn off"
     //    }
     //});
+
+    var input = /** @type {HTMLInputElement} */(
+      document.getElementById('pac-input'));
+
+    var types = document.getElementById('type-selector');
+    map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+    map.controls[google.maps.ControlPosition.TOP_LEFT].push(types);
+
+    var autocomplete = new google.maps.places.Autocomplete(input);
+    autocomplete.bindTo('bounds', map);
+
+
+    google.maps.event.addListener(autocomplete, 'place_changed', function() {
+        //infowindow.close();
+        marker.setVisible(false);
+        var place = autocomplete.getPlace();
+        if (!place.geometry) {
+            return;
+        }
+
+        // If the place has a geometry, then present it on a map.
+        if (place.geometry.viewport) {
+            map.fitBounds(place.geometry.viewport);
+        } else {
+            map.setCenter(place.geometry.location);
+            map.setZoom(14);  // Why 17? Because it looks good.
+        }
+        marker.setIcon(/** @type {google.maps.Icon} */({
+            url: place.icon,
+            size: new google.maps.Size(71, 71),
+            origin: new google.maps.Point(0, 0),
+            anchor: new google.maps.Point(17, 34),
+            scaledSize: new google.maps.Size(35, 35)
+        }));
+        marker.setPosition(place.geometry.location);
+        marker.setVisible(true);
+
+        var address = '';
+        if (place.address_components) {
+            address = [
+              (place.address_components[0] && place.address_components[0].short_name || ''),
+              (place.address_components[1] && place.address_components[1].short_name || ''),
+              (place.address_components[2] && place.address_components[2].short_name || '')
+            ].join(' ');
+        }
+
+        //infowindow.setContent('<div><strong>' + place.name + '</strong><br>' + address);
+        //infowindow.open(map, marker);
+    });
+
+    // Sets a listener on a radio button to change the filter type on Places
+    // Autocomplete.
+    function setupClickListener(id, types) {
+        var radioButton = document.getElementById(id);
+        google.maps.event.addDomListener(radioButton, 'click', function() {
+            autocomplete.setTypes(types);
+        });
+    }
+
+    setupClickListener('changetype-all', []);
+    //setupClickListener('changetype-address', ['address']);
+    //setupClickListener('changetype-establishment', ['establishment']);
+    setupClickListener('changetype-geocode', ['geocode']);
+
+
 
 
     //triger update of map on these events
@@ -136,15 +205,23 @@ function initialize() {
         $("#clear").on('click', function()
         {
             deleteClusteredMarkersOverlays()
+            $('#table').addClass('disabled');
             resetUserSelection()
         })
-    });
+    })
 
     //click event for tab
     $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
         if (e.target.id == "tableTab") { setUpTimeseriesDatatable(); }
         // activated tab
     })
+    $('#table').addClass('disabled');
+
+    //disable 
+    $('body').on('click', '.disabled', function (e) {
+        e.preventDefault();
+        return false;
+    });
 };
   
 function getMapHeight()
@@ -184,6 +261,9 @@ function processMarkers(geoJson)
 
         //features = json.features;
         if (typeof json.features != "undefined") {
+
+            $('#tableTab').removeClass('disabled')
+
             for (var i = 0, len = json.features.length; i < len; ++i) {
                 if (json.features[i].geometry.type == "Point") {
 
@@ -253,6 +333,7 @@ function processMarkers(geoJson)
 
                 }
             };
+            
         }
     }
 }
@@ -349,7 +430,7 @@ function updateMap(isNewRequest) {
     
   
     if (clusteredMarkersArray.length == 0 && isNewRequest == false) return;//only map navigation
-  $("#pageloaddiv").show();
+    $("#pageloaddiv").show();
     var formData = getFormData();
 
     //get the action-url of the form
@@ -377,6 +458,7 @@ function updateMap(isNewRequest) {
         success: function (data) {
             processMarkers(data)
             //setUpTimeseriesDatatable();
+            $('#table').removeClass('disabled');
             $("#pageloaddiv").hide();
         },
         error: function (xmlhttprequest, textstatus, message) {
@@ -767,6 +849,7 @@ function setUpDatatables(clusterid)
         "ajax": actionUrl,
         "autoWidth": true,
         "jQueryUI": false,
+        "deferRender": true,
          "dom": 'C<"clear">lfrtip',
          colVis: {
              restore: "Restore",
@@ -811,7 +894,40 @@ function setUpDatatables(clusterid)
             { "data": "Citation", "visible": false }            
         ],
         
-        "scrollX": true,       
+        // "scrollX": true, removed to fix column alignment 
+         
+         "createdRow": function (row, data, index) {
+
+             //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
+
+             var id = $('td', row).eq(0).html();
+             //var d = $('td', row).eq(4).html();
+             $('td', row).eq(0).append("<a href='/Export/downloadFile/" + id + "' id=" + id + " <span class='glyphicon glyphicon glyphicon-download-alt' aria-hidden='true'></span> </a>");
+             $('td', row).eq(0).click(function () {
+                 //downloadtimeseries('csv', id); return false;/Content/Images/ajax-loader-green.gif
+                 //$('#spinner' + id).removeClass('hidden')
+                 $(this).append("<img class='spinner ' src=/Content/Images/ajax-loader-green.gif>");
+                 //$.fileDownload($(this).prop('href'), {
+                 //    preparingMessageHtml: "We are preparing your report, please wait...",
+                 //    failMessageHtml: "There was a problem generating your report, please try again."
+                 //})
+                 
+                 $.fileDownload($(this).prop('href'))
+                     .done(function () {
+                         $('.spinner').addClass('hidden');
+                         $('.spinner').parent().parent().addClass('selected');
+
+                     })
+                     .fail(function () {
+                         $('.spinner').addClass('hidden');
+                         $('.spinner').parent().parent().addClass('downloadFail');
+                     });
+
+             });
+
+
+             //}
+         },
         initComplete: function () {
             var api = this.api();
            
@@ -835,7 +951,7 @@ function setUpDatatables(clusterid)
                     select.append( '<option value="'+d+'">'+d+'</option>' )
                 } );
             });
-            this.fnAdjustColumnSizing();
+            oTable.fnAdjustColumnSizing();
         }
         
           
@@ -844,43 +960,43 @@ function setUpDatatables(clusterid)
     });
 
     //##########Context menu
-    $(document).contextmenu({
-        on: ".dataTable tr",
-        menu: [
-          { title: "Download as CSV", cmd: "DownloadAsCSV" },
-          { title: "Add to DataCart", cmd: "AddtoDataCart" }
-        ],
-        select: function (event, ui) {
-            var celltext = ui.target.text();
+    //$(document).contextmenu({
+    //    on: ".dataTable tr",
+    //    menu: [
+    //      { title: "Download as CSV", cmd: "DownloadAsCSV" },
+    //      { title: "Add to DataCart", cmd: "AddtoDataCart" }
+    //    ],
+    //    select: function (event, ui) {
+    //        var celltext = ui.target.text();
            
 
-            var colvindex = ui.target.parent().children().index(ui.target);
-            var colindex = $('table thead tr th:eq(' + colvindex + ')').data('column-index');
-            switch (ui.cmd) {
-                case "DownloadAsCSV":
-                    var seriesId = ui.target.parent().children()[0].innerText;
-                    var cell = ui.target.parent().children()[0];
-                    //cell.cssClass("activeDownload");
-                    ui.target.parent().addClass('selected');
-                    $('.dataTable tr:eq(1)').addClass(".activeDownload")
-                         url = "/Export/downloadFile/" + seriesId
-                         var _iframe_dl = $('<iframe  onerror="alert()" />')
-                                 .attr('src', url)
-                                 .hide()                                 
-                                 .appendTo('body');
-                    break;
-                case "AddtoDataCart":
-                    alert("Datacart")
-                    break;
-            }
-        },
-        beforeOpen: function (event, ui) {
-            var $menu = ui.menu,
-                $target = ui.target,
-                extraData = ui.extraData;
-            ui.menu.zIndex(9999);
-        }
-    });
+    //        var colvindex = ui.target.parent().children().index(ui.target);
+    //        var colindex = $('table thead tr th:eq(' + colvindex + ')').data('column-index');
+    //        switch (ui.cmd) {
+    //            case "DownloadAsCSV":
+    //                var seriesId = ui.target.parent().children()[0].innerText;
+    //                var cell = ui.target.parent().children()[0];
+    //                //cell.cssClass("activeDownload");
+    //                ui.target.parent().addClass('selected');
+    //                $('.dataTable tr:eq(1)').addClass(".activeDownload")
+    //                     url = "/Export/downloadFile/" + seriesId
+    //                     var _iframe_dl = $('<iframe  onerror="alert()" />')
+    //                             .attr('src', url)
+    //                             .hide()                                 
+    //                             .appendTo('body');
+    //                break;
+    //            case "AddtoDataCart":
+    //                alert("Datacart")
+    //                break;
+    //        }
+    //    },
+    //    beforeOpen: function (event, ui) {
+    //        var $menu = ui.menu,
+    //            $target = ui.target,
+    //            extraData = ui.extraData;
+    //        ui.menu.zIndex(9999);
+    //    }
+    //});
     //////////#################
 
     //$('#dtMarkers tbody').on('click', 'tr', function () {
@@ -900,7 +1016,7 @@ function setUpDatatables(clusterid)
 
 
     $('#dtMarkers tbody').on('click', 'tr', function () {
-        $(this).addClass('selected');
+        //$(this).addClass('selected');
 
     });
     //####
@@ -1015,7 +1131,8 @@ function setUpTimeseriesDatatable()
     {
         return;
     }
-    $('#dtTimeseries').is(':visible')
+    // $('#dtTimeseries').(':visible')
+    $('#dtTimeseries').removeClass("hidden");
 
     $.fn.DataTable.isDataTable("#dtTimeseries")
     {
@@ -1027,27 +1144,8 @@ function setUpTimeseriesDatatable()
     var actionUrl = "/home/getTimeseries"
     // $('#example').DataTable().clear()
     // $('#demo').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example"></table>' );
-
     var oTable = $('#dtTimeseries').dataTable({
         "ajax": actionUrl,
-        "dom": 'C<"clear">lfrtip',
-        colVis: {
-            restore: "Restore",
-            showAll: "Show all",
-            showNone: "Show none",
-            activate: "mouseover",
-            exclude: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 16, 17, 18, 19, 20, 21],
-            groups: [
-               {
-                   title: "Main",
-                   columns: [0, 4, 5, 6.7]
-               },
-               {
-                   title: "Auxiliary",
-                   columns: [1, 2, 3, 8, 10, 11, 12, 13, 14, 15, 16, 16, 17, 18, 19, 20, 21]
-               }
-            ]
-        },
         "columns": [
 
            { "data": "SeriesId" },
@@ -1072,43 +1170,67 @@ function setUpTimeseriesDatatable()
            { "data": "IsRegular", "visible": false },
            { "data": "VariableUnits", "visible": false },
            { "data": "Citation", "visible": false }
-        ],
+        ]
 
-        "scrollX": true,
-        initComplete: function () {
-            var api = this.api();
-
-            api.columns().indexes().flatten().each(function (i) {
-                if (i > 6 || i == 0) return;
-                var column = api.column(i);
-                var select = $('<select><option value=""></option></select>')
-                    .appendTo($(column.footer()).empty())
-                    .on('change', function () {
-                        var val = $.fn.dataTable.util.escapeRegex(
-                            $(this).val()
-                        );
-
-                        column
-                            .search(val ? '^' + val + '$' : '', true, false)
-                            .draw();
-                    });
-
-                column.data().unique().sort().each(function (d, j) {
-
-                    select.append('<option value="' + d + '">' + d + '</option>')
-                });
-            });
-            this.fnAdjustColumnSizing();
-        }
+        //"createdRow": function (row, data, index) {
 
 
 
-        //"retrieve": true
+        //    var id = $('td', row).eq(0).html();
+        //    //var d = $('td', row).eq(4).html();
+        //    $('td', row).eq(0).append("<a href='/Export/downloadFile/" + id + " id=" + d + " <span class='glyphicon glyphicon glyphicon-download-alt' aria-hidden='true'></span> </a>");
+        //    //$('td', row).eq(0).click(function () {
+        //    //    //downloadtimeseries('csv', id); return false;
+
+        //    //    $.fileDownload($(this).prop('href'))
+        //    //        .done(function () { alert('File download a success!'); })
+        //    //        .fail(function () { alert('File download failed!'); });
+
+        //    //});
+        //}
     });
 
 
+        
+
 }
 
+function downloadtimeseries(format, id)
+{
+    //var name = $('td', this).eq(0).text();
+    //var id = this.cells[0].innerHTML;
+    url = "/Export/downloadFile/" + id
+
+
+    $.ajax({
+        url: url,
+        data:  null,
+        success: function (data) {
+            //Do something with data that is returned. (The downloaded file?)
+            alert();
+        }
+    });
+
+    //bootbox.confirm("Are you sure?", function (url) {
+
+    //var _iframe_dl = $('<iframe onload="testalert()";/>')
+    //    .attr('src', url)
+    //    //.hide()
+    //    .appendTo('body')
+        
+    //;
+    //});                         
+   
+}
+
+function resetUserSelection() {
+
+}
+
+function testalert()
+{
+    alert("a");
+}
 function fnGetSelected(oTableLocal) {
     var aReturn = new Array();
     oTableLocal.$("tr").filter(".row_selected").each(function (index, row) {
@@ -1130,12 +1252,8 @@ function serviceFailed(xmlhttprequest, textstatus, message)
     //}
     //else 
     //{
-    bootbox.alert('Service call failed. Please refresh page: ' + xmlhttprequest.status + '' + xmlhttprequest.statusText);
+    bootbox.alert('Service call failed with Error ' + xmlhttprequest.statusText+ ' Please limit search extent, date range or Concepts.');
     //}
 
 };
 
-function download()
-{
-    alert()
-}

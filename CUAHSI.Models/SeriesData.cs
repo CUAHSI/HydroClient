@@ -6,6 +6,7 @@ using System.Data;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text;
+using ServerSideHydroDesktop.ObjectModel;
 
 namespace CUAHSI.Models
 {
@@ -53,6 +54,18 @@ namespace CUAHSI.Models
         /// </summary>
         [DataMember]
         public List<HydroTag> tags { get; set; }
+
+        /// <summary>
+        /// List of Sources (MS) 
+        /// </summary>
+        [DataMember]
+        public Source mySource { get; set; }
+
+        /// <summary>
+        /// List of Variables (MS) 
+        /// </summary>
+        [DataMember]
+        public Variable myVariable { get; set; }
 
         /// <summary>
         /// Concatenates the HIS Ontology canonical names, and the site name, to produce a single name that shold be unique within HIS at the time that the search is conducted (no guarantee in the future).
@@ -117,6 +130,21 @@ namespace CUAHSI.Models
             values = dataValues.ToList();
             ontology = new List<OntologyItem>();
             tags = new List<HydroTag>();
+            
+        }
+        public SeriesData(int seriesId, SeriesMetadata myMeta, Boolean qcIsValidNow, IList<DataValue> dataValues, Variable variable, Source source)
+        {
+            myMetadata = myMeta;
+            SeriesID = seriesId;
+            HasConfirmedTimeStamp = true;
+            TimeStampMessage = string.Empty;
+            qcIsValid = qcIsValidNow;
+            myVariable = variable;           
+            values = dataValues.ToList();
+            ontology = new List<OntologyItem>();
+            tags = new List<HydroTag>();
+            mySource =source;
+
         }
     }
 }

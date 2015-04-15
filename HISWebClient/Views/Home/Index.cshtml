@@ -1,88 +1,147 @@
-﻿@{
-    Page.Title = ViewBag.Message;
-    <script>
-        sessionGuid = '@(ViewBag.ThisSessionGuid)';
-    </script>
-        //Layout = null;
-}
-@section styles
+﻿@section styles
 {
     @*<link href="~/Content/Sidebar.css" rel="stylesheet" />*@
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
+    <script src="//cdn.jsdelivr.net/jquery.ui-contextmenu/1.7.0/jquery.ui-contextmenu.min.js"></script>
 
     <link href="//cdn.datatables.net/1.10.4/css/jquery.dataTables.min.css" rel="stylesheet" />
     <link href="//cdn.datatables.net/colvis/1.1.1/css/dataTables.colVis.css" rel="stylesheet" />
-    @* <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/south-street/jquery-ui.min.css" rel="stylesheet" type="text/css" />*@
-
-    <script src="~/Scripts/Fancytree/jquery-ui.custom.js"></script>
+    <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/south-street/jquery-ui.min.css" rel="stylesheet" type="text/css" />
     <link href="~/Content/FancyTree/skin-xp/ui.fancytree.css" rel="stylesheet" />
-    <script src="~/Scripts/Fancytree/jquery.fancytree.js"></script>
-    <script src="~/Scripts/Fancytree/jquery.fancytree.filter.js"></script>
-    <script src="~/Scripts/Fancytree/jquery.fancytree.childcounter.js"></script>
-    <script src="~/Scripts/Fancytree/sample.js"></script>
+
+
 }
-
-<!-- HTML code from Bootply.com editor -->
-
-<div class="container">
-    <div class="row">
-        <div class="col-sm-12">
-            <h1>Google Map Inside Tab Panel</h1>
-
-            <ul class="nav nav-tabs" id="myTab">
-                <li class="active"><a href="#home" data-toggle="tab">Home</a></li>
-                <li><a href="#map" data-toggle="tab">Map</a></li>
-                <li><a href="#messages" data-toggle="tab">Messages</a></li>
-            </ul>
-
-            <div class="tab-content">
-                <div class="tab-pane active" id="home">Home content...</div>
-                <div class="tab-pane" id="map">
-                    <div id="map-canvas">
-
-                        <div class="container">
-                            <div id="pageloaddiv"></div>
-                            <div class="row">
-                                <div class="">
-                                    <div id="map-canvas"></div>
-                                    <div id="menu">
-                                        <div><img class="expander" alt="Expand" src="~/Content/Images/closetop.png" /></div>
-                                        <div class="" id="selectors">
-                                            <form id="Search" class="navbar-form" role="search">
-                                                <!-- Button trigger modal -->
-                                                <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectDateModal">Select Date</button>
-                                                <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectVariableModal">Select Variable(s)</button>
-                                                <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectServicesModal">Select Services(s)</button>
-
-                                                <div id="SelectedDateRange">
-
-                                                </div>
-                                                <br />
-                                                <button type="submit" class="btn btn-success btn-block">Search Map</button><br />
-                                                <button id="clear" type="button" class="btn btn-warning btn-xs btn-group-justified"> Clear map </button>
+<script type='text/javascript' src="http://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true&libraries=places"></script>
 
 
-                                            </form>
-                                        </div>
-                                    </div>
-                                    @*<h1 id="home">
-                                            <a id="menu-toggle" href="#" class="glyphicon glyphicon-align-justify ">
-                                                <i class="fa fa-bars"></i>
-                                            </a>
 
-                                        </h1>*@
+<div class="_container"><div class="row">
+
+    <div id="tabSelector" class=""></div>
+
+    <ul class="nav nav-tabs" id="myTab">
+        <li class="active navbar-custom"><a href="#map" id="mapTab" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> Map</a></li>
+        <li class="navbar-custom hidden"><a href="#graph" id="graphTab" data-toggle="tab"><span class="glyphicon glyphicon-home"></span> Graph</a></li>
+        <li id="table" class="navbar-custom "><a href="#table" id="tableTab" data-toggle="tab"><span class="glyphicon glyphicon-list"></span> Table</a></li>
+    </ul>
+</div>
+    <div class="tab-content">
+        <div class="tab-pane" id="table">
+            <table id="dtTimeseries" class="hidden" cellspacing="0" width="100%">
+                <thead>
+                    <tr>
+                        <th>SeriesId</th>
+                        <th>ServCode</th>
+                        <th>ServURL</th>
+                        <th>SiteCode</th>
+                        <th>VariableCode</th>
+                        <th>VariableName</th>
+                        <th>BeginDate</th>
+                        <th>EndDate</th>
+                        <th>ValueCount</th>
+                        <th>SiteName</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>DataType</th>
+                        <th>ValueType</th>
+                        <th>SampleMedium</th>
+                        <th>TimeUnit</th>
+                        <th>GeneralCategory</th>
+                        <th>TimeSupport</th>
+                        <th>ConceptKeyword</th>
+                        <th>IsRegular</th>
+                        <th>VariableUnits</th>
+                        <th>Citation</th>
+                    </tr>
+                </thead>
+
+                <tfoot>
+                    <tr>
+                        <th>SeriesId</th>
+                        <th>ServCode</th>
+                        <th>ServURL</th>
+                        <th>SiteCode</th>
+                        <th>VariableCode</th>
+                        <th>VariableName</th>
+                        <th>BeginDate</th>
+                        <th>EndDate</th>
+                        <th>ValueCount</th>
+                        <th>SiteName</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>DataType</th>
+                        <th>ValueType</th>
+                        <th>SampleMedium</th>
+                        <th>TimeUnit</th>
+                        <th>GeneralCategory</th>
+                        <th>TimeSupport</th>
+                        <th>ConceptKeyword</th>
+                        <th>IsRegular</th>
+                        <th>VariableUnits</th>
+                        <th>Citation</th>
+                    </tr>
+                </tfoot>
+            </table>
+
+
+
+        </div>
+        <div class="tab-pane active" id="map">
+            <div id="pageloaddiv"></div>
+            <div class="row">
+                <div class="">
+                    <div id="map-canvas"></div>
+                    <div id="menu">
+                        <div><img class="expander"  alt="Expand" src="~/Content/Images/closetop.png" /></div>
+                        <div class="" id="selectors">
+                            <form id="Search" class="navbar-form" role="search">
+                                <!-- Button trigger modal -->
+                                <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectDateModal">Select Date</button>
+                                <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectVariableModal">Select Concepts(s)</button>
+                                <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectServicesModal">Select Services(s)</button>
+
+                                <div id="SelectedDateRange">
+
                                 </div>
+                                <br />
+                                <button type="submit" class="btn btn-success btn-block">Search Map</button><br />
+                                <button id="clear" type="button" class="btn btn-warning btn-xs btn-group-justified"> Clear map </button>
 
-                            </div>
 
+                            </form>
                         </div>
-
                     </div>
+                    <input id="pac-input" class="controls" type="text"
+                           placeholder="Enter a location">
+                    <div id="type-selector" class="controls">
+                        <input type="radio" name="type" id="changetype-all" checked="checked">
+                        <label for="changetype-all">All</label>
+
+                        @*<input type="radio" name="type" id="changetype-establishment">
+                        <label for="changetype-establishment">Establishments</label>
+
+                        <input type="radio" name="type" id="changetype-address">
+                        <label for="changetype-address">Addresses</label>*@
+
+                        <input type="radio" name="type" id="changetype-geocode">
+                        <label for="changetype-geocode">Geocodes</label>
+                    </div>
+
+                    @*<h1 id="home">
+                            <a id="menu-toggle" href="#" class="glyphicon glyphicon-align-justify ">
+                                <i class="fa fa-bars"></i>
+                            </a>
+
+                        </h1>*@
                 </div>
-                <div class="tab-pane" id="messages">Messages...</div>
+
             </div>
         </div>
+        <div class="tab-pane hidden" id="graph">Messages...</div>
     </div>
 </div>
+@*</div>*@
+
 
 
 <!-- Modal -->
@@ -129,8 +188,8 @@
                     <div class="tabbable">
                         <!-- Only required for left/right tabs -->
                         <ul class="nav nav-tabs">
-                            <li class="active"><a href="#tab1" data-toggle="tab">Section 1</a></li>
-                            <li><a href="#tab2" data-toggle="tab">Section 2</a></li>
+                            <li class="active"><a href="#tab1" data-toggle="tab">Common</a></li>
+                            <li><a href="#tab2" data-toggle="tab">Hierarchy</a></li>
                         </ul>
                         <div class="tab-content">
                             <div class="tab-pane active" id="tab1">
@@ -213,8 +272,6 @@
     <!-- /.modal-content -->
 </div>
 <!-- /.modal-dialog -->
-    </div>
-
 <!-- Modal -->
 
 <div class="modal fade full-screen" id="SelectServicesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -270,8 +327,6 @@
     </div>
 </div>
 
-
-
 <!-- Modal -->
 <div class="modal fade full-screen" id="SelectDateModaltest" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-header">
@@ -289,7 +344,7 @@
                 <h5>Clicking the row will start the download of the data as a CSV file</h5>
             </div>
             <div class="modal-body-full">
-                <table id="dtMarkers" class="display" cellspacing="0" width="100%">
+                <table id="dtMarkers" class="display" data-toggle="context" data-target="#context-menu" cellspacing="0">
                     <thead>
                         <tr>
                             <th>SeriesId</th>
@@ -357,53 +412,28 @@
         <!-- /.modal-dialog -->
     </div>
 </div>
-
-<div id="context" data-toggle="context" data-target="#context-menu" style="height:300px;width:650px;border:1px solid #ddd">
-</div>
-
-<!-- Your custom menu with dropdown-menu as default styling -->
-<div id="context-menu">
-    <ul class="dropdown-menu" role="menu">
-        <li><a tabindex="-1">Action</a></li>
-        <li><a tabindex="-1">Another action</a></li>
-        <li><a tabindex="-1">Something else here</a></li>
-        <li class="divider"></li>
-        <li><a tabindex="-1">Separated link</a></li>
-    </ul>
-</div>
+@*<div id="context-menu">
+        <ul class="dropdown-menu" role="menu">
+            <li><a tabindex="-1" id="DownloadAsCSV" href="#">Download as CSV</a></li>
+            <li><a tabindex="-1" href="#">Add to DataCart</a></li>
+        </ul>
+    </div>*@
 
 
+@*<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>*@
 
-<!-- /.modal -->
-@*<script type='text/javascript' src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-
-
-    <script type='text/javascript' src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>*@
-
-
-<script type='text/javascript' src="http://maps.googleapis.com/maps/api/js?sensor=false&extension=.js&output=embed"></script>
-
-
-
-
-
-<!-- JavaScript jQuery code from Bootply.com editor  -->
-
-<script src="~/Scripts/bootstrap-datepicker.js"></script>
 <script src="~/Scripts/Google/markerwithlabel.js"></script>
 <script src="//cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js"></script>
 <script src="//cdn.datatables.net/colvis/1.1.1/js/dataTables.colVis.min.js"></script>
-@*<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>*@
 
-@*<script src="//cdn.jsdelivr.net/jquery.ui-contextmenu/1.7.0/jquery.ui-contextmenu.min.js"></script>*@
-@*<script src="//cdn.datatables.net/plug-ins/725b2a2115b/api/fnFilterClear.js"></script>*@
 
 <script src="~/Scripts/Google/keydragzoom_packed.js"></script>
-@*<script src="//cdn.datatables.net/plug-ins/9dcbecd42ad/integration/bootstrap/3/dataTables.bootstrap.js"></script>*@
-<script src="~/Scripts/Custom/webclient.js"></script>
-@*<script src="~/Scripts/custom/webclient.js"></script>*@
 @*<script src="~/Scripts/bootstrap-contextmenu.js"></script>*@
-
-<script>
-
-</script>
+<script src="~/Scripts/Custom/webclient.js"></script>
+<script src="~/Scripts/Fancytree/jquery-ui.custom.js"></script>
+<script src="~/Scripts/Fancytree/jquery.fancytree.js"></script>
+<script src="~/Scripts/Fancytree/jquery.fancytree.filter.js"></script>
+<script src="~/Scripts/Fancytree/jquery.fancytree.childcounter.js"></script>
+<script src="~/Scripts/Fancytree/sample.js"></script>
+<script src="~/Scripts/bootstrap-datepicker.js"></script>
+<script src="~/Scripts/Custom/jquery-filedownload.js"></script>
