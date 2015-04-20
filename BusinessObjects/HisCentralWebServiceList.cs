@@ -1,6 +1,7 @@
 ﻿using HISWebClient.DataLayer;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -24,7 +25,7 @@ namespace HISWebClient.BusinessObjects
         public HisCentralWebServicesList(string webServicesFilename)
         {
             //_hisCentralUrl = hisCentralUrl;
-            WebServicesFilename = "http://hiscentral.cuahsi.org/webservices/hiscentral_1_1.asmx";//Path.Combine(ServicesXmlDirectoryPath, DotSpatial.Data.Properties.Settings.Default.WebServicesFileName);
+            WebServicesFilename = ConfigurationManager.AppSettings["ServiceUrl1_1_Endpoint"]; // "http://hiscentral.cuahsi.org/webservices/hiscentral_1_1.asmx";//Path.Combine(ServicesXmlDirectoryPath, DotSpatial.Data.Properties.Settings.Default.WebServicesFileName);
         }
 
         #endregion

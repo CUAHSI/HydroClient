@@ -108,6 +108,7 @@
       <HintPath>..\packages\StackExchange.Redis.StrongName.1.0.371\lib\net45\StackExchange.Redis.StrongName.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.Services.Client" />
     <Reference Include="System.Drawing" />
@@ -164,7 +165,6 @@
     <Reference Include="System.Web.Abstractions" />
     <Reference Include="System.Web.Routing" />
     <Reference Include="System.Xml" />
-    <Reference Include="System.Configuration" />
     <Reference Include="System.Web.Services" />
     <Reference Include="System.EnterpriseServices" />
     <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -296,15 +296,24 @@
     <Content Include="Areas\HelpPage\HelpPage.css" />
     <Content Include="Content\bootstrap-modal-bs3patch.css" />
     <Content Include="Content\bootstrap-modal.css" />
+    <Content Include="Content\dataTables.colVis.css" />
     <Content Include="Content\datepicker3.css" />
-    <Content Include="Content\Images\ajax-loader-green.gif" />
+    <Content Include="Content\Images\ajax-loader-green.gif">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Images\beta.png" />
     <Content Include="Content\Images\cart_remove.png" />
     <Content Include="Content\Images\ajax-loader-blue.gif" />
     <Content Include="Content\Images\ajax-loader.gif" />
     <Content Include="Content\Images\cart_add.png" />
     <Content Include="Content\Images\closetop.png" />
     <Content Include="Content\Images\cuahsi_logo.png" />
-    <Content Include="Content\Images\download-icon.png" />
+    <Content Include="Content\Images\download-icon-25.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Images\download-icon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Images\HydroserverLogo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -323,6 +332,7 @@
     <Content Include="Content\Images\Markers\ClusterIcons\m4.png" />
     <Content Include="Content\Images\Markers\ClusterIcons\m5.png" />
     <Content Include="Content\Images\Markers\ClusterIcons\m6.png" />
+    <Content Include="Content\Images\Markers\ClusterIcons\m6_single.png" />
     <Content Include="Content\Images\Markers\Services\blue-20.png" />
     <Content Include="Content\Images\pageloader.gif" />
     <Content Include="Content\Images\cuahsi_logo_small.png" />
@@ -429,6 +439,7 @@
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />
     <None Include="Scripts\jquery.validate-vsdoc.js" />
+    <Content Include="Scripts\jquery.dataTables.js" />
     <Content Include="Scripts\jquery.validate.js" />
     <Content Include="Scripts\jquery.validate.min.js" />
     <Content Include="Scripts\jquery.validate.unobtrusive.js" />

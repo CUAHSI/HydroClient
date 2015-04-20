@@ -50,7 +50,7 @@ namespace HISWebClient.Controllers
             //LogHelper.LogNewAPIUse(sessionguid);
             var conceptKeyword = "";
             var ontologyHelper = new OntologyHelper();
-            var s = ontologyHelper.getOntology(conceptKeyword);
+            //var s = ontologyHelper.getOntology(conceptKeyword);
             return View();
         }
 
@@ -60,7 +60,12 @@ namespace HISWebClient.Controllers
 
             return View();
         }
+        public ActionResult About()
+        {
+            ViewBag.Message = "About";
 
+            return View();
+        }
         public ActionResult Contact()
         {
             ViewBag.Message = "Your contact page.";
@@ -140,8 +145,8 @@ namespace HISWebClient.Controllers
                 //{
                 //    keywords[k] = keywords[k].Replace("_", ",");
                 //}
-                var tileWidth = 1;
-                var tileHeight = 1;
+                var tileWidth = 2;
+                var tileHeight = 2;
                 List<int> webServiceIds = null;
                 try
                 {
@@ -233,11 +238,11 @@ namespace HISWebClient.Controllers
         {
             var sb =  new StringBuilder();
             sb.Append("[");
-	        sb.Append("{\"key\": \"1\", \"title\": \"Hydrosphere\", \"folder\": \"true\", \"children\": [");
+	        //sb.Append("{\"key\": \"1\", \"title\": \"Hydrosphere\", \"folder\": \"true\", \"children\": [");
 		    sb.Append("{\"key\": \"2\", \"title\": \"Physical\",\"folder\": true, \"lazy\":true},");
             sb.Append("{\"key\": \"3\", \"title\": \"Chemical\",\"folder\": true, \"lazy\":true},");
             sb.Append("{\"key\": \"4\", \"title\": \"Biological\",\"folder\": true, \"lazy\":true}");
-	        sb.Append("]}");	
+	        //.Append("]}");	
             sb.Append("]");
             //var json = new JsonResult(s);
             return sb.ToString();

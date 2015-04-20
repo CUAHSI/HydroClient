@@ -1,6 +1,7 @@
 ﻿using HISWebClient.BusinessObjects;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,7 +32,7 @@ namespace HISWebClient.BusinessObjects
                            new CatalogSettings
                            {
                                TypeOfCatalog = TypeOfCatalog.HisCentral,
-                               HISCentralUrl = "http://hiscentral.cuahsi.org/webservices/hiscentral_1_1.asmx"
+                               HISCentralUrl = ConfigurationManager.AppSettings["ServiceUrl1_1_Endpoint"] //http://hiscentral.cuahsi.org/webservices/hiscentral_1_1.asmx"
                            });
             }
         }

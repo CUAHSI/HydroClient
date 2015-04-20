@@ -17,7 +17,7 @@ namespace HISWebClient.DataLayer
 
         public DataWorker()
         {
-            hisCentralUrl = "http://hiscentral.cuahsi.org/webservices/hiscentral.asmx";
+            hisCentralUrl = System.Configuration.ConfigurationManager.AppSettings["ServiceUrl"]; // "http://hiscentral.cuahsi.org/webservices/hiscentral.asmx";
             webServicesFilename = "HisServicesList.xml";
         }
 

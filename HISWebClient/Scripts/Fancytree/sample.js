@@ -8,6 +8,7 @@
         selectMode: 3,
         extensions: ["childcounter", "filter"],
         quicksearch: true,
+        autoCollapse:false,
         source: {
             //url: "ajax-tree-plain.json"
             url: "/home/getOntologyMainCategories"

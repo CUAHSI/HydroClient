@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title - My ASP.NET Application</title>
+    <title>@ViewBag.Title - CUAHSI HIS HydroClient</title>
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
     @Scripts.Render("~/bundles/jquery")
@@ -23,16 +23,20 @@
 </head>
 <body>               
 
-    <div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar navbar-inverse navbar-fixed-top"><img src="~/Content/Images/beta.png" class="navbar-left" style="border:0px; vertical-align:top" />
         <div class="container">
             <div class="navbar-header">
-                <span><img src="~/Content/Images/cuahsi_logo_small.png" class="navbar-right" style="border:0px; vertical-align:top" /></span>
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              
+                <span>
+                    
+                    <img src="~/Content/Images/cuahsi_logo_small.png" class="navbar-left" style="border:0px; vertical-align:top" />
+                @*<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
-                </button>
-              @*  @Html.ActionLink("HIS Web Client-BETA", "Index", "Home", new { area = "" }, new { @class = "navbar-brand right" })*@
+                </button>*@
+                    
+                @Html.ActionLink("HIS HydroClient-BETA V. 0.2", "Index", "Home", new { area = "" }, new { @class = "navbar-left navbar-brand" })</span>
             </div>
             <div class="navbar-collapse collapse ">
                 <ul class="nav navbar-nav navbar-right ">

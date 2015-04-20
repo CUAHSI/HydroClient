@@ -19,7 +19,7 @@ $(document).ready(function () {
 
 function initialize() {
 
-    var myCenter = new google.maps.LatLng(34, -100);
+    var myCenter = new google.maps.LatLng(39, -92);
     
     var marker = new google.maps.Marker({
         map: map,
@@ -33,7 +33,7 @@ function initialize() {
 
     var mapProp = {
         center: myCenter,
-        zoom: 4,
+        zoom: 5,
         draggable: true,
         scrollwheel: true,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
@@ -199,23 +199,55 @@ function initialize() {
         //prevent Default functionality
         e.preventDefault();
         e.stopImmediatePropagation();
+        //var formData = getFormData();
+        var path=[];
+        var path = GetPathForBounds(map.getBounds())
+        var area = GetAreainSqareKilometers(path)
         
-        updateMap(true)        
-
-        $("#clear").on('click', function()
+        var selectedKeys = $("input[name='keywords']:checked").map(function () {
+            return $(this).val();
+        }).get();
+        //validate inputs
+        if (area > 5000 &&  selectedKeys.length == 0)
         {
-            deleteClusteredMarkersOverlays()
-            $('#table').addClass('disabled');
-            resetUserSelection()
-        })
-    })
+                bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search for All concepts.  <br> Please limit search area to less than 5000 sq km and/or reduce search terms .<h4>")
+            return
+        }
+        if (area > 5000 && selectedKeys.length == 1) {         
+           
+            if (area > 50000) {
+                bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search .  <br> Please limit search area to less than 50000 sq km and/or reduce search terms .<h4>")
+                return
+            }
+            else {
+                bootbox.confirm("<h4>Current selected area is " + area + " sq km. This search can take a long time. Do you want to continue?<h4>", function () {
 
+                    updateMap(true)
+                });
+            }
+        }
+        else {
+
+            updateMap(true)           
+        }
+
+        
+    })
+    $("#clear").on('click', function()
+            {
+                deleteClusteredMarkersOverlays()
+                $('.data').addClass('disabled');
+                resetUserSelection()
+            })
     //click event for tab
     $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
-        if (e.target.id == "tableTab") { setUpTimeseriesDatatable(); }
+        if (e.target.id == "tableTab")
+        {
+            setUpTimeseriesDatatable();
+        }
         // activated tab
     })
-    $('#table').addClass('disabled');
+    $('.data').addClass('disabled');
 
     //disable 
     $('body').on('click', '.disabled', function (e) {
@@ -227,12 +259,13 @@ function initialize() {
 function getMapHeight()
 {
     toolbarHeight = $(document).height() - $(window).height();
-    var mapHeight = $(document).height() - toolbarHeight-50 - $("#page-header").height() + "px";
+    var mapHeight = $(document).height() - toolbarHeight  + "px";
     return mapHeight;
 }
 
 function getMapWidth() {
     var mapWidth = $(window).width() + "px";
+    //var mapWidth = $(document).width() + "px";
     return mapWidth;
 }
 
@@ -452,13 +485,13 @@ function updateMap(isNewRequest) {
         url: actionurl,
         type: 'POST',
         dataType: 'json',
-        timeout: 30000,
+        timeout: 60000,
         //processData: false,
         data: formData,
         success: function (data) {
             processMarkers(data)
             //setUpTimeseriesDatatable();
-            $('#table').removeClass('disabled');
+            $('.data').removeClass('disabled');
             $("#pageloaddiv").hide();
         },
         error: function (xmlhttprequest, textstatus, message) {
@@ -520,7 +553,9 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
         var marker = new MarkerWithLabel({
             position: point,
-            icon: new google.maps.MarkerImage(markerPath + 'blue-20.png', new google.maps.Size(32, 32), null, null, new google.maps.Size(32, 32)),
+            icon: new google.maps.MarkerImage(clusterMarkerPath + 'm6_single.png', new google.maps.Size(32, 32), null, null, new google.maps.Size(32, 32)),
+            //icon: new google.maps.MarkerImage(markerPath + 'm6_single.png', new google.maps.Size(53, 52), null, new google.maps.Point(icon_width / 2, icon_width / 2), new google.maps.Size(icon_width, icon_width)),
+
             //icon: new google.maps.MarkerImage(/Content.png', new google.maps.Size(32, 32), null, null, new google.maps.Size(28, 28)),
             draggable: false,
             raiseOnDrag: true,
@@ -589,22 +624,22 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
         if (count < 5) {
             icon_choice = 0;
             icon_height = 28;
-            icon_width = 28;
+            icon_width = 32;
         }
         else if (count < 10) {
             icon_choice = 0;
             icon_height = 30;
-            icon_width = 30;
+            icon_width = 34;
         }
         else if (count < 25) {
             icon_choice = 1;
             icon_height = 32;
-            icon_width = 32;
+            icon_width = 36;
         }
         else if (count < 50) {
             icon_choice = 2;
             icon_height = 36;
-            icon_width = 36;
+            icon_width = 38;
         }
         else if (count < 100) {
             icon_choice = 3;
@@ -780,7 +815,7 @@ function setupServices()
          //    }
          //},
 
-         "scrollX": true,
+        // "scrollX": true,
          initComplete: function () {
              this.fnAdjustColumnSizing();
          }
@@ -849,24 +884,24 @@ function setUpDatatables(clusterid)
         "ajax": actionUrl,
         "autoWidth": true,
         "jQueryUI": false,
-        "deferRender": true,
+        //"deferRender": true,
          "dom": 'C<"clear">lfrtip',
          colVis: {
-             restore: "Restore",
-             showAll: "Show all",
+             //restore: "Restore",
+             //showAll: "Show all",
              //showNone: "Show none",
              activate: "mouseover",
              exclude: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,16,17,18,19,20,21],
-             //groups: [
-             //   {
-             //       title: "Main",
-             //       columns: [ 0, 4, 5,6.7]
-             //   },
-             //   {
-             //       title: "Auxiliary",
-             //       columns: [1, 2, 3, 8, 10, 11, 12, 13, 14, 15, 16, 16, 17, 18, 19, 20, 21]
-             //   }
-             //]
+             groups: [
+                //{
+                //    title: "Main",
+                //    columns: [ 0, 1,4, 5,6,7,9]
+                //},
+                {
+                    title: "Show All Columns",
+                    columns: [ 2, 3, 8, 9,10, 11, 12, 13, 14, 15, 16, 16, 17, 18, 19, 20, 21]
+                }
+             ]
          },
          "columns": [
              
@@ -894,7 +929,7 @@ function setUpDatatables(clusterid)
             { "data": "Citation", "visible": false }            
         ],
         
-        // "scrollX": true, removed to fix column alignment 
+         "scrollX": true, //removed to fix column alignment 
          
          "createdRow": function (row, data, index) {
 
@@ -902,17 +937,18 @@ function setUpDatatables(clusterid)
 
              var id = $('td', row).eq(0).html();
              //var d = $('td', row).eq(4).html();
-             $('td', row).eq(0).append("<a href='/Export/downloadFile/" + id + "' id=" + id + " <span class='glyphicon glyphicon glyphicon-download-alt' aria-hidden='true'></span> </a>");
+             //$('td', row).eq(0).append("<a href='/Export/downloadFile/" + id + "' id=" + id + " <span class='glyphicon glyphicon-download-alt'  aria-hidden='true'> </span> </a>");
+             $('td', row).eq(0).append("<a href='/Export/downloadFile/" + id + "' id=" + id + "<span><img  src='/Content/Images/download-icon-25.png' ></span> </a>");
              $('td', row).eq(0).click(function () {
                  //downloadtimeseries('csv', id); return false;/Content/Images/ajax-loader-green.gif
                  //$('#spinner' + id).removeClass('hidden')
-                 $(this).append("<img class='spinner ' src=/Content/Images/ajax-loader-green.gif>");
+                 $(this).append("<span><img class='spinner' src='/Content/Images/ajax-loader-green.gif'></span>");
                  //$.fileDownload($(this).prop('href'), {
                  //    preparingMessageHtml: "We are preparing your report, please wait...",
                  //    failMessageHtml: "There was a problem generating your report, please try again."
                  //})
                  
-                 $.fileDownload($(this).prop('href'))
+                 $.fileDownload($(this).prop('href'))                     
                      .done(function () {
                          $('.spinner').addClass('hidden');
                          $('.spinner').parent().parent().addClass('selected');
@@ -1146,8 +1182,8 @@ function setUpTimeseriesDatatable()
     // $('#demo').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example"></table>' );
     var oTable = $('#dtTimeseries').dataTable({
         "ajax": actionUrl,
+        "dom": 'C<"clear">lfrtip',
         "columns": [
-
            { "data": "SeriesId" },
            { "data": "ServCode", "sTitle": "Service Name" },
            { "data": "ServURL", "visible": false },
@@ -1170,28 +1206,38 @@ function setUpTimeseriesDatatable()
            { "data": "IsRegular", "visible": false },
            { "data": "VariableUnits", "visible": false },
            { "data": "Citation", "visible": false }
-        ]
+        ],
+        "createdRow": function (row, data, index) {
 
-        //"createdRow": function (row, data, index) {
+            //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
 
+            var id = $('td', row).eq(0).html();
+            //var d = $('td', row).eq(4).html();
+            $('td', row).eq(0).append("<a href='/Export/downloadFile/" + id + "' id=" + id + "<span><img  src='/Content/Images/download-icon-25.png' ></span> </a>");
+            $('td', row).eq(0).click(function () {
+                //downloadtimeseries('csv', id); return false;/Content/Images/ajax-loader-green.gif
+                //$('#spinner' + id).removeClass('hidden')
+                $(this).append("<span><img class='spinner' src='/Content/Images/ajax-loader-green.gif' style='padding-left:4px;padding-right:4px'></span>");
+                //$.fileDownload($(this).prop('href'), {
+                //    preparingMessageHtml: "We are preparing your report, please wait...",
+                //    failMessageHtml: "There was a problem generating your report, please try again."
+                //})
 
+                $.fileDownload($(this).prop('href'))
+                    .done(function () {
+                        $('.spinner').addClass('hidden');
+                        $('.spinner').parent().parent().addClass('selected');
 
-        //    var id = $('td', row).eq(0).html();
-        //    //var d = $('td', row).eq(4).html();
-        //    $('td', row).eq(0).append("<a href='/Export/downloadFile/" + id + " id=" + d + " <span class='glyphicon glyphicon glyphicon-download-alt' aria-hidden='true'></span> </a>");
-        //    //$('td', row).eq(0).click(function () {
-        //    //    //downloadtimeseries('csv', id); return false;
+                    })
+                    .fail(function () {
+                        $('.spinner').addClass('hidden');
+                        $('.spinner').parent().parent().addClass('downloadFail');
+                    });
 
-        //    //    $.fileDownload($(this).prop('href'))
-        //    //        .done(function () { alert('File download a success!'); })
-        //    //        .fail(function () { alert('File download failed!'); });
-
-        //    //});
-        //}
+            });
+        }        
     });
-
-
-        
+      
 
 }
 
@@ -1231,6 +1277,7 @@ function testalert()
 {
     alert("a");
 }
+
 function fnGetSelected(oTableLocal) {
     var aReturn = new Array();
     oTableLocal.$("tr").filter(".row_selected").each(function (index, row) {
@@ -1256,4 +1303,32 @@ function serviceFailed(xmlhttprequest, textstatus, message)
     //}
 
 };
+
+function GetAreainAcres(poly) {
+    var result = parseFloat(google.maps.geometry.spherical.computeArea(poly.getPath())) * 0.000247105;
+    return result.toFixed(4);
+}
+
+function GetAreainSqareKilometers(path) {
+    var result = parseFloat(google.maps.geometry.spherical.computeArea(path)) * 0.0000001;
+    return result.toFixed(4);
+}
+function GetPathForBounds(bounds)
+{
+    var ne = bounds.getNorthEast(); // LatLng of the north-east corner
+    var sw = bounds.getSouthWest(); // LatLng of the south-west corder 
+
+    var xMin = Math.min(ne.lng(), sw.lng())
+    var xMax = Math.max(ne.lng(), sw.lng())
+    var yMin = Math.min(ne.lat(), sw.lat())
+    var yMax = Math.max(ne.lat(), sw.lat())
+
+    var path = [];
+    path.push (ne)
+    path.push(new google.maps.LatLng(ne.lng(), sw.lat()))
+    path.push(sw)
+    path.push(new google.maps.LatLng(sw.lng(), ne.lat()))
+    return path;
+}
+
 

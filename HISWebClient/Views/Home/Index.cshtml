@@ -1,33 +1,33 @@
 ﻿@section styles
 {
     @*<link href="~/Content/Sidebar.css" rel="stylesheet" />*@
-    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
-    <script src="//cdn.jsdelivr.net/jquery.ui-contextmenu/1.7.0/jquery.ui-contextmenu.min.js"></script>
+    @*<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>*@
+ @*   <script src="//cdn.jsdelivr.net/jquery.ui-contextmenu/1.7.0/jquery.ui-contextmenu.min.js"></script>*@
 
-    <link href="//cdn.datatables.net/1.10.4/css/jquery.dataTables.min.css" rel="stylesheet" />
-    <link href="//cdn.datatables.net/colvis/1.1.1/css/dataTables.colVis.css" rel="stylesheet" />
-    <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/south-street/jquery-ui.min.css" rel="stylesheet" type="text/css" />
+    <link href="//cdn.datatables.net/1.10.6/css/jquery.dataTables.min.css" rel="stylesheet" />
+    
+  @*  <link href="//cdn.datatables.net/colvis/1.1.1/css/dataTables.colVis.css" rel="stylesheet" />*@
+    <link href="~/Content/dataTables.colVis.css" rel="stylesheet" />
+    @*<link href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/south-street/jquery-ui.min.css" rel="stylesheet" type="text/css" />*@
     <link href="~/Content/FancyTree/skin-xp/ui.fancytree.css" rel="stylesheet" />
-
-
+    
 }
-<script type='text/javascript' src="http://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true&libraries=places"></script>
-
-
+<script type='text/javascript' src="http://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true&libraries=places,geometry"></script>
 
 <div class="_container"><div class="row">
-
+<div id="pageloaddiv"></div>
     <div id="tabSelector" class=""></div>
-
+                            
     <ul class="nav nav-tabs" id="myTab">
         <li class="active navbar-custom"><a href="#map" id="mapTab" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> Map</a></li>
-        <li class="navbar-custom hidden"><a href="#graph" id="graphTab" data-toggle="tab"><span class="glyphicon glyphicon-home"></span> Graph</a></li>
-        <li id="table" class="navbar-custom "><a href="#table" id="tableTab" data-toggle="tab"><span class="glyphicon glyphicon-list"></span> Table</a></li>
+        <li class="navbar-custom disabled"><a href="#graph" id="graphTab" data-toggle="tab"><span class="glyphicon glyphicon-home"></span> Graph</a></li>
+        <li  class="navbar-custom data"><a href="#dataview" id="tableTab" data-toggle="tab"><span class="glyphicon glyphicon-list"></span> Data</a></li>
     </ul>
 </div>
     <div class="tab-content">
-        <div class="tab-pane" id="table">
-            <table id="dtTimeseries" class="hidden" cellspacing="0" width="100%">
+        <div class="tab-pane" id="dataview">
+           
+            <table width="100%"  id="dtTimeseries" class="display"  cellspacing="0">
                 <thead>
                     <tr>
                         <th>SeriesId</th>
@@ -82,17 +82,14 @@
                     </tr>
                 </tfoot>
             </table>
-
-
-
-        </div>
+</div>
         <div class="tab-pane active" id="map">
-            <div id="pageloaddiv"></div>
-            <div class="row">
-                <div class="">
+           
+            <div class="_row">
+                <div class="map">
                     <div id="map-canvas"></div>
                     <div id="menu">
-                        <div><img class="expander"  alt="Expand" src="~/Content/Images/closetop.png" /></div>
+                        <div><img class="expander" alt="Expand" src="~/Content/Images/closetop.png" /></div>
                         <div class="" id="selectors">
                             <form id="Search" class="navbar-form" role="search">
                                 <!-- Button trigger modal -->
@@ -105,23 +102,23 @@
                                 </div>
                                 <br />
                                 <button type="submit" class="btn btn-success btn-block">Search Map</button><br />
-                                <button id="clear" type="button" class="btn btn-warning btn-xs btn-group-justified"> Clear map </button>
+                                <button id="clear" type="button" class="btn btn-warning btn-block"> Clear map </button>
 
 
                             </form>
                         </div>
                     </div>
-                    <input id="pac-input" class="controls" type="text"
+                    <input id="pac-input" class="searchbarcontrols" type="text"
                            placeholder="Enter a location">
-                    <div id="type-selector" class="controls">
+                    <div id="type-selector" class="searchbarcontrols hidden">
                         <input type="radio" name="type" id="changetype-all" checked="checked">
                         <label for="changetype-all">All</label>
 
                         @*<input type="radio" name="type" id="changetype-establishment">
-                        <label for="changetype-establishment">Establishments</label>
+            <label for="changetype-establishment">Establishments</label>
 
-                        <input type="radio" name="type" id="changetype-address">
-                        <label for="changetype-address">Addresses</label>*@
+            <input type="radio" name="type" id="changetype-address">
+            <label for="changetype-address">Addresses</label>*@
 
                         <input type="radio" name="type" id="changetype-geocode">
                         <label for="changetype-geocode">Geocodes</label>
@@ -137,7 +134,7 @@
 
             </div>
         </div>
-        <div class="tab-pane hidden" id="graph">Messages...</div>
+        <div class="tab-pane" id="graph">A timeseries viewer will be available soon!</div>
     </div>
 </div>
 @*</div>*@
@@ -157,7 +154,7 @@
                 <div class="col-md-12">
                     <div class="row">
                         <div class="input-daterange">
-                            <input id="startDate" value="02/12/2000" />
+                            <input id="startDate" value="02/12/2010" />
                             <span class="add-on">to</span>
                             <input id="endDate" value="12/12/2014" />
                         </div>
@@ -273,7 +270,6 @@
 </div>
 <!-- /.modal-dialog -->
 <!-- Modal -->
-
 <div class="modal fade full-screen" id="SelectServicesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog-full">
         <div class="modal-content-full">
@@ -326,25 +322,16 @@
         <!-- /.modal-dialog -->
     </div>
 </div>
-
-<!-- Modal -->
-<div class="modal fade full-screen" id="SelectDateModaltest" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal">×</button>
-        <h3 ng-hide="newUser">Heading</h3>
-    </div>
-</div>
-
 <div class="modal fade full-screen" id="SeriesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog-full">
         <div class="modal-content-full">
             <div class="modal-header-full">
-                <button type="button" class="close" data-dismiss="modal" ariaplease click to start download as csv filehidden="true">&times;</button>
+                <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
                 <h3 class="modal-title" id="myModalLabel">List of Timeseries in area</h3>
-                <h5>Clicking the row will start the download of the data as a CSV file</h5>
+                <h5>Clicking the download icon will start the download of the data as a CSV file.</h5>
             </div>
             <div class="modal-body-full">
-                <table id="dtMarkers" class="display" data-toggle="context" data-target="#context-menu" cellspacing="0">
+                <table id="dtMarkers" class="display"  width="100%" cellspacing="0">
                     <thead>
                         <tr>
                             <th>SeriesId</th>
@@ -418,12 +405,19 @@
             <li><a tabindex="-1" href="#">Add to DataCart</a></li>
         </ul>
     </div>*@
-
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        </div><!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
 
 @*<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>*@
 
 <script src="~/Scripts/Google/markerwithlabel.js"></script>
-<script src="//cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js"></script>
+@*<script src="//cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js"></script>*@
+<script src="~/Scripts/jquery.dataTables.js"></script>
 <script src="//cdn.datatables.net/colvis/1.1.1/js/dataTables.colVis.min.js"></script>
 
 
