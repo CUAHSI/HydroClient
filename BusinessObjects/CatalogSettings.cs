@@ -9,6 +9,8 @@ namespace HISWebClient.BusinessObjects
 {
     public class CatalogSettings : ObservableObject<CatalogSettings>
     {
+
+        //THis is a test...
         private string _hisCentralUrl;
         public string HISCentralUrl
         {
