@@ -1,41 +1,42 @@
-﻿body {
+﻿
+
+ html, body, .container, .tab-content, .tab-pane {
+            height: 100%;
+        }
+ body {
     /*padding-top: 0px;*/
     /*padding-bottom: 0px;*/
     padding:0px;
 }
 
-/* Set padding to keep content from hitting the edges */
-.body-content {
-   
-    padding-top: 0px;
-    padding-right: 0px;
+.navbar
+{
+    background-color:lightgray;
+    height:50px;
 }
-
+.collapsing {
+        overflow: hidden!important;
+    }
 /* Override the default bootstrap behavior where horizontal description lists 
    will truncate terms that are too long to fit in the left column 
 */
 .dl-horizontal dt {
     white-space: normal;
 }
-
- html, body, .container, .tab-content, .tab-pane {
-            height: 100%;
-        }
-.navbar
-{
-    background-color:lightgray;
-    height:50px;
-
-}
-.collapsing {
-        overflow: hidden!important;
-    }
-
 .navbar-custom {
+    left:0px;
+    top:10px;
     color:lightgray;
     background-color: lightgray;
-    border:ridge;
+    border:inset;
+    border-width:1px;
     padding:2px;
+
+
+}
+.nav li a
+{
+    padding: 2px;
 }
 .expander{
     top:50px;
@@ -63,9 +64,9 @@ selector{
 }
 #myTab{
      position:absolute;
-     top:50px;
-     z-index:1000;
-     left:0px;
+     top:0px;
+     z-index:100000000000;
+     right: 0px;
 
 }
 .full-screen {
@@ -141,15 +142,15 @@ div.GblueLabel64 {  padding-top: 22px;  width: 64px;  font-size: 13px;}
    width: 200px;
    /*height:225px;*/
     position: absolute;/*this will position the div according to its parent div "map"*/
-    top: 50px;
-    right: 15px; /*place the div wherever you want with top and left px, em or % values*/
+    top: 0px;
+    right: 0px; /*place the div wherever you want with top and left px, em or % values*/
     float:right;
-    z-index: 10000;
+    z-index: 1000;
  /*Use this for your trasparency*/
-    background-color: white;
-    background-image: none;
-    opacity: .8; /*for real browsers (Chrome, Firefox, Safari..)*/
-    filter:alpha(opacity=60); /* for IE */
+    /*background-color: white;*/
+    /*background-image: none;*/
+    /*opacity: .8;*/ /*for real browsers (Chrome, Firefox, Safari..)*/
+    /*filter:alpha(opacity=60);*/ /* for IE */
     }
 .row-background-red{
     background-color:red;
@@ -212,7 +213,7 @@ tr.selected {background: #009900;}
 
 /*Google maps searchbar*/
 .searchbarcontrols {
-        margin-top: 107px;
+        margin-top: 60px;
         border: 1px solid transparent;
         border-radius: 2px 0 0 2px;
         box-sizing: border-box;
@@ -220,36 +221,53 @@ tr.selected {background: #009900;}
         height: 32px;
         outline: none;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-      }
+}
 
-      #pac-input {
-        background-color: #fff;
-        font-family: Roboto;
-        font-size: 15px;
-        font-weight: 300;
-        margin-left: 12px;
-        padding: 0 11px 0 13px;
-        text-overflow: ellipsis;
-        width: 265px;
-      }
+#pac-input {
+background-color: #fff;
+font-family: Roboto;
+font-size: 15px;
+font-weight: 300;
+margin-left: 12px;
+padding: 0 11px 0 13px;
+text-overflow: ellipsis;
+width: 265px;
+}
 
-      #pac-input:focus {
-        border-color: #4d90fe;
-      }
+#pac-input:focus {
+border-color: #4d90fe;
+}
 
-      .pac-container {
-        font-family: Roboto;
-      }
+.pac-container {
+font-family: Roboto;
+}
 
-      #type-selector {
-        color: #fff;
-        background-color: #4d90fe;
-        padding: 5px 11px 0px 11px;
-      }
+#type-selector {
+color: #fff;
+background-color: #4d90fe;
+padding: 5px 11px 0px 11px;
+}
 
-      #type-selector label {
-        font-family: Roboto;
-        font-size: 13px;
-        font-weight: 300;
-      }
+#type-selector label {
+font-family: Roboto;
+font-size: 13px;
+font-weight: 300;
+}
 
+* {
+    box-sizing: content-box;
+}
+.side-panel{
+	background-color: #E6E6E6;
+	padding: 0px;
+}
+
+.side-panel-left{
+	box-shadow: -5px 0 15px -6px #585858 inset;
+}
+.side-panel-left-overlay{
+	box-shadow: -10px 0 15px 10px #585858;
+}
+.side-panel-right{
+	box-shadow: 5px 0 15px -6px #585858 inset;
+}

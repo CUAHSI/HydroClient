@@ -1,0 +1,43 @@
+﻿* {
+    padding: 0px;
+    margin: 0px;
+}
+
+body {
+    background-color: #f1f1f1;
+}
+
+body div {
+    padding: 10px;
+}
+#map-canvas {
+   
+    
+    
+}
+.slider {
+    background-color: gray;
+    color: white;
+}
+
+#trigger {
+    width: 90%;
+    padding: 0px;
+    margin: 5px 5%;
+}
+.side-panel{
+    background-color: #E6E6E6;
+    padding: 0px;
+}
+
+.side-panel-left{
+    box-shadow: -5px 0 15px -6px #585858 inset;
+}
+.side-panel-left-overlay{
+    box-shadow: -10px 0 15px 10px #585858;
+}
+.side-panel-right{
+    box-shadow: 5px 0 15px -6px #585858 inset;
+}
+    
+

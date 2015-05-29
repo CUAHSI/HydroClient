@@ -21,21 +21,17 @@ using System.Xml;
 using System.Text.RegularExpressions;
 
 
-
-
 namespace HISWebClient.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly CUAHSI.DataExport.IExportEngine wdcStore;
-      
+        private readonly CUAHSI.DataExport.IExportEngine wdcStore;      
 
         public ActionResult Index()
         {
 
             ViewBag.Message = "CUAHSI Hydrologic Data Services";
-            //ViewBag.ServiceDomain = RoleEnvironment.GetConfigurationSettingValue("ServiceDomain");
-           
+            //ViewBag.ServiceDomain = RoleEnvironment.GetConfigurationSettingValue("ServiceDomain");           
             
             if (Session["sessionGuid"] == null)
             {
@@ -48,7 +44,7 @@ namespace HISWebClient.Controllers
                 ViewBag.ThisSessionGuid = Session["sessionGuid"].ToString();
             }
             //LogHelper.LogNewAPIUse(sessionguid);
-            var conceptKeyword = "";
+            //var conceptKeyword = "";
             var ontologyHelper = new OntologyHelper();
             //var s = ontologyHelper.getOntology(conceptKeyword);
             return View();
@@ -103,6 +99,12 @@ namespace HISWebClient.Controllers
         public ActionResult datatablestest()
         {
             ViewBag.Message = "Your application description page.";
+
+            return View();
+        }
+        public ActionResult viztest()
+        {
+            ViewBag.Message = "viztest";
 
             return View();
         }
@@ -232,7 +234,23 @@ namespace HISWebClient.Controllers
 
         }
 
+        public string getSeriesDataForViz()
+        {
+            StringBuilder sb  = new StringBuilder();
+            sb.Append("[");
+            sb.Append("[1,10,100],");
+            sb.Append("[2,20,80],");
+            sb.Append("[3,50,60],");
+            sb.Append("[4,70,80]");
+            sb.Append("]");
+            //sb.Append(",");
+            //sb.Append("{");
+            //sb.Append(" labels: [ \"x\", \"A\", \"B\" ]");
+            //sb.Append("}");
 
+            //return new ContentResult { Content = sb.ToString(), ContentType = "application/json" };
+            return sb.ToString();
+        }
         
         public string getOntologyMainCategories()
         {

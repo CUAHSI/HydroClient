@@ -54,7 +54,7 @@ namespace HISWebClient.Controllers
                 //filestream.Write(result, 0, result.Count);
                 return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename };
             }
-            catch
+            catch (Exception ex)
             {
                 string input = "An error occured downloading file: " + filename;
 
@@ -144,8 +144,8 @@ namespace HISWebClient.Controllers
                 {
                     // persist memory stream as blob
                     ms.Position = 0;
-                   // CloudStorageAccount cloudstorageAccount = CloudStorageAccount.Parse(CloudConfigurationManager.GetSetting("StorageConnectionString"));
-                    //CloudBlockBlob blob = await WriteMemoryStreamToBlobInGuidDirectory(data, ms, cloudStorageAccount);
+                    var csa = CloudStorageAccount.Parse(CloudConfigurationManager.GetSetting("StorageConnectionString"));
+                    CloudBlockBlob blob = await WriteMemoryStreamToBlobInGuidDirectory(data, ms, csa);
 
                 }           
 
@@ -157,9 +157,10 @@ namespace HISWebClient.Controllers
         private async Task<CloudBlockBlob> WriteMemoryStreamToBlobInGuidDirectory(SeriesData data, MemoryStream ms, CloudStorageAccount csa)
         {
             CloudBlobClient bClient = csa.CreateCloudBlobClient();
+            
             CloudBlobContainer container = bClient.GetContainerReference(DiscoveryStorageTableNames.SeriesDownloads);
             string fileName = GenerateBlobName(data);
-            CloudBlockBlob blob = container.GetDirectoryReference(new Guid().ToString()).GetBlockBlobReference(fileName);
+            CloudBlockBlob blob = container.GetDirectoryReference(Session.SessionID.ToString()).GetBlockBlobReference(fileName);
             blob.Properties.ContentType = "text/csv; utf-8";
             blob.Properties.ContentDisposition = string.Format("attachment; filename = {0}", fileName);
             await blob.DeleteIfExistsAsync();

@@ -1,5 +1,6 @@
 ﻿var map;
 var clusteredMarkersArray = [];
+var areaRect;
 var clusterMarkerPath = "/Content/Images/Markers/ClusterIcons/";
 var markerPath = "/Content/Images/Markers/Services/";
 var infoWindow;
@@ -10,21 +11,21 @@ var myServicesDatatable;
 var mySelectedServices = [];
 var mySelectedTimeSeries = [];
 var sessionGuid;
+var slider;
+var sidepanelVisible = false;
 
 $(document).ready(function () {
 
     $("#pageloaddiv").hide();
     initialize();
+   
 })
 
 function initialize() {
 
-    var myCenter = new google.maps.LatLng(39, -92);
+    var myCenter = new google.maps.LatLng(39, -92); //us
+    //var myCenter = new google.maps.LatLng(42.3, -71);//boston
     
-    var marker = new google.maps.Marker({
-        map: map,
-        anchorPoint: new google.maps.Point(0, -29)
-    });
 
     infoWindow = new google.maps.InfoWindow();
 
@@ -33,7 +34,7 @@ function initialize() {
 
     var mapProp = {
         center: myCenter,
-        zoom: 5,
+        zoom: 6,
         draggable: true,
         scrollwheel: true,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
@@ -52,29 +53,367 @@ function initialize() {
             mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.TERRAIN]
         },
     };
+
     $("#map-canvas").height(getMapHeight()) //setMapHeight
     $("#map-canvas").width(getMapWidth()) //setMapWidth
     map = new google.maps.Map(document.getElementById("map-canvas"), mapProp);
-    //marker.setMap(map);
+    
+
+    //UI
+    
+    addCustomMapControls();
+
+    slider = addSlider();
+ 
+    slider.slideReveal("show");
+  
+    addLocationSearch();
+    
+   
+  
 
 
+    //triger update of map on these events
+    google.maps.event.addListener(map, 'dblclick', function () {
+        if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
+            updateMap(false)
+            //$("#MapAreaControl").html(getMapAreaSize());
+        }
+    });
+    google.maps.event.addListener(map, 'dragend', function () {
+        if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
+            updateMap(false)
+            //$("#MapAreaControl").html(getMapAreaSize());
+        }
+    });
+    
+    google.maps.event.addListener(map, 'zoom_changed', function () {
+        if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
+            updateMap(false)
+            
+            //$("#MapAreaControl").html(getMapAreaSize());
+            
+        }
+    });
+    //added to load size on startup
+    google.maps.event.addListener(map, 'bounds_changed', function () {
+        if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
+            updateMap(false)
 
-    //map.enableKeyDragZoom({
-    //    visualEnabled: true,
-    //    visualPosition: google.maps.ControlPosition.LEFT,
-    //    visualPositionOffset: new google.maps.Size(35, 0),
-    //    visualPositionIndex: null,
-    //    visualSprite: "http://maps.gstatic.com/mapfiles/ftr/controls/dragzoom_btn.png",
-    //    visualSize: new google.maps.Size(20, 20),
-    //    visualTips: {
-    //        off: "Turn on and drag mouse to zoom",
-    //        on: "Turn off"
-    //    }
+            $("#MapAreaControl").html(getMapAreaSize());
+
+        }
+    });
+
+    //google.maps.event.addListener(marker, 'click', function () {
+
+    //    infowindow.setContent(contentString);
+    //    infowindow.open(map, marker);
+
     //});
+    
+    
+    google.maps.event.addDomListener(window, "resize", function () {
+        $("#map-canvas").height(getMapHeight()) //setMapHeight
+        $("#map-canvas").width(getMapWidth()) //setMapWidth
+       
+        google.maps.event.trigger(map, "resize");
+       
+    });
+   
 
+
+
+ 
+
+    //initialize datepicker
+    $('.input-daterange').datepicker()
+
+    //initialize show/hide for search box
+    $('.expander').on('click', function () {
+        $('#selectors').slideToggle();
+    });
+
+    $('#btnTopSelect').click(function () {
+        $("#tree").fancytree("getTree").visit(function (node) {
+                            node.setSelected(false);
+                        });
+                        //return false;
+    })
+
+    $('#btnHierarchySelect').click(function () {
+        
+                    
+        $("input[name='keywords']:checked").attr('checked', false);
+                
+        //return false;
+    })
+
+    $("#Search").submit(function (e) {       
+
+        resetMap()
+        //prevent Default functionality
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        //var formData = getFormData();
+        var path=[];
+        var path = GetPathForBounds(map.getBounds())
+        var area = GetAreainSqareKilometers(path)
+        
+        var selectedKeys = $("input[name='keywords']:checked").map(function () {
+            return $(this).val();
+        }).get();
+        //validate inputs
+        if (area > 10000 &&  selectedKeys.length == 0)
+        {
+                bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search for All concepts.  <br> Please limit search area to less than 10000 sq km and/or reduce search terms .<h4>")
+            return
+        }
+        if (area > 5000 && selectedKeys.length == 1) {         
+           
+            if (area > 500000) {
+                bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search .  <br> Please limit search area to less than 500000 sq km and/or reduce search terms .<h4>")
+                return
+            }
+            else {
+                bootbox.confirm("<h4>Current selected area is " + area + " sq km. This search can take a long time. Do you want to continue?<h4>", function () {
+
+                    updateMap(true)
+                });
+            }
+        }
+        else {
+
+            updateMap(true)           
+        }
+        // Construct the polygon.
+        areaRect = new google.maps.Polygon({
+            paths: path,
+            strokeColor: '#FF0000',
+            strokeOpacity: 0.5,
+            strokeWeight: 1,
+            fillColor: '#F8F8F8',
+            fillOpacity: 0
+        });
+
+        areaRect.setMap(map);
+
+        
+    })
+    $("#clear").on('click', function()
+            {
+                resetMap()
+            })
+    //click event for tab
+    $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
+        if (e.target.id == "tableTab")
+        {
+            setUpTimeseriesDatatable();
+            //hide sidebar
+            slider.slideReveal("hide")
+        }
+        // activated tab
+    })
+    $('.data').addClass('disabled');
+
+    //disable 
+    $('body').on('click', '.disabled', function (e) {
+        e.preventDefault();
+        return false;
+    });
+
+   
+};
+  
+function getMapHeight()
+{
+    
+    toolbarHeight = $(document).height() - $(window).height();
+    var mapHeight = $(document).height() - toolbarHeight + "px";
+    return mapHeight;
+}
+function getMapWidth(panelVisible)
+{    
+    var panelwidth = 0;
+    //panelVisible
+    //if (panelVisible) 
+    panelwidth = $('#slider').width();
+
+    //var mapWidth = $(window).width() - panelwidth + "px";
+    var mapWidth = $(window).width() - panelwidth + "px";
+    return mapWidth;
+}
+function addCustomMapControls()
+{
+    var toggleSidePanelDiv = document.createElement('div');
+    var toggleSidePanel = new toggleSidePanelControl(toggleSidePanelDiv, map);
+
+    toggleSidePanel.index = 1;
+    map.controls[google.maps.ControlPosition.RIGHT_TOP].push(toggleSidePanelDiv);
+
+    var AreaSizeDiv = document.createElement('div');
+    var AreaSize = new AreaSizeControl(AreaSizeDiv, map);
+
+    AreaSize.index = 1;
+    map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(AreaSizeDiv);
+}
+function addSlider()
+{
+    var _slider = $("#slider").slideReveal({
+        width: 200,
+        push: false,
+        position: "right",
+        top: 50,
+        speed: 300,
+        trigger: $("#trigger"),
+        // autoEscape: false,
+        show: function (obj) {
+            $("#map-canvas").width(($(window).width() - $('#slider').width())) //setMapWidth
+            if (typeof (map) != "undefined") google.maps.event.trigger(map, "resize");
+            sidepanelVisible = true;
+
+        },
+        shown: function (obj) {
+            //$("#map-canvas").position({ left:2* $('#slider').width() })
+            //$("#map-canvas").position({ right: $('#slider').width() })
+            // $("#map-canvas").width(($(window).width() - $('#slider').width())) //setMapWidth
+            // $("#map-canvas").position({ left:0 })
+            // google.maps.event.trigger(map, "resize");
+            console.log(obj);
+        },
+        hide: function (obj) {
+            $("#map-canvas").position({ left: -$('#slider').width() })
+            $("#map-canvas").width(($(window).width())) //setMapWidth
+
+            google.maps.event.trigger(map, "resize");
+            sidepanelVisible = false;
+        },
+        hidden: function (obj) {
+            console.log(obj);
+        }
+    });
+    return _slider;
+}
+function toggleSidePanelControl(controlDiv, map)
+   {
+
+    //var controlUI = document.createElement('button');
+    //controlUI.id = 'trigger';
+    //controlDiv.appendChild(controlUI);
+
+        // Set CSS for the control border
+        var controlUI = document.createElement('div');
+        controlUI.style.backgroundColor = 'red';
+        controlUI.style.border = '1px';
+        controlUI.style.borderRadius = '3px';
+        controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
+        controlUI.style.cursor = 'pointer';
+        controlUI.style.marginBottom = '2px';
+        controlUI.style.textAlign = 'center';
+        controlUI.title = 'Click to sho/hide side panel';
+        controlDiv.appendChild(controlUI);
+       
+
+        // Set CSS for the control interior
+        var controlText = document.createElement('button');
+        controlText.style.color = 'rgb(25,25,25)';
+        controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+        controlText.style.fontSize = '16px';
+        controlText.style.lineHeight = '25px';
+        controlText.style.paddingTop = '5px';
+        controlText.style.paddingLeft = '3px';
+        controlText.style.paddingRight = '3px';
+        controlText.style.border = '5px'
+        controlText.innerHTML = '< >';
+        controlText.id = 'trigger';
+        controlUI.appendChild(controlText);
+
+        // Setup the click event listeners: simply set the map to
+    // Chicago
+
+        google.maps.event.addDomListener(controlUI, 'click', function () {
+            if (sidepanelVisible) { slider.slideReveal("hide") }
+            else { slider.slideReveal("show") }
+        });
+
+        //if (typeof slider != "undefined") { // Show
+       
+        //} else { // Hide
+        //    self.slideReveal("hide");
+        //}
+}
+function AreaSizeControl(controlDiv, map) {
+
+    //var controlUI = document.createElement('button');
+    //controlUI.id = 'trigger';
+    //controlDiv.appendChild(controlUI);
+    //div{
+    //    -moz-border-radius:10px;
+    //    -webkit-border-radius:10px;
+    //    border-radius:10px;
+    //    background: #fff; /* fallback for browsers that don't understand rgba */
+    //    border: #solid 10px #000; /* fallback for browsers that don't understand rgba */
+    //    background-color: rgba(255,255,255,0.8)/* slighly transparent white */
+    //    border-color: rgba(0,0,0,0.2) /*Very transparent black*/
+    //}
+
+    // Set CSS for the control border
+    var controlUI = document.createElement('div');
+    controlUI.style.backgroundColor = 'rgb(250, 250, 250)';
+    controlUI.style.border = '1px';
+    controlUI.style.borderRadius = '5px';
+    controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
+    controlUI.style.cursor = 'pointer';
+    controlUI.style.marginBottom = '12px';
+    controlUI.style.textAlign = 'center';
+    controlUI.title = 'Current size of map area';
+    controlDiv.appendChild(controlUI);
+
+
+    // Set CSS for the control interior
+    var controlText = document.createElement('div');
+    controlText.style.color = 'rgb(125, 125, 125)';
+    controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+    controlText.style.fontSize = '12px';
+    controlText.style.lineHeight = '25px';
+    controlText.style.paddingTop = '0px';
+    controlText.style.paddingLeft = '3px';
+    controlText.style.paddingRight = '3px';
+    controlText.style.paddingBottom = '0px';
+    controlText.style.borderRadius = '15px';
+    controlText.style.backgroundColor = 'rgba(255,255,255,0.8)'/* slighly transparent white */
+    controlText.style.border = '5px'
+    controlText.innerHTML = "Area in sq km";
+    controlText.id = 'MapAreaControl';
+    controlUI.appendChild(controlText);
+
+    // Setup the click event listeners: simply set the map to
+    // Chicago
+
+    //google.maps.event.addListener(map, 'zoom_changed', function () {
+    //    var path = GetPathForBounds(map.getBounds())
+    //    var area = GetAreainSqareKilometers(path)
+    //    controlText.innerHTML = area;
+    //});
+        
+
+    
+
+    //if (typeof slider != "undefined") { // Show
+
+    //} else { // Hide
+    //    self.slideReveal("hide");
+    //}
+}
+function addLocationSearch()
+{
     var input = /** @type {HTMLInputElement} */(
       document.getElementById('pac-input'));
 
+    //var marker = new google.maps.Marker({
+    //    map: map,
+    //    anchorPoint: new google.maps.Point(0, -29)
+    //});
     var types = document.getElementById('type-selector');
     map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
     map.controls[google.maps.ControlPosition.TOP_LEFT].push(types);
@@ -85,7 +424,7 @@ function initialize() {
 
     google.maps.event.addListener(autocomplete, 'place_changed', function() {
         //infowindow.close();
-        marker.setVisible(false);
+        //marker.setVisible(false);
         var place = autocomplete.getPlace();
         if (!place.geometry) {
             return;
@@ -98,15 +437,15 @@ function initialize() {
             map.setCenter(place.geometry.location);
             map.setZoom(14);  // Why 17? Because it looks good.
         }
-        marker.setIcon(/** @type {google.maps.Icon} */({
-            url: place.icon,
-            size: new google.maps.Size(71, 71),
-            origin: new google.maps.Point(0, 0),
-            anchor: new google.maps.Point(17, 34),
-            scaledSize: new google.maps.Size(35, 35)
-        }));
-        marker.setPosition(place.geometry.location);
-        marker.setVisible(true);
+        //marker.setIcon(/** @type {google.maps.Icon} */({
+        //    url: place.icon,
+        //    size: new google.maps.Size(71, 71),
+        //    origin: new google.maps.Point(0, 0),
+        //    anchor: new google.maps.Point(17, 34),
+        //    scaledSize: new google.maps.Size(35, 35)
+        //}));
+        //marker.setPosition(place.geometry.location);
+        //marker.setVisible(true);
 
         var address = '';
         if (place.address_components) {
@@ -134,141 +473,20 @@ function initialize() {
     //setupClickListener('changetype-address', ['address']);
     //setupClickListener('changetype-establishment', ['establishment']);
     setupClickListener('changetype-geocode', ['geocode']);
-
-
-
-
-    //triger update of map on these events
-    google.maps.event.addListener(map, 'dblclick', function () {
-        if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
-            updateMap(false)
-        }
-    });
-    google.maps.event.addListener(map, 'dragend', function () {
-        if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
-            updateMap(false)
-        }
-    });
-    google.maps.event.addListener(map, 'zoom_changed', function () {
-        if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
-            updateMap(false)
-        }
-    });
-
-    //google.maps.event.addListener(marker, 'click', function () {
-
-    //    infowindow.setContent(contentString);
-    //    infowindow.open(map, marker);
-
-    //});
-
-    google.maps.event.addDomListener(window, "resize", function () {
-        $("#map-canvas").height(getMapHeight()) //setMapHeight
-        $("#map-canvas").width(getMapWidth()) //setMapWidth
-        google.maps.event.trigger(map, "resize");
-           
-    });
-
-
-   
-    //initialize datepicker
-    $('.input-daterange').datepicker()
-
-    //initialize show/hide for search box
-    $('.expander').on('click', function () {
-        $('#selectors').slideToggle();
-    });
-
-    $('#btnTopSelect').click(function () {
-        $("#tree").fancytree("getTree").visit(function (node) {
-                            node.setSelected(false);
-                        });
-                        //return false;
-    })
-
-    $('#btnHierarchySelect').click(function () {
-        
-                    
-        $("input[name='keywords']:checked").attr('checked', false);
-                
-        //return false;
-    })
-
-    $("#Search").submit(function (e) {       
-
-        //prevent Default functionality
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        //var formData = getFormData();
-        var path=[];
-        var path = GetPathForBounds(map.getBounds())
-        var area = GetAreainSqareKilometers(path)
-        
-        var selectedKeys = $("input[name='keywords']:checked").map(function () {
-            return $(this).val();
-        }).get();
-        //validate inputs
-        if (area > 5000 &&  selectedKeys.length == 0)
-        {
-                bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search for All concepts.  <br> Please limit search area to less than 5000 sq km and/or reduce search terms .<h4>")
-            return
-        }
-        if (area > 5000 && selectedKeys.length == 1) {         
-           
-            if (area > 50000) {
-                bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search .  <br> Please limit search area to less than 50000 sq km and/or reduce search terms .<h4>")
-                return
-            }
-            else {
-                bootbox.confirm("<h4>Current selected area is " + area + " sq km. This search can take a long time. Do you want to continue?<h4>", function () {
-
-                    updateMap(true)
-                });
-            }
-        }
-        else {
-
-            updateMap(true)           
-        }
-
-        
-    })
-    $("#clear").on('click', function()
-            {
-                deleteClusteredMarkersOverlays()
-                $('.data').addClass('disabled');
-                resetUserSelection()
-            })
-    //click event for tab
-    $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
-        if (e.target.id == "tableTab")
-        {
-            setUpTimeseriesDatatable();
-        }
-        // activated tab
-    })
-    $('.data').addClass('disabled');
-
-    //disable 
-    $('body').on('click', '.disabled', function (e) {
-        e.preventDefault();
-        return false;
-    });
-};
-  
-function getMapHeight()
+}
+function getMapAreaSize()
 {
-    toolbarHeight = $(document).height() - $(window).height();
-    var mapHeight = $(document).height() - toolbarHeight  + "px";
-    return mapHeight;
+    var path = GetPathForBounds(map.getBounds())
+    var area = GetAreainSqareKilometers(path)
+    return 'Area: ' + area + ' sq km';
 }
-
-function getMapWidth() {
-    var mapWidth = $(window).width() + "px";
-    //var mapWidth = $(document).width() + "px";
-    return mapWidth;
+function resetMap()
+{
+    deleteClusteredMarkersOverlays();
+    $('.data').addClass('disabled');
+    resetUserSelection()
+    if (typeof areaRect != "undefined") areaRect.setMap(null);
 }
-
 function processMarkers(geoJson)
 {
     //map.data.loadGeoJson('https://storage.googleapis.com/maps-devrel/google.json');
@@ -1310,8 +1528,13 @@ function GetAreainAcres(poly) {
 }
 
 function GetAreainSqareKilometers(path) {
+    
     var result = parseFloat(google.maps.geometry.spherical.computeArea(path)) * 0.0000001;
-    return result.toFixed(4);
+    //if (_result > 10000) result = result.toFixed(0);
+    if (result < 100) { return result.toFixed(3); }
+    if (result < 1000) { return result.toFixed(2); }
+    if (result < 10000) { return result.toFixed(1); }
+    return result.toFixed(0);
 }
 function GetPathForBounds(bounds)
 {
@@ -1325,9 +1548,9 @@ function GetPathForBounds(bounds)
 
     var path = [];
     path.push (ne)
-    path.push(new google.maps.LatLng(ne.lng(), sw.lat()))
+    path.push(new google.maps.LatLng(sw.lat(),ne.lng()))
     path.push(sw)
-    path.push(new google.maps.LatLng(sw.lng(), ne.lat()))
+    path.push(new google.maps.LatLng(ne.lat(),sw.lng()))
     return path;
 }
 

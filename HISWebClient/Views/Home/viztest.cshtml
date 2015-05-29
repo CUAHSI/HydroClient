@@ -1,0 +1,56 @@
+﻿
+@{
+    ViewBag.Title = "viztest";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script src="//cdnjs.cloudflare.com/ajax/libs/dygraph/1.1.0/dygraph-combined.js"></script>
+
+<h2>viztest</h2>
+
+<div id="graphdiv"></div>
+<script type="text/javascript">
+    new Dygraph(document.getElementById("graphdiv2"),
+             [
+               [2008-05-07, 10, 100],
+               [2008-05-08, 20, 80],
+               [2008-05-07, 50, 60],
+               [2008-05-07, 70, 80]
+             ],
+             {
+                 labels: ["x", "A", "B"]
+             });
+    function getValues()
+    {
+        var s =  "Date,Temperature\n" +
+      "2008-05-07,75\n" +
+      "2008-05-08,70\n" +
+      "2008-05-09,80\n"
+        return s;
+    }
+    function getValuesAjax()
+    {
+        var actionurl = '/home/getSeriesDataForViz';
+
+        $.ajax({
+            url: actionurl,
+            type: 'POST',
+            dataType: 'text',
+            timeout: 60000,
+            processData: false,
+            //data: formData,
+            success: function (data) {
+                //processMarkers(data)
+                return (data);
+                //$("#pageloaddiv").hide();
+            },
+            error: function (xmlhttprequest, textstatus, message) {
+                serviceFailed(xmlhttprequest, textstatus, message)
+                $("#pageloaddiv").hide();
+            }
+        });
+
+
+    }
+</script>
+
+
