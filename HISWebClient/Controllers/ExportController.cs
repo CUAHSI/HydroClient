@@ -109,7 +109,7 @@ namespace HISWebClient.Controllers
                 {
                     var dataResult = data.Item2.FirstOrDefault();
                     IList<DataValue> dataValues = dataResult.DataValueList.OrderBy(a => a.DateTimeUTC).Select(aa => new DataValue(aa)).ToList();
-                    return new Tuple<Stream, SeriesData>(data.Item1, new SeriesData(meta.SeriesID, meta, dataResult.QualityControlLevel.IsValid, dataValues,
+                    return new Tuple<Stream, SeriesData>(data.Item1, new SeriesData(meta.SeriesID, meta, dataResult.Method.Description.ToString(), dataResult.QualityControlLevel.Definition, dataValues,
                         dataResult.Variable, dataResult.Source));
                     //return new Tuple<Stream, SeriesData>(data.Item1, new SeriesData(meta.SeriesID, meta, dataValues, (IList < ServerSideHydroDesktop.ObjectModel.Series >) dataResult));
                 
@@ -186,7 +186,7 @@ namespace HISWebClient.Controllers
                 "VarUnits",
                 "SampleMedium",
                 "MethodDescription",
-                "QualityControlLevelCode",
+                "QualityControlLevel",
                 "DataType",
                 "ValueType",
                 "IsRegular",
@@ -209,9 +209,9 @@ namespace HISWebClient.Controllers
                 data.mySource.Link,
                 data.myMetadata.VariableName,
                 data.myVariable.VariableUnit.Name,
-                "SampleMedium",	
-                "MethodDescription",                            
-                "QualityControlLevelCode",		
+                data.myMetadata.SampleMedium,	
+                data.MethodDescription,                            
+                data.QualityControlLevelDefinition,		
                 data.myVariable.DataType,
                 data.myVariable.ValueType,
                 data.myVariable.IsRegular.ToString(),
@@ -221,7 +221,7 @@ namespace HISWebClient.Controllers
                 data.myMetadata.SiteCode,
                 data.myMetadata.Latitude.ToString(),
                 data.myMetadata.Longitude.ToString(),
-                "GeneralCategory",
+                data.myMetadata.GeneralCategory,
                 data.myVariable.NoDataValue.ToString(),                
                 data.mySource.Citation,
                 //"UTCOffset",                
@@ -239,7 +239,7 @@ namespace HISWebClient.Controllers
                 //DataValues
 
                 //csvwrtr.ValueSeparator = Char.Parse(",");
-                csvwrtr.WriteRecord(new List<string>() { "TimeStamp"
+                csvwrtr.WriteRecord(new List<string>() { "UTCTimeStamp"
                         ,"Value","OffsetType","OffsetValue", "ValueAccuracy",
                         "Qualifier","CensorCode", "UTCOffset" });
 
@@ -247,12 +247,13 @@ namespace HISWebClient.Controllers
                 {
                     List<string> values = new List<string>();
                     values.Add(value.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss"));
-                    values.Add(value.Value.ToString());
+                    values.Add(value.Value.ToString());                   
                     values.Add(value.OffsetType);
                     values.Add(value.OffsetValue.ToString());
                     values.Add(value.ValueAccuracy.ToString());
                     values.Add(value.Qualifier);
                     values.Add(value.CensorCode);
+                    values.Add(value.UTCOffset.ToString());
                     //values.Add(value.);
                     csvwrtr.WriteRecord(values);
                 }
@@ -277,20 +278,22 @@ namespace HISWebClient.Controllers
 
             var d = retrievedSeries[SeriesId];
 
-            object[] metadata = new object[13];
+            object[] metadata = new object[15];
             metadata[0] = d.ServCode;
             metadata[1] = d.ServURL;
             metadata[2] = d.SiteCode;
             metadata[3] = d.VariableCode;
             metadata[4] = d.SiteName;
             metadata[5] = d.VariableName;
-            metadata[6] = d.BeginDate;
-            metadata[7] = d.EndDate;
-            metadata[8] = d.ValueCount;
-            metadata[9] = d.Latitude;
-            metadata[10] = d.Longitude;
-            metadata[11] = 0;
-            metadata[12] = 0;
+            metadata[6] = d.SampleMedium;
+            metadata[7] = d.GeneralCategory;            
+            metadata[8] = d.BeginDate;
+            metadata[9] = d.EndDate;
+            metadata[10] = d.ValueCount;
+            metadata[11] = d.Latitude;
+            metadata[12] = d.Longitude;
+            metadata[13] = 0;
+            metadata[14] = 0;
             //metadata[13] = split[13];
 
 

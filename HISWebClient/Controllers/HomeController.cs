@@ -449,82 +449,82 @@ namespace HISWebClient.Controllers
 
         }
 
-        [HttpPost]
-        public string getSeriesValuesAsCSV(FormCollection collection)
-        {
-            //var series = new ServerSideHydroDesktop.ObjectModel.SeriesDataCart();
+        //[HttpPost]
+        //public string getSeriesValuesAsCSV(FormCollection collection)
+        //{
+        //    var series = new ServerSideHydroDesktop.ObjectModel.SeriesDataCart();
 
 
-            CUAHSI.Models.SeriesMetadata seriesMetaData = null;
+        //    CUAHSI.Models.SeriesMetadata seriesMetaData = null;
 
-            for (int i = 0; i < collection.Count; i++)
-            {
-                var split = collection[i].Split(',');
-                //   list[i] = new Array(rows[i].ServCode, rows[i].ServURL, rows[i].SiteCode, rows[i].VariableCode, rows[i].BeginDate, rows[i].EndDate);
-                object[] metadata = new object[13];
-                metadata[0] = split[0];
-                metadata[1] = split[1];
-                metadata[2] = split[2];
-                metadata[3] = split[3];
-                metadata[4] = split[4];
-                metadata[5] = split[5];
-                metadata[6] = split[6];
-                metadata[7] = split[7];
-                metadata[8] = split[8];
-                metadata[9] = split[9];
-                metadata[10] = split[10];
-                metadata[11] = 0;
-                metadata[12] = 0;
-                //metadata[13] = split[13];
-                seriesMetaData = new SeriesMetadata(metadata);
-            }
+        //    for (int i = 0; i < collection.Count; i++)
+        //    {
+        //        var split = collection[i].Split(',');
+        //        list[i] = new Array(rows[i].ServCode, rows[i].ServURL, rows[i].SiteCode, rows[i].VariableCode, rows[i].BeginDate, rows[i].EndDate);
+        //        object[] metadata = new object[13];
+        //        metadata[0] = split[0];
+        //        metadata[1] = split[1];
+        //        metadata[2] = split[2];
+        //        metadata[3] = split[3];
+        //        metadata[4] = split[4];
+        //        metadata[5] = split[5];
+        //        metadata[6] = split[6];
+        //        metadata[7] = split[7];
+        //        metadata[8] = split[8];
+        //        metadata[9] = split[9];
+        //        metadata[10] = split[10];
+        //        metadata[11] = 0;
+        //        metadata[12] = 0;
+        //        metadata[13] = split[13];
+        //        seriesMetaData = new SeriesMetadata(metadata);
+        //    }
 
-            var url = DoSeriesDownload(seriesMetaData);
+        //    var url = DoSeriesDownload(seriesMetaData);
 
 
 
-            return "url";
-        }
+        //    return "url";
+        //}
 
         public void setdownloadIds(FormCollection collection)
         {
 
         }
 
-        public async Task<string> DoSeriesDownload(SeriesMetadata seriesMetaData)
-        {
-            Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>> data = await SeriesAndStreamOfSeriesID(seriesMetaData);
-            Tuple<Stream, SeriesData> series = null;
-            DateTimeOffset requestTime = DateTimeOffset.UtcNow;
+        //public async Task<string> DoSeriesDownload(SeriesMetadata seriesMetaData)
+        //{
+        //    Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>> data = await SeriesAndStreamOfSeriesID(seriesMetaData);
+        //    Tuple<Stream, SeriesData> series = null;
+        //    DateTimeOffset requestTime = DateTimeOffset.UtcNow;
 
 
 
-            if (data == null || data.Item2.FirstOrDefault() == null)
-            {
-                throw new KeyNotFoundException();
-            }
-            else
-            {
-                var dataResult = data.Item2.FirstOrDefault();
-                IList<DataValue> dataValues = dataResult.DataValueList.OrderBy(a => a.DateTimeUTC).Select(aa => new DataValue(aa)).ToList();
-                series = new Tuple<Stream, SeriesData>(data.Item1, new SeriesData(seriesMetaData.SeriesID, seriesMetaData, dataResult.QualityControlLevel.IsValid, dataValues,
-                    dataResult.Variable.VariableUnit.Name, dataResult.Variable.VariableUnit.Abbreviation, dataResult.Site.VerticalDatum, dataResult.Site.Elevation_m));
-            }
+        //    if (data == null || data.Item2.FirstOrDefault() == null)
+        //    {
+        //        throw new KeyNotFoundException();
+        //    }
+        //    else
+        //    {
+        //        var dataResult = data.Item2.FirstOrDefault();
+        //        IList<DataValue> dataValues = dataResult.DataValueList.OrderBy(a => a.DateTimeUTC).Select(aa => new DataValue(aa)).ToList();
+        //        series = new Tuple<Stream, SeriesData>(data.Item1, new SeriesData(seriesMetaData.SeriesID, seriesMetaData, dataResult.Method, dataResult.QualityControlLevel.Code, dataValues,
+        //            dataResult.Variable.VariableUnit.Name, dataResult.Variable.VariableUnit.Abbreviation, dataResult.Site.VerticalDatum, dataResult.Site.Elevation_m));
+        //    }
 
-            string nameGuid = Guid.NewGuid().ToString();
+        //    string nameGuid = Guid.NewGuid().ToString();
 
-            var dl = wdcStore.PersistSeriesData(series.Item2, nameGuid, requestTime);
+        //    var dl = wdcStore.PersistSeriesData(series.Item2, nameGuid, requestTime);
 
-            //fire and forget => no reason to require consistency with user download.
-            var persist = wdcStore.PersistSeriesDocumentStream(data.Item1, 0, nameGuid, DateTime.UtcNow);
+        //    //fire and forget => no reason to require consistency with user download.
+        //    var persist = wdcStore.PersistSeriesDocumentStream(data.Item1, 0, nameGuid, DateTime.UtcNow);
 
-            await Task.WhenAll(new List<Task>() { dl, persist });
+        //    await Task.WhenAll(new List<Task>() { dl, persist });
 
-            series.Item2.wdcCache = dl.Result.Uri;
-            //return series.Item2;
-            Session["StatusMessage"] = dl.Result.Uri;
-            return dl.Result.Uri;
-        }
+        //    series.Item2.wdcCache = dl.Result.Uri;
+        //    //return series.Item2;
+        //    Session["StatusMessage"] = dl.Result.Uri;
+        //    return dl.Result.Uri;
+        //}
 
         public async Task<Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>>> SeriesAndStreamOfSeriesID(SeriesMetadata meta)
         {

@@ -38,7 +38,8 @@ namespace CUAHSI.Models
             SiteCode = Convert.ToString(r.ItemArray[2]);
             VarCode = Convert.ToString(r.ItemArray[3]);
             SiteName = Convert.ToString(r.ItemArray[4]);
-            VariableName = Convert.ToString(r.ItemArray[5]);          
+            VariableName = Convert.ToString(r.ItemArray[5]);   
+       
 
             StartDate = Convert.ToDateTime(r.ItemArray[6]);
             EndDate = Convert.ToDateTime(r.ItemArray[7]);
@@ -76,14 +77,17 @@ namespace CUAHSI.Models
             SiteName = Convert.ToString(ItemArray[4]);
             VariableName = Convert.ToString(ItemArray[5]);
 
-            StartDate = Convert.ToDateTime(ItemArray[6]);
-            EndDate = Convert.ToDateTime(ItemArray[7]);
-            ValueCount = Convert.ToInt32(ItemArray[8]);
+            SampleMedium = Convert.ToString(ItemArray[6]); ;
+            GeneralCategory = Convert.ToString(ItemArray[7]);
 
-            Latitude = Convert.ToDouble(ItemArray[9]);
-            Longitude = Convert.ToDouble(ItemArray[10]);
-            SeriesID = Convert.ToInt32(ItemArray[11]);
-            SiteID = Convert.ToInt32(ItemArray[12]);
+            StartDate = Convert.ToDateTime(ItemArray[8]);
+            EndDate = Convert.ToDateTime(ItemArray[9]);
+            ValueCount = Convert.ToInt32(ItemArray[10]);
+
+            Latitude = Convert.ToDouble(ItemArray[11]);
+            Longitude = Convert.ToDouble(ItemArray[12]);
+            SeriesID = Convert.ToInt32(ItemArray[13]);
+            SiteID = Convert.ToInt32(ItemArray[14]);
         }
 
         public Boolean HasValue()
@@ -110,8 +114,11 @@ namespace CUAHSI.Models
         public string SiteName { get; set; }
 
         
-        public string VariableName { get; set; }   
+        public string VariableName { get; set; }
 
+        public string SampleMedium { get; set; }
+
+        public string GeneralCategory { get; set; }   
         
         public DateTime StartDate { get; set; }
 

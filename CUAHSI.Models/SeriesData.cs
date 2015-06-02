@@ -90,8 +90,11 @@ namespace CUAHSI.Models
         [DataMember]
         public string unitAbbrev { get; set; }
 
-        [DataMember] 
-        public bool qcIsValid { get; set; }
+        [DataMember]
+        public string MethodDescription { get; set; }
+
+        [DataMember]
+        public string QualityControlLevelDefinition { get; set; }
 
         [DataMember] 
         public string VerticalDatum { get; set; }
@@ -115,30 +118,32 @@ namespace CUAHSI.Models
             tags = new List<HydroTag>();                
         }
 
-        public SeriesData(int seriesId, SeriesMetadata myMeta, Boolean qcIsValidNow, IList<DataValue> dataValues, string unitName, string unitAbbreviation,
-            string verticalDatum, double elev_m)
-        {
-            myMetadata = myMeta;
-            SeriesID = seriesId;
-            HasConfirmedTimeStamp = true;
-            TimeStampMessage = string.Empty;
-            qcIsValid = qcIsValidNow;
-            unit = unitName;
-            unitAbbrev = unitAbbreviation;
-            Elevation_m = elev_m;
-            VerticalDatum = verticalDatum;
-            values = dataValues.ToList();
-            ontology = new List<OntologyItem>();
-            tags = new List<HydroTag>();
+        //public SeriesData(int seriesId, SeriesMetadata myMeta, string methodDescription, string QualityControlLevelCode, IList<DataValue> dataValues, string unitName, string unitAbbreviation,
+        //    string verticalDatum, double elev_m)
+        //{
+        //    myMetadata = myMeta;
+        //    SeriesID = seriesId;
+        //    HasConfirmedTimeStamp = true;
+        //    TimeStampMessage = string.Empty;
+        //    MethodDescription = MethodDescription
+        //    QualityControlLevelCode = QualityControlLevelCode;
+        //    unit = unitName;
+        //    unitAbbrev = unitAbbreviation;
+        //    Elevation_m = elev_m;
+        //    VerticalDatum = verticalDatum;
+        //    values = dataValues.ToList();
+        //    ontology = new List<OntologyItem>();
+        //    tags = new List<HydroTag>();
             
-        }
-        public SeriesData(int seriesId, SeriesMetadata myMeta, Boolean qcIsValidNow, IList<DataValue> dataValues, Variable variable, Source source)
+        //}
+        public SeriesData(int seriesId, SeriesMetadata myMeta, string methodDescription, string qualityControlLevelDefinition, IList<DataValue> dataValues, Variable variable, Source source)
         {
             myMetadata = myMeta;
             SeriesID = seriesId;
             HasConfirmedTimeStamp = true;
             TimeStampMessage = string.Empty;
-            qcIsValid = qcIsValidNow;
+            MethodDescription = methodDescription;
+            QualityControlLevelDefinition = qualityControlLevelDefinition;
             myVariable = variable;           
             values = dataValues.ToList();
             ontology = new List<OntologyItem>();

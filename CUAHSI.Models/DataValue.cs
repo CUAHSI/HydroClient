@@ -15,6 +15,9 @@ namespace CUAHSI.Models
         public DateTime TimeStamp { get; set; }
 
         [DataMember]
+        public double UTCOffset { get; set; }
+
+        [DataMember]
         public Double Value { get; set; }
 
         [DataMember]
@@ -65,6 +68,7 @@ namespace CUAHSI.Models
         public DataValue(ServerSideHydroDesktop.ObjectModel.DataValue v)
         {
             TimeStamp = v.DateTimeUTC;
+            UTCOffset = v.UTCOffset;
             Value = v.Value;
             ValueAccuracy = v.ValueAccuracy;
             if (v.Qualifier != null)
@@ -75,7 +79,7 @@ namespace CUAHSI.Models
             {
                 OffsetType = v.OffsetType.Description;
             }
-            
+            CensorCode = v.CensorCode;
             OffsetValue = v.OffsetValue;
         }
     }
