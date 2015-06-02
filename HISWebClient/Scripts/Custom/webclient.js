@@ -165,14 +165,14 @@ function initialize() {
             return $(this).val();
         }).get();
         //validate inputs
-        if (area > 10000 &&  selectedKeys.length == 0)
+        if (area > 10000000000 &&  selectedKeys.length == 0)
         {
                 bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search for All concepts.  <br> Please limit search area to less than 10000 sq km and/or reduce search terms .<h4>")
             return
         }
         if (area > 5000 && selectedKeys.length == 1) {         
            
-            if (area > 500000) {
+            if (area > 500000000000) {
                 bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search .  <br> Please limit search area to less than 500000 sq km and/or reduce search terms .<h4>")
                 return
             }
@@ -265,7 +265,7 @@ function addSlider()
         push: false,
         position: "right",
         top: 50,
-        speed: 300,
+        speed: 100,
         trigger: $("#trigger"),
         // autoEscape: false,
         show: function (obj) {
@@ -498,7 +498,7 @@ function processMarkers(geoJson)
     if (json != null) {
         if (json.features.length == 0)
         {
-            alert(" No timeseries for specified parameters found.")
+            bootbox.alert(" No timeseries for specified parameters found.")
             return;
         }
         // set title
@@ -1033,8 +1033,16 @@ function setupServices()
          //        $(row).addClass('selected');
          //    }
          //},
+         "createdRow": function ( row, data, index ) {
 
-        // "scrollX": true,
+             var id = $('td', row).eq(0).html();
+             var title = $('td', row).eq(2).html();
+             var url = 'http://hiscentral.cuahsi.org/pub_network.aspx?n=';
+             $('td', row).eq(2).html("<a href='" + url + id + "' target='_Blank'>" + title + " </a>");
+
+
+         },
+         "scrollX": true,
          initComplete: function () {
              this.fnAdjustColumnSizing();
          }
@@ -1103,7 +1111,7 @@ function setUpDatatables(clusterid)
         "ajax": actionUrl,
         "autoWidth": true,
         "jQueryUI": false,
-        //"deferRender": true,
+        "deferRender": true,
          "dom": 'C<"clear">lfrtip',
          colVis: {
              //restore: "Restore",
@@ -1402,6 +1410,7 @@ function setUpTimeseriesDatatable()
     var oTable = $('#dtTimeseries').dataTable({
         "ajax": actionUrl,
         "dom": 'C<"clear">lfrtip',
+        "deferRender": true,
         "columns": [
            { "data": "SeriesId" },
            { "data": "ServCode", "sTitle": "Service Name" },
@@ -1518,7 +1527,9 @@ function serviceFailed(xmlhttprequest, textstatus, message)
     //}
     //else 
     //{
-    bootbox.alert('Service call failed with Error ' + xmlhttprequest.statusText+ ' Please limit search extent, date range or Concepts.');
+    bootbox.alert('Service call failed with Error ' + xmlhttprequest.statusText + ' Please limit search extent, date range or Concepts.');
+    //clean up
+    resetMap()
     //}
 
 };

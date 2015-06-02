@@ -65,7 +65,7 @@ selector{
 #myTab{
      position:absolute;
      top:0px;
-     z-index:100000000000;
+     z-index:1030;
      right: 0px;
 
 }
@@ -94,6 +94,7 @@ selector{
 .modal-body-full
 {
     width:100%;
+   
 }
 .modal-header-full
 {
@@ -145,7 +146,7 @@ div.GblueLabel64 {  padding-top: 22px;  width: 64px;  font-size: 13px;}
     top: 0px;
     right: 0px; /*place the div wherever you want with top and left px, em or % values*/
     float:right;
-    z-index: 1000;
+    z-index: 1002;
  /*Use this for your trasparency*/
     /*background-color: white;*/
     /*background-image: none;*/

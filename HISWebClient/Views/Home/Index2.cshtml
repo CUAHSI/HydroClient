@@ -1,58 +1,146 @@
-﻿@{
-    Page.Title = ViewBag.Message;
-    <script>
-        sessionGuid = '@(ViewBag.ThisSessionGuid)';
-    </script>
-        //Layout = null;
-}
-@section styles
+﻿@section styles
 {
     @*<link href="~/Content/Sidebar.css" rel="stylesheet" />*@
+    @*<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>*@
+    @*   <script src="//cdn.jsdelivr.net/jquery.ui-contextmenu/1.7.0/jquery.ui-contextmenu.min.js"></script>*@
 
-    <link href="//cdn.datatables.net/1.10.4/css/jquery.dataTables.min.css" rel="stylesheet" />
-    <link href="//cdn.datatables.net/colvis/1.1.1/css/dataTables.colVis.css" rel="stylesheet" />
-    @* <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/south-street/jquery-ui.min.css" rel="stylesheet" type="text/css" />*@
+    <link href="//cdn.datatables.net/1.10.6/css/jquery.dataTables.min.css" rel="stylesheet" />
+
+    @*  <link href="//cdn.datatables.net/colvis/1.1.1/css/dataTables.colVis.css" rel="stylesheet" />*@
+    <link href="~/Content/dataTables.colVis.css" rel="stylesheet" />
+    @*<link href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/south-street/jquery-ui.min.css" rel="stylesheet" type="text/css" />*@
+    <link href="~/Content/FancyTree/skin-xp/ui.fancytree.css" rel="stylesheet" />
 
 }
+<script type='text/javascript' src="http://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true&libraries=places,geometry"></script>
 
-<!-- HTML code from Bootply.com editor -->
-
-<div class="container">
-    <div id="pageloaddiv"></div>
+<div class="_container">
     <div class="row">
-        <div class="">
-            <div id="map-canvas"></div>
-            <div id="menu">
-                <div><img class="expander" alt="Expand" src="~/Content/Images/closetop.png" /></div>
-                <div class="" id="selectors">
-                    <form id="Search" class="navbar-form" role="search">
-                        <!-- Button trigger modal -->
-                        <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectDateModal">Select Date</button>
-                        <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectVariableModal">Select Variable(s)</button>
-                        <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectServicesModal">Select Services(s)</button>
+        <div id="pageloaddiv"></div>
+        <div id="tabSelector" class=""></div>
 
-                        <div id="SelectedDateRange">
-
-                        </div>
-                        <br />
-                        <button type="submit" class="btn btn-success btn-block">Search Map</button><br />
-                        <button id="clear" type="button" class="btn btn-warning btn-xs btn-group-justified"> Clear map </button>
-
-
-                    </form>
-                </div>
-            </div>
-            @*<h1 id="home">
-                    <a id="menu-toggle" href="#" class="glyphicon glyphicon-align-justify ">
-                        <i class="fa fa-bars"></i>
-                    </a>
-
-                </h1>*@
-        </div>
-
+        <ul class="nav nav-tabs" id="myTab">
+            <li class="active navbar-custom"><a href="#map" id="mapTab" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> Map</a></li>
+            <li class="navbar-custom disabled"><a href="#graph" id="graphTab" data-toggle="tab"><span class="glyphicon glyphicon-home"></span> Graph</a></li>
+            <li class="navbar-custom data"><a href="#dataview" id="tableTab" data-toggle="tab"><span class="glyphicon glyphicon-list"></span> Data</a></li>
+        </ul>
     </div>
+    <div class="tab-content">
+        <div class="tab-pane" id="dataview">
 
+            <table width="100%" id="dtTimeseries" class="display" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>SeriesId</th>
+                        <th>ServCode</th>
+                        <th>ServURL</th>
+                        <th>SiteCode</th>
+                        <th>VariableCode</th>
+                        <th>VariableName</th>
+                        <th>BeginDate</th>
+                        <th>EndDate</th>
+                        <th>ValueCount</th>
+                        <th>SiteName</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>DataType</th>
+                        <th>ValueType</th>
+                        <th>SampleMedium</th>
+                        <th>TimeUnit</th>
+                        <th>GeneralCategory</th>
+                        <th>TimeSupport</th>
+                        <th>ConceptKeyword</th>
+                        <th>IsRegular</th>
+                        <th>VariableUnits</th>
+                        <th>Citation</th>
+                    </tr>
+                </thead>
+
+                <tfoot>
+                    <tr>
+                        <th>SeriesId</th>
+                        <th>ServCode</th>
+                        <th>ServURL</th>
+                        <th>SiteCode</th>
+                        <th>VariableCode</th>
+                        <th>VariableName</th>
+                        <th>BeginDate</th>
+                        <th>EndDate</th>
+                        <th>ValueCount</th>
+                        <th>SiteName</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>DataType</th>
+                        <th>ValueType</th>
+                        <th>SampleMedium</th>
+                        <th>TimeUnit</th>
+                        <th>GeneralCategory</th>
+                        <th>TimeSupport</th>
+                        <th>ConceptKeyword</th>
+                        <th>IsRegular</th>
+                        <th>VariableUnits</th>
+                        <th>Citation</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="tab-pane active" id="map">
+
+            <div class="_row">
+                <div class="map">
+                    <div id="map-canvas"></div>
+                    <div id="menu">
+                        <div><img class="expander" alt="Expand" src="~/Content/Images/closetop.png" /></div>
+                        <div class="" id="selectors">
+                            <form id="Search" class="navbar-form" role="search">
+                                <!-- Button trigger modal -->
+                                <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectDateModal">Select Date</button>
+                                <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectVariableModal">Select Concepts(s)</button>
+                                <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectServicesModal">Select Services(s)</button>
+
+                                <div id="SelectedDateRange">
+
+                                </div>
+                                <br />
+                                <button type="submit" class="btn btn-success btn-block">Search Map</button><br />
+                                <button id="clear" type="button" class="btn btn-warning btn-block"> Clear map </button>
+
+
+                            </form>
+                        </div>
+                    </div>
+                    <input id="pac-input" class="searchbarcontrols" type="text"
+                           placeholder="Enter a location">
+                    <div id="type-selector" class="searchbarcontrols hidden">
+                        <input type="radio" name="type" id="changetype-all" checked="checked">
+                        <label for="changetype-all">All</label>
+
+                        @*<input type="radio" name="type" id="changetype-establishment">
+                            <label for="changetype-establishment">Establishments</label>
+
+                            <input type="radio" name="type" id="changetype-address">
+                            <label for="changetype-address">Addresses</label>*@
+
+                        <input type="radio" name="type" id="changetype-geocode">
+                        <label for="changetype-geocode">Geocodes</label>
+                    </div>
+
+                    @*<h1 id="home">
+                            <a id="menu-toggle" href="#" class="glyphicon glyphicon-align-justify ">
+                                <i class="fa fa-bars"></i>
+                            </a>
+
+                        </h1>*@
+                </div>
+
+            </div>
+        </div>
+        <div class="tab-pane" id="graph">A timeseries viewer will be available soon!</div>
+    </div>
 </div>
+@*</div>*@
+
+
 
 <!-- Modal -->
 <div class="modal fade" id="SelectDateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -67,7 +155,7 @@
                 <div class="col-md-12">
                     <div class="row">
                         <div class="input-daterange">
-                            <input id="startDate" value="02/12/2000" />
+                            <input id="startDate" value="02/12/2010" />
                             <span class="add-on">to</span>
                             <input id="endDate" value="12/12/2014" />
                         </div>
@@ -95,50 +183,94 @@
             </div>
             <div class="modal-body">
                 <div class="col-md-12">
-                    <div class="row">
-                        <div class="controls col-md-4">
-                            <label class="checkbox">
-                                <input type="checkbox" name="keywords" value="Temperature" id="inlineCheckbox2"> Temperature
-                            </label>
-                            <label class="checkbox">
-                                <input type="checkbox" name="keywords" value="Precipitation" id="inlineCheckbox3"> Precipitation
-                            </label>
-                            <label class="checkbox">
-                                <input type="checkbox" name="keywords" value="Discharge_ stream" id="inlineCheckbox7"> Streamflow
-                            </label>
-                            <label class="checkbox">
-                                <input type="checkbox" name="keywords" value="Salinity" id="inlineCheckbox3"> Salinity
-                            </label>
-                        </div>
-                        <div class="controls col-md-4">
-                            <label class="checkbox">
-                                <input type="checkbox" name="keywords" value="Humidity" id="inlineCheckbox4"> Humidity
-                            </label>
-                            <label class="checkbox">
-                                <input type="checkbox" name="keywords" value="Iron" id="inlineCheckbox5"> Iron
-                            </label>
-                            <label class="checkbox">
-                                <input type="checkbox" name="keywords" value="Lead" id="inlineCheckbox6"> Lead
-                            </label>
-                        </div>
+                    <div class="tabbable">
+                        <!-- Only required for left/right tabs -->
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#tab1" data-toggle="tab">Common</a></li>
+                            <li><a href="#tab2" data-toggle="tab">Hierarchy</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="tab1">
+                                <div class="row">
+                                    <div class="controls col-md-4">
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Temperature" id="inlineCheckbox2" class="topCategories"> Temperature
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Precipitation" id="inlineCheckbox3" class="topCategories"> Precipitation
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Discharge, stream" id="inlineCheckbox7" class="topCategories"> Streamflow
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Salinity" id="inlineCheckbox3" class="topCategories"> Salinity
+                                        </label>
+                                    </div>
+                                    <div class="controls col-md-4">
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Humidity" id="inlineCheckbox4" class="topCategories"> Humidity
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Iron" id="inlineCheckbox5" class="topCategories"> Iron
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Lead" id="inlineCheckbox6" class="topCategories"> Lead
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" id="btnTopSelect" class="btn btn-default btn-primary" data-dismiss="modal">Save</button>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="tab2">
+                                <p>
+                                    <label>Filter:</label>
+                                    <input name="search" placeholder="Filter...">
+                                    <button id="btnResetSearch">&times;</button>
+                                    <span id="matches"></span>
+                                </p>
+                                @*<p>
+                                        <label for="hideMode">
+                                            <input type="checkbox" id="hideMode">
+                                            Hide unmatched nodes
+                                        </label>
+                                        <label for="leavesOnly">
+                                            <input type="checkbox" id="leavesOnly">
+                                            Leaves only
+                                        </label>
+
+                                        <label for="regex">
+                                            <input type="checkbox" id="regex">
+                                            Regular expression
+                                        </label>
+                                    </p>
+                                    <p id="sampleButtons">
+                                    </p>*@
 
 
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default btn-primary" data-dismiss="modal">Save</button>
+                                <div id="tree" data-source="ajax" class="sampletree">
+
+
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" id="btnHierarchySelect" class="btn btn-default btn-primary" data-dismiss="modal">Save</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+
+
             </div>
         </div>
-
-
-        <!-- /.modal-content -->
     </div>
-    <!-- /.modal-dialog -->
+
+
+    <!-- /.modal-content -->
 </div>
-
+<!-- /.modal-dialog -->
 <!-- Modal -->
-
 <div class="modal fade full-screen" id="SelectServicesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog-full">
         <div class="modal-content-full">
@@ -191,27 +323,16 @@
         <!-- /.modal-dialog -->
     </div>
 </div>
-
-
-
-<!-- Modal -->
-<div class="modal fade full-screen" id="SelectDateModaltest" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal">×</button>
-        <h3 ng-hide="newUser">Heading</h3>
-    </div>
-</div>
-
 <div class="modal fade full-screen" id="SeriesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog-full">
         <div class="modal-content-full">
             <div class="modal-header-full">
-                <button type="button" class="close" data-dismiss="modal" ariaplease click to start download as csv filehidden="true">&times;</button>
+                <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
                 <h3 class="modal-title" id="myModalLabel">List of Timeseries in area</h3>
-                <h5>Clicking the row will start the download of the data as a CSV file</h5>
+                <h5>Clicking the download icon will start the download of the data as a CSV file.</h5>
             </div>
             <div class="modal-body-full">
-                <table id="dtMarkers" class="display" cellspacing="0" width="100%">
+                <table id="dtMarkers" class="display" width="100%" cellspacing="0">
                     <thead>
                         <tr>
                             <th>SeriesId</th>
@@ -279,53 +400,35 @@
         <!-- /.modal-dialog -->
     </div>
 </div>
-
-<div id="context" data-toggle="context" data-target="#context-menu" style="height:300px;width:650px;border:1px solid #ddd">
+@*<div id="context-menu">
+        <ul class="dropdown-menu" role="menu">
+            <li><a tabindex="-1" id="DownloadAsCSV" href="#">Download as CSV</a></li>
+            <li><a tabindex="-1" href="#">Add to DataCart</a></li>
+        </ul>
+    </div>*@
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        </div><!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
 </div>
 
-<!-- Your custom menu with dropdown-menu as default styling -->
-<div id="context-menu">
-    <ul class="dropdown-menu" role="menu">
-        <li><a tabindex="-1">Action</a></li>
-        <li><a tabindex="-1">Another action</a></li>
-        <li><a tabindex="-1">Something else here</a></li>
-        <li class="divider"></li>
-        <li><a tabindex="-1">Separated link</a></li>
-    </ul>
-</div>
-
-
-
-<!-- /.modal -->
-@*<script type='text/javascript' src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-
-
-    <script type='text/javascript' src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>*@
-
-
-<script type='text/javascript' src="http://maps.googleapis.com/maps/api/js?sensor=false&extension=.js&output=embed"></script>
-
-
-
-
-
-<!-- JavaScript jQuery code from Bootply.com editor  -->
-
-<script src="~/Scripts/bootstrap-datepicker.js"></script>
-<script src="~/Scripts/Google/markerwithlabel.js"></script>
-<script src="//cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js"></script>
-<script src="//cdn.datatables.net/colvis/1.1.1/js/dataTables.colVis.min.js"></script>
 @*<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>*@
 
-<script src="//cdn.jsdelivr.net/jquery.ui-contextmenu/1.7.0/jquery.ui-contextmenu.min.js"></script>
-@*<script src="//cdn.datatables.net/plug-ins/725b2a2115b/api/fnFilterClear.js"></script>*@
+<script src="~/Scripts/Google/markerwithlabel.js"></script>
+@*<script src="//cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js"></script>*@
+<script src="~/Scripts/jquery.dataTables.js"></script>
+<script src="//cdn.datatables.net/colvis/1.1.1/js/dataTables.colVis.min.js"></script>
+
 
 <script src="~/Scripts/Google/keydragzoom_packed.js"></script>
-@*<script src="//cdn.datatables.net/plug-ins/9dcbecd42ad/integration/bootstrap/3/dataTables.bootstrap.js"></script>*@
-<script src="~/Scripts/Custom/webclient.js"></script>
-@*<script src="~/Scripts/custom/webclient.js"></script>*@
 @*<script src="~/Scripts/bootstrap-contextmenu.js"></script>*@
-
-<script>
-
-</script>
+<script src="~/Scripts/Custom/webclient.js"></script>
+<script src="~/Scripts/Fancytree/jquery-ui.custom.js"></script>
+<script src="~/Scripts/Fancytree/jquery.fancytree.js"></script>
+<script src="~/Scripts/Fancytree/jquery.fancytree.filter.js"></script>
+<script src="~/Scripts/Fancytree/jquery.fancytree.childcounter.js"></script>
+<script src="~/Scripts/Fancytree/sample.js"></script>
+<script src="~/Scripts/bootstrap-datepicker.js"></script>
+<script src="~/Scripts/Custom/jquery-filedownload.js"></script>
