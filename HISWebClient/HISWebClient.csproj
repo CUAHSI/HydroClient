@@ -33,6 +33,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <FilesToIncludeForPublish>AllFilesInTheProject</FilesToIncludeForPublish>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -50,6 +51,9 @@
     <Reference Include="Kent.Boogaart.KBCsv, Version=3.0.0.0, Culture=neutral, PublicKeyToken=cc96fa93a217f7a1, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Kent.Boogaart.KBCsv.3.0.0\lib\portable-win+net45+wp8\Kent.Boogaart.KBCsv.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net">
+      <HintPath>..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.ApplicationInsights">
       <HintPath>..\packages\Microsoft.ApplicationInsights.0.10.0-build17704\lib\net40\Microsoft.ApplicationInsights.dll</HintPath>
@@ -112,6 +116,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Data.Services.Client" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Net" />
     <Reference Include="System.Net.Http.Formatting, Version=5.2.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -287,9 +292,14 @@
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
     <Compile Include="Models\OntologyHelper.cs" />
+    <Compile Include="Models\TaskData.cs" />
+    <Compile Include="Models\TimeSeriesRequest.cs" />
+    <Compile Include="Models\TimeSeriesResponse.cs" />
     <Compile Include="Models\TimeSeriesViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
+    <Compile Include="Util\AzureContext.cs" />
+    <Compile Include="Util\EnumExtensionMethods.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Areas\HelpPage\HelpPage.css" />
@@ -411,14 +421,22 @@
     <Content Include="Areas\HelpPage\Views\Help\Api.cshtml" />
     <Content Include="Areas\HelpPage\Views\_ViewStart.cshtml" />
     <Content Include="ajax-ontologyLazy.json" />
+    <Content Include="HISWebClient.log4net">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Properties\PublishProfiles\dev-hiswebclient - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\dev-hiswebclient - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\hiswebclient.pubxml" />
     <Content Include="Content\FancyTree\skin-xp\ui.fancytree.less" />
+    <None Include="Properties\PublishProfiles\qa-hiswebclient - FTP.pubxml" />
+    <None Include="Properties\PublishProfiles\qa-hiswebclient - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\Custom\DownloadHelper.js" />
+    <Content Include="Scripts\Custom\freezeEnum.js" />
     <Content Include="Scripts\Custom\jquery-filedownload.js" />
+    <Content Include="Scripts\Custom\RandomId.js" />
     <Content Include="Scripts\Custom\test1.js" />
+    <Content Include="Scripts\Custom\TimeSeriesRequestStatus.js" />
     <Content Include="Scripts\Custom\webclient.js" />
     <Content Include="Scripts\Fancytree\jquery-ui.custom.js" />
     <Content Include="Scripts\Fancytree\jquery.fancytree.childcounter.js" />
@@ -451,7 +469,6 @@
     <Content Include="Scripts\respond.js" />
     <Content Include="Scripts\respond.min.js" />
     <Content Include="Scripts\test\maptest.css" />
-    <Content Include="Scripts\test\maptest.js" />
     <Content Include="Scripts\_references.js" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>

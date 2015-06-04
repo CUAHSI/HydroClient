@@ -34,7 +34,10 @@
     </div>
     <div class="tab-content">
         <div class="tab-pane" id="dataview">
-
+            <div class="modal-header-full" style="margin-top: 2.5em;">
+                <h3 class="modal-title" id="myModalLabel">List of Timeseries in area - from index.cshtml</h3>
+                <h5 style="margin-bottom: 1em;">To download one or more data files (in CSV format), please click the associated table row(s) and then click the 'Download Selections' button.</h5>
+            </div>
             <table width="100%" id="dtTimeseries" class="display" cellspacing="0">
                 <thead>
                     <tr>
@@ -107,6 +110,7 @@
 
                             </div>
                             <br />
+                                <!-- For click handler see webclient.js $("#Search").submit(function (e) -->
                             <button type="submit" class="btn btn-success btn-block">Search Map</button><br />
                             <button id="clear" type="button" class="btn btn-warning btn-block"> Clear map </button>
 
@@ -122,8 +126,41 @@
 
                     </div>
 
+                    <!-- BC - TEST - Add an area for the download manager... -->
+                    <div style="position:absolute; top: 12em; left: 1em;">
+                        <div style="position:relative; display: inline; float: left">
+                            <div id="downloadManager" style="position:relative; display:none; float: left; background-color: white">
+                                <div class="container">
+                                    <div class="row">
+                                        <!-- word-wrap: break-word - Allow long words to break and wrap to next line.
+                                             white-space:pre-wrap - Preserve white space in browser.  Wrap text when necessary and on line breaks. -->
+                                        <table id="tblDownloadManager" class="table table-bordered table-hover" style="word-wrap: break-word; white-space:pre-wrap;">
+                                            <caption style="font-weight:bold; font-size:2em;">Download Manager</caption>
+                                            <thead>
+                                                <tr style="height: 3em;" class="active">
+                                                    <th class="col-sm-1 text-center" style="vertical-align: middle;">Request ID</th>
+                                                    <th class="col-sm-2 text-center" style="vertical-align: middle;">Current Status</th>
+                                                    <th class="col-sm-3 text-center" style="vertical-align: middle;">Time Series URI</th>
+                                                    <th class="col-sm-1 text-center" style="vertical-align: middle;"><input type="button" id="btnDownloadAll" value="Download All" /></th>
+                                                    <th class="col-sm-2 text-center" style="vertical-align: middle;"><label><input type="checkbox" id="chkbxAutoDownload" />&nbsp;Auto Download?</label></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                            <tfoot>
+                                                @*<tr>
+                            <td>Footer text goes here</td>
+                        </tr>*@
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="glyphicon glyphicon-hand-right expander2" title="Click to open the Download Manager..." style="font-size: 3em; float:left; margin-left: 0.5em;"></div>
+                        </div>
+                    </div>
+
                     <input id="pac-input" class="searchbarcontrols" type="text"
-                           placeholder="Enter a location">
+                           placeholder="Enter a location"/>
                     <div id="type-selector" class="searchbarcontrols hidden">
                         <input type="radio" name="type" id="changetype-all" checked="checked">
                         <label for="changetype-all">All</label>
@@ -344,7 +381,7 @@
             <div class="modal-header-full">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
                 <h3 class="modal-title" id="myModalLabel">List of Timeseries in area</h3>
-                <h5>Clicking the download icon will start the download of the data as a CSV file.</h5>
+                <h5 style="margin-bottom: 1em;">To download one or more time series (in CSV format), please click the associated table row(s) and then click the 'Download Selections' button.</h5>
             </div>
             <div class="modal-body-full">
                 <table id="dtMarkers" class="display" width="100%" cellspacing="0">
@@ -440,6 +477,9 @@
 <script src="~/Scripts/Google/keydragzoom_packed.js"></script>
 @*<script src="~/Scripts/bootstrap-contextmenu.js"></script>*@
 <script src="~/Scripts/Custom/webclient.js"></script>
+<script src="~/Scripts/Custom/randomId.js"></script>
+<script src="~/Scripts/Custom/freezeEnum.js"></script>
+<script src="~/Scripts/Custom/TimeSeriesRequestStatus.js"></script>
 <script src="~/Scripts/Fancytree/jquery-ui.custom.js"></script>
 <script src="~/Scripts/Fancytree/jquery.fancytree.js"></script>
 <script src="~/Scripts/Fancytree/jquery.fancytree.filter.js"></script>
@@ -447,5 +487,4 @@
 <script src="~/Scripts/Fancytree/sample.js"></script>
 <script src="~/Scripts/bootstrap-datepicker.js"></script>
 <script src="~/Scripts/Custom/jquery-filedownload.js"></script>
-
 <script src="~/Scripts/jquery.slidereveal.min.js"></script>
