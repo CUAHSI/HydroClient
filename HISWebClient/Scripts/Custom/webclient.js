@@ -11,6 +11,9 @@ var myServicesDatatable;
 var mySelectedServices = [];
 var mySelectedTimeSeries = [];
 var sessionGuid;
+var randomId;
+var currentPlaceAddress;
+var timeSeriesRequestStatus;
 var slider;
 var sidepanelVisible = false;
 
@@ -134,6 +137,55 @@ function initialize() {
     $('.expander').on('click', function () {
         $('#selectors').slideToggle();
     });
+
+    //show/hide download manager...
+    $('.expander2').on('click', function () {
+
+        var effect = 'slide';
+        var options = { 'direction': 'left' };
+        var duration = 500; //milliseconds
+        var complete = function () {
+            var item = $('.expander2');
+
+            if ($('#downloadManager').is(':visible')) {
+                //alert("Visible!!");
+                item.removeClass('glyphicon-hand-right');
+                item.addClass('glyphicon-hand-left');
+
+                item.attr('title', 'Click to close the Download Manager...');
+            }
+            else {
+                //alert("NOT Visible!!");
+                item.removeClass('glyphicon-hand-left');
+                item.addClass('glyphicon-hand-right');
+
+                item.attr('title', 'Click to open the Download Manager...');
+            }
+        };
+
+        $('#downloadManager').toggle(effect, options, duration, complete);
+    });
+
+    //allocate a RandomId instance...
+   randomId = new RandomId( { 'iterationCount': 10,
+                              'characterSets': ['alpha', 'numeric']
+                            } );
+
+    //Allocate a TimeSeriesRequestStatus instance...
+   timeSeriesRequestStatus = (new TimeSeriesRequestStatus()).getEnum();
+
+    //Download All button click handler..
+   $('#btnDownloadAll').on('click', function (event) {
+       //For each zip blob download button element...
+       $("tr > td > button.zipBlobDownload").each(function (index) {
+           //Initiate individual file downloads at three second intervals
+           var buttonThis = this;
+           setTimeout(function () {
+               //$(buttonArray[index]).click();
+               $(buttonThis).click();
+           }, (3000 * index));
+       });
+   });
 
     $('#btnTopSelect').click(function () {
         $("#tree").fancytree("getTree").visit(function (node) {
@@ -457,6 +509,8 @@ function addLocationSearch()
             ].join(' ');
         }
 
+        //Retain the current place name
+        currentPlaceAddress = place.formatted_address;
         //infowindow.setContent('<div><strong>' + place.name + '</strong><br>' + address);
         //infowindow.open(map, marker);
     });
@@ -834,6 +888,13 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             //infoWindow.open(map, this);
             //$('#example').DataTable();
             setUpDatatables(clusterid);
+            if (('undefined' !== typeof currentPlaceAddress) && (null !== currentPlaceAddress)) {
+                $('#SeriesModal #myModalLabel').html('List of Timeseries for ' + currentPlaceAddress + ' (Cluster: ' + clusterid.toString() + ', Count: ' + count.toString() + ')');
+            }
+            else {
+                $('#SeriesModal #myModalLabel').html('List of Timeseries for (Cluster: ' + clusterid.toString() + ', Count: ' + count.toString() + ')');
+            }
+
             $('#SeriesModal').modal('show')
             //var details = getDetailsForMarker(clusterid)
             //createInfoWindowContent()
@@ -944,6 +1005,13 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             //infoWindow.open(map, this);
             //$('#example').DataTable();
             setUpDatatables(clusterid);
+            if (('undefined' !== typeof currentPlaceAddress) && (null !== currentPlaceAddress)) {
+                $('#SeriesModal #myModalLabel').html('List of Timeseries for ' + currentPlaceAddress + ' (Cluster: ' + clusterid.toString() + ', Count: ' + count.toString() + ')');
+            }
+            else {
+                $('#SeriesModal #myModalLabel').html('List of Timeseries for (Cluster: ' + clusterid.toString() + ', Count: ' + count.toString() + ')');
+            }
+                
             $('#SeriesModal').modal('show')
             //var details = getDetailsForMarker(clusterid)
             //createInfoWindowContent()
@@ -1047,7 +1115,7 @@ function setupServices()
 
 
          },
-         "scrollX": true,
+         //"scrollX": true,
          initComplete: function () {
              this.fnAdjustColumnSizing();
          }
@@ -1117,13 +1185,13 @@ function setUpDatatables(clusterid)
         "autoWidth": true,
         "jQueryUI": false,
         "deferRender": true,
-         "dom": 'C<"clear">lfrtip',
+        "dom": 'C<"clear">l<"toolbar">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
          colVis: {
              //restore: "Restore",
              //showAll: "Show all",
              //showNone: "Show none",
              activate: "mouseover",
-             exclude: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,16,17,18,19,20,21],
+             exclude: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
              groups: [
                 //{
                 //    title: "Main",
@@ -1131,7 +1199,7 @@ function setUpDatatables(clusterid)
                 //},
                 {
                     title: "Show All Columns",
-                    columns: [ 2, 3, 8, 9,10, 11, 12, 13, 14, 15, 16, 16, 17, 18, 19, 20, 21]
+                    columns: [ 2, 3, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
                 }
              ]
          },
@@ -1161,7 +1229,7 @@ function setUpDatatables(clusterid)
             { "data": "Citation", "visible": false }            
         ],
         
-         "scrollX": true, //removed to fix column alignment 
+         //"scrollX": true, //removed to fix column alignment 
          
          "createdRow": function (row, data, index) {
 
@@ -1170,56 +1238,50 @@ function setUpDatatables(clusterid)
              var id = $('td', row).eq(0).html();
              //var d = $('td', row).eq(4).html();
              //$('td', row).eq(0).append("<a href='/Export/downloadFile/" + id + "' id=" + id + " <span class='glyphicon glyphicon-download-alt'  aria-hidden='true'> </span> </a>");
-             $('td', row).eq(0).append("<a href='/Export/downloadFile/" + id + "' id=" + id + "<span><img  src='/Content/Images/download-icon-25.png' ></span> </a>");
-             $('td', row).eq(0).click(function () {
+
+/* BC - TEST - Do not include download icon or href in any table row... 
+              //BC TEST - For IE - can we replace <a> with <span>???
+             //$('td', row).eq(0).append("<a href='/Export/downloadFile/" + id + "' id='" + id + "' <span><img  src='/Content/Images/download-icon-25.png' ></span> </a>");
+             $('td', row).eq(0).append("<span href='/Export/downloadFile/" + id + "' id='" + id + "' <span><img  src='/Content/Images/download-icon-25.png' ></span> </span>");
+             $('td', row).eq(0).click(function (event) {
+
+                 //BC - TEST - Prevent the default action - jquery-filedownload handles the 'GET' request...
+                 event.preventDefault();
+
+                 event.stopImmediatePropagation();  //Does this help with IE's open/save dialog?
+
                  //downloadtimeseries('csv', id); return false;/Content/Images/ajax-loader-green.gif
                  //$('#spinner' + id).removeClass('hidden')
-                 $(this).append("<span><img class='spinner' src='/Content/Images/ajax-loader-green.gif'></span>");
+                 $(this).append("<span><img class='spinner' src='/Content/Images/ajax-loader-green.gif' id='" + id  + "'></span>");
                  //$.fileDownload($(this).prop('href'), {
                  //    preparingMessageHtml: "We are preparing your report, please wait...",
                  //    failMessageHtml: "There was a problem generating your report, please try again."
                  //})
                  
-                 $.fileDownload($(this).prop('href'))                     
+                 //BC TEST - For IE - can we replace <a> with <span>???
+                 //var hrefProp = $(this).children('a').attr('href');   //href from the <a> element...
+                 var hrefProp = $(this).children('span').attr('href');   //href from the <a> element...
+                 var imgSelector = 'img[id="' + id + '"]';
+                 $.fileDownload(hrefProp)
                      .done(function () {
-                         $('.spinner').addClass('hidden');
-                         $('.spinner').parent().parent().addClass('selected');
+                         $(imgSelector).addClass('hidden');
+                         $(imgSelector).parent().parent().addClass('selected');
 
                      })
                      .fail(function () {
-                         $('.spinner').addClass('hidden');
-                         $('.spinner').parent().parent().addClass('downloadFail');
+                         $(imgSelector).addClass('hidden');
+                         $(imgSelector).parent().parent().addClass('downloadFail');
                      });
 
+                 return (false);
              });
-
+*/
 
              //}
          },
         initComplete: function () {
-            var api = this.api();
-           
-            api.columns().indexes().flatten().each(function (i) {
-                if (i > 5 || i == 0) return;
-                var column = api.column( i );
-                var select = $('<select><option value=""></option></select>')
-                    .appendTo( $(column.footer()).empty() )
-                    .on( 'change', function () {
-                        var val = $.fn.dataTable.util.escapeRegex(
-                            $(this).val()
-                        );
- 
-                        column
-                            .search( val ? '^'+val+'$' : '', true, false )
-                            .draw();
-                    } );
- 
-                column.data().unique().sort().each(function (d, j) {
-                    
-                    select.append( '<option value="'+d+'">'+d+'</option>' )
-                } );
-            });
-            oTable.fnAdjustColumnSizing();
+
+             setfooterFilters('#dtMarkers', [1,2,3,5]);
         }
         
           
@@ -1227,6 +1289,36 @@ function setUpDatatables(clusterid)
         //"retrieve": true
     });
 
+    //BC - Test - make each table row selectable by clicking anywhere on the row...
+    //Source: https://datatables.net/examples/api/select_row.html
+    //Avoid multiple registrations of the same handler...
+    $('#dtMarkers tbody').off('click', 'tr', toggleSelected);
+    $('#dtMarkers tbody').on('click', 'tr', toggleSelected);
+
+    //BC - Test - add a custom toolbar to the table...
+    //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+    $("div.toolbar").html('<span style="margin-left: 2em;"> <input type="checkbox" class="ColVis-Button" id="chkbxSelectAll"/>&nbsp;Select All? <input type="button" style="margin-left: 2em;" class="ColVis-Button" id="btnDownloadSelections" value="Download Selections"/></span>');
+    //$("div.toolbar").css('border', '1px solid red');
+  
+    //Add click handlers...
+
+    //Avoid multiple registrations of the same handler...
+    $('#chkbxSelectAll').off('click', selectAll);
+    $('#chkbxSelectAll').on('click', {'tableId': '#dtMarkers', 'chkbxId': '#chkbxSelectAll'}, selectAll);
+
+    //Avoid multiple registrations of the same handler...
+    $('#btnDownloadSelections').off('click', downloadSelections);
+    $('#btnDownloadSelections').on('click', { 'tableId': '#dtMarkers'}, downloadSelections);
+
+    //BC - TEST - Retrieve the colvis button control - assign a click handler for scrollx control...
+    var colvis = new $.fn.DataTable.ColVis(oTable);
+    var button = colvis.button();
+
+    //Avoid multiple registrations of the same handler...
+    $(button).off('click', clovisButtonClick);
+    $(button).on('click', clovisButtonClick);
+
+    
     //##########Context menu
     //$(document).contextmenu({
     //    on: ".dataTable tr",
@@ -1393,8 +1485,294 @@ function setUpDatatables(clusterid)
     //});
 }
 
-function setUpTimeseriesDatatable()
-{
+//Create 'select'-based filters for the input tableId and columns array
+function setfooterFilters(tableId, columnsArray) {
+
+    var api = $(tableId).DataTable();
+
+    api.columns().indexes().flatten().each(function (i) {
+        if (-1 !== columnsArray.indexOf(i)) {
+            var column = api.column(i);
+            var data = column.data();
+            var select = $('<select><option value=""></option></select>')
+                .appendTo($(column.footer()).empty())
+                .on('change', function () {
+                    var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+                    column.search(val ? '^' + val + '$' : '', true, false).draw();
+                });
+
+            column.data().unique().sort().each(function (d, j) {
+                select.append('<option value="' + d + '">' + d + '</option>')
+            });
+        }
+    });
+
+    $(tableId).dataTable().fnAdjustColumnSizing();
+}
+
+
+function toggleSelected() {
+    $(this).toggleClass('selected');
+}
+
+function clovisButtonClick(event) {
+    var table = $('#dtMarkers');
+    var option = false;
+    var jsonScrollX = { 'scrollX': option };
+
+    var datatable = $('#dtMarkers').DataTable();
+    var colvis = new $.fn.DataTable.ColVis(datatable);
+    var colvisbutton = colvis.button();
+
+    //if ($(button).is(':checked')) {
+    if ($(colvisbutton).is(':checked')) {
+            option = true;
+    }
+
+    table.dataTable(jsonScrollX);
+}
+
+//Add a new row to the input table...
+function newRow($table, cols) {
+    var $row = $('<tr/>');
+    for (i = 0; i < cols.length; i++) {
+        var $col = $('<td/>');
+        $col.append(cols[i]);
+        $row.append($col);
+    }
+    $table.append($row);
+    return ($row);
+}
+
+function selectAll(event) {
+
+    //Retrieve all the table's <tr> elements whether visible or not...
+    //Source: http://datatables.net/reference/api/rows().nodes()
+    //var table = $('#dtMarkers').DataTable();
+    var table = $(event.data.tableId).DataTable();
+    var rows = table.rows();
+    var nodes = rows.nodes();
+    var jqueryObjects = nodes.to$();    //Convert to jQuery Objects!!
+
+    //Apply/remove 'selected' class per checkbox state
+    var className = 'selected';
+    //if ($("#chkbxSelectAll").prop("checked")) {
+    if ($(event.data.chkbxId).prop("checked")) {
+            jqueryObjects.addClass(className);
+    }
+    else {
+        jqueryObjects.removeClass(className);
+    }
+}
+
+function downloadSelections(event) {
+
+    //Create the list of selected time series ids...
+    //var table = $('#dtMarkers').DataTable();
+    var table = $(event.data.tableId).DataTable();
+    var selectedRows = table.rows('.selected').data();
+    var selectedCount = selectedRows.length;
+    var timeSeriesIds = [];
+
+    for (var i = 0; i < selectedCount; ++i) {
+        var row = selectedRows[i];
+        //var id = $('td', row).eq(0).html();
+        var id = row.SeriesId;
+        timeSeriesIds.push(id);
+    }
+
+    //NOTE- This code gives the count of selected rows...
+    //$('#button').click(function () {
+    //    alert(table.rows('.selected').data().length + ' row(s) selected');
+    //});
+
+    //Create the request object...
+    var requestId = randomId.generateId();
+    var requestName = 'SelectedArea';
+
+    if (('undefined' !== typeof currentPlaceAddress) && (null !== currentPlaceAddress)) {
+        requestName = currentPlaceAddress.replace(/\s*,\s*/g, '-');  //Replace whitespace and commas with '_' 
+    }
+
+    var timeSeriesRequest = {
+        "RequestName": requestName,
+        "RequestId": requestId,
+        "TimeSeriesIds": timeSeriesIds
+    };
+
+    var timeSeriesRequestString = JSON.stringify(timeSeriesRequest);
+
+    var actionUrl = "/Export/RequestTimeSeries";
+
+    $.ajax({
+        url: actionUrl,
+        type: 'POST',
+        dataType: 'json',
+        //timeout: 60000,
+        //processData: false,
+        cache: false,           //Per IE...
+        async: true,
+        data: timeSeriesRequestString,
+        contentType: 'application/json',
+        success: function (data, textStatus, jqXHR) {
+            //Retrieve response data
+            var response = jQuery.parseJSON(data);
+
+            //alert("Response received: " + response.Status.toString());
+
+            //Add new row to the download manager table
+            var cols = [];
+
+            cols.push(response.RequestId.toString());
+            cols.push(response.Status);
+            cols.push(response.BlobUri);
+
+            var button = $("<button class='stopTask'>Stop Task</button>");
+
+            button.click(function (event) {
+            //Send request to server to stop task...
+                event.preventDefault();
+                //var actionUrl = rootDir + 'home/ET';
+                var actionUrl = "/Export/EndTask";
+
+                $.ajax({
+                        url: actionUrl + '/' + response.RequestId,
+                        type: 'GET',
+                        contentType: 'application/json',
+                        success: function (data, textStatus, jqXHR) {
+
+                        var statusResponse = jQuery.parseJSON(data);
+
+                            //Update status in download manager table...
+                            //var tableRow = $("#tblServerTaskCart > td").filter(function () {
+                        var tableRow = $("#tblDownloadManager tr td").filter(function () {
+                            return $(this).text() === statusResponse.RequestId;
+                        }).parent("tr");
+
+                        tableRow.find('td:eq(1)').html(statusResponse.Status);
+                        tableRow.find('td:eq(2)').html(statusResponse.BlobUri);
+                        tableRow.find('td:eq(4)').html(statusResponse.RequestStatus);
+
+                        //Color table row as 'warning'
+                        tableRow.removeClass('info');
+                        tableRow.addClass('warning');
+                        },
+                        error: function (xmlhttprequest, textStatus, message) {
+
+                            var n = 6;
+                        n++;
+
+                            alert('Failed to request server to stop task ' +message);
+                    }
+                    });
+            });
+            
+            cols.push(button);
+            cols.push(response.RequestStatus);
+
+            //Add the new row and hide the RequestStatus column...
+            var newrow = newRow($("#tblDownloadManager"), cols);
+            newrow.find('td:eq(4)').hide();
+
+            //Color row as 'info'
+            newrow.addClass('info');
+
+            //Add a new monitor for the newly created task...
+            var intervalId = setInterval(function () {
+
+                //Retrieve status from server
+                //var actionUrl = rootDir + 'home/CT';
+                var actionUrl = "/Export/CheckTask";
+
+                $.ajax({
+                    url: actionUrl + '/' + response.RequestId,
+                    type: 'GET',
+                    contentType: 'application/json',
+                    cache: false,   //So IE does not cache when calling the same URL - source: http://stackoverflow.com/questions/7846707/ie9-jquery-ajax-call-first-time-doing-well-second-time-not
+                    success: function (data, textStatus, jqXHR) {
+
+                        var statusResponse = jQuery.parseJSON(data);
+
+                        //Retrieve associated row from Download Manager table...
+                        //var tableRow = $("#tblServerTaskCart > td").filter(function () {
+                        var tableRow = $("#tblDownloadManager tr td").filter(function () {
+                            return $(this).text() === response.RequestId;
+                        }).parent("tr");
+
+                        //Update table row...
+                        tableRow.find('td:eq(1)').html(statusResponse.Status);
+                        tableRow.find('td:eq(2)').html(statusResponse.BlobUri);
+                        tableRow.find('td:eq(4)').html(statusResponse.RequestStatus);
+
+                        //Color row as 'info'
+                        tableRow.addClass('info');
+
+                        //Check for completed/cancelled task
+                        var requestStatus = parseInt(tableRow.find('td:eq(4)').html());
+
+                        if (timeSeriesRequestStatus.Completed === requestStatus ||
+                            timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus) {
+                            //If task completed - re-assign 'Stop Task' button to 'Download'
+                            if (timeSeriesRequestStatus.Completed === requestStatus) {
+                                var button = tableRow.find('td:eq(3)');
+
+                                //button.remove();
+                                button = $("<button class='zipBlobDownload'>Download</button>");
+
+                                button.on('click', function (event) {
+                                    var blobUri = tableRow.find('td:eq(2)').html();
+                                    location.href = blobUri;
+
+                                    event.stopPropagation();
+                                });
+
+                                tableRow.find('td:eq(3)').html(button);
+
+                                tableRow.addClass('success');   //Color row as 'successful'
+
+                                if ($("#chkbxAutoDownload").prop("checked")) {
+                                        //Autodownload checkbox checked - click the newly created button...
+                                    button.click();
+                                }
+                            }
+                            else {
+                                //Task canceled - color row as 'danger'
+                                tableRow.addClass('danger');
+                                
+                                //Fade row and remove from table...
+                                tableRow.fadeTo(1500, 0.5, function() {
+                                    $(this).remove();
+                                });
+                            }
+                            
+                            //Clear the interval
+                            clearInterval(intervalId);
+                            return;
+                        }
+                    },
+                    error: function (xmlhttprequest, textStatus, message) {
+
+                        var n = 6;
+                        n++;
+
+                        alert('Failed to retrieve task status ' + message);
+                    }
+                });
+
+            }, 1000);
+
+        },
+        error: function (xmlhttprequest, textstatus, message) {
+            var n = 6;
+
+            n++;
+            alert('Failed request time series: ' + message);
+        }
+    });
+}
+
+function setUpTimeseriesDatatable() {
     if (clusteredMarkersArray.length == 0)
     {
         return;
@@ -1407,6 +1785,14 @@ function setUpTimeseriesDatatable()
         $('#dtTimeseries').DataTable().clear().destroy();
     }
 
+    //Set page title...
+    if (('undefined' !== typeof currentPlaceAddress) && (null !== currentPlaceAddress)) {
+        $('#dataview #myModalLabel').html('List of Timeseries for ' + currentPlaceAddress);
+    }
+    else {
+        $('#dataview #myModalLabel').html('List of Timeseries for Selected Area');
+    }
+
 
     //var dataSet = getDetailsForMarker(clusterid)
     var actionUrl = "/home/getTimeseries"
@@ -1414,8 +1800,17 @@ function setUpTimeseriesDatatable()
     // $('#demo').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example"></table>' );
     var oTable = $('#dtTimeseries').dataTable({
         "ajax": actionUrl,
-        "dom": 'C<"clear">lfrtip',
-        "deferRender": true,
+        "dom": 'C<"clear">l<"toolbarTS">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+        colVis: {
+            activate: "mouseover",
+            exclude: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
+            groups: [
+           {
+               title: "Show All Columns",
+               columns: [2, 3, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
+           }
+            ]
+        },
         "columns": [
            { "data": "SeriesId" },
            { "data": "ServCode", "sTitle": "Service Name" },
@@ -1446,6 +1841,8 @@ function setUpTimeseriesDatatable()
 
             var id = $('td', row).eq(0).html();
             //var d = $('td', row).eq(4).html();
+
+            /* BC - TEST - Do not include download icon or href in any table row...
             $('td', row).eq(0).append("<a href='/Export/downloadFile/" + id + "' id=" + id + "<span><img  src='/Content/Images/download-icon-25.png' ></span> </a>");
             $('td', row).eq(0).click(function () {
                 //downloadtimeseries('csv', id); return false;/Content/Images/ajax-loader-green.gif
@@ -1468,9 +1865,34 @@ function setUpTimeseriesDatatable()
                     });
 
             });
-        }        
+*/
+        },
+        initComplete: function () {
+
+            setfooterFilters('#dtTimeseries', [1, 2, 3, 5]);
+        }
+
     });
       
+    //BC - Test - make each table row selectable by clicking anywhere on the row...
+    //Source: https://datatables.net/examples/api/select_row.html
+    //Avoid multiple registrations of the same handler...
+    $('#dtTimeseries tbody').off('click', 'tr', toggleSelected);
+    $('#dtTimeseries tbody').on('click', 'tr', toggleSelected);
+
+    //BC - Test - add a custom toolbar to the table...
+    //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+    $("div.toolbarTS").html('<span style="margin-left: 2em;"> <input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS"/>&nbsp;Select All? <input type="button" style="margin-left: 2em;" class="ColVis-Button" id="btnDownloadSelectionsTS" value="Download Selections"/></span>');
+
+    //Add click handlers...
+
+    //Avoid multiple registrations of the same handler...
+    $('#chkbxSelectAllTS').off('click', selectAll);
+    $('#chkbxSelectAllTS').on('click', { 'tableId': '#dtTimeseries', 'chkbxId': '#chkbxSelectAllTS' }, selectAll);
+
+    //Avoid multiple registrations of the same handler...
+    $('#btnDownloadSelectionsTS').off('click', downloadSelections);
+    $('#btnDownloadSelectionsTS').on('click', { 'tableId': '#dtTimeseries'}, downloadSelections);
 
 }
 

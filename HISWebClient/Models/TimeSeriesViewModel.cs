@@ -7,6 +7,36 @@ namespace HISWebClient.Models
 {
     public class TimeSeriesViewModel
     {
+        //Initializing constructor
+        public TimeSeriesViewModel() { }
+
+        //Copy constructor...
+        public TimeSeriesViewModel(TimeSeriesViewModel tsvm)
+        {
+            SeriesId = tsvm.SeriesId;
+            ServCode = tsvm.ServCode;
+            ServURL = tsvm.ServURL;
+            SiteCode = tsvm.SiteCode;
+            VariableCode = tsvm.VariableCode;
+            VariableName = tsvm.VariableName;
+            BeginDate = tsvm.BeginDate;
+            EndDate = tsvm.EndDate;
+            ValueCount = tsvm.ValueCount;
+            SiteName = tsvm.SiteName;
+            Latitude = tsvm.Latitude;
+            Longitude = tsvm.Longitude;
+            DataType = tsvm.DataType;
+            ValueType = tsvm.ValueType;
+            SampleMedium = tsvm.SampleMedium;
+            TimeUnit = tsvm.TimeUnit;
+            GeneralCategory = tsvm.GeneralCategory;
+            TimeSupport = tsvm.TimeSupport;
+            ConceptKeyword = tsvm.ConceptKeyword;
+            IsRegular = tsvm.IsRegular;
+            VariableUnits = tsvm.VariableUnits;
+            Citation = tsvm.Citation;
+        }
+
         public int SeriesId { get; set; }
         /// <summary>
         /// code of the web service

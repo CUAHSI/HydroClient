@@ -45,6 +45,14 @@
     background-color: lightgray;
     border:1px
 }
+
+.expander2{
+    padding:5px;
+    background-color: lightgray;
+    border:1px
+}
+
+
 selector{
     border:inset;
     border-width:thin;
@@ -113,6 +121,11 @@ table
     white-space:nowrap;
     width:100%;
     /*background-color:red;*/
+}
+
+/* Assure proper alignment of control elements in a dataTable which includes a custom toolbar*/
+.toolbar, .toolbarTS{
+    float: left;
 }
 
 #dataview{
