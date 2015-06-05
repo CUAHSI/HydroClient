@@ -647,16 +647,20 @@ function getFormData()
     else
         {
         var tree = $("#tree").fancytree("getTree");
-
+        var allChildrenSelected = false;
         var selKeys = $.map(tree.getSelectedNodes(), function (node) {
             
-            if (node.children !== null)
+            
+            if (node.children !== null)//all children are selected
             {
-                 $.map(node.children, function (node) {
-                        return  node.title ;
-                    });
+                 //$.map(node.children, function (node) {
+                 //       return  node.title ;
+                //});
+                allChildrenSelected = true;
+                 return node.title
+                 
             }
-            else 
+            if  (!allChildrenSelected)
             {
                 return node.title;
             }
@@ -1058,12 +1062,13 @@ function setupServices()
         "ajax": actionUrl,
          "columns": [
             { "data": "ServiceID" },
+            { "data": "Organization" },
             { "data": "ServiceCode" },
             { "data": "Title" },
             { "data": "DescriptionUrl", "visible": false },
             { "data": "ServiceUrl", "visible": false },
             { "data": "Checked", "visible": false },
-            { "data": "Organization" },
+           
             { "data": "Sites", "visible": false },
             { "data": "Variables", "visible": false },
             { "data": "Values", "visible": false },
@@ -1077,7 +1082,7 @@ function setupServices()
          "createdRow": function ( row, data, index ) {
 
              var id = $('td', row).eq(0).html();
-             var title = $('td', row).eq(2).html();
+             var title = $('td', row).eq(1).html();
              var url = 'http://hiscentral.cuahsi.org/pub_network.aspx?n=';
              $('td', row).eq(2).html("<a href='" + url + id + "' target='_Blank'>" + title + " </a>");
 
