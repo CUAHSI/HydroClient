@@ -138,34 +138,7 @@ function initialize() {
         $('#selectors').slideToggle();
     });
 
-    //show/hide download manager...
-    $('.expander2').on('click', function () {
-
-        var effect = 'slide';
-        var options = { 'direction': 'left' };
-        var duration = 500; //milliseconds
-        var complete = function () {
-            var item = $('.expander2');
-
-            if ($('#downloadManager').is(':visible')) {
-                //alert("Visible!!");
-                item.removeClass('glyphicon-hand-right');
-                item.addClass('glyphicon-hand-left');
-
-                item.attr('title', 'Click to close the Download Manager...');
-            }
-            else {
-                //alert("NOT Visible!!");
-                item.removeClass('glyphicon-hand-left');
-                item.addClass('glyphicon-hand-right');
-
-                item.attr('title', 'Click to open the Download Manager...');
-            }
-        };
-
-        $('#downloadManager').toggle(effect, options, duration, complete);
-    });
-
+ 
     //allocate a RandomId instance...
    randomId = new RandomId( { 'iterationCount': 10,
                               'characterSets': ['alpha', 'numeric']
@@ -1292,7 +1265,7 @@ function setUpDatatables(clusterid)
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-    $("div.toolbar").html('<span style="margin-left: 2em;"> <input type="checkbox" class="ColVis-Button" id="chkbxSelectAll"/>&nbsp;Select All? <input type="button" style="margin-left: 2em;" class="ColVis-Button" id="btnDownloadSelections" value="Download Selections"/></span>');
+    $("div.toolbar").html('<span style="margin-left: 2em;"> <input type="checkbox" class="ColVis-Button" id="chkbxSelectAll"/>&nbsp;Select All? <input type="button" style="margin-left: 2em;" class="ColVis-Button btn btn-primary" id="btnDownloadSelections" value="Download Selections"/></span>');
     //$("div.toolbar").css('border', '1px solid red');
   
     //Add click handlers...
@@ -1620,13 +1593,16 @@ function downloadSelections(event) {
             var cols = [];
 
             cols.push(response.RequestId.toString());
-            cols.push(response.Status);
+            //cols.push(response.Status);
+            cols.push(formatStatusMessage(response.Status));
             cols.push(response.BlobUri);
 
-            var button = $("<button class='stopTask'>Stop Task</button>");
+            var button = $("<button class='stopTask btn btn-warning'>Stop Processing</button>");
 
             button.click(function (event) {
-            //Send request to server to stop task...
+                //Hide the button...
+                $(event.target).hide();
+                //Send request to server to stop task...
                 event.preventDefault();
                 //var actionUrl = rootDir + 'home/ET';
                 var actionUrl = "/Export/EndTask";
@@ -1670,6 +1646,10 @@ function downloadSelections(event) {
             var newrow = newRow($("#tblDownloadManager"), cols);
             newrow.find('td:eq(4)').hide();
 
+            //Center the button in the td-3
+            var td3 = newrow.find('td:eq(3)');
+            td3.addClass('text-center');
+
             //Color row as 'info'
             newrow.addClass('info');
 
@@ -1696,7 +1676,9 @@ function downloadSelections(event) {
                         }).parent("tr");
 
                         //Update table row...
-                        tableRow.find('td:eq(1)').html(statusResponse.Status);
+                        //tableRow.find('td:eq(1)').html(statusResponse.Status);
+                        //tableRow.find('td:eq(1)').html(formatStatusMessage(statusResponse.Status));
+                        tableRow.find('#statusMessageText').html(statusResponse.Status);
                         tableRow.find('td:eq(2)').html(statusResponse.BlobUri);
                         tableRow.find('td:eq(4)').html(statusResponse.RequestStatus);
 
@@ -1710,10 +1692,10 @@ function downloadSelections(event) {
                             timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus) {
                             //If task completed - re-assign 'Stop Task' button to 'Download'
                             if (timeSeriesRequestStatus.Completed === requestStatus) {
+                                //Success - create a download button...
                                 var button = tableRow.find('td:eq(3)');
 
-                                //button.remove();
-                                button = $("<button class='zipBlobDownload'>Download</button>");
+                                button = $("<button class='zipBlobDownload btn btn-success'>Download Archive</button>");
 
                                 button.on('click', function (event) {
                                     var blobUri = tableRow.find('td:eq(2)').html();
@@ -1723,6 +1705,14 @@ function downloadSelections(event) {
                                 });
 
                                 tableRow.find('td:eq(3)').html(button);
+
+                                //Change the glyphicon and stop the animation
+                                var glyphiconSpan = tableRow.find('#glyphiconSpan');
+
+                                glyphiconSpan.removeClass('glyphicon-refresh spin');
+                                glyphiconSpan.addClass('glyphicon-thumbs-up');
+
+                                tableRow.find('#statusMessageText').html(statusResponse.Status);
 
                                 tableRow.addClass('success');   //Color row as 'successful'
 
@@ -1765,6 +1755,17 @@ function downloadSelections(event) {
             alert('Failed request time series: ' + message);
         }
     });
+}
+
+//Format the html for the status message as follows - all elements inline:  <h1> - glyphicon spinner </h1> <h3> status message text </h3> 
+function formatStatusMessage(statusText) {
+    
+    var formattedMessage = '<h3 class="text-center" style="display: inline; margin: 0em 0em 0em 0em;">' + 
+                           '<span id="glyphiconSpan" class="glyphicon glyphicon-refresh spin" style="color: #32cd32"></span></h3>' + //color is CSS LimeGreen
+                           '<span id="statusMessageText" style="display:inline; margin: 0em 0em 0em 1em;">' + 
+                           statusText +
+                           '</span>';
+    return ( formattedMessage)
 }
 
 function setUpTimeseriesDatatable() {
@@ -1877,7 +1878,7 @@ function setUpTimeseriesDatatable() {
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-    $("div.toolbarTS").html('<span style="margin-left: 2em;"> <input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS"/>&nbsp;Select All? <input type="button" style="margin-left: 2em;" class="ColVis-Button" id="btnDownloadSelectionsTS" value="Download Selections"/></span>');
+    $("div.toolbarTS").html('<span style="margin-left: 2em;"> <input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS"/>&nbsp;Select All? <input type="button" style="margin-left: 2em;" class="ColVis-Button btn btn-primary" id="btnDownloadSelectionsTS" value="Download Selections"/></span>');
 
     //Add click handlers...
 

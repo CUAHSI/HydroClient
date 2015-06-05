@@ -14,13 +14,6 @@
 }
 <script type='text/javascript' src="http://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true&libraries=places,geometry"></script>
 
-
-
-
-
-
-
-
 <div class="_container">
     <div class="row">
         <div id="pageloaddiv"></div>
@@ -30,11 +23,14 @@
             <li class="active navbar-custom"><a href="#map" id="mapTab" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> Map</a></li>
             <li class="navbar-custom disabled"><a href="#graph" id="graphTab" data-toggle="tab"><span class="glyphicon glyphicon-home"></span> Graph</a></li>
             <li class="navbar-custom data"><a href="#dataview" id="tableTab" data-toggle="tab"><span class="glyphicon glyphicon-list"></span> Data</a></li>
+            <li class="btn-separator"></li>
+            <!-- li class="glyphicon glyphicon-option-vertical"></li -->
+            <li class="navbar-custom"><a href="" id="downloadmanagerTab" data-toggle="modal" data-target="#dmModal"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</a></li>
         </ul>
     </div>
     <div class="tab-content">
         <div class="tab-pane" id="dataview">
-            <div class="modal-header-full" style="margin-top: 2.5em;">
+            <div class="modal-header-full">
                 <h3 class="modal-title" id="myModalLabel">List of Timeseries in area - from index.cshtml</h3>
                 <h5 style="margin-bottom: 1em;">To download one or more data files (in CSV format), please click the associated table row(s) and then click the 'Download Selections' button.</h5>
             </div>
@@ -110,7 +106,7 @@
 
                             </div>
                             <br />
-                                <!-- For click handler see webclient.js $("#Search").submit(function (e) -->
+                            <!-- For click handler see webclient.js $("#Search").submit(function (e) -->
                             <button type="submit" class="btn btn-success btn-block">Search Map</button><br />
                             <button id="clear" type="button" class="btn btn-warning btn-block"> Clear map </button>
 
@@ -125,42 +121,9 @@
                     <div id="map-canvas">
 
                     </div>
-
-                    <!-- BC - TEST - Add an area for the download manager... -->
-                    <div style="position:absolute; top: 12em; left: 1em;">
-                        <div style="position:relative; display: inline; float: left">
-                            <div id="downloadManager" style="position:relative; display:none; float: left; background-color: white">
-                                <div class="container">
-                                    <div class="row">
-                                        <!-- word-wrap: break-word - Allow long words to break and wrap to next line.
-                                             white-space:pre-wrap - Preserve white space in browser.  Wrap text when necessary and on line breaks. -->
-                                        <table id="tblDownloadManager" class="table table-bordered table-hover" style="word-wrap: break-word; white-space:pre-wrap;">
-                                            <caption style="font-weight:bold; font-size:2em;">Download Manager</caption>
-                                            <thead>
-                                                <tr style="height: 3em;" class="active">
-                                                    <th class="col-sm-1 text-center" style="vertical-align: middle;">Request ID</th>
-                                                    <th class="col-sm-2 text-center" style="vertical-align: middle;">Current Status</th>
-                                                    <th class="col-sm-3 text-center" style="vertical-align: middle;">Time Series URI</th>
-                                                    <th class="col-sm-1 text-center" style="vertical-align: middle;"><input type="button" id="btnDownloadAll" value="Download All" /></th>
-                                                    <th class="col-sm-2 text-center" style="vertical-align: middle;"><label><input type="checkbox" id="chkbxAutoDownload" />&nbsp;Auto Download?</label></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody></tbody>
-                                            <tfoot>
-                                                @*<tr>
-                            <td>Footer text goes here</td>
-                        </tr>*@
-                                            </tfoot>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="glyphicon glyphicon-hand-right expander2" title="Click to open the Download Manager..." style="font-size: 3em; float:left; margin-left: 0.5em;"></div>
-                        </div>
-                    </div>
-
+                   
                     <input id="pac-input" class="searchbarcontrols" type="text"
-                           placeholder="Enter a location"/>
+                           placeholder="Enter a location" />
                     <div id="type-selector" class="searchbarcontrols hidden">
                         <input type="radio" name="type" id="changetype-all" checked="checked">
                         <label for="changetype-all">All</label>
@@ -190,9 +153,48 @@
 </div>
 @*</div>*@
 
-
-
 <!-- Modal -->
+<!-- Modal dialog for Download Manager... -->
+<div class="modal fade full-screen" id="dmModal" tabindex="-1" role="dialog" aria-labelledby="dmModalLabel" aria-hidden="true" style="z-index: 20000;">
+    <div class="modal-dialog-full">
+        <div class="modal-content-full">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
+                <label style="float:right; margin-right: 2em"><input type="checkbox" id="chkbxAutoDownload" />Auto Download Archives?</label>
+                <h3 class="modal-title" id="myModalLabel">Download Manager</h3>
+            </div>
+            <div class="modal-body-full">
+
+            <!-- word-wrap: break-word - Allow long words to break and wrap to next line.
+                    white-space:pre-wrap - Preserve white space in browser.  Wrap text when necessary and on line breaks. -->
+            <table id="tblDownloadManager" class="table table-bordered table-hover" style="word-wrap: break-word; white-space:pre-wrap; width: 100%">
+                <thead>
+                    <tr style="height: 3em;" class="active">
+                        <th class="text-center" style="vertical-align: middle;">Request ID</th>
+                        <th class="text-center" style="vertical-align: middle;">Time Series Processing</th>
+                        <th class="text-center" style="vertical-align: middle;">Time Series Archive</th>
+                        <th class="text-center" style="vertical-align: middle;"><input type="button" class="btn btn-primary" id="btnDownloadAll" value="Download All Archives" /></th>
+                        <!--
+                        <th class="text-center" style="vertical-align: middle;"><label><input type="checkbox" id="chkbxAutoDownload" />&nbsp;Auto Download Archives?</label></th>
+                        -->
+                    </tr>
+                </thead>
+                <tbody style="scroll"></tbody>
+                <tfoot>
+                    @*<tr>
+                        <td>Footer text goes here</td>
+                    </tr>*@
+                </tfoot>
+            </table>
+
+            </div>
+            <div class="modal-footer">
+                <p>This is the modal footer!!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="SelectDateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -210,12 +212,12 @@
                             <input id="endDate" value=@DateTime.Now.ToShortDateString() />
                             <button type="button" class="btn btn-default btn-primary" data-dismiss="modal">Save</button>
                         </div>
-                        </div>
                     </div>
-                   
+                </div>
+
             </div>
             <div class="modal-footer">
-                
+
             </div>
 
             <!-- /.modal-content -->
@@ -380,6 +382,8 @@
         <div class="modal-content-full">
             <div class="modal-header-full">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
+                <!--button type="button" id="seriesModal-DM" style="float: right; margin-right: 2em; color: #428bca;"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</button -->
+                <a href="" id="seriesModal-DM" data-toggle="modal" data-target="#dmModal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</a>
                 <h3 class="modal-title" id="myModalLabel">List of Timeseries in area</h3>
                 <h5 style="margin-bottom: 1em;">To download one or more time series (in CSV format), please click the associated table row(s) and then click the 'Download Selections' button.</h5>
             </div>
@@ -452,39 +456,40 @@
         <!-- /.modal-dialog -->
     </div>
 </div>
-@*<div id="context-menu">
-        <ul class="dropdown-menu" role="menu">
-            <li><a tabindex="-1" id="DownloadAsCSV" href="#">Download as CSV</a></li>
-            <li><a tabindex="-1" href="#">Add to DataCart</a></li>
-        </ul>
-    </div>*@
-<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-        </div><!-- /.modal-content -->
-    </div>
-    <!-- /.modal-dialog -->
-</div>
 
-@*<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>*@
+        @*<div id="context-menu">
+                <ul class="dropdown-menu" role="menu">
+                    <li><a tabindex="-1" id="DownloadAsCSV" href="#">Download as CSV</a></li>
+                    <li><a tabindex="-1" href="#">Add to DataCart</a></li>
+                </ul>
+            </div>*@
+        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                </div><!-- /.modal-content -->
+            </div>
+            <!-- /.modal-dialog -->
+        </div>
 
-<script src="~/Scripts/Google/markerwithlabel.js"></script>
-@*<script src="//cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js"></script>*@
-<script src="~/Scripts/jquery.dataTables.js"></script>
-<script src="//cdn.datatables.net/colvis/1.1.1/js/dataTables.colVis.min.js"></script>
+        @*<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>*@
+
+        <script src="~/Scripts/Google/markerwithlabel.js"></script>
+        @*<script src="//cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js"></script>*@
+        <script src="~/Scripts/jquery.dataTables.js"></script>
+        <script src="//cdn.datatables.net/colvis/1.1.1/js/dataTables.colVis.min.js"></script>
 
 
-<script src="~/Scripts/Google/keydragzoom_packed.js"></script>
-@*<script src="~/Scripts/bootstrap-contextmenu.js"></script>*@
-<script src="~/Scripts/Custom/webclient.js"></script>
-<script src="~/Scripts/Custom/randomId.js"></script>
-<script src="~/Scripts/Custom/freezeEnum.js"></script>
-<script src="~/Scripts/Custom/TimeSeriesRequestStatus.js"></script>
-<script src="~/Scripts/Fancytree/jquery-ui.custom.js"></script>
-<script src="~/Scripts/Fancytree/jquery.fancytree.js"></script>
-<script src="~/Scripts/Fancytree/jquery.fancytree.filter.js"></script>
-<script src="~/Scripts/Fancytree/jquery.fancytree.childcounter.js"></script>
-<script src="~/Scripts/Fancytree/sample.js"></script>
-<script src="~/Scripts/bootstrap-datepicker.js"></script>
-<script src="~/Scripts/Custom/jquery-filedownload.js"></script>
-<script src="~/Scripts/jquery.slidereveal.min.js"></script>
+        <script src="~/Scripts/Google/keydragzoom_packed.js"></script>
+        @*<script src="~/Scripts/bootstrap-contextmenu.js"></script>*@
+        <script src="~/Scripts/Custom/webclient.js"></script>
+        <script src="~/Scripts/Custom/randomId.js"></script>
+        <script src="~/Scripts/Custom/freezeEnum.js"></script>
+        <script src="~/Scripts/Custom/TimeSeriesRequestStatus.js"></script>
+        <script src="~/Scripts/Fancytree/jquery-ui.custom.js"></script>
+        <script src="~/Scripts/Fancytree/jquery.fancytree.js"></script>
+        <script src="~/Scripts/Fancytree/jquery.fancytree.filter.js"></script>
+        <script src="~/Scripts/Fancytree/jquery.fancytree.childcounter.js"></script>
+        <script src="~/Scripts/Fancytree/sample.js"></script>
+        <script src="~/Scripts/bootstrap-datepicker.js"></script>
+        <script src="~/Scripts/Custom/jquery-filedownload.js"></script>
+        <script src="~/Scripts/jquery.slidereveal.min.js"></script>

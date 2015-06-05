@@ -52,6 +52,16 @@
     border:1px
 }
 
+/* Source: http://stackoverflow.com/questions/21697659/bootstrap-3-vertical-line-in-button-group */
+.btn-separator:after {
+    content: ' ';
+    display: block;
+    float: left;
+    background: #ADADAD;
+    margin: 10px 10px;
+    height: 34px;
+    width: 10px;
+}
 
 selector{
     border:inset;
@@ -284,4 +294,76 @@ font-weight: 300;
 }
 .side-panel-right{
 	box-shadow: 5px 0 15px -6px #585858 inset;
+}
+
+
+/* CSS for rotating glyphicons...
+    Source: http://chadkuehn.com/animated-font-spinners/ 
+*/
+/*
+.glyphicon-spin {
+    -webkit-animation: spin 1000ms infinite linear;
+    animation: spin 1000ms infinite linear;
+}
+@-webkit-keyframes spin {
+    0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(359deg);
+        transform: rotate(359deg);
+    }
+}
+@keyframes spin {
+    0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(359deg);
+        transform: rotate(359deg);
+    }
+}
+*/
+
+/* CSS for rotating glyphicons...
+    Source: http://stackoverflow.com/questions/19364726/issue-making-bootstrap3-icon-spin - answer 28
+*/
+
+.spin {
+  -webkit-animation: spin 1.5s infinite linear;
+  -moz-animation: spin 1.5s infinite linear;
+  -o-animation: spin 1.5s infinite linear;
+  animation: spin 1.5s infinite linear;
+     -webkit-transform-origin: 50% 58%;
+         transform-origin:50% 58%;
+         -ms-transform-origin:50% 58%; /* IE 9 */
+}
+
+@-moz-keyframes spin {
+  from {
+    -moz-transform: rotate(0deg);
+  }
+  to {
+    -moz-transform: rotate(360deg);
+  }
+}
+
+@-webkit-keyframes spin {
+  from {
+    -webkit-transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
