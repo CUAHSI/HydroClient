@@ -1844,6 +1844,7 @@ function setUpTimeseriesDatatable() {
     var oTable = $('#dtTimeseries').dataTable({
         "ajax": actionUrl,
         "dom": 'C<"clear">l<"toolbarTS">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+        "deferRender": true,
         colVis: {
             activate: "mouseover",
             exclude: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
