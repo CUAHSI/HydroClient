@@ -1197,10 +1197,10 @@ function setUpDatatables(clusterid)
          "createdRow": function (row, data, index) {
 
              //BC - TEST - mark the row as selected per check box state...
-//             if ($('#chkbxSelectAll').prop('checked')) {
-//                 var jqueryObject = $(row);
-//                 jqueryObject.addClass('selected');
-//             }
+             if ($('#chkbxSelectAll').prop('checked')) {
+                 var jqueryObject = $(row);
+                 jqueryObject.addClass('selected');
+             }
 
              //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
 
@@ -1880,6 +1880,12 @@ function setUpTimeseriesDatatable() {
            { "data": "Citation", "visible": false }
         ],
         "createdRow": function (row, data, index) {
+
+            //BC - TEST - mark the row as selected per check box state...
+            if ($('#chkbxSelectAllTS').prop('checked')) {
+                var jqueryObject = $(row);
+                jqueryObject.addClass('selected');
+            }
 
             //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
 
