@@ -31,7 +31,7 @@ function initialize() {
     var myCenter = new google.maps.LatLng(41.7, -111.9);//Salt Lake
     
 
-    infoWindow = new google.maps.InfoWindow();
+    //infoWindow = new google.maps.InfoWindow();
 
     //init list od datatables for modal 
     myServicesList = setupServices();
@@ -70,6 +70,7 @@ function initialize() {
     slider = addSlider();
  
     slider.slideReveal("show");
+    sidepanelVisible = true;
   
     addLocationSearch();
     
@@ -79,34 +80,34 @@ function initialize() {
 
     //triger update of map on these events
     google.maps.event.addListener(map, 'dblclick', function () {
-        if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
+        //if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
             updateMap(false)
             //$("#MapAreaControl").html(getMapAreaSize());
-        }
+        //}
     });
     google.maps.event.addListener(map, 'dragend', function () {
-        if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
+        //if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
             updateMap(false)
             //$("#MapAreaControl").html(getMapAreaSize());
-        }
+        //}
     });
     
     google.maps.event.addListener(map, 'zoom_changed', function () {
-        if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
+        //if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
             updateMap(false)
             
             //$("#MapAreaControl").html(getMapAreaSize());
             
-        }
+        //}
     });
     //added to load size on startup
     google.maps.event.addListener(map, 'bounds_changed', function () {
-        if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
+        //if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
             updateMap(false)
 
             $("#MapAreaControl").html(getMapAreaSize());
 
-        }
+        //}
     });
 
     //google.maps.event.addListener(marker, 'click', function () {
@@ -122,7 +123,10 @@ function initialize() {
         $("#map-canvas").width(getMapWidth()) //setMapWidth
        
         google.maps.event.trigger(map, "resize");
-       
+        if (sidepanelVisible)
+        {
+            slider.slideReveal("show")
+        }
     });
    
 
@@ -236,7 +240,14 @@ function initialize() {
         {
             setUpTimeseriesDatatable();
             //hide sidebar
-            slider.slideReveal("hide")
+           // slider.slideReveal("hide")
+        }
+         if (e.target.id == "mapTab")
+        {
+             google.maps.event.trigger(map, "resize");
+             if (!sidepanelVisible) {
+                 slider.slideReveal("show")
+             }
         }
         // activated tab
     })
@@ -358,8 +369,14 @@ function toggleSidePanelControl(controlDiv, map)
     // Chicago
 
         google.maps.event.addDomListener(controlUI, 'click', function () {
-            if (sidepanelVisible) { slider.slideReveal("hide") }
-            else { slider.slideReveal("show") }
+            if (sidepanelVisible) {
+                slider.slideReveal("hide")
+                sidepanelVisible = false
+            }
+            else {
+                slider.slideReveal("show")
+                sidepanelVisible = true
+            }
         });
 
         //if (typeof slider != "undefined") { // Show
@@ -1183,11 +1200,11 @@ function setUpDatatables(clusterid)
             { "data": "ServURL", "visible": false },
             { "data": "SiteCode", "visible": false },
             { "data": "VariableCode", "visible": false },
-            { "data": "VariableName"},
-            { "data": "BeginDate" },
-            { "data": "EndDate" },
+            { "data": "VariableName","width": "50px", "sTitle": "Variable Name"},
+            { "data": "BeginDate", "sTitle": "Start Date" },
+            { "data": "EndDate","sTitle": "End Date" },
             { "data": "ValueCount", "visible": false },
-            { "data": "SiteName" },
+            { "data": "SiteName", "sTitle": "Site Name" },
             { "data": "Latitude", "visible": false },
             { "data": "Longitude", "visible": false },
             { "data": "DataType", "visible": false },
@@ -1202,7 +1219,7 @@ function setUpDatatables(clusterid)
             { "data": "Citation", "visible": false }            
         ],
         
-         //"scrollX": true, //removed to fix column alignment 
+         "scrollX": true, //removed to fix column alignment 
          
          "createdRow": function (row, data, index) {
 
@@ -1254,7 +1271,8 @@ function setUpDatatables(clusterid)
          },
         initComplete: function () {
 
-             setfooterFilters('#dtMarkers', [1,2,3,5]);
+            setfooterFilters('#dtMarkers', [1, 2, 3, 5]);
+            oTable.fnAdjustColumnSizing();
         }
         
           
@@ -1820,8 +1838,8 @@ function setUpTimeseriesDatatable() {
            { "data": "SiteCode", "visible": false },
            { "data": "VariableCode", "visible": false },
            { "data": "VariableName" },
-           { "data": "BeginDate" },
-           { "data": "EndDate" },
+           { "data": "BeginDate", "visible": false},
+           { "data": "EndDate", "visible": false},
            { "data": "ValueCount", "visible": false },
            { "data": "SiteName" },
            { "data": "Latitude", "visible": false },
@@ -1836,7 +1854,8 @@ function setUpTimeseriesDatatable() {
            { "data": "IsRegular", "visible": false },
            { "data": "VariableUnits", "visible": false },
            { "data": "Citation", "visible": false }
-        ],
+           ],
+        "scrollX": true, //removed to fix column alignment 
         "createdRow": function (row, data, index) {
 
             //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {

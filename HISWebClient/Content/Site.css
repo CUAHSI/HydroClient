@@ -34,6 +34,12 @@
 
 
 }
+logo
+{
+     border:0px; 
+     vertical-align:top;
+     left:0px;
+}
 .nav li a
 {
     padding: 2px;
@@ -160,8 +166,7 @@ div.GblueLabel48 {  padding-top: 22px;  width: 48px;  font-size: 13px;}
 div.GblueLabel56 {  padding-top: 22px;  width: 56px;  font-size: 13px;}
 div.GblueLabel64 {  padding-top: 22px;  width: 64px;  font-size: 13px;} 
 
-#wrapper {
-}
+
 #menu {
    width: 200px;
    /*height:225px;*/
@@ -176,9 +181,7 @@ div.GblueLabel64 {  padding-top: 22px;  width: 64px;  font-size: 13px;}
     /*opacity: .8;*/ /*for real browsers (Chrome, Firefox, Safari..)*/
     /*filter:alpha(opacity=60);*/ /* for IE */
     }
-.row-background-red{
-    background-color:red;
-}
+
 #pageloaddiv {
     position: fixed;
     left: 0px;
@@ -195,16 +198,8 @@ td.details-control {
 tr.details td.details-control {
     background: url('../Content/Images/cart_remove.png') no-repeat center center;
 }
-/* An ugly trick to use a filter icon */
-.ui-icon-volume-off.ui-icon-filter {
-	-ms-transform: rotate(270deg);
-	-webkit-transform: rotate(270deg);
-	transform: rotate(270deg);
-}
-.activeDownload
-{
-    background-color:red;
-}
+
+
 /* Fancytree*/
 span.fancytree-icon {
   position: relative;
@@ -232,7 +227,7 @@ span.fancytree-childcounter {
 .datepicker{z-index:1151 !important;}
 
 tr.selected {background: #009900;}
-.downloadFail {background: #CC0000;}
+
 
 
 /*Google maps searchbar*/
