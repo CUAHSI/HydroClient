@@ -878,12 +878,7 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             //infoWindow.open(map, this);
             //$('#example').DataTable();
             setUpDatatables(clusterid);
-            if (('undefined' !== typeof currentPlaceAddress) && (null !== currentPlaceAddress)) {
-                $('#SeriesModal #myModalLabel').html('List of Timeseries for ' + currentPlaceAddress + ' (Cluster: ' + clusterid.toString() + ', Count: ' + count.toString() + ')');
-            }
-            else {
-                $('#SeriesModal #myModalLabel').html('List of Timeseries for (Cluster: ' + clusterid.toString() + ', Count: ' + count.toString() + ')');
-            }
+            $('#SeriesModal #myModalLabel').html('List of Timeseries for Selected Marker');
 
             $('#SeriesModal').modal('show')
             //var details = getDetailsForMarker(clusterid)
@@ -995,12 +990,7 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             //infoWindow.open(map, this);
             //$('#example').DataTable();
             setUpDatatables(clusterid);
-            if (('undefined' !== typeof currentPlaceAddress) && (null !== currentPlaceAddress)) {
-                $('#SeriesModal #myModalLabel').html('List of Timeseries for ' + currentPlaceAddress + ' (Cluster: ' + clusterid.toString() + ', Count: ' + count.toString() + ')');
-            }
-            else {
-                $('#SeriesModal #myModalLabel').html('List of Timeseries for (Cluster: ' + clusterid.toString() + ', Count: ' + count.toString() + ')');
-            }
+            $('#SeriesModal #myModalLabel').html('List of Timeseries for Selected Marker');
                 
             $('#SeriesModal').modal('show')
             //var details = getDetailsForMarker(clusterid)
@@ -1223,6 +1213,12 @@ function setUpDatatables(clusterid)
          
          "createdRow": function (row, data, index) {
 
+             //BC - TEST - mark the row as selected per check box state...
+             if ($('#chkbxSelectAll').prop('checked')) {
+                 var jqueryObject = $(row);
+                 jqueryObject.addClass('selected');
+             }
+
              //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
 
              var id = $('td', row).eq(0).html();
@@ -1284,22 +1280,24 @@ function setUpDatatables(clusterid)
     //Source: https://datatables.net/examples/api/select_row.html
     //Avoid multiple registrations of the same handler...
     $('#dtMarkers tbody').off('click', 'tr', toggleSelected);
-    $('#dtMarkers tbody').on('click', 'tr', toggleSelected);
+    $('#dtMarkers tbody').on('click', 'tr', {'tableId': '#dtMarkers', 'btnId': '#btnZipSelections'},toggleSelected);
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-    $("div.toolbar").html('<span style="margin-left: 2em;"> <input type="checkbox" class="ColVis-Button" id="chkbxSelectAll"/>&nbsp;Select All? <input type="button" style="margin-left: 2em;" class="ColVis-Button btn btn-primary" id="btnDownloadSelections" value="Download Selections"/></span>');
+    $("div.toolbar").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAll" style="float:left;"/>&nbsp;Select All?</span>' +
+                          '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary disabled" id="btnZipSelections" value="Zip Selections"/>' +
+                          '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;">Zip started.  To download the archive, please open Download Manager</span>');
     //$("div.toolbar").css('border', '1px solid red');
   
     //Add click handlers...
 
     //Avoid multiple registrations of the same handler...
     $('#chkbxSelectAll').off('click', selectAll);
-    $('#chkbxSelectAll').on('click', {'tableId': '#dtMarkers', 'chkbxId': '#chkbxSelectAll'}, selectAll);
+    $('#chkbxSelectAll').on('click', {'tableId': '#dtMarkers', 'chkbxId': '#chkbxSelectAll', 'btnId': '#btnZipSelections'}, selectAll);
 
     //Avoid multiple registrations of the same handler...
-    $('#btnDownloadSelections').off('click', downloadSelections);
-    $('#btnDownloadSelections').on('click', { 'tableId': '#dtMarkers'}, downloadSelections);
+    $('#btnZipSelections').off('click', zipSelections);
+    $('#btnZipSelections').on('click', { 'tableId': '#dtMarkers', 'chkbxId': '#chkbxSelectAll'}, zipSelections);
 
     //BC - TEST - Retrieve the colvis button control - assign a click handler for scrollx control...
     var colvis = new $.fn.DataTable.ColVis(oTable);
@@ -1503,8 +1501,11 @@ function setfooterFilters(tableId, columnsArray) {
 }
 
 
-function toggleSelected() {
+function toggleSelected(event) {
     $(this).toggleClass('selected');
+
+    //Check state of 'Zip Selections' button...
+    enableDisableButton(event.data.tableId, event.data.btnId);
 }
 
 function clovisButtonClick(event) {
@@ -1538,13 +1539,14 @@ function newRow($table, cols) {
 
 function selectAll(event) {
 
-    //Retrieve all the table's <tr> elements whether visible or not...
+    //Retrieve all the table's RENDERED <tr> elements whether visible or not...
     //Source: http://datatables.net/reference/api/rows().nodes()
     //var table = $('#dtMarkers').DataTable();
     var table = $(event.data.tableId).DataTable();
     var rows = table.rows();
-    var nodes = rows.nodes();
-    var jqueryObjects = nodes.to$();    //Convert to jQuery Objects!!
+    var nodesRendered = rows.nodes();
+
+    var jqueryObjects = nodesRendered.to$();    //Convert to jQuery Objects!!
 
     //Apply/remove 'selected' class per checkbox state
     var className = 'selected';
@@ -1555,14 +1557,54 @@ function selectAll(event) {
     else {
         jqueryObjects.removeClass(className);
     }
+
+    //Check state of 'Zip Selections' button...
+    enableDisableButton(event.data.tableId, event.data.btnId);
 }
 
-function downloadSelections(event) {
+//Enable/disable referenced button per contents of referenced Data Table...
+function enableDisableButton(tableId, btnId) {
+
+    var table = $(tableId).DataTable();
+    var selectedRows = table.rows('.selected').data();
+    var selectedCount = selectedRows.length;
+
+    if (0 < selectedCount) {
+        $(btnId).removeClass('disabled');
+    }
+    else {
+        $(btnId).addClass('disabled');
+    }
+}
+
+//Dispaly the referenced label class and then fade...
+function displayAndFadeLabel(labelClass) {
+
+    //Display inline... 
+    $(labelClass).fadeIn({'duration': 1500});
+
+    setTimeout(function () {
+        $(labelClass).fadeOut({ 'duration': 1500 });
+    }, 5000);
+}
+
+function zipSelections(event) {
+
+    //Display the 'Zip processing started... message
+    displayAndFadeLabel('.clsZipStarted');
 
     //Create the list of selected time series ids...
     //var table = $('#dtMarkers').DataTable();
     var table = $(event.data.tableId).DataTable();
     var selectedRows = table.rows('.selected').data();
+
+    if ($(event.data.chkbxId).prop("checked")) {
+        //User has clicked the 'Select All' check box - ALL rows selected...
+        //NOTE: If the DataTable instance has the 'deferRender' option set - not all rows may have been rendered at this point.
+        //        Thus one cannot rely on the selectedRows above, since in this case only rendered rows appear in the selectedRows...
+        selectedRows = table.rows().data();
+    }
+
     var selectedCount = selectedRows.length;
     var timeSeriesIds = [];
 
@@ -1724,6 +1766,11 @@ function downloadSelections(event) {
                                     var blobUri = tableRow.find('td:eq(2)').html();
                                     location.href = blobUri;
 
+                                    //Fade row and remove from table...
+                                    tableRow.fadeTo(1500, 0.5, function() {
+                                            $(this).remove();
+                                    });
+
                                     event.stopPropagation();
                                 });
 
@@ -1780,7 +1827,7 @@ function downloadSelections(event) {
     });
 }
 
-//Format the html for the status message as follows - all elements inline:  <h1> - glyphicon spinner </h1> <h3> status message text </h3> 
+//Format the html for the status message as follows - all elements inline:  <h3> - glyphicon spinner </h3> <span> status message text </span> 
 function formatStatusMessage(statusText) {
     
     var formattedMessage = '<h3 class="text-center" style="display: inline; margin: 0em 0em 0em 0em;">' + 
@@ -1805,12 +1852,7 @@ function setUpTimeseriesDatatable() {
     }
 
     //Set page title...
-    if (('undefined' !== typeof currentPlaceAddress) && (null !== currentPlaceAddress)) {
-        $('#dataview #myModalLabel').html('List of Timeseries for ' + currentPlaceAddress);
-    }
-    else {
-        $('#dataview #myModalLabel').html('List of Timeseries for Selected Area');
-    }
+    $('#dataview #myModalLabel').html('List of Timeseries for Selected Area');
 
 
     //var dataSet = getDetailsForMarker(clusterid)
@@ -1858,6 +1900,12 @@ function setUpTimeseriesDatatable() {
         "scrollX": true, //removed to fix column alignment 
         "createdRow": function (row, data, index) {
 
+            //BC - TEST - mark the row as selected per check box state...
+            if ($('#chkbxSelectAllTS').prop('checked')) {
+                var jqueryObject = $(row);
+                jqueryObject.addClass('selected');
+            }
+
             //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
 
             var id = $('td', row).eq(0).html();
@@ -1899,21 +1947,23 @@ function setUpTimeseriesDatatable() {
     //Source: https://datatables.net/examples/api/select_row.html
     //Avoid multiple registrations of the same handler...
     $('#dtTimeseries tbody').off('click', 'tr', toggleSelected);
-    $('#dtTimeseries tbody').on('click', 'tr', toggleSelected);
+    $('#dtTimeseries tbody').on('click', 'tr', { 'tableId': '#dtTimeseries', 'btnId': '#btnZipSelectionsTS' }, toggleSelected);
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-    $("div.toolbarTS").html('<span style="margin-left: 2em;"> <input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS"/>&nbsp;Select All? <input type="button" style="margin-left: 2em;" class="ColVis-Button btn btn-primary" id="btnDownloadSelectionsTS" value="Download Selections"/></span>');
+    $("div.toolbarTS").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS" style="float:left;"/>&nbsp;Select All?</span>' +
+                            '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary disabled" id="btnZipSelectionsTS" value="Zip Selections"/>' +
+                            '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;">Zip started.  To download the archive, please open Download Manager</span>');
 
     //Add click handlers...
 
     //Avoid multiple registrations of the same handler...
     $('#chkbxSelectAllTS').off('click', selectAll);
-    $('#chkbxSelectAllTS').on('click', { 'tableId': '#dtTimeseries', 'chkbxId': '#chkbxSelectAllTS' }, selectAll);
+    $('#chkbxSelectAllTS').on('click', { 'tableId': '#dtTimeseries', 'chkbxId': '#chkbxSelectAllTS', 'btnId': '#btnZipSelectionsTS'}, selectAll);
 
     //Avoid multiple registrations of the same handler...
-    $('#btnDownloadSelectionsTS').off('click', downloadSelections);
-    $('#btnDownloadSelectionsTS').on('click', { 'tableId': '#dtTimeseries'}, downloadSelections);
+    $('#btnZipSelectionsTS').off('click', zipSelections);
+    $('#btnZipSelectionsTS').on('click', { 'tableId': '#dtTimeseries', 'chkbxId': '#chkbxSelectAllTS'}, zipSelections);
 
 }
 
