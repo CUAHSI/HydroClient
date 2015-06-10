@@ -345,6 +345,7 @@
     <Content Include="Content\Images\Markers\Services\blue-20.png" />
     <Content Include="Content\Images\pageloader.gif" />
     <Content Include="Content\Images\cuahsi_logo_small.png" />
+    <Content Include="fonts\glyphicons-halflings-regular.woff" />
     <Content Include="modal_ajax_test.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -527,7 +528,6 @@
     <Folder Include="Views\Export\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="fonts\glyphicons-halflings-regular.woff" />
     <Content Include="fonts\glyphicons-halflings-regular.ttf" />
     <Content Include="fonts\glyphicons-halflings-regular.eot" />
     <Content Include="packages.config" />
