@@ -362,3 +362,28 @@ font-weight: 300;
     transform: rotate(360deg);
   }
 }
+
+/* Styling for a table with a vertical scroll bar in the tbody (table with class: vscroll)
+    Source: http://www.bootply.com/qdLCAlG9fm
+*/
+
+.table-fixed thead {
+  width: 97%;
+}
+.table-fixed tbody {
+  height: 230px;
+  overflow-y: auto;
+  width: 100%;
+}
+.table-fixed thead, .table-fixed tbody, .table-fixed tr, .table-fixed td, .table-fixed th {
+  display: block;
+}
+.table-fixed tbody td, .table-fixed thead > tr> th {
+  float: left;
+  border-bottom-width: 0;
+}
+
+/* Styling for Bootstrap tooltips... */
+#chkbxSelectAll + .tooltip > .tooltip-inner, #chkbxSelectAllTS + .tooltip > .tooltip-inner  {
+    background-color: red;
+}

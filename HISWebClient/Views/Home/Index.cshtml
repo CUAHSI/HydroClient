@@ -163,29 +163,25 @@
                 <h3 class="modal-title" id="myModalLabel">Download Manager</h3>
             </div>
             <div class="modal-body-full">
-
-            <!-- word-wrap: break-word - Allow long words to break and wrap to next line.
-                    white-space:pre-wrap - Preserve white space in browser.  Wrap text when necessary and on line breaks. -->
-            <table id="tblDownloadManager" class="table table-bordered table-hover" style="word-wrap: break-word; white-space:pre-wrap; width: 100%">
-                <thead>
-                    <tr style="height: 3em;" class="active">
-                        <th class="text-center" style="vertical-align: middle;">Request ID</th>
-                        <th class="text-center" style="vertical-align: middle;">Time Series Processing</th>
-                        <th class="text-center" style="vertical-align: middle;">Time Series Archive</th>
-                        <th class="text-center" style="vertical-align: middle;"><input type="button" class="btn btn-primary" id="btnDownloadAll" value="Download All Archives" /></th>
-                        <!--
-                        <th class="text-center" style="vertical-align: middle;"><label><input type="checkbox" id="chkbxAutoDownload" />&nbsp;Auto Download Archives?</label></th>
-                        -->
-                    </tr>
-                </thead>
-                <tbody style="scroll"></tbody>
-                <tfoot>
-                    @*<tr>
-                        <td>Footer text goes here</td>
-                    </tr>*@
-                </tfoot>
-            </table>
-
+                <!-- BCC - Try a dynamically sized font here... 
+                     Source: http://stackoverflow.com/questions/14537611/bootstrap-responsive-text-size     
+                -->
+                <table id="tblDownloadManager" class="table table-hover table-fixed" style="font-size: 1.5vmin;">
+                    <thead>
+                        <tr class="active">
+                            <th class="text-center" style="vertical-align: middle; height: 2em; width: 15%">Request ID</th>
+                            <th class="text-center" style="vertical-align: middle; height: 2em; width: 15%"">Time Series Processing</th>
+                            <th class="text-center" style="vertical-align: middle; height: 2em; width: 50%"">Time Series Archive</th>
+                            <th class="text-center" style="vertical-align: middle; height: 2em; width: 15%"><input type="button" class="btn btn-primary" id="btnDownloadAll" style="margin-left: 5em; font-size: 1.5vmin" value="Download All Archives" /></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                    <tfoot>
+                        @*<tr>
+                    <td>Footer text goes here</td>
+                </tr>*@
+                    </tfoot>
+                </table>
             </div>
             <div class="modal-footer">
                 <!--p>This is the modal footer!!</p-->

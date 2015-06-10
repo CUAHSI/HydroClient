@@ -17,6 +17,8 @@ var timeSeriesRequestStatus;
 var slider;
 var sidepanelVisible = false;
 
+var selectedTimeSeriesMax = 50;
+
 $(document).ready(function () {
 
     $("#pageloaddiv").hide();
@@ -259,7 +261,6 @@ function initialize() {
         return false;
     });
 
-   
 };
   
 function getMapHeight()
@@ -1285,10 +1286,14 @@ function setUpDatatables(clusterid)
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
     $("div.toolbar").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAll" style="float:left;"/>&nbsp;Select All?</span>' +
-                          '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary disabled" id="btnZipSelections" value="Zip Selections"/>' +
+                          '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelections" value="Zip Selections"/>' +
                           '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;">Zip started.  To download the archive, please open Download Manager</span>');
     //$("div.toolbar").css('border', '1px solid red');
   
+    //Add data load event handler...
+    $('#dtMarkers').off('xhr.dt', dataTableLoad);
+    $('#dtMarkers').on('xhr.dt', { 'chkbxId': '#chkbxSelectAll'}, dataTableLoad);
+
     //Add click handlers...
 
     //Avoid multiple registrations of the same handler...
@@ -1537,7 +1542,41 @@ function newRow($table, cols) {
     return ($row);
 }
 
+//Add styles to row for download manager table...
+function addRowStylesDM(newrow) {
+
+    //Cell: 0
+    var td = newrow.find('td:eq(0)');
+//    td.addClass('text-center col-xs-1');
+    td.addClass('text-center');
+    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '15%' });
+
+    //Cell: 1
+    td = newrow.find('td:eq(1)');
+//    td.addClass('text-center col-xs-2');
+    td.addClass('text-center');
+    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '15%' });
+
+    //Cell: 2
+    td = newrow.find('td:eq(2)');
+//    td.addClass('text-center col-xs-6');
+    td.addClass('text-center');
+    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '50%', 'overflow': 'hidden', 'text-overflow': 'ellipsis' });
+
+    //Cell: 3
+    td = newrow.find('td:eq(3)');
+//    td.addClass('text-center col-xs-2');
+    td.addClass('text-center');
+    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '15%' });
+}
+
 function selectAll(event) {
+
+    //Check for disabled button...
+    if ($(this).hasClass("disabled")) {
+        event.preventDefault();
+        return false;
+    }
 
     //Retrieve all the table's RENDERED <tr> elements whether visible or not...
     //Source: http://datatables.net/reference/api/rows().nodes()
@@ -1562,7 +1601,7 @@ function selectAll(event) {
     enableDisableButton(event.data.tableId, event.data.btnId);
 }
 
-//Enable/disable referenced button per contents of referenced Data Table...
+//Set/reset 'disabled' attribute on referenced button per contents of referenced Data Table...
 function enableDisableButton(tableId, btnId) {
 
     var table = $(tableId).DataTable();
@@ -1570,10 +1609,10 @@ function enableDisableButton(tableId, btnId) {
     var selectedCount = selectedRows.length;
 
     if (0 < selectedCount) {
-        $(btnId).removeClass('disabled');
+        $(btnId).prop('disabled', false);
     }
     else {
-        $(btnId).addClass('disabled');
+        $(btnId).prop('disabled', true);
     }
 }
 
@@ -1586,6 +1625,36 @@ function displayAndFadeLabel(labelClass) {
     setTimeout(function () {
         $(labelClass).fadeOut({ 'duration': 1500 });
     }, 5000);
+}
+
+//Enable/disable 'Select All' checkbox per max. selectable row count check...
+function dataTableLoad(event, settings, json, xhr) {
+
+    if ((null !== json) && (null !== json.data)) {
+        //Successful AJAX query - check total rows received against max. selectable row count...
+        var length = json.data.length;
+        var propValue = (selectedTimeSeriesMax >= length) ? false : true;
+
+        //$(event.data.chkbxId).prop('disabled', propValue);
+
+        //Remove the tooltip and title attributes...
+        $(event.data.chkbxId).removeAttr('data-toggle data-placement title');
+        $(event.data.chkbxId).removeClass('disabled');
+        //$(event.data.chkbxId).prop('disabled', propValue);
+
+        if (true === propValue) {
+            //Checkbox disabled - add disabled class 
+            $(event.data.chkbxId).addClass('disabled');
+
+            //Add tooltip explaining why
+            $(event.data.chkbxId).attr('data-toggle', 'tooltip');
+            $(event.data.chkbxId).attr('data-placement', 'right');
+            $(event.data.chkbxId).attr('title', 'The total timeseries rows (' + length.toString() + ') exceed the selectable maximum (' + selectedTimeSeriesMax.toString() + ')');
+
+            //Enable Bootstrap tooltips...
+            $('[data-toggle="tooltip"]').tooltip();
+        }
+    }
 }
 
 function zipSelections(event) {
@@ -1662,7 +1731,7 @@ function zipSelections(event) {
             cols.push(formatStatusMessage(response.Status));
             cols.push(response.BlobUri);
 
-            var button = $("<button class='stopTask btn btn-warning'>Stop Processing</button>");
+            var button = $("<button class='stopTask btn btn-warning' style='font-size: 1.5vmin'>Stop Processing</button>");
 
             button.click(function (event) {
                 //Hide the button...
@@ -1712,11 +1781,14 @@ function zipSelections(event) {
             newrow.find('td:eq(4)').hide();
 
             //Center the button in the td-3
-            var td3 = newrow.find('td:eq(3)');
-            td3.addClass('text-center');
+            //var td3 = newrow.find('td:eq(3)');
+            //td3.addClass('text-center');
+
+            addRowStylesDM(newrow);
+
 
             //Color row as 'info'
-            newrow.addClass('info');
+            //newrow.addClass('info');
 
             //Add a new monitor for the newly created task...
             var intervalId = setInterval(function () {
@@ -1760,7 +1832,7 @@ function zipSelections(event) {
                                 //Success - create a download button...
                                 var button = tableRow.find('td:eq(3)');
 
-                                button = $("<button class='zipBlobDownload btn btn-success'>Download Archive</button>");
+                                button = $("<button class='zipBlobDownload btn btn-success' style='font-size: 1.5vmin'>Download Archive</button>");
 
                                 button.on('click', function (event) {
                                     var blobUri = tableRow.find('td:eq(2)').html();
@@ -1952,8 +2024,12 @@ function setUpTimeseriesDatatable() {
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
     $("div.toolbarTS").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS" style="float:left;"/>&nbsp;Select All?</span>' +
-                            '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary disabled" id="btnZipSelectionsTS" value="Zip Selections"/>' +
+                            '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelectionsTS" value="Zip Selections"/>' +
                             '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;">Zip started.  To download the archive, please open Download Manager</span>');
+
+    //Add data load event handler...
+    $('#dtTimeseries').off('xhr.dt', dataTableLoad);
+    $('#dtTimeseries').on('xhr.dt', { 'chkbxId': '#chkbxSelectAllTS' }, dataTableLoad);
 
     //Add click handlers...
 
