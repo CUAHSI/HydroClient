@@ -21,7 +21,7 @@
 
         <ul class="nav nav-tabs" id="myTab">
             <li class="active navbar-custom"><a href="#map" id="mapTab" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> Map</a></li>
-            <li class="navbar-custom disabled"><a href="#graph" id="graphTab" data-toggle="tab"><span class="glyphicon glyphicon-home"></span> Graph</a></li>
+         @*   <li class="navbar-custom disabled"><a href="#graph" id="graphTab" data-toggle="tab"><span class="glyphicon glyphicon-home"></span> Graph</a></li>*@
             <li class="navbar-custom data"><a href="#dataview" id="tableTab" data-toggle="tab"><span class="glyphicon glyphicon-list"></span> Data</a></li>
             <li class="btn-separator"></li>
             <!-- li class="glyphicon glyphicon-option-vertical"></li -->
@@ -197,24 +197,20 @@
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h3 class="modal-title" id="myModalLabel">Please select your date range:</h3>
-
             </div>
             <div class="modal-body">
                 <div class="col-md-12">
                     <div class="row">
                         <div class="input-daterange">
-                            <input id="startDate" value="02/12/2010" />
+                            <input id="startDate" value=@DateTime.Now.AddYears(-1).ToShortDateString() />
                             <span class="add-on">to</span>
                             <input id="endDate" value=@DateTime.Now.ToShortDateString() />
                             <button type="button" class="btn btn-default btn-primary" data-dismiss="modal">Save</button>
                         </div>
                     </div>
                 </div>
-
             </div>
-            <div class="modal-footer">
-
-            </div>
+            <div class="modal-footer"></div>
 
             <!-- /.modal-content -->
         </div>
@@ -243,58 +239,59 @@
                             <div class="tab-pane active" id="tab1">
                                 <div class="row">
                                     <div class="controls col-md-4">
+                                        
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Evaporation, actual" id="inlineCheckbox2" class="topCategories"> Actual Evaporation
-                                        </label>
+                                            <input type="checkbox" name="keywords" value="Discharge, stream" id="inlineCheckbox2" class="topCategories"> Discharge
+                                        </label>     
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Discharge, stream" id="inlineCheckbox3" class="topCategories"> Discharge
-                                        </label>
-                                        <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="dissolved solids, total" id="inlineCheckbox7" class="topCategories"> Total Dissolved Solids
-                                        </label>
+                                            <input type="checkbox" name="keywords" value="Precipitation " id="inlineCheckbox12" class="topCategories"> Precipitation
+                                        </label>                                   
                                         <label class="checkbox">
                                             <input type="checkbox" name="keywords" value="Water Level" id="inlineCheckbox3" class="topCategories"> Water Level 
                                         </label>
                                         <label class="checkbox">
                                             <input type="checkbox" name="keywords" value="Groundwater Level" id="inlineCheckbox4" class="topCategories"> Groundwater Level
                                         </label>
-                                        <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Methane" id="inlineCheckbox5" class="topCategories"> Methane
+                                        @*<label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="dissolved solids, total" id="inlineCheckbox5" class="topCategories"> Total Dissolved Solids
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Nutrient" id="inlineCheckbox6" class="topCategories">	Nutrient
+                                            <input type="checkbox" name="keywords" value="Methane" id="inlineCheckbox6" class="topCategories"> Methane
+                                        </label>*@
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Temperature, Air" id="inlineCheckbox7" class="topCategories">	Air Temperature
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Oxygen, dissolved" id="inlineCheckbox6" class="topCategories">	Dissolved Oxygen
+                                            <input type="checkbox" name="keywords" value="Temperature, Water" id="inlineCheckbox8" class="topCategories"> Water Temperature
+                                        </label>
+                                       
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Evaporation, actual" id="inlineCheckbox1" class="topCategories"> Actual Evaporation
                                         </label>
                                     </div>
-                                    
-                                       
                                        
                                     <div class="controls col-md-4">
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Lead" id="inlineCheckbox6" class="topCategories">	Nutrient
+                                            <input type="checkbox" name="keywords" value="Nutrient" id="inlineCheckbox9" class="topCategories">	Nutrient
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Lead" id="inlineCheckbox6" class="topCategories">	Dissolved Oxygen
+                                            <input type="checkbox" name="keywords" value="Oxygen, dissolved" id="inlineCheckbox10" class="topCategories"> Dissolved Oxygen
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Lead" id="inlineCheckbox6" class="topCategories">	Nutrient
+                                            <input type="checkbox" name="keywords" value="pH" id="inlineCheckbox11" class="topCategories">pH
+                                        </label>
+                                      
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Specific Conductance" id="inlineCheckbox13" class="topCategories">	Specific Conductance 
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Lead" id="inlineCheckbox6" class="topCategories">	Dissolved Oxygen
+                                            <input type="checkbox" name="keywords" value="Snow Water Equivalent" id="inlineCheckbox14" class="topCategories"> Snow Water Equivalent 
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Lead" id="inlineCheckbox6" class="topCategories">	Nutrient
+                                            <input type="checkbox" name="keywords" value="Soil Moisture" id="inlineCheckbox15" class="topCategories"> Soil Moisture 
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Lead" id="inlineCheckbox6" class="topCategories">	Dissolved Oxygen
-                                        </label>
-                                        <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Lead" id="inlineCheckbox6" class="topCategories">	Nutrient
-                                        </label>
-                                        <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Lead" id="inlineCheckbox6" class="topCategories">	Dissolved Oxygen
+                                            <input type="checkbox" name="keywords" value="Solids, total suspended" id="inlineCheckbox16" class="topCategories">	Total Suspended Solids
                                         </label>
                                     </div>
                                 </div>
