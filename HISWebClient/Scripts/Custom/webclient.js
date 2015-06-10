@@ -1187,9 +1187,9 @@ function setUpDatatables(clusterid)
              
             { "data": "SeriesId" },
             { "data": "ServCode", "sTitle": "Service Name" },
-            { "data": "ServURL", "visible": false },
-            { "data": "SiteCode", "visible": false },
-            { "data": "VariableCode", "visible": false },
+            //{ "data": "ServURL", "visible": false },
+            //{ "data": "SiteCode", "visible": false },
+            //{ "data": "VariableCode", "visible": false },
             { "data": "VariableName","width": "50px", "sTitle": "Variable Name"},
             { "data": "BeginDate", "sTitle": "Start Date" },
             { "data": "EndDate","sTitle": "End Date" },
@@ -1201,12 +1201,12 @@ function setUpDatatables(clusterid)
             { "data": "ValueType", "visible": false },
             { "data": "SampleMedium","visible": false },
             { "data": "TimeUnit", "visible": false },
-            { "data": "GeneralCategory", "visible": false },
+            //{ "data": "GeneralCategory", "visible": false },
             { "data": "TimeSupport", "visible": false },
             { "data": "ConceptKeyword", "visible": false },
-            { "data": "IsRegular", "visible": false },
-            { "data": "VariableUnits","visible": false },
-            { "data": "Citation", "visible": false }            
+            { "data": "IsRegular", "visible": false }
+            //{ "data": "VariableUnits","visible": false },
+            //{ "data": "Citation", "visible": false }            
         ],
         
          "scrollX": true, //removed to fix column alignment 

@@ -15,9 +15,9 @@ namespace HISWebClient.Models
         {
             SeriesId = tsvm.SeriesId;
             ServCode = tsvm.ServCode;
-            ServURL = tsvm.ServURL;
-            SiteCode = tsvm.SiteCode;
-            VariableCode = tsvm.VariableCode;
+            //ServURL = tsvm.ServURL;
+            //SiteCode = tsvm.SiteCode;
+            //VariableCode = tsvm.VariableCode;
             VariableName = tsvm.VariableName;
             BeginDate = tsvm.BeginDate;
             EndDate = tsvm.EndDate;
@@ -29,12 +29,12 @@ namespace HISWebClient.Models
             ValueType = tsvm.ValueType;
             SampleMedium = tsvm.SampleMedium;
             TimeUnit = tsvm.TimeUnit;
-            GeneralCategory = tsvm.GeneralCategory;
+            //GeneralCategory = tsvm.GeneralCategory;
             TimeSupport = tsvm.TimeSupport;
             ConceptKeyword = tsvm.ConceptKeyword;
             IsRegular = tsvm.IsRegular;
-            VariableUnits = tsvm.VariableUnits;
-            Citation = tsvm.Citation;
+            //VariableUnits = tsvm.VariableUnits;
+            //Citation = tsvm.Citation;
         }
 
         public int SeriesId { get; set; }

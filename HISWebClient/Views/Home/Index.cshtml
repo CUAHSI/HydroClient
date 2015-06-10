@@ -31,7 +31,7 @@
     <div class="tab-content">
         <div class="tab-pane" id="dataview">
             <div class="modal-header-full">
-                <h3 class="modal-title" id="myModalLabel">List of Timeseries in area - from index.cshtml</h3>
+                <h3 class="modal-title" id="myModalLabel">Timeseries in Current Map Area</h3>
                 <h5 style="margin-bottom: 1em;">To zip one or more data files, please click the associated table row(s) and then click the 'Zip Selections' button.</h5>
             </div>
             <table width="100%" id="dtTimeseries" class="display" cellspacing="0">
@@ -39,9 +39,9 @@
                     <tr>
                         <th>SeriesId</th>
                         <th>ServCode</th>
-                        <th>ServURL</th>
-                        <th>SiteCode</th>
-                        <th>VariableCode</th>
+                        @*<th>ServURL</th>*@
+                       @* <th>SiteCode</th>*@
+                        @*<th>VariableCode</th>*@
                         <th>VariableName</th>
                         <th>BeginDate</th>
                         <th>EndDate</th>
@@ -53,12 +53,12 @@
                         <th>ValueType</th>
                         <th>SampleMedium</th>
                         <th>TimeUnit</th>
-                        <th>GeneralCategory</th>
+                        @*<th>GeneralCategory</th>*@
                         <th>TimeSupport</th>
                         <th>ConceptKeyword</th>
                         <th>IsRegular</th>
-                        <th>VariableUnits</th>
-                        <th>Citation</th>
+                        @*<th>VariableUnits</th>*@
+                       @* <th>Citation</th>*@
                     </tr>
                 </thead>
 
@@ -66,9 +66,9 @@
                     <tr>
                         <th>SeriesId</th>
                         <th>ServCode</th>
-                        <th>ServURL</th>
-                        <th>SiteCode</th>
-                        <th>VariableCode</th>
+                        @*<th>ServURL</th>*@
+                        @* <th>SiteCode</th>*@
+                        @*<th>VariableCode</th>*@
                         <th>VariableName</th>
                         <th>BeginDate</th>
                         <th>EndDate</th>
@@ -80,13 +80,12 @@
                         <th>ValueType</th>
                         <th>SampleMedium</th>
                         <th>TimeUnit</th>
-                        <th>GeneralCategory</th>
+                        @*<th>GeneralCategory</th>*@
                         <th>TimeSupport</th>
                         <th>ConceptKeyword</th>
                         <th>IsRegular</th>
-                        <th>VariableUnits</th>
-                        <th>Citation</th>
-                    </tr>
+                        @*<th>VariableUnits</th>*@
+                        @* <th>Citation</th>*@
                 </tfoot>
             </table>
         </div>
