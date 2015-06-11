@@ -17,6 +17,7 @@ var timeSeriesRequestStatus;
 var slider;
 var sidepanelVisible = false;
 
+var selectedTimeSeriesCount = 0;
 var selectedTimeSeriesMax = 50;
 
 $(document).ready(function () {
@@ -1549,13 +1550,13 @@ function addRowStylesDM(newrow) {
     var td = newrow.find('td:eq(0)');
 //    td.addClass('text-center col-xs-1');
     td.addClass('text-center');
-    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '15%' });
+    td.css({ 'vertical-align': 'middle', 'height': '2em', 'display': 'none' });
 
     //Cell: 1
     td = newrow.find('td:eq(1)');
 //    td.addClass('text-center col-xs-2');
     td.addClass('text-center');
-    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '15%' });
+    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '22.5%' });
 
     //Cell: 2
     td = newrow.find('td:eq(2)');
@@ -1567,7 +1568,7 @@ function addRowStylesDM(newrow) {
     td = newrow.find('td:eq(3)');
 //    td.addClass('text-center col-xs-2');
     td.addClass('text-center');
-    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '15%' });
+    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '22.5%' });
 }
 
 function selectAll(event) {
@@ -1829,7 +1830,13 @@ function zipSelections(event) {
                             timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus) {
                             //If task completed - re-assign 'Stop Task' button to 'Download'
                             if (timeSeriesRequestStatus.Completed === requestStatus) {
-                                //Success - create a download button...
+                                //Success - display the base blob URI only 
+                                var baseUri = (statusResponse.BlobUri).split('.zip');
+                                baseUri[0] += '.zip';
+
+                                tableRow.find('td:eq(2)').html(baseUri[0]);
+                                
+                                //Create a download button...
                                 var button = tableRow.find('td:eq(3)');
 
                                 button = $("<button class='zipBlobDownload btn btn-success' style='font-size: 1.5vmin'>Download Archive</button>");
@@ -1903,10 +1910,10 @@ function zipSelections(event) {
 function formatStatusMessage(statusText) {
     
     var formattedMessage = '<h3 class="text-center" style="display: inline; margin: 0em 0em 0em 0em;">' + 
-                           '<span id="glyphiconSpan" class="glyphicon glyphicon-refresh spin" style="color: #32cd32"></span></h3>' + //color is CSS LimeGreen
-                           '<span id="statusMessageText" style="display:inline; margin: 0em 0em 0em 1em;">' + 
+                           '<span id="glyphiconSpan" class="glyphicon glyphicon-refresh spin" style="color: #32cd32;"></span></h3>' + //color is CSS LimeGreen
+                           '<div id="statusMessageText" class="text-center" style="display:inline-block; margin: 0em 0em 0em 1em; vertical-align: top;">' +
                            statusText +
-                           '</span>';
+                           '</div>';
     return ( formattedMessage)
 }
 

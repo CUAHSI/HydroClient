@@ -160,20 +160,20 @@
         <div class="modal-content-full">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
-                <label style="float:right; margin-right: 2em"><input type="checkbox" id="chkbxAutoDownload" />Auto Download Archives?</label>
+                <label style="float:right; margin-right: 2em"><input type="checkbox" id="chkbxAutoDownload" checked="checked"/>&nbsp;Auto Download Archives?</label>
                 <h3 class="modal-title" id="myModalLabel">Download Manager</h3>
             </div>
             <div class="modal-body-full">
                 <!-- BCC - Try a dynamically sized font here... 
                      Source: http://stackoverflow.com/questions/14537611/bootstrap-responsive-text-size     
                 -->
-                <table id="tblDownloadManager" class="table table-hover table-fixed" style="font-size: 1.5vmin;">
+                <table id="tblDownloadManager" class="table table-hover table-fixed" style="font-size: 1.5vmin; margin: 0 auto;">
                     <thead>
                         <tr class="active">
-                            <th class="text-center" style="vertical-align: middle; height: 2em; width: 15%">Request ID</th>
-                            <th class="text-center" style="vertical-align: middle; height: 2em; width: 15%"">Time Series Processing</th>
-                            <th class="text-center" style="vertical-align: middle; height: 2em; width: 50%"">Time Series Archive</th>
-                            <th class="text-center" style="vertical-align: middle; height: 2em; width: 15%"><input type="button" class="btn btn-primary" id="btnDownloadAll" style="margin-left: 5em; font-size: 1.5vmin" value="Download All Archives" /></th>
+                            <th class="text-center" style="vertical-align: middle; height: 2em; display: none;">Request ID</th>
+                            <th class="text-center" style="vertical-align: middle; height: 2em; width: 22.5%">Time Series Processing</th>
+                            <th class="text-center" style="vertical-align: middle; height: 2em; width: 50%">Time Series Archive</th>
+                            <th class="text-center" style="vertical-align: middle; height: 2em; width: 22.5%;"><input type="button" class="btn btn-primary text-center" id="btnDownloadAll" style="margin-left: 5em; font-size: 1.5vmin;" value="Download All Archives" /></th>
                         </tr>
                     </thead>
                     <tbody></tbody>

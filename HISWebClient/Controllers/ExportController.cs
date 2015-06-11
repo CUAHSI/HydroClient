@@ -296,7 +296,9 @@ namespace HISWebClient.Controllers
                                 }
 
                                 UpdateTaskStatus(requestId, TimeSeriesRequestStatus.ProcessingTimeSeriesId,
-                                    TimeSeriesRequestStatus.ProcessingTimeSeriesId.GetEnumDescription() + tsrIn.TimeSeriesIds[i].ToString());
+                                    TimeSeriesRequestStatus.ProcessingTimeSeriesId.GetEnumDescription() + 
+                                                                      tsrIn.TimeSeriesIds[i].ToString() + 
+                                                                      " (" + (i+1).ToString() + " of " + count.ToString() + ")");
 
                                 //Retrieve the time series data in csv format
                                 FileStreamResult filestreamresult = await DownloadFile(tsrIn.TimeSeriesIds[i], currentSeries);
