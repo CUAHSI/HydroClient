@@ -1168,45 +1168,45 @@ function setUpDatatables(clusterid)
         "jQueryUI": false,
         "deferRender": true,
         "dom": 'C<"clear">l<"toolbar">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-         colVis: {
-             //restore: "Restore",
-             //showAll: "Show all",
-             //showNone: "Show none",
-             activate: "mouseover",
-             exclude: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
-             groups: [
-                //{
-                //    title: "Main",
-                //    columns: [ 0, 1,4, 5,6,7,9]
-                //},
-                {
-                    title: "Show All Columns",
-                    columns: [ 2, 3, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
-                }
-             ]
-         },
+         //colVis: {
+         //    //restore: "Restore",
+         //    //showAll: "Show all",
+         //    //showNone: "Show none",
+         //    activate: "mouseover",
+         //    exclude: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
+         //    groups: [
+         //       //{
+         //       //    title: "Main",
+         //       //    columns: [ 0, 1,4, 5,6,7,9]
+         //       //},
+         //       {
+         //           title: "Show All Columns",
+         //           columns: [ 2, 3, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
+         //       }
+         //    ]
+         //},
          "columns": [
-             
+              { "data": "VariableName","width": "50px", "sTitle": "Variable Name"},
             { "data": "SeriesId" },
             { "data": "ServCode", "sTitle": "Service Name" },
             //{ "data": "ServURL", "visible": false },
             //{ "data": "SiteCode", "visible": false },
             //{ "data": "VariableCode", "visible": false },
-            { "data": "VariableName","width": "50px", "sTitle": "Variable Name"},
+           
             { "data": "BeginDate", "sTitle": "Start Date" },
             { "data": "EndDate","sTitle": "End Date" },
-            { "data": "ValueCount", "visible": false },
+            { "data": "ValueCount" },
             { "data": "SiteName", "sTitle": "Site Name" },
-            { "data": "Latitude", "visible": false },
-            { "data": "Longitude", "visible": false },
-            { "data": "DataType", "visible": false },
-            { "data": "ValueType", "visible": false },
-            { "data": "SampleMedium","visible": false },
-            { "data": "TimeUnit", "visible": false },
+            { "data": "Latitude", "visible": true },
+            { "data": "Longitude", "visible": true },
+            { "data": "DataType", "visible": true },
+            { "data": "ValueType", "visible": true },
+            { "data": "SampleMedium", "visible": true },
+            { "data": "TimeUnit", "visible": true },
             //{ "data": "GeneralCategory", "visible": false },
-            { "data": "TimeSupport", "visible": false },
-            { "data": "ConceptKeyword", "visible": false },
-            { "data": "IsRegular", "visible": false }
+            { "data": "TimeSupport", "visible": true },
+            { "data": "ConceptKeyword", "visible": true },
+            { "data": "IsRegular", "visible": true }
             //{ "data": "VariableUnits","visible": false },
             //{ "data": "Citation", "visible": false }            
         ],
