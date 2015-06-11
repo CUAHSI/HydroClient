@@ -371,9 +371,9 @@ namespace HISWebClient.Controllers
             
                     obj.SeriesId = id;
                     obj.ServCode = dc.ServCode;
-                    obj.ServURL = dc.ServURL;
-                    obj.SiteCode = dc.SiteCode;
-                    obj.VariableCode = dc.VariableCode;
+                    //obj.ServURL = dc.ServURL;
+                    //obj.SiteCode = dc.SiteCode;
+                    //obj.VariableCode = dc.VariableCode;
                     obj.SiteName = dc.SiteName;
                     obj.VariableName = dc.VariableName;
                     obj.BeginDate = dc.BeginDate;
@@ -385,12 +385,12 @@ namespace HISWebClient.Controllers
                     obj.ValueType = dc.ValueType;
                     obj.SampleMedium = dc.SampleMedium;
                     obj.TimeUnit = dc.TimeUnit;
-                    obj.GeneralCategory = dc.GeneralCategory;
+                    //obj.GeneralCategory = dc.GeneralCategory;
                     obj.TimeSupport = dc.TimeSupport;
                     obj.ConceptKeyword = dc.ConceptKeyword;
                     obj.IsRegular = dc.IsRegular;
-                    obj.VariableUnits = dc.VariableUnits;
-                    obj.Citation = dc.Citation;
+                    //obj.VariableUnits = dc.VariableUnits;
+                    //obj.Citation = dc.Citation;
             return obj;
         }
 
