@@ -1548,27 +1548,23 @@ function addRowStylesDM(newrow) {
 
     //Cell: 0
     var td = newrow.find('td:eq(0)');
-//    td.addClass('text-center col-xs-1');
     td.addClass('text-center');
     td.css({ 'vertical-align': 'middle', 'height': '2em', 'display': 'none' });
 
     //Cell: 1
     td = newrow.find('td:eq(1)');
-//    td.addClass('text-center col-xs-2');
     td.addClass('text-center');
     td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '22.5%' });
 
     //Cell: 2
     td = newrow.find('td:eq(2)');
-//    td.addClass('text-center col-xs-6');
     td.addClass('text-center');
     td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '50%', 'overflow': 'hidden', 'text-overflow': 'ellipsis' });
 
     //Cell: 3
     td = newrow.find('td:eq(3)');
-//    td.addClass('text-center col-xs-2');
     td.addClass('text-center');
-    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '22.5%' });
+    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '22.5%', 'margin-left': '-2em' });
 }
 
 function selectAll(event) {
