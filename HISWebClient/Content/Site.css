@@ -380,7 +380,7 @@ font-weight: 300;
 }
 .table-fixed tbody td, .table-fixed thead > tr> th {
   float: left;
-  border-bottom-width: 0;
+  /*border-bottom-width: 0;*/
 }
 
 /* Styling for Bootstrap tooltips... */
