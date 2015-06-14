@@ -520,6 +520,8 @@
     <Content Include="Views\Home\datatablestest.cshtml" />
     <Content Include="Views\Home\Maptest.cshtml" />
     <Content Include="Views\Home\viztest.cshtml" />
+    <Content Include="Views\Home\_DatatableTimeseriesColumns.cshtml" />
+    <Content Include="Views\Home\_DatatableDataservicesColumns.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

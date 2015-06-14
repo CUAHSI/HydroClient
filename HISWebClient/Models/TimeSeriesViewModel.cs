@@ -15,16 +15,16 @@ namespace HISWebClient.Models
         {
             SeriesId = tsvm.SeriesId;
             ServCode = tsvm.ServCode;
-            //ServURL = tsvm.ServURL;
-            //SiteCode = tsvm.SiteCode;
-            //VariableCode = tsvm.VariableCode;
+            ServURL = tsvm.ServURL;
+            SiteCode = tsvm.SiteCode;
+            VariableCode = tsvm.VariableCode;
             VariableName = tsvm.VariableName;
             BeginDate = tsvm.BeginDate;
             EndDate = tsvm.EndDate;
             ValueCount = tsvm.ValueCount;
             SiteName = tsvm.SiteName;
-            Latitude = tsvm.Latitude;
-            Longitude = tsvm.Longitude;
+            //Latitude = tsvm.Latitude;
+            //Longitude = tsvm.Longitude;
             DataType = tsvm.DataType;
             ValueType = tsvm.ValueType;
             SampleMedium = tsvm.SampleMedium;
@@ -35,6 +35,7 @@ namespace HISWebClient.Models
             IsRegular = tsvm.IsRegular;
             //VariableUnits = tsvm.VariableUnits;
             //Citation = tsvm.Citation;
+            Organization = tsvm.Organization;
         }
 
         public int SeriesId { get; set; }
@@ -120,5 +121,7 @@ namespace HISWebClient.Models
         public string VariableUnits { get; set; }
 
         public string Citation { get; set; }
+        //Organization to be retrived rom service metadata
+        public string Organization { get; set; }
     }
 }
