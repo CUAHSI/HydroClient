@@ -165,11 +165,7 @@ function initialize() {
        });
    });
 
-    $('#btnTopSelect').click(function () {
-        $("#tree").fancytree("getTree").visit(function (node) {
-                            node.setSelected(false);
-                        });
-                        //return false;
+    
 
     $('#btnTopSelect').click(function () {
         $("#tree").fancytree("getTree").visit(function (node) {
@@ -180,6 +176,9 @@ function initialize() {
 
     $('#btnHierarchySelect').click(function () {
         
+        //Clear and re-populate concepts list...
+        var list = $('#olConcepts');
+
         list.empty();
                     
         var checked = $("input[name='keywords']:checked");
@@ -204,6 +203,7 @@ function initialize() {
         $("input[name='keywords']:checked").attr('checked', false);
                 
         //return false;
+    });
 
     $("input[name='checkOnlyObservedValues']").change(function (e) {
 
@@ -277,6 +277,7 @@ function initialize() {
 
         
     })
+
     $("#clear").on('click', function()
             {
                 resetMap()
@@ -301,6 +302,7 @@ function initialize() {
         }
         // activated tab
     })
+
     $('.data').addClass('disabled');
 
     //disable 
