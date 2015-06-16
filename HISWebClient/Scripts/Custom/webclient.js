@@ -10,7 +10,6 @@ var myServicesList;
 var myServicesDatatable;
 
 var mySelectedServices = [];
-var mySelectedServiceCodes = [];
 var mySelectedTimeSeries = [];
 var sessionGuid;
 var randomId;
@@ -21,6 +20,11 @@ var sidepanelVisible = false;
 
 var selectedTimeSeriesCount = 0;
 var selectedTimeSeriesMax = 50;
+
+//var selectedConceptsCommonCount = 0;
+//var selectedConceptsFullCount = 0;
+var selectedConceptsMax = 4;
+
 //lisy of services that only have 
 var ArrayOfNonObservedServices = ["1","3","4","8","226","243","244","262","267","274"]
 
@@ -136,7 +140,27 @@ function initialize() {
    
 
     //initialize datepicker
-    $('.input-daterange').datepicker()
+    $('.input-daterange').datepicker();
+
+    //Set start and end of date range...
+    var initDate = new Date();
+
+    $('#startDate').val((initDate.getMonth() + 1).toString() + '/' + initDate.getDate().toString() + '/' + (initDate.getFullYear() - 1).toString());
+    $('#endDate').val((initDate.getMonth() + 1).toString() + '/' + initDate.getDate().toString() + '/' + (initDate.getFullYear()).toString());
+
+    //Button click handler for Select Date Range...
+    $('#btnDateRange').on('click', function (event) {
+        //Assign current start and end date values to their modal counterparts...
+        $('#startDateModal').val($('#startDate').val());
+        $('#endDateModal').val($('#endDate').val());
+    });
+
+    //Button click handler for Date Range Modal Save 
+    $('#btnDateRangeModalSave').on('click', function (event) {
+        //Assign current start and end date values to their modal counterparts...
+        $('#startDate').val($('#startDateModal').val());
+        $('#endDate').val($('#endDateModal').val());
+    });
 
     //initialize show/hide for search box
     $('.expander').on('click', function () {
@@ -163,6 +187,24 @@ function initialize() {
                $(buttonThis).click();
            }, (3000 * index));
        });
+   });
+
+    //Click handler for 'Most Common' concept checkboxes...
+   $('.topCategories').click(function (event) {
+    
+       if (!$(event.target).prop('checked')) {
+           //Checkbox unchecked - enable all unchecked checkboxes
+           ($("input[name='keywords']").not(':checked')).prop( "disabled", false );
+       }
+       else {
+           //Checkbox checked - if maximum reached, disable all unchecked checboxes
+           var checked = $("input[name='keywords']:checked");
+           var length = checked.length;
+
+           if (selectedConceptsMax <= length) {
+               ($("input[name='keywords']").not(':checked')).prop("disabled", true);
+           }
+        }
    });
 
     $('#btnTopSelect').click(function () {
@@ -199,6 +241,31 @@ function initialize() {
                 
         //return false;
 
+        //Clear and re-populate concepts list...
+        var list = $('#olConcepts');
+
+        list.empty();
+
+        var tree = $("#tree").fancytree("getTree");
+
+        //var checked = $("input[name='keywords']:checked");
+        //var length = checked.length;
+        var selectedNodes = tree.getSelectedNodes();
+        var length = selectedNodes.length;
+
+        if (0 < length) {
+            //Certain concepts selected...
+            for(var i = 0; i < length; ++i) {
+                list.append('<li>' + selectedNodes[i].title + '</li>');
+            }
+        }
+        else {
+            //All concepts selected...
+            list.append('All');
+        }
+    });
+
+
     $("input[name='checkOnlyObservedValues']").change(function (e) {
 
         var rows = $("#dtServices").dataTable().fnGetNodes();
@@ -219,11 +286,11 @@ function initialize() {
                     mySelectedServices.push(id);
                     //mark with select class
                     $(rows[i]).addClass('selected');
-                }
             }
-        }
-        else
-        {
+}
+}
+else
+{
             for (var i = 0; i < rows.length; i++) {
                 // Get HTML of 3rd column (for example)
                 
@@ -231,11 +298,11 @@ function initialize() {
                 
 
                     
-                    //mark with select class
+                //mark with select class
                     $(rows[i]).removeClass('selected');
                 
-            }
-        }
+}
+    }
         
     });
 
@@ -253,54 +320,54 @@ function initialize() {
 
         var selectedKeys = $("input[name='keywords']:checked").map(function () {
             return $(this).val();
-        }).get();
+    }).get();
            
         validateQueryParameters(area, selectedKeys)
 
         // Construct the polygon.
         areaRect = new google.maps.Polygon({
             paths: path,
-            strokeColor: '#FF0000',
+                strokeColor: '#FF0000',
             strokeOpacity: 0.5,
             strokeWeight: 1,
-            fillColor: '#F8F8F8',
+                fillColor: '#F8F8F8',
             fillOpacity: 0
-        });
+    });
 
         areaRect.setMap(map);
 
         
     })
     $("#clear").on('click', function()
-            {
+    {
                 resetMap()
-            })
-    //click event for tab
-    $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
-        if (e.target.id == "tableTab")
+    })
+        //click event for tab
+        $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
+            if (e.target.id == "tableTab")
         {
-            setUpTimeseriesDatatable();
+                setUpTimeseriesDatatable();
             var table = $('#dtTimeseries').DataTable();
             table.order([0, 'asc']).draw();
             ////hide sidebar
-           // slider.slideReveal("hide")
+            // slider.slideReveal("hide")
             
         }
          if (e.target.id == "mapTab")
-        {
+         {
              google.maps.event.trigger(map, "resize");
              if (!sidepanelVisible) {
                  slider.slideReveal("show")
-             }
+         }
         }
         // activated tab
     })
     $('.data').addClass('disabled');
 
-    //disable 
-    $('body').on('click', '.disabled', function (e) {
-        e.preventDefault();
-        return false;
+        //disable 
+        $('body').on('click', '.disabled', function (e) {
+            e.preventDefault();
+            return false;
     });
 
 };
@@ -1224,21 +1291,15 @@ function setupServices()
     $('#dtServices tbody').on('click', 'tr', function () {
         $(this).toggleClass('selected');
         var id = this.cells[0].innerHTML;
-        var serviceCode = this.cells[2].innerHTML;
         if ($.inArray(id, mySelectedServices ) == -1) {
             //add
             mySelectedServices.push(id);
-            mySelectedServiceCodes.push(serviceCode);
         }
         else {            
             //remove
             mySelectedServices = $.grep(mySelectedServices, function (element, index) {
                 return element !== id;
             });
-
-            mySelectedServiceCodes = $.grep(mySelectedServiceCodes, function(element, index) {
-                return element !== serviceCode;
-    });
         }
     });
 
@@ -1247,16 +1308,14 @@ function setupServices()
        
         //Clear and re-populate services list...
         var list = $('#olServices');
-        var length = mySelectedServiceCodes.length;
+        var length = mySelectedServices.length;
 
         list.empty();
         
         if (0 < length) {
             //Certain services selected...
-            for (var i = 0; i < length; ++i) {
-                list.append( '<li>' + mySelectedServiceCodes[i] + '</li>');
-            }
-        }
+              list.append('<li>' + length.toString() + '</li>');
+}
         else {
             //All services selected...
             list.append('All');
