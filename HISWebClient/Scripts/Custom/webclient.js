@@ -161,6 +161,13 @@ function initialize() {
        });
    });
 
+   $('#btnTopSelect').click(function () {
+       $("#tree").fancytree("getTree").visit(function (node) {
+           node.setSelected(false);
+       });
+       //return false;
+   })
+
     $('#btnTopSelect').click(function () {
         $("#tree").fancytree("getTree").visit(function (node) {
                             node.setSelected(false);
