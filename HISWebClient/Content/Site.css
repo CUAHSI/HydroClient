@@ -171,7 +171,8 @@ div.GblueLabel64 {  padding-top: 22px;  width: 64px;  font-size: 13px;}
 
 
 #menu {
-   width: 200px;
+    /* BC - Test - Increase width specification... */
+   width: 300px;
    /*height:225px;*/
     /*position: absolute;*//*this will position the div according to its parent div "map"*/
     top: 0px;
@@ -382,9 +383,9 @@ font-weight: 300;
 .table-fixed thead, .table-fixed tbody, .table-fixed tr, .table-fixed td, .table-fixed th {
   display: block;
 }
-.table-fixed tbody td, .table-fixed thead > tr> th {
+.table-fixed tbody td, .table-fixed thead > tr > th {
   float: left;
-  /*border-bottom-width: 0;*/
+  border-bottom-width: 0;
 }
 
 /* Styling for Bootstrap tooltips... */
