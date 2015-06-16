@@ -8,6 +8,7 @@ var myTimeSeriesList;
 var myTimeSeriesClusterDatatable;
 var myServicesList;
 var myServicesDatatable;
+
 var mySelectedServices = [];
 var mySelectedServiceCodes = [];
 var mySelectedTimeSeries = [];
@@ -20,6 +21,8 @@ var sidepanelVisible = false;
 
 var selectedTimeSeriesCount = 0;
 var selectedTimeSeriesMax = 50;
+//lisy of services that only have 
+var ArrayOfNonObservedServices = ["1","3","4","8","226","243","244","262","267","274"]
 
 var taskCount = 0;
 
@@ -32,9 +35,9 @@ $(document).ready(function () {
 
 function initialize() {
 
-    //var myCenter = new google.maps.LatLng(39, -92); //us
+    var myCenter = new google.maps.LatLng(39, -92); //us
     //var myCenter = new google.maps.LatLng(42.3, -71);//boston
-    var myCenter = new google.maps.LatLng(41.7, -111.9);//Salt Lake
+   // var myCenter = new google.maps.LatLng(41.7, -111.9);//Salt Lake
     
 
     //infoWindow = new google.maps.InfoWindow();
@@ -44,7 +47,7 @@ function initialize() {
 
     var mapProp = {
         center: myCenter,
-        zoom: 9,
+        zoom: 5,
         draggable: true,
         scrollwheel: true,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
@@ -54,8 +57,8 @@ function initialize() {
         zoomControl: true,
         panControl:false,        
         zoomControlOptions: {     
-            style: google.maps.ZoomControlStyle.SMALL,
-            position: google.maps.ControlPosition.RIGHT_BOTTOM
+            //style: google.maps.ZoomControlStyle.SMALL,
+            position: google.maps.ControlPosition.LEFT_TOP
         },
         mapTypeControlOptions: {
             style: google.maps.MapTypeControlStyle.DEFAULT,
@@ -80,36 +83,32 @@ function initialize() {
   
     addLocationSearch();
     
-   
-  
-
-
     //triger update of map on these events
     google.maps.event.addListener(map, 'dblclick', function () {
-        //if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
+        if ((clusteredMarkersArray.length > 0)) {
             updateMap(false)
             //$("#MapAreaControl").html(getMapAreaSize());
-        //}
+        }
     });
     google.maps.event.addListener(map, 'dragend', function () {
-        //if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
+        if ((clusteredMarkersArray.length > 0)) {
             updateMap(false)
             //$("#MapAreaControl").html(getMapAreaSize());
-        //}
+        }
     });
     
     google.maps.event.addListener(map, 'zoom_changed', function () {
-        //if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
+        if ((clusteredMarkersArray.length > 0)) {
             updateMap(false)
             
             //$("#MapAreaControl").html(getMapAreaSize());
             
-        //}
+        }
     });
     //added to load size on startup
     google.maps.event.addListener(map, 'bounds_changed', function () {
-        //if ((infoWindow.getContent() == undefined) || (infoWindow.getContent() == "")) {
-            updateMap(false)
+        //if ((clusteredMarkersArray.length > 0)) {
+            //updateMap(false)
 
             $("#MapAreaControl").html(getMapAreaSize());
 
@@ -135,10 +134,6 @@ function initialize() {
         }
     });
    
-
-
-
- 
 
     //initialize datepicker
     $('.input-daterange').datepicker()
@@ -174,13 +169,13 @@ function initialize() {
         $("#tree").fancytree("getTree").visit(function (node) {
                             node.setSelected(false);
                         });
-        //return false;
+                        //return false;
 
         //Clear and re-populate concepts list...
         var list = $('#olConcepts');
-
+        
         list.empty();
-
+                    
         var checked = $("input[name='keywords']:checked");
         var length = checked.length;
 
@@ -204,30 +199,44 @@ function initialize() {
                 
         //return false;
 
-        //Clear and re-populate concepts list...
-        var list = $('#olConcepts');
+    $("input[name='checkOnlyObservedValues']").change(function (e) {
 
-        list.empty();
+        var rows = $("#dtServices").dataTable().fnGetNodes();
+        //reset global array
+        mySelectedServices = [];
 
-        //TO DO - how to get all the checked nodes out of the fancytree??
-        var tree = $("#tree").fancytree("getTree");
+        if ($("input[name='checkOnlyObservedValues']").is(':checked')) {         
+           
+            
+            for (var i = 0; i < rows.length; i++) {
+                // Get HTML of 3rd column (for example)
+                //get vvalue from (network)id field 
+                var id = $(rows[i]).find("td:eq(5)").html();
+                //check if value in array of non observed services
+                if ($.inArray(id, ArrayOfNonObservedServices) == -1) {
 
-        //var checked = $("input[name='keywords']:checked");
-        //var length = checked.length;
-        var selectedNodes = tree.getSelectedNodes();
-        var length = selectedNodes.length;
-
-        if (0 < length) {
-            //Certain concepts selected...
-            for(var i = 0; i < length; ++i) {
-                list.append('<li>' + selectedNodes[i].title + '</li>');
+                    //add
+                    mySelectedServices.push(id);
+                    //mark with select class
+                    $(rows[i]).addClass('selected');
                 }
-
-                }
-                else {
-                    //All concepts selected...
-            list.append('All');
+            }
         }
+        else
+        {
+            for (var i = 0; i < rows.length; i++) {
+                // Get HTML of 3rd column (for example)
+                
+                //check if value in array of non observed services
+                
+
+                    
+                    //mark with select class
+                    $(rows[i]).removeClass('selected');
+                
+            }
+        }
+        
     });
 
     $("#Search").submit(function (e) {       
@@ -238,35 +247,16 @@ function initialize() {
         e.stopImmediatePropagation();
         //var formData = getFormData();
         var path=[];
-        var path = GetPathForBounds(map.getBounds())
+        path = GetPathForBounds(map.getBounds())
         var area = GetAreainSqareKilometers(path)
         
+
         var selectedKeys = $("input[name='keywords']:checked").map(function () {
             return $(this).val();
         }).get();
-        //validate inputs
-        if (area > 10000000000 &&  selectedKeys.length == 0)
-        {
-                bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search for All concepts.  <br> Please limit search area to less than 10000 sq km and/or reduce search terms .<h4>")
-            return
-        }
-        if (area > 5000 && selectedKeys.length == 1) {         
            
-            if (area > 500000000000) {
-                bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search .  <br> Please limit search area to less than 500000 sq km and/or reduce search terms .<h4>")
-                return
-            }
-            else {
-                bootbox.confirm("<h4>Current selected area is " + area + " sq km. This search can take a long time. Do you want to continue?<h4>", function () {
+        validateQueryParameters(area, selectedKeys)
 
-                    updateMap(true)
-                });
-            }
-        }
-        else {
-
-            updateMap(true)           
-        }
         // Construct the polygon.
         areaRect = new google.maps.Polygon({
             paths: path,
@@ -290,8 +280,11 @@ function initialize() {
         if (e.target.id == "tableTab")
         {
             setUpTimeseriesDatatable();
-            //hide sidebar
+            var table = $('#dtTimeseries').DataTable();
+            table.order([0, 'asc']).draw();
+            ////hide sidebar
            // slider.slideReveal("hide")
+            
         }
          if (e.target.id == "mapTab")
         {
@@ -312,6 +305,60 @@ function initialize() {
 
 };
   
+function validateQueryParameters(area, selectedKeys) {
+    //validate inputs
+
+    if (area > 100000) {
+        bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search.  <br> Please limit search area to less than 100000 sq km and/or reduce search keywords.<h4>")
+        return
+    }
+
+    if (area > 25000 && selectedKeys.length == 0) {
+        bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search for All keywords.  <br> Please limit search area to less than 25000 sq km and/or reduce search keywords.<h4>")
+        return
+    }
+    if (area > 500000 && selectedKeys.length == 1) {
+
+        if (area > 500000) {
+            bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search.  <br> Please limit search area to less than 50000 sq km and/or reduce search keywords .<h4>")
+            return
+        }
+        else {
+            bootbox.confirm("<h4>Current selected area is " + area + " sq km. This search can take a long time. Do you want to continue?<h4>", function () {
+
+                updateMap(true)
+            });
+        }
+    }
+    else {
+
+        if (area > 25000 && selectedKeys.length > 5) {
+            bootbox.alert("<h4>Current selected area is " + area + " sq km and you have cselecte more than 4 keywords. Please reduce area or number of keywords?<h4>", function () {
+
+                return;
+            });
+        }
+        if (area > 25000 && selectedKeys.length < 5) {
+            bootbox.confirm("<h4>Current selected area larger than 2500 sq km and you selected several keywords. This search can take a long time and might timeout. Do you want to continue?<h4>", function () {
+
+                updateMap(true)
+            });
+            //if (area > 100000 && selectedKeys.length > 5) { 
+            //    bootbox.confirm("<h4>Current selected area is " + area + " sq km. This search can take a long time. Do you want to continue?<h4>", function () {
+
+            //        updateMap(true) 
+            //    });
+
+               
+        }
+        else
+        {
+            updateMap(true)
+        }
+        
+    }
+}
+
 function getMapHeight()
 {
     
@@ -319,6 +366,7 @@ function getMapHeight()
     var mapHeight = $(document).height() - toolbarHeight + "px";
     return mapHeight;
 }
+
 function getMapWidth(panelVisible)
 {    
     var panelwidth = 0;
@@ -330,6 +378,7 @@ function getMapWidth(panelVisible)
     var mapWidth = $(window).width() - panelwidth + "px";
     return mapWidth;
 }
+
 function addCustomMapControls()
 {
     var toggleSidePanelDiv = document.createElement('div');
@@ -344,6 +393,7 @@ function addCustomMapControls()
     AreaSize.index = 1;
     map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(AreaSizeDiv);
 }
+
 function addSlider()
 {
     var _slider = $("#slider").slideReveal({
@@ -382,6 +432,7 @@ function addSlider()
     });
     return _slider;
 }
+
 function toggleSidePanelControl(controlDiv, map)
    {
 
@@ -398,7 +449,7 @@ function toggleSidePanelControl(controlDiv, map)
         controlUI.style.cursor = 'pointer';
         controlUI.style.marginBottom = '2px';
         controlUI.style.textAlign = 'center';
-        controlUI.title = 'Click to sho/hide side panel';
+        controlUI.title = 'Click to show/hide side panel';
         controlDiv.appendChild(controlUI);
        
 
@@ -408,7 +459,7 @@ function toggleSidePanelControl(controlDiv, map)
         controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
         controlText.style.fontSize = '16px';
         controlText.style.lineHeight = '25px';
-        controlText.style.paddingTop = '5px';
+        controlText.style.paddingTop = '15px';
         controlText.style.paddingLeft = '3px';
         controlText.style.paddingRight = '3px';
         controlText.style.border = '5px'
@@ -436,6 +487,7 @@ function toggleSidePanelControl(controlDiv, map)
         //    self.slideReveal("hide");
         //}
 }
+
 function AreaSizeControl(controlDiv, map) {
 
     //var controlUI = document.createElement('button');
@@ -499,6 +551,7 @@ function AreaSizeControl(controlDiv, map) {
     //    self.slideReveal("hide");
     //}
 }
+
 function addLocationSearch()
 {
     var input = /** @type {HTMLInputElement} */(
@@ -570,19 +623,22 @@ function addLocationSearch()
     //setupClickListener('changetype-establishment', ['establishment']);
     setupClickListener('changetype-geocode', ['geocode']);
 }
+
 function getMapAreaSize()
 {
     var path = GetPathForBounds(map.getBounds())
     var area = GetAreainSqareKilometers(path)
     return 'Area: ' + area + ' sq km';
 }
+
 function resetMap()
 {
     deleteClusteredMarkersOverlays();
     $('.data').addClass('disabled');
-    resetUserSelection()
+    //resetUserSelection()
     if (typeof areaRect != "undefined") areaRect.setMap(null);
 }
+
 function processMarkers(geoJson)
 {
     //map.data.loadGeoJson('https://storage.googleapis.com/maps-devrel/google.json');
@@ -775,20 +831,20 @@ function getFormData()
     return formdata;
 }
 
-
 //upddate map wit new clusters
 function updateMap(isNewRequest) {
     
   
     if (clusteredMarkersArray.length == 0 && isNewRequest == false) return;//only map navigation
     $("#pageloaddiv").show();
-    var formData = getFormData();
+
 
     //get the action-url of the form
     var actionurl = '/home/updateMarkers';
     //Clean up
     if (clusteredMarkersArray.length == 0 || isNewRequest == true) {
 
+        var formData = getFormData();
         formData.push({ name: "isNewRequest", value: true });
     }
     else {
@@ -871,7 +927,7 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
         var marker = new MarkerWithLabel({
             position: point,
-            icon: new google.maps.MarkerImage(clusterMarkerPath + 'm6_single.png', new google.maps.Size(32, 32), null, null, new google.maps.Size(32, 32)),
+            icon: new google.maps.MarkerImage(clusterMarkerPath + 'm6_single.png', new google.maps.Size(25, 25), null, null, new google.maps.Size(25, 25)),
             //icon: new google.maps.MarkerImage(markerPath + 'm6_single.png', new google.maps.Size(53, 52), null, new google.maps.Point(icon_width / 2, icon_width / 2), new google.maps.Size(icon_width, icon_width)),
 
             //icon: new google.maps.MarkerImage(/Content.png', new google.maps.Size(32, 32), null, null, new google.maps.Size(28, 28)),
@@ -929,6 +985,7 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             //infoWindow.open(map, this);
             //$('#example').DataTable();
             setUpDatatables(clusterid);
+
             $('#SeriesModal #myModalLabel').html('List of Timeseries for Selected Marker');
 
             $('#SeriesModal').modal('show')
@@ -1118,19 +1175,21 @@ function setupServices()
  
     myServicesDatatable = $('#dtServices').dataTable({
         "ajax": actionUrl,
+        "order": [2,'asc'],
          "columns": [
-            { "data": "ServiceID" },
+            
             { "data": "Organization" },
-            { "data": "ServiceCode" },
+            { "data": "ServiceCode", "visible": false},
             { "data": "Title" },
             { "data": "DescriptionUrl", "visible": false },
             { "data": "ServiceUrl", "visible": false },
             { "data": "Checked", "visible": false },
            
-            { "data": "Sites", "visible": false },
-            { "data": "Variables", "visible": false },
-            { "data": "Values", "visible": false },
-            { "data": "ServiceBoundingBox", "visible": false}
+            { "data": "Sites", "visible": true },
+            { "data": "Variables", "visible": true },
+            { "data": "Values", "visible": true },
+            { "data": "ServiceBoundingBox", "visible": false},
+            { "data": "ServiceID" }
          ],
          //"rowCallback": function( row, data ) {
          //    if ( $.inArray(data.DT_RowId, mySelectedServices) !== -1 ) {
@@ -1139,10 +1198,10 @@ function setupServices()
          //},
          "createdRow": function ( row, data, index ) {
 
-             var id = $('td', row).eq(0).html();
+             var id = $('td', row).eq(5).html();
              var title = $('td', row).eq(1).html();
              var url = 'http://hiscentral.cuahsi.org/pub_network.aspx?n=';
-             $('td', row).eq(2).html("<a href='" + url + id + "' target='_Blank'>" + title + " </a>");
+             $('td', row).eq(1).html("<a href='" + url + id + "' target='_Blank'>" + title + " </a>");
 
 
          },
@@ -1151,15 +1210,15 @@ function setupServices()
              this.fnAdjustColumnSizing();
          }
     })
-    $('a.toggle-vis').on('click', function (e) {
-        e.preventDefault();
+    //$('a.toggle-vis').on('click', function (e) {
+    //    e.preventDefault();
 
-        // Get the column API object
-        var column = table.column($(this).attr('data-column'));
+    //    // Get the column API object
+    //    var column = table.column($(this).attr('data-column'));
 
-        // Toggle the visibility
-        column.visible(!column.visible());
-    });
+    //    // Toggle the visibility
+    //    column.visible(!column.visible());
+    //});
 
 
     $('#dtServices tbody').on('click', 'tr', function () {
@@ -1179,13 +1238,13 @@ function setupServices()
 
             mySelectedServiceCodes = $.grep(mySelectedServiceCodes, function(element, index) {
                 return element !== serviceCode;
-            });
+    });
         }
     });
 
     $('#saveServiceSelection').click(function () {
-        // alert(myServicesDatatable[0].rows('.selected').data().length + ' row(s) selected');
-
+       // alert(myServicesDatatable[0].rows('.selected').data().length + ' row(s) selected');
+       
         //Clear and re-populate services list...
         var list = $('#olServices');
         var length = mySelectedServiceCodes.length;
@@ -1211,7 +1270,7 @@ function setupServices()
     });
     //return table;
 }
-
+//Datatable for Marker
 function setUpDatatables(clusterid)
 {
     
@@ -1256,29 +1315,30 @@ function setUpDatatables(clusterid)
          //    ]
          //},
          "columns": [
+            { "data": "Organization", "width": "50px", "visible": true },
+            { "data": "ServCode", "sTitle": "Service Name", "visible": true },
+            { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
+            { "data": "ServURL", "visible": false },
+            { "data": "SiteCode", "visible": false },
+            { "data": "VariableCode", "visible": false },
               { "data": "VariableName","width": "50px", "sTitle": "Variable Name"},
-            { "data": "SeriesId" },
-            { "data": "ServCode", "sTitle": "Service Name" },
-            //{ "data": "ServURL", "visible": false },
-            //{ "data": "SiteCode", "visible": false },
-            //{ "data": "VariableCode", "visible": false },
-           
             { "data": "BeginDate", "sTitle": "Start Date" },
             { "data": "EndDate","sTitle": "End Date" },
             { "data": "ValueCount" },
             { "data": "SiteName", "sTitle": "Site Name" },
-            { "data": "Latitude", "visible": true },
-            { "data": "Longitude", "visible": true },
+            //{ "data": "Latitude", "visible": true },
+            //{ "data": "Longitude", "visible": true },
             { "data": "DataType", "visible": true },
             { "data": "ValueType", "visible": true },
             { "data": "SampleMedium", "visible": true },
             { "data": "TimeUnit", "visible": true },
             //{ "data": "GeneralCategory", "visible": false },
             { "data": "TimeSupport", "visible": true },
-            { "data": "ConceptKeyword", "visible": true },
-            { "data": "IsRegular", "visible": true }
+           
+            { "data": "IsRegular", "visible": true },
             //{ "data": "VariableUnits","visible": false },
             //{ "data": "Citation", "visible": false }            
+            { "data": "SeriesId" }
         ],
         
          "scrollX": true, //removed to fix column alignment 
@@ -1288,19 +1348,19 @@ function setUpDatatables(clusterid)
              //BC - TEST - if row is in top '50', mark the row as selected per check box state...
              if ($('#chkbxSelectAll').prop('checked')) {
                  if (index < selectedTimeSeriesMax) {
-                     var jqueryObject = $(row);
+                 var jqueryObject = $(row);
                      var className = 'selected';
 
                      if (!jqueryObject.hasClass(className)) {
                          jqueryObject.addClass(className);
                          ++selectedTimeSeriesCount;
-                    }
+             }
                  }                 
              }
 
              //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
 
-             var id = $('td', row).eq(0).html();
+             //var id = $('td', row).eq(14).html();//only visible count
              //var d = $('td', row).eq(4).html();
              //$('td', row).eq(0).append("<a href='/Export/downloadFile/" + id + "' id=" + id + " <span class='glyphicon glyphicon-download-alt'  aria-hidden='true'> </span> </a>");
 
@@ -1346,14 +1406,16 @@ function setUpDatatables(clusterid)
          },
         initComplete: function () {
 
-            setfooterFilters('#dtMarkers', [1, 2, 3, 5]);
-            oTable.fnAdjustColumnSizing();
+            setfooterFilters('#dtMarkers', [0,1,2,3,4]);
+        
+           // oTable.fnAdjustColumnSizing();
         }
         
           
 
         //"retrieve": true
     });
+    //workaround reorder to align headers
 
     //BC - Test - make each table row selectable by clicking anywhere on the row...
     //Source: https://datatables.net/examples/api/select_row.html
@@ -1384,12 +1446,12 @@ function setUpDatatables(clusterid)
     $('#btnZipSelections').on('click', { 'tableId': '#dtMarkers', 'chkbxId': '#chkbxSelectAll'}, zipSelections);
 
     //BC - TEST - Retrieve the colvis button control - assign a click handler for scrollx control...
-    var colvis = new $.fn.DataTable.ColVis(oTable);
-    var button = colvis.button();
+    //var colvis = new $.fn.DataTable.ColVis(oTable);
+    //var button = colvis.button();
 
     //Avoid multiple registrations of the same handler...
-    $(button).off('click', clovisButtonClick);
-    $(button).on('click', clovisButtonClick);
+   // $(button).off('click', clovisButtonClick);
+   // $(button).on('click', clovisButtonClick);
 
     
     //##########Context menu
@@ -1452,110 +1514,142 @@ function setUpDatatables(clusterid)
         //$(this).addClass('selected');
 
     });
-    //####
    
-    //######
-    //$('#dtMarkers tbody').contextmenu({
-    //    target: '#context-menu2',
-    //    onItem: function (context, e) {
-    //        alert($(e.target).text());
-    //    }
-    //});
+}
+//Data table for data tab
+function setUpTimeseriesDatatable() {
+    if (clusteredMarkersArray.length == 0) {
+        return;
+    }
+    // $('#dtTimeseries').(':visible')
+    $('#dtTimeseries').removeClass("hidden");
 
-    //$('#context-menu2').on('show.bs.context', function (e) {
-    //    console.log('before show event');
-    //});
+    $.fn.DataTable.isDataTable("#dtTimeseries")
+    {
+        $('#dtTimeseries').DataTable().clear().destroy();
+    }
 
-    //$('#context-menu2').on('shown.bs.context', function (e) {
-    //    console.log('after show event');
-    //});
-
-    //$('#context-menu2').on('hide.bs.context', function (e) {
-    //    console.log('before hide event');
-    //});
-
-    //$('#context-menu2').on('hidden.bs.context', function (e) {
-    //    console.log('after hide event');
-    //});
+    //Set page title...
+    $('#dataview #myModalLabel').html('List of Timeseries for Selected Area');
 
 
-    myTimeSeriesClusterDatatable = $('#dtMarkers').DataTable()  
+    //var dataSet = getDetailsForMarker(clusterid)
+    var actionUrl = "/home/getTimeseries"
+    // $('#example').DataTable().clear()
+    // $('#demo').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example"></table>' );
+    var oTable = $('#dtTimeseries').dataTable({
+        "ajax": actionUrl,
+        "dom": 'C<"clear">l<"toolbarTS">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+        "deferRender": true,
+        
+        //colVis: {
+        //    activate: "mouseover",
+        //    exclude: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
+        //    groups: [
+        //   {
+        //       title: "Show All Columns",
+        //       columns: [2, 3, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
+        //   }
+        //    ]
+        //},
+        "columns": [
+             { "data": "Organization", "width": "50px", "visible": true },
+            { "data": "ServCode", "sTitle": "Service Name", "visible": true },
+            { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
+            { "data": "ServURL", "visible": false },
+            { "data": "SiteCode", "visible": false },
+            { "data": "VariableCode", "visible": false },
+            { "data": "VariableName","width": "50px", "sTitle": "Variable Name"},
+            { "data": "BeginDate", "sTitle": "Start Date" },
+            { "data": "EndDate","sTitle": "End Date" },
+            { "data": "ValueCount" },
+            { "data": "SiteName", "sTitle": "Site Name" },
+            //{ "data": "Latitude", "visible": true },
+            //{ "data": "Longitude", "visible": true },
+            { "data": "DataType", "visible": true },
+            { "data": "ValueType", "visible": true },
+            { "data": "SampleMedium", "visible": true },
+            { "data": "TimeUnit", "visible": true },
+            //{ "data": "GeneralCategory", "visible": false },
+            { "data": "TimeSupport", "visible": true },
 
-    //$('#Download').click(function () {
-    //    download();
-    //});
+            { "data": "IsRegular", "visible": true },
+            //{ "data": "VariableUnits","visible": false },
+            //{ "data": "Citation", "visible": false }  
+            { "data": "SeriesId" }
+        ],
+        "scrollX": true, //removed to fix column alignment 
+        "createdRow": function (row, data, index) {
 
-    //$('#DownloadAsCSV').click(function () {
+            //BC - TEST - mark the row as selected per check box state...
+            if ($('#chkbxSelectAllTS').prop('checked')) {
+                var jqueryObject = $(row);
+                jqueryObject.addClass('selected');
+            }
 
-    //    var name = $('td', this).eq(0).text();
-    //    //     var id = this.cells[0].innerHTML;
+            //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
 
-    //    if (myTimeSeriesClusterDatatable.rows('.selected').data().length > 0)
-    //    {
-    //        var list = new Array();
-    //        var rows = myTimeSeriesClusterDatatable.rows('.selected').data();
+            //var id = $('td', row).eq(14).html();//only visible count
+            //var d = $('td', row).eq(4).html();
 
+            /* BC - TEST - Do not include download icon or href in any table row...
+            $('td', row).eq(0).append("<a href='/Export/downloadFile/" + id + "' id=" + id + "<span><img  src='/Content/Images/download-icon-25.png' ></span> </a>");
+            $('td', row).eq(0).click(function () {
+                //downloadtimeseries('csv', id); return false;/Content/Images/ajax-loader-green.gif
+                //$('#spinner' + id).removeClass('hidden')
+                $(this).append("<span><img class='spinner' src='/Content/Images/ajax-loader-green.gif' style='padding-left:4px;padding-right:4px'></span>");
+                //$.fileDownload($(this).prop('href'), {
+                //    preparingMessageHtml: "We are preparing your report, please wait...",
+                //    failMessageHtml: "There was a problem generating your report, please try again."
+                //})
+
+                $.fileDownload($(this).prop('href'))
+                    .done(function () {
+                        $('.spinner').addClass('hidden');
+                        $('.spinner').parent().parent().addClass('selected');
+
+                    })
+                    .fail(function () {
+                        $('.spinner').addClass('hidden');
+                        $('.spinner').parent().parent().addClass('downloadFail');
+                    });
+
+            });
+*/
+        },
+        initComplete: function () {
+
+            setfooterFilters('#dtTimeseries', [0,1,2,3,4]);
+        }
+
+    });
           
+    //BC - Test - make each table row selectable by clicking anywhere on the row...
+    //Source: https://datatables.net/examples/api/select_row.html
+    //Avoid multiple registrations of the same handler...
+    $('#dtTimeseries tbody').off('click', 'tr', toggleSelected);
+    $('#dtTimeseries tbody').on('click', 'tr', { 'tableId': '#dtTimeseries', 'btnId': '#btnZipSelectionsTS' }, toggleSelected);
 
+    //BC - Test - add a custom toolbar to the table...
+    //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+    $("div.toolbarTS").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS" style="float:left;"/>&nbsp;Select All?</span>' +
+                            '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelectionsTS" value="Zip Selections"/>' +
+                            '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;">Zip started.  To download the archive, please open Download Manager</span>');
 
-    //        //<th>ServCode</th>
-    //        //                <th>ServURL</th>
-    //        //                <th>SiteCode</th>
-    //        //                <th>VariableCode</th>
-    //        //                <th>VariableName</th>
-    //        //                <th>BeginDate</th>
-    //        //                <th>EndDate</th>
+    //Add data load event handler...
+    $('#dtTimeseries').off('xhr.dt', dataTableLoad);
+    $('#dtTimeseries').on('xhr.dt', { 'chkbxId': '#chkbxSelectAllTS' }, dataTableLoad);
 
-    //        for (i = 0; i < rows.length; i++)
-    //        {
-    //            list[i] = new Array(
+    //Add click handlers...
                         
-    //                    rows[i].ServCode,
-    //                    rows[i].ServURL,
-    //                    rows[i].SiteCode,
-    //                    rows[i].VariableCode,
-    //                    rows[i].SiteName,
-    //                    rows[i].VariableName,
-    //                    rows[i].BeginDate,
-    //                    rows[i].EndDate,
-    //                    rows[i].ValueCount,                        
-    //                    rows[i].Latitude,
-    //                    rows[i].Longitude,
-    //                    rows[i].DataType,
-    //                    rows[i].ValueType,
-    //                    rows[i].SampleMedium,
-    //                    rows[i].TimeUnit,
-    //                    rows[i].GeneralCategory,
-    //                    rows[i].TimeSupport,
-    //                    rows[i].ConceptKeyword,
-    //                    rows[i].IsRegular,
-    //                    rows[i].VariableUnits,
-    //                    rows[i].Citation
-    //                );
-    //        }
+    //Avoid multiple registrations of the same handler...
+    $('#chkbxSelectAllTS').off('click', selectAll);
+    $('#chkbxSelectAllTS').on('click', { 'tableId': '#dtTimeseries', 'chkbxId': '#chkbxSelectAllTS', 'btnId': '#btnZipSelectionsTS' }, selectAll);
 
-    //        $.ajax({
-    //            url: "/Export/downloadFile/1",
-    //            //url: "/api/seriesdata?SeriesID=1",
-    //            type: 'Post',
-    //            dataType: 'json',
-    //            timeout: 60000,
-    //            processData: false,
-    //            //data: list,
-    //            //success: function () {
-    //            //    //alert("ys")
-    //            //},
-    //            //error: function (xmlhttprequest, textstatus, message) {
-    //            //    serviceFailed(xmlhttprequest, textstatus, message)
-    //            //}
-    //        }).done(function (d)
-    //        { bootbox.alert(d) }
-    //        );
-    //        //var newWindow = window.open('/Home/CreatePartialView', '_blank', 'left=100,top=100,width=400,height=300,toolbar=1,resizable=0');         
-    //    }
-    //    else
-    //        alert("Please select Series")
-    //});
+    //Avoid multiple registrations of the same handler...
+    $('#btnZipSelectionsTS').off('click', zipSelections);
+    $('#btnZipSelectionsTS').on('click', { 'tableId': '#dtTimeseries', 'chkbxId': '#chkbxSelectAllTS' }, zipSelections);
+    return oTable;
 }
 
 //Create 'select'-based filters for the input tableId and columns array
@@ -1576,7 +1670,7 @@ function setfooterFilters(tableId, columnsArray) {
                 });
 
             column.data().unique().sort().each(function (d, j) {
-                select.append('<option value="' + d + '">' + d + '</option>')
+                select.append('<option value="' + d + '">' + d.substring(0,45) + '</option>')
             });
         }
     });
@@ -1682,14 +1776,14 @@ function selectAll(event) {
             var indx = node._DT_RowIndex;
             if ((0 <= indx) && (indx < selectedTimeSeriesMax)) {
                 var jqueryObject = $(node);
-                var className = 'selected';
+    var className = 'selected';
 
                 if ((null != jqueryObject) && (!jqueryObject.hasClass(className))) {
                     jqueryObject.addClass(className);
                     ++selectedTimeSeriesCount;
                 }
             }
-        }
+    }
     }
 
     //Check state of 'Zip Selections' button...
@@ -2198,15 +2292,6 @@ function downloadtimeseries(format, id)
    
 }
 
-function resetUserSelection() {
-
-}
-
-function testalert()
-{
-    alert("a");
-}
-
 function fnGetSelected(oTableLocal) {
     var aReturn = new Array();
     oTableLocal.$("tr").filter(".row_selected").each(function (index, row) {
@@ -2249,6 +2334,7 @@ function GetAreainSqareKilometers(path) {
     if (result < 10000) { return result.toFixed(1); }
     return result.toFixed(0);
 }
+
 function GetPathForBounds(bounds)
 {
     var ne = bounds.getNorthEast(); // LatLng of the north-east corner

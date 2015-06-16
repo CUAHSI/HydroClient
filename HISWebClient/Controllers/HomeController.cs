@@ -367,13 +367,19 @@ namespace HISWebClient.Controllers
 
         private TimeSeriesViewModel mapDataCartToTimeseries(BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart dc, int id)
         {
+            var allWebservices = (List < WebServiceNode >) Session["webServiceList"];
+
+            var dict = allWebservices.Distinct().ToDictionary(i => i.ServiceCode, i => i.Organization);
+
+            
+
             var obj = new TimeSeriesViewModel();           
             
                     obj.SeriesId = id;
                     obj.ServCode = dc.ServCode;
-                    //obj.ServURL = dc.ServURL;
-                    //obj.SiteCode = dc.SiteCode;
-                    //obj.VariableCode = dc.VariableCode;
+                    obj.ServURL = dc.ServURL;
+                    obj.SiteCode = dc.SiteCode;
+                    obj.VariableCode = dc.VariableCode;
                     obj.SiteName = dc.SiteName;
                     obj.VariableName = dc.VariableName;
                     obj.BeginDate = dc.BeginDate;
@@ -391,6 +397,7 @@ namespace HISWebClient.Controllers
                     obj.IsRegular = dc.IsRegular;
                     //obj.VariableUnits = dc.VariableUnits;
                     //obj.Citation = dc.Citation;
+                    obj.Organization = dict.FirstOrDefault(x => x.Key == dc.ServCode).Value;
             return obj;
         }
 

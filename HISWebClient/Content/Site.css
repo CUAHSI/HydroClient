@@ -103,12 +103,12 @@ selector{
     bottom:2%;*/    
     padding:20px;
     background-color:white;
-    z-index:10000; 
+    z-index:1000000; 
 }
 .modal-dialog-full
 {
     width:100%;
-    z-index:10000; 
+   
 }
 .modal-content-full
 {
@@ -189,7 +189,7 @@ div.GblueLabel64 {  padding-top: 22px;  width: 64px;  font-size: 13px;}
     top: 0px;
     width: 100%;
     height: 100%;
-    z-index: 100000000000;
+    z-index: 1000000000000000;
     background: url('images/ajax-loader-blue.gif') 50% 50% no-repeat 
 }
 td.details-control {
@@ -387,4 +387,8 @@ font-weight: 300;
 /* Styling for Bootstrap tooltips... */
 #chkbxSelectAll + .tooltip > .tooltip-inner, #chkbxSelectAllTS + .tooltip > .tooltip-inner  {
     background-color: red;
+}
+th {
+  padding: 100 !important;
+  margin: 0 !important;
 }

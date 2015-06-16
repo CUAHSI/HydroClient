@@ -7,12 +7,29 @@
     <link href="//cdn.datatables.net/1.10.6/css/jquery.dataTables.min.css" rel="stylesheet" />
 
     @*  <link href="//cdn.datatables.net/colvis/1.1.1/css/dataTables.colVis.css" rel="stylesheet" />*@
-    <link href="~/Content/dataTables.colVis.css" rel="stylesheet" />
+   @* <link href="~/Content/dataTables.colVis.css" rel="stylesheet" />*@
     @*<link href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/south-street/jquery-ui.min.css" rel="stylesheet" type="text/css" />*@
     <link href="~/Content/FancyTree/skin-xp/ui.fancytree.css" rel="stylesheet" />
 
 }
 <script type='text/javascript' src="http://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true&libraries=places,geometry"></script>
+
+<!-- Start of cuahsi Zendesk Widget script -->
+<script>/*<![CDATA[*/window.zEmbed || function (e, t) {
+var n, o, d, i, s, a = [],
+    r = document.createElement("iframe"); window.zEmbed = function ()
+    { a.push(arguments) }, window.zE = window.zE || window.zEmbed, r.src = "javascript:false",
+    r.title = "", r.role = "presentation", (r.frameElement || r).style.cssText = "display: none",
+    d = document.getElementsByTagName("script"), d = d[d.length - 1], d.parentNode.insertBefore(r, d),
+    i = r.contentWindow, s = i.document; try { o = s } catch (c) {
+        n = document.domain,
+            r.src = 'javascript:var d=document.open();d.domain="' + n + '";void(0);', o = s
+    } o.open()._l = function () {
+        var o = this.createElement("script"); n && (this.domain = n),
+            o.id = "js-iframe-async", o.src = e, this.t = +new Date, this.zendeskHost = t, this.zEQueue = a, this.body.appendChild(o)
+    }, o.write('<body onload="document._l();">'), o.close()
+}("//assets.zendesk.com/embeddable_framework/main.js", "cuahsi.zendesk.com");/*]]>*/</script>
+<!-- End of cuahsi Zendesk Widget script -->
 
 <div class="_container">
     <div class="row">
@@ -34,58 +51,17 @@
                 <h3 class="modal-title" id="myModalLabel">Timeseries in Current Map Area</h3>
                 <h5 style="margin-bottom: 1em;">To zip one or more data files, please click the associated table row(s) and then click the 'Zip Selections' button.</h5>
             </div>
-            <table width="100%" id="dtTimeseries" class="display" cellspacing="0">
+            <table id="dtTimeseries" class="display" cellspacing="0">
                 <thead>
                     <tr>
-                        <th>SeriesId</th>
-                        <th>ServCode</th>
-                        @*<th>ServURL</th>*@
-                       @* <th>SiteCode</th>*@
-                        @*<th>VariableCode</th>*@
-                        <th>VariableName</th>
-                        <th>BeginDate</th>
-                        <th>EndDate</th>
-                        <th>ValueCount</th>
-                        <th>SiteName</th>
-                        <th>Latitude</th>
-                        <th>Longitude</th>
-                        <th>DataType</th>
-                        <th>ValueType</th>
-                        <th>SampleMedium</th>
-                        <th>TimeUnit</th>
-                        @*<th>GeneralCategory</th>*@
-                        <th>TimeSupport</th>
-                        <th>ConceptKeyword</th>
-                        <th>IsRegular</th>
-                        @*<th>VariableUnits</th>*@
-                       @* <th>Citation</th>*@
+                        @Html.Partial("_DatatableTimeseriesColumns")
                     </tr>
                 </thead>
 
                 <tfoot>
                     <tr>
-                        <th>SeriesId</th>
-                        <th>ServCode</th>
-                        @*<th>ServURL</th>*@
-                        @* <th>SiteCode</th>*@
-                        @*<th>VariableCode</th>*@
-                        <th>VariableName</th>
-                        <th>BeginDate</th>
-                        <th>EndDate</th>
-                        <th>ValueCount</th>
-                        <th>SiteName</th>
-                        <th>Latitude</th>
-                        <th>Longitude</th>
-                        <th>DataType</th>
-                        <th>ValueType</th>
-                        <th>SampleMedium</th>
-                        <th>TimeUnit</th>
-                        @*<th>GeneralCategory</th>*@
-                        <th>TimeSupport</th>
-                        <th>ConceptKeyword</th>
-                        <th>IsRegular</th>
-                        @*<th>VariableUnits</th>*@
-                        @* <th>Citation</th>*@
+                        @Html.Partial("_DatatableTimeseriesColumns")
+                    </tr>
                 </tfoot>
             </table>
         </div>
@@ -144,7 +120,7 @@
                     <div id="map-canvas">
 
                     </div>
-
+                   
                     <input id="pac-input" class="searchbarcontrols" type="text"
                            placeholder="Enter a location" />
                     <div id="type-selector" class="searchbarcontrols hidden">
@@ -152,21 +128,21 @@
                         <label for="changetype-all">All</label>
 
                         @*<input type="radio" name="type" id="changetype-establishment">
-                        <label for="changetype-establishment">Establishments</label>
+                            <label for="changetype-establishment">Establishments</label>
 
-                        <input type="radio" name="type" id="changetype-address">
-                        <label for="changetype-address">Addresses</label>*@
+                            <input type="radio" name="type" id="changetype-address">
+                            <label for="changetype-address">Addresses</label>*@
 
                         <input type="radio" name="type" id="changetype-geocode">
                         <label for="changetype-geocode">Geocodes</label>
                     </div>
 
                     @*<h1 id="home">
-                        <a id="menu-toggle" href="#" class="glyphicon glyphicon-align-justify ">
-                            <i class="fa fa-bars"></i>
-                        </a>
+                            <a id="menu-toggle" href="#" class="glyphicon glyphicon-align-justify ">
+                                <i class="fa fa-bars"></i>
+                            </a>
 
-                    </h1>*@
+                        </h1>*@
                 </div>
 
             </div>
@@ -183,7 +159,7 @@
         <div class="modal-content-full">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
-                <label style="float:right; margin-right: 2em"><input type="checkbox" id="chkbxAutoDownload" checked="checked"/>&nbsp;Auto Download Archives?</label>
+                <label style="float:right; margin-right: 2em"><input type="checkbox" id="chkbxAutoDownload" checked="checked" />&nbsp;Auto Download Archives?</label>
                 <h3 class="modal-title" id="myModalLabel">Download Manager</h3>
             </div>
             <div class="modal-body-full">
@@ -242,12 +218,12 @@
                             <input id="startDate" value=@DateTime.Now.AddYears(-1).ToShortDateString() />
                             <span class="add-on">to</span>
                             <input id="endDate" value=@DateTime.Now.ToShortDateString() />
-                            <button type="button" class="btn btn-default btn-primary" data-dismiss="modal">Save</button>
+                            
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer"></div>
+            <div class="modal-footer"><button type="button" class="btn btn-default btn-primary" data-dismiss="modal">Save</button></div>
 
             <!-- /.modal-content -->
         </div>
@@ -260,7 +236,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 class="modal-title" id="myModalLabel">Please select your concept/variable(s) </h3>
+                <h3 class="modal-title" id="myModalLabel">Please select your Keyword(s) </h3>
                 <h6>(No selection searches all)</h6>
 
             </div>
@@ -269,8 +245,8 @@
                     <div class="tabbable">
                         <!-- Only required for left/right tabs -->
                         <ul class="nav nav-tabs">
-                            <li class="active"><a href="#tab1" data-toggle="tab">Common</a></li>
-                            <li><a href="#tab2" data-toggle="tab">Hierarchy</a></li>
+                            <li class="active"><a href="#tab1" data-toggle="tab">Most Common</a></li>
+                            <li><a href="#tab2" data-toggle="tab">Full</a></li>
                         </ul>
                         <div class="tab-content">
                             <div class="tab-pane active" id="tab1">
@@ -281,7 +257,7 @@
                                             <input type="checkbox" name="keywords" value="Discharge, stream" id="inlineCheckbox2" class="topCategories"> Discharge
                                         </label>     
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Precipitation " id="inlineCheckbox12" class="topCategories"> Precipitation
+                                            <input type="checkbox" name="keywords" value="Precipitation" id="inlineCheckbox12" class="topCategories"> Precipitation
                                         </label>                                   
                                         <label class="checkbox">
                                             <input type="checkbox" name="keywords" value="Water Level" id="inlineCheckbox3" class="topCategories"> Water Level 
@@ -391,40 +367,21 @@
         <div class="modal-content-full">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 class="modal-title" id="myModalLabel">Click to select Services (No selection searches all)</h3>
+                <h3 class="modal-title" id="myModalLabel">Click to select Data Services (No selection searches all)</h3>
+                <input type="checkbox" name="checkOnlyObservedValues" id="checkOnlyObservedValues" class="" data-inline="true" data-mini="true" /><label for="checkOnlyObservedValues">Select Only services with observed values</label>                                         
+
             </div>
             <div class="modal-body-full">
                 <table id="dtServices" class="display" cellspacing="0" >
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Organization</th>
-                            <th>ServiceCode</th>
-                            <th>Title</th>
-                            <th>DescriptionUrl</th>
-                            <th>ServiceUrl</th>
-                            <th>Checked</th>                            
-                            <th>Sites</th>
-                            <th>Variables</th>
-                            <th>Values</th>
-                            <th>ServiceBoundingBox</th>
+                            @Html.Partial("_DatatableDataservicesColumns")
                         </tr>
                     </thead>
 
                     <tfoot>
                         <tr>
-                            <th>ID</th>
-                            <th>Organization</th>
-                            <th>ServiceCode</th>
-                            <th>Title</th>
-                            <th>DescriptionUrl</th>
-                            <th>ServiceUrl</th>
-                            <th>Checked</th>
-                            
-                            <th>Sites</th>
-                            <th>Variables</th>
-                            <th>Values</th>
-                            <th>ServiceBoundingBox</th>
+                            @Html.Partial("_DatatableDataservicesColumns")
                         </tr>
                     </tfoot>
                 </table>
@@ -450,61 +407,16 @@
                 <h5 style="margin-bottom: 1em;">To zip one or more data files, please click the associated table row(s) and then click the 'Zip Selections' button.</h5>
             </div>
             <div class="modal-body-full">
-                <table id="dtMarkers" class="display" width="100%" cellspacing="0">
+                <table id="dtMarkers" class="display" cellspacing="0">
                     <thead>
                         <tr>
-                            <th>VariableName</th>
-                            <th>SiteName</th>
-                            <th>SeriesId</th>
-                            <th>ServCode</th>
-                            @*<th>ServURL</th>*@
-                            @* <th>SiteCode</th>*@
-                            @*<th>VariableCode</th>*@
-                          
-                            <th>BeginDate</th>
-                            <th>EndDate</th>
-                            <th>ValueCount</th>
-                           
-                            <th>Latitude</th>
-                            <th>Longitude</th>
-                            <th>DataType</th>
-                            <th>ValueType</th>
-                            <th>SampleMedium</th>
-                            <th>TimeUnit</th>
-                            @*<th>GeneralCategory</th>*@
-                            <th>TimeSupport</th>
-                            <th>ConceptKeyword</th>
-                            <th>IsRegular</th>
-                            @*<th>VariableUnits</th>*@
-                            @* <th>Citation</th>*@
+                            @Html.Partial("_DatatableTimeseriesColumns")
                         </tr>
                     </thead>
 
                     <tfoot>
                         <tr>
-                            <th>VariableName</th>
-                            <th>SeriesId</th>
-                            <th>ServCode</th>
-                            @*<th>ServURL</th>*@
-                            @* <th>SiteCode</th>*@
-                            @*<th>VariableCode</th>*@
-                           
-                            <th>BeginDate</th>
-                            <th>EndDate</th>
-                            <th>ValueCount</th>
-                            <th>SiteName</th>
-                            <th>Latitude</th>
-                            <th>Longitude</th>
-                            <th>DataType</th>
-                            <th>ValueType</th>
-                            <th>SampleMedium</th>
-                            <th>TimeUnit</th>
-                            @*<th>GeneralCategory</th>*@
-                            <th>TimeSupport</th>
-                            <th>ConceptKeyword</th>
-                            <th>IsRegular</th>
-                            @*<th>VariableUnits</th>*@
-                            @* <th>Citation</th>*@
+                            @Html.Partial("_DatatableTimeseriesColumns")
                         </tr>
                     </tfoot>
                 </table>
@@ -541,7 +453,7 @@
         <script src="~/Scripts/Google/markerwithlabel.js"></script>
         @*<script src="//cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js"></script>*@
         <script src="~/Scripts/jquery.dataTables.js"></script>
-        <script src="//cdn.datatables.net/colvis/1.1.1/js/dataTables.colVis.min.js"></script>
+@*<script src="//cdn.datatables.net/colvis/1.1.1/js/dataTables.colVis.min.js"></script>*@
 
 
         <script src="~/Scripts/Google/keydragzoom_packed.js"></script>
