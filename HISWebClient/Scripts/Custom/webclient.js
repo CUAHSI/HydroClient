@@ -9,6 +9,7 @@ var myTimeSeriesClusterDatatable;
 var myServicesList;
 var myServicesDatatable;
 var mySelectedServices = [];
+var mySelectedServiceCodes = [];
 var mySelectedTimeSeries = [];
 var sessionGuid;
 var randomId;
@@ -19,6 +20,8 @@ var sidepanelVisible = false;
 
 var selectedTimeSeriesCount = 0;
 var selectedTimeSeriesMax = 50;
+
+var taskCount = 0;
 
 $(document).ready(function () {
 
@@ -171,16 +174,61 @@ function initialize() {
         $("#tree").fancytree("getTree").visit(function (node) {
                             node.setSelected(false);
                         });
-                        //return false;
-    })
+        //return false;
+
+        //Clear and re-populate concepts list...
+        var list = $('#olConcepts');
+
+        list.empty();
+
+        var checked = $("input[name='keywords']:checked");
+        var length = checked.length;
+
+        if (0 < length) {
+            //Certain concepts selected...
+            for(var i = 0; i < length; ++i) {
+                list.append('<li>' + checked[i].value + '</li>');
+            }
+
+        }
+        else {
+            //All concepts selected...
+            list.append('All');
+        }
+
+    });
 
     $('#btnHierarchySelect').click(function () {
-        
-                    
+                        
         $("input[name='keywords']:checked").attr('checked', false);
                 
         //return false;
-    })
+
+        //Clear and re-populate concepts list...
+        var list = $('#olConcepts');
+
+        list.empty();
+
+        //TO DO - how to get all the checked nodes out of the fancytree??
+        var tree = $("#tree").fancytree("getTree");
+
+        //var checked = $("input[name='keywords']:checked");
+        //var length = checked.length;
+        var selectedNodes = tree.getSelectedNodes();
+        var length = selectedNodes.length;
+
+        if (0 < length) {
+            //Certain concepts selected...
+            for(var i = 0; i < length; ++i) {
+                list.append('<li>' + selectedNodes[i].title + '</li>');
+                }
+
+                }
+                else {
+                    //All concepts selected...
+            list.append('All');
+        }
+    });
 
     $("#Search").submit(function (e) {       
 
@@ -299,7 +347,8 @@ function addCustomMapControls()
 function addSlider()
 {
     var _slider = $("#slider").slideReveal({
-        width: 200,
+        //BC - Increase slider panel width...
+        width: 300,
         push: false,
         position: "right",
         top: 50,
@@ -1116,26 +1165,46 @@ function setupServices()
     $('#dtServices tbody').on('click', 'tr', function () {
         $(this).toggleClass('selected');
         var id = this.cells[0].innerHTML;
-        if ($.inArray(id, mySelectedServices ) == -1)
-        {
+        var serviceCode = this.cells[2].innerHTML;
+        if ($.inArray(id, mySelectedServices ) == -1) {
             //add
             mySelectedServices.push(id);
+            mySelectedServiceCodes.push(serviceCode);
         }
         else {            
-
             //remove
             mySelectedServices = $.grep(mySelectedServices, function (element, index) {
-                return element.id == id;
-            })
+                return element !== id;
+            });
+
+            mySelectedServiceCodes = $.grep(mySelectedServiceCodes, function(element, index) {
+                return element !== serviceCode;
+            });
         }
-
-
     });
 
     $('#saveServiceSelection').click(function () {
-       // alert(myServicesDatatable[0].rows('.selected').data().length + ' row(s) selected');
+        // alert(myServicesDatatable[0].rows('.selected').data().length + ' row(s) selected');
+
+        //Clear and re-populate services list...
+        var list = $('#olServices');
+        var length = mySelectedServiceCodes.length;
+
+        list.empty();
+        
+        if (0 < length) {
+            //Certain services selected...
+            for (var i = 0; i < length; ++i) {
+                list.append( '<li>' + mySelectedServiceCodes[i] + '</li>');
+            }
+        }
+        else {
+            //All services selected...
+            list.append('All');
+        }
        
     });
+
     $('#cancelServiceSelection').click(function () {
         mySelectedServices.length = 0;
 
@@ -1167,6 +1236,7 @@ function setUpDatatables(clusterid)
         "autoWidth": true,
         "jQueryUI": false,
         "deferRender": true,
+        "aaSorting": [],        //Disable initial sorting...
         "dom": 'C<"clear">l<"toolbar">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
          //colVis: {
          //    //restore: "Restore",
@@ -1215,10 +1285,17 @@ function setUpDatatables(clusterid)
          
          "createdRow": function (row, data, index) {
 
-             //BC - TEST - mark the row as selected per check box state...
+             //BC - TEST - if row is in top '50', mark the row as selected per check box state...
              if ($('#chkbxSelectAll').prop('checked')) {
-                 var jqueryObject = $(row);
-                 jqueryObject.addClass('selected');
+                 if (index < selectedTimeSeriesMax) {
+                     var jqueryObject = $(row);
+                     var className = 'selected';
+
+                     if (!jqueryObject.hasClass(className)) {
+                         jqueryObject.addClass(className);
+                         ++selectedTimeSeriesCount;
+                    }
+                 }                 
              }
 
              //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
@@ -1286,14 +1363,15 @@ function setUpDatatables(clusterid)
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-    $("div.toolbar").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAll" style="float:left;"/>&nbsp;Select All?</span>' +
+    $("div.toolbar").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAll" style="float:left;"/>&nbsp;Select Top 50?</span>' +
                           '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelections" value="Zip Selections"/>' +
-                          '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;">Zip started.  To download the archive, please open Download Manager</span>');
+                          '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;"></span>');
     //$("div.toolbar").css('border', '1px solid red');
   
+    // BC - Do not respond to data table load event...
     //Add data load event handler...
-    $('#dtMarkers').off('xhr.dt', dataTableLoad);
-    $('#dtMarkers').on('xhr.dt', { 'chkbxId': '#chkbxSelectAll'}, dataTableLoad);
+    //$('#dtMarkers').off('xhr.dt', dataTableLoad);
+    //$('#dtMarkers').on('xhr.dt', { 'chkbxId': '#chkbxSelectAll'}, dataTableLoad);
 
     //Add click handlers...
 
@@ -1554,26 +1632,31 @@ function addRowStylesDM(newrow) {
     //Cell: 1
     td = newrow.find('td:eq(1)');
     td.addClass('text-center');
-    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '22.5%' });
+    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '15%' });
 
     //Cell: 2
     td = newrow.find('td:eq(2)');
     td.addClass('text-center');
-    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '50%', 'overflow': 'hidden', 'text-overflow': 'ellipsis' });
+    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '15%' });
 
     //Cell: 3
     td = newrow.find('td:eq(3)');
     td.addClass('text-center');
-    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '22.5%', 'margin-left': '-2em' });
+    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '50%', 'overflow': 'hidden', 'text-overflow': 'ellipsis' });
+
+    //Cell: 4
+    td = newrow.find('td:eq(4)');
+    td.addClass('text-center');
+    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '13%' /*, 'margin-left': '-2em' */ });
 }
 
 function selectAll(event) {
 
     //Check for disabled button...
-    if ($(this).hasClass("disabled")) {
-        event.preventDefault();
-        return false;
-    }
+//    if ($(this).hasClass("disabled")) {
+//        event.preventDefault();
+//        return false;
+//    }
 
     //Retrieve all the table's RENDERED <tr> elements whether visible or not...
     //Source: http://datatables.net/reference/api/rows().nodes()
@@ -1583,15 +1666,30 @@ function selectAll(event) {
     var nodesRendered = rows.nodes();
 
     var jqueryObjects = nodesRendered.to$();    //Convert to jQuery Objects!!
-
-    //Apply/remove 'selected' class per checkbox state
     var className = 'selected';
-    //if ($("#chkbxSelectAll").prop("checked")) {
+
+    //Remove selected class from all rows...
+    jqueryObjects.removeClass(className);
+    selectedTimeSeriesCount = 0;
+
+    //Apply 'selected' class to 'top 50' rows, if indicated 
     if ($(event.data.chkbxId).prop("checked")) {
-            jqueryObjects.addClass(className);
-    }
-    else {
-        jqueryObjects.removeClass(className);
+        var length = nodesRendered.length;
+
+        for (var i = 0; i < length; ++i) {
+            var node = nodesRendered[i];
+            //var indx = node.rowIndex; 
+            var indx = node._DT_RowIndex;
+            if ((0 <= indx) && (indx < selectedTimeSeriesMax)) {
+                var jqueryObject = $(node);
+                var className = 'selected';
+
+                if ((null != jqueryObject) && (!jqueryObject.hasClass(className))) {
+                    jqueryObject.addClass(className);
+                    ++selectedTimeSeriesCount;
+                }
+            }
+        }
     }
 
     //Check state of 'Zip Selections' button...
@@ -1656,8 +1754,18 @@ function dataTableLoad(event, settings, json, xhr) {
 
 function zipSelections(event) {
 
+    //Get the next Task Id...
+    var taskId = getNextTaskId();
+    var txtClass = '.clsZipStarted';
+
+    //Update the text...
+    var txt = 'Task: @@taskId@@ started.  To download the archive, please open Download Manager';
+    var txts = txt.split('@@taskId@@');
+
+    $(txtClass).text( txts[0] + taskId.toString() + txts[1]);
+
     //Display the 'Zip processing started... message
-    displayAndFadeLabel('.clsZipStarted');
+    displayAndFadeLabel(txtClass);
 
     //Create the list of selected time series ids...
     //var table = $('#dtMarkers').DataTable();
@@ -1724,7 +1832,7 @@ function zipSelections(event) {
             var cols = [];
 
             cols.push(response.RequestId.toString());
-            //cols.push(response.Status);
+            cols.push(taskId);
             cols.push(formatStatusMessage(response.Status));
             cols.push(response.BlobUri);
 
@@ -1752,9 +1860,9 @@ function zipSelections(event) {
                             return $(this).text() === statusResponse.RequestId;
                         }).parent("tr");
 
-                        tableRow.find('td:eq(1)').html(statusResponse.Status);
-                        tableRow.find('td:eq(2)').html(statusResponse.BlobUri);
-                        tableRow.find('td:eq(4)').html(statusResponse.RequestStatus);
+                        tableRow.find('td:eq(2)').html(statusResponse.Status);
+                        tableRow.find('td:eq(3)').html(statusResponse.BlobUri);
+                        tableRow.find('td:eq(5)').html(statusResponse.RequestStatus);
 
                         //Color table row as 'warning'
                         tableRow.removeClass('info');
@@ -1775,7 +1883,7 @@ function zipSelections(event) {
 
             //Add the new row and hide the RequestStatus column...
             var newrow = newRow($("#tblDownloadManager"), cols);
-            newrow.find('td:eq(4)').hide();
+            newrow.find('td:eq(5)').hide();
 
             //Center the button in the td-3
             //var td3 = newrow.find('td:eq(3)');
@@ -1813,14 +1921,14 @@ function zipSelections(event) {
                         //tableRow.find('td:eq(1)').html(statusResponse.Status);
                         //tableRow.find('td:eq(1)').html(formatStatusMessage(statusResponse.Status));
                         tableRow.find('#statusMessageText').html(statusResponse.Status);
-                        tableRow.find('td:eq(2)').html(statusResponse.BlobUri);
-                        tableRow.find('td:eq(4)').html(statusResponse.RequestStatus);
+                        tableRow.find('td:eq(3)').html(statusResponse.BlobUri);
+                        tableRow.find('td:eq(5)').html(statusResponse.RequestStatus);
 
                         //Color row as 'info'
                         tableRow.addClass('info');
 
                         //Check for completed/cancelled task
-                        var requestStatus = parseInt(tableRow.find('td:eq(4)').html());
+                        var requestStatus = parseInt(tableRow.find('td:eq(5)').html());
 
                         if (timeSeriesRequestStatus.Completed === requestStatus ||
                             timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus) {
@@ -1830,15 +1938,15 @@ function zipSelections(event) {
                                 var baseUri = (statusResponse.BlobUri).split('.zip');
                                 baseUri[0] += '.zip';
 
-                                tableRow.find('td:eq(2)').html(baseUri[0]);
+                                tableRow.find('td:eq(3)').html(baseUri[0]);
                                 
                                 //Create a download button...
-                                var button = tableRow.find('td:eq(3)');
+                                var button = tableRow.find('td:eq(4)');
 
                                 button = $("<button class='zipBlobDownload btn btn-success' style='font-size: 1.5vmin'>Download Archive</button>");
 
                                 button.on('click', function (event) {
-                                    var blobUri = tableRow.find('td:eq(2)').html();
+                                    var blobUri = tableRow.find('td:eq(3)').html();
                                     location.href = blobUri;
 
                                     //Fade row and remove from table...
@@ -1849,7 +1957,7 @@ function zipSelections(event) {
                                     event.stopPropagation();
                                 });
 
-                                tableRow.find('td:eq(3)').html(button);
+                                tableRow.find('td:eq(4)').html(button);
 
                                 //Change the glyphicon and stop the animation
                                 var glyphiconSpan = tableRow.find('#glyphiconSpan');
@@ -1913,6 +2021,13 @@ function formatStatusMessage(statusText) {
     return ( formattedMessage)
 }
 
+//Return the next task Id in format: <++taskCount>@hh:mm:ss
+function getNextTaskId() {
+    var date = new Date();
+
+    return ((++taskCount).toString() + '@' + date.getHours().toString() + ':' + date.getMinutes().toString() + ':' + date.getSeconds().toString()); 
+}
+
 function setUpTimeseriesDatatable() {
     if (clusteredMarkersArray.length == 0)
     {
@@ -1938,6 +2053,7 @@ function setUpTimeseriesDatatable() {
         "ajax": actionUrl,
         "dom": 'C<"clear">l<"toolbarTS">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
         "deferRender": true,
+        "aaSorting": [],        //Disable initial sorting...
         colVis: {
             activate: "mouseover",
             exclude: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
@@ -1975,11 +2091,18 @@ function setUpTimeseriesDatatable() {
         "scrollX": true, //removed to fix column alignment 
         "createdRow": function (row, data, index) {
 
-            //BC - TEST - mark the row as selected per check box state...
-            if ($('#chkbxSelectAllTS').prop('checked')) {
-                var jqueryObject = $(row);
-                jqueryObject.addClass('selected');
-            }
+            //BC - TEST - if row is in top '50', mark the row as selected per check box state...
+           if ($('#chkbxSelectAllTS').prop('checked')) {
+                 if (index < selectedTimeSeriesMax) {
+                     var jqueryObject = $(row);
+                     var className = 'selected';
+
+                     if (!jqueryObject.hasClass(className)) {
+                         jqueryObject.addClass(className);
+                         ++selectedTimeSeriesCount;
+                    }
+                }
+           }
 
             //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
 
@@ -2026,13 +2149,14 @@ function setUpTimeseriesDatatable() {
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-    $("div.toolbarTS").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS" style="float:left;"/>&nbsp;Select All?</span>' +
+    $("div.toolbarTS").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS" style="float:left;"/>&nbsp;Select Top 50?</span>' +
                             '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelectionsTS" value="Zip Selections"/>' +
-                            '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;">Zip started.  To download the archive, please open Download Manager</span>');
+                            '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;"></span>');
 
+    // BC - Do not respond to data table load event...
     //Add data load event handler...
-    $('#dtTimeseries').off('xhr.dt', dataTableLoad);
-    $('#dtTimeseries').on('xhr.dt', { 'chkbxId': '#chkbxSelectAllTS' }, dataTableLoad);
+    //$('#dtTimeseries').off('xhr.dt', dataTableLoad);
+    //$('#dtTimeseries').on('xhr.dt', { 'chkbxId': '#chkbxSelectAllTS' }, dataTableLoad);
 
     //Add click handlers...
 
