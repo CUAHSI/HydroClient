@@ -8,6 +8,7 @@ using DotSpatial.Data;
 using DotSpatial.Topology;
 using System.Threading;
 using HISWebClient.BusinessObjects;
+using System.Configuration;
 
 
 namespace HISWebClient.DataLayer
@@ -15,6 +16,8 @@ namespace HISWebClient.DataLayer
       public abstract class SeriesSearcher
     {
         private int totalSeriesCount = 0;
+        private int maxAllowedTimeseriesReturn = Convert.ToInt32(ConfigurationManager.AppSettings["maxAllowedTimeseriesReturn"].ToString()); //maximum ammount of number of timeseries that are returned
+
 
         public SearchResult GetSeriesCatalogInRectangle(Box extentBox, string[] keywords, double tileWidth, double tileHeight,
                                                         DateTime startDate, DateTime endDate, WebServiceNode[] serviceIDs)//, BusinessObjects.Models.IProgressHandler bgWorker)
@@ -168,7 +171,8 @@ namespace HISWebClient.DataLayer
             totalSeriesCount = 0;
 
             //bgWorker.ReportProgress(0, "0 Series found");
-           
+            CancellationTokenSource cts = new CancellationTokenSource();
+
             var serviceLoopOptions = new ParallelOptions
                 {
                         //CancellationToken = bgWorker.CancellationToken,
@@ -177,114 +181,132 @@ namespace HISWebClient.DataLayer
             var tileLoopOptions = new ParallelOptions
                 {
                         //CancellationToken = bgWorker.CancellationToken,
+                        CancellationToken = cts.Token,
                         // Note: currently HIS Central returns timeout if many requests are sent in the same time.
                         // To test set  MaxDegreeOfParallelism = -1
                         MaxDegreeOfParallelism = 4,
                 };
-
-            Parallel.ForEach(servicesWithExtents, serviceLoopOptions, wsInfo =>
+            try
             {
-                //bgWorker.CheckForCancel();
-                var ids = wsInfo.Item1.Select(item => item.ServiceID).ToArray();
-                var tiles = wsInfo.Item2;
-
-                Parallel.ForEach(tiles, tileLoopOptions, tile =>
+                Parallel.ForEach(servicesWithExtents, serviceLoopOptions, wsInfo =>
                 {
-                    var current = Interlocked.Add(ref currentTileIndex, 1);
                     //bgWorker.CheckForCancel();
-
-                    // Do the web service call
-                    var tileSeriesList = new List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>();
-
-                    if (SearchSettings.AndSearch == true)
+                    var ids = wsInfo.Item1.Select(item => item.ServiceID).ToArray();
+                    var tiles = wsInfo.Item2;
+                    try
                     {
-                        //CHANGES FOR "AND" SEARCH
-                        var totalTileSeriesList = new List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>();
-                        var tileSeriesList2 = new List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>();
-                        var tileSeriesList3 = new List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>();
-                        var tileSeriesList4 = new List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>();
-
-                        SeriesComparer sc = new SeriesComparer();
-
-                        for (int i = 0; i < keywords.Count(); i++)
+                        Parallel.ForEach(tiles, tileLoopOptions, tile =>
                         {
-                            String keyword = keywords.ElementAt(i);
-
+                            var current = Interlocked.Add(ref currentTileIndex, 1);
                             //bgWorker.CheckForCancel();
-                            //var series = GetSeriesCatalogForBox(tile.MinX, tile.MaxX, tile.MinY, tile.MaxY, keyword, startDate, endDate, ids, bgWorker, current, totalTilesCount);
-                            var series = GetSeriesCatalogForBox(tile.MinX, tile.MaxX, tile.MinY, tile.MaxY, keyword, startDate, endDate, ids, current, totalTilesCount);
-                           
-                            totalTileSeriesList.AddRange(series);
-                            if (tileSeriesList.Count() == 0)
+
+                            // Do the web service call
+                            var tileSeriesList = new List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>();
+
+                            if (SearchSettings.AndSearch == true)
                             {
-                                if (i == 0)
+                                //CHANGES FOR "AND" SEARCH
+                                var totalTileSeriesList = new List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>();
+                                var tileSeriesList2 = new List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>();
+                                var tileSeriesList3 = new List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>();
+                                var tileSeriesList4 = new List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>();
+
+                                SeriesComparer sc = new SeriesComparer();
+
+                                for (int i = 0; i < keywords.Count(); i++)
                                 {
-                                    tileSeriesList.AddRange(series);
+                                    String keyword = keywords.ElementAt(i);
+
+                                    //bgWorker.CheckForCancel();
+                                    //var series = GetSeriesCatalogForBox(tile.MinX, tile.MaxX, tile.MinY, tile.MaxY, keyword, startDate, endDate, ids, bgWorker, current, totalTilesCount);
+                                    var series = GetSeriesCatalogForBox(tile.MinX, tile.MaxX, tile.MinY, tile.MaxY, keyword, startDate, endDate, ids, current, totalTilesCount);
+
+                                    totalTileSeriesList.AddRange(series);
+                                    if (tileSeriesList.Count() == 0)
+                                    {
+                                        if (i == 0)
+                                        {
+                                            tileSeriesList.AddRange(series);
+                                        }
+                                        else
+                                        {
+                                            break;
+                                        }
+                                    }
+                                    else
+                                    {
+
+                                        tileSeriesList2.AddRange(tileSeriesList.Intersect(series, sc));
+                                        tileSeriesList.Clear();
+                                        tileSeriesList.AddRange(tileSeriesList2);
+                                        tileSeriesList2.Clear();
+                                    }
                                 }
-                                else
+
+
+                                for (int i = 0; i < tileSeriesList.Count(); i++)
                                 {
-                                    break;
+                                    tileSeriesList4 = totalTileSeriesList.Where(item => (item.SiteName.Equals(tileSeriesList.ElementAt(i).SiteName))).ToList();
+                                    tileSeriesList3.AddRange(tileSeriesList4);
                                 }
+
+                                tileSeriesList = tileSeriesList3;
                             }
                             else
                             {
+                                tileSeriesList = new List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>();
+                                foreach (var keyword in keywords)
+                                {
+                                    //bgWorker.CheckForCancel();
+                                    //var series = GetSeriesCatalogForBox(tile.MinX, tile.MaxX, tile.MinY, tile.MaxY, keyword, startDate, endDate, ids, bgWorker, current, totalTilesCount);
+                                    var series = GetSeriesCatalogForBox(tile.MinX, tile.MaxX, tile.MinY, tile.MaxY, keyword, startDate, endDate, ids, current, totalTilesCount);
 
-                                tileSeriesList2.AddRange(tileSeriesList.Intersect(series, sc));
-                                tileSeriesList.Clear();
-                                tileSeriesList.AddRange(tileSeriesList2);
-                                tileSeriesList2.Clear();
+                                    tileSeriesList.AddRange(series);
+                                }
                             }
-                        }
+                            //END CHANGES FOR "AND" SEARCH
 
-
-                        for (int i = 0; i < tileSeriesList.Count(); i++)
-                        {
-                            tileSeriesList4 = totalTileSeriesList.Where(item => (item.SiteName.Equals(tileSeriesList.ElementAt(i).SiteName))).ToList();
-                            tileSeriesList3.AddRange(tileSeriesList4);
-                        }
-
-                        tileSeriesList = tileSeriesList3;
-                    }
-                    else
-                    {
-                        tileSeriesList = new List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>();
-                        foreach (var keyword in keywords)
-                        {
                             //bgWorker.CheckForCancel();
-                            //var series = GetSeriesCatalogForBox(tile.MinX, tile.MaxX, tile.MinY, tile.MaxY, keyword, startDate, endDate, ids, bgWorker, current, totalTilesCount);
-                            var series = GetSeriesCatalogForBox(tile.MinX, tile.MaxX, tile.MinY, tile.MaxY, keyword, startDate, endDate, ids, current, totalTilesCount);
-                        
-                            tileSeriesList.AddRange(series);
-                        }
-                    }
-                    //END CHANGES FOR "AND" SEARCH
-
-                    //bgWorker.CheckForCancel();
-                    if (tileSeriesList.Count > 0)
-                    {
-                        var filtered = tileSeriesList.Where(seriesFilter).ToList();
-                        if (filtered.Count > 0)
-                        {
-                            lock (_lockGetSeries)
+                            if (tileSeriesList.Count > 0)
                             {
-                                totalSeriesCount += filtered.Count;
-                                fullSeriesList.Add(filtered);
+                                var filtered = tileSeriesList.Where(seriesFilter).ToList();
+                                if (filtered.Count > 0)
+                                {
+                                    lock (_lockGetSeries)
+                                    {
+                                        totalSeriesCount += filtered.Count;
+                                        fullSeriesList.Add(filtered);
+                                    }
+                                }
                             }
-                        }
+
+                            // Report progress
+                            var currentFinished = Interlocked.Add(ref tilesFinished, 1);
+                            if (totalSeriesCount > maxAllowedTimeseriesReturn)
+                            {
+                                cts.Cancel();
+                            }
+                            var message = string.Format("{0} Series found", totalSeriesCount);
+                            var percentProgress = (currentFinished * 100) / totalTilesCount;
+                            //bgWorker.ReportProgress(percentProgress, message);
+
+
+                        });
                     }
-
-                    // Report progress
-                    var currentFinished = Interlocked.Add(ref tilesFinished, 1);
-                    var message = string.Format("{0} Series found", totalSeriesCount);
-                    var percentProgress = (currentFinished * 100) / totalTilesCount;
-                    //bgWorker.ReportProgress(percentProgress, message);
+                    catch (OperationCanceledException e)
+                    {
+                        throw e;
+                    }
                 });
-            });
-
-            // Collect all series into result list
-            var result = new List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>(totalSeriesCount);
-            fullSeriesList.ForEach(result.AddRange);
-            return result;
+                // Collect all series into result list
+                var result = new List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>(totalSeriesCount);
+                fullSeriesList.ForEach(result.AddRange);
+                return result;
+            }
+            catch (OperationCanceledException e)
+            {
+                throw;
+            }
         }
 
         private static readonly object _lockGetSeries = new object();

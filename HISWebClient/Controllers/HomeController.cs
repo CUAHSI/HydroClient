@@ -132,10 +132,14 @@ namespace HISWebClient.Controllers
             UniversalTypeConverter.TryConvertTo<int>(collection["zoomLevel"], out zoomLevel);
             var activeWebservices = new List<WebServiceNode>();
 
-            var sessionGuid = collection["sessionGuid"].ToString();
+            //if (collection["sessionGuid"] != null)
+            //{
+            //    var sessionGuid = collection["sessionGuid"].ToString();
+            //}
+            
 
             //if it is a new request
-            if (collection["isNewRequest"] != null)
+            if (collection["isNewRequest"].ToString() == "true")
             {
 
                 bool canConvert = false;
@@ -147,8 +151,8 @@ namespace HISWebClient.Controllers
                 //{
                 //    keywords[k] = keywords[k].Replace("_", ",");
                 //}
-                var tileWidth = 2;
-                var tileHeight = 2;
+                var tileWidth = 1;
+                var tileHeight = 1;
                 List<int> webServiceIds = null;
                 try
                 {
@@ -206,11 +210,23 @@ namespace HISWebClient.Controllers
                     var centerPoint = new LatLong(0, 0);
                     markerjSON = markerClustererHelper.createMarkersGEOJSON(clusteredPins, zoomLevel, centerPoint, "");
                 }
+               
                 catch (Exception ex)
                 {
-                    Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    return Json(new { success = false });
+                    if (ex.InnerException.ToString().ToLower().Contains("operationcanceledexception"))
+                    {
+                        Response.StatusCode = (int)HttpStatusCode.RequestEntityTooLarge;
+                        var maxAllowedTimeseriesReturn = Convert.ToInt32(ConfigurationManager.AppSettings["maxAllowedTimeseriesReturn"].ToString()); //maximum ammount of number of timeseries that are returned
+ 
+                        return Json(new {Message="Search returned more than " + maxAllowedTimeseriesReturn + "timeseries and was canceled. Please limit search area and/or Keywords." });
+                        //throw new WebException("Timeout. Try to decrease Search Area, or Select another Keywords.", WebExceptionStatus.Timeout);
+                    }
+                    else{
+                         Response.StatusCode = (int)HttpStatusCode.RequestTimeout;
+                         return Json(new { Message = "The execution of the search took too long. Please limit search area and/or Keywords." });                    
+                    }
                 }
+
 
                 //var session2 =(List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>) Session["Series"];
             }

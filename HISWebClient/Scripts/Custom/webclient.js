@@ -31,9 +31,9 @@ $(document).ready(function () {
 
 function initialize() {
 
-    var myCenter = new google.maps.LatLng(39, -92); //us
+    //var myCenter = new google.maps.LatLng(39, -92); //us
     //var myCenter = new google.maps.LatLng(42.3, -71);//boston
-   // var myCenter = new google.maps.LatLng(41.7, -111.9);//Salt Lake
+    var myCenter = new google.maps.LatLng(41.7, -111.9);//Salt Lake
     
 
     //infoWindow = new google.maps.InfoWindow();
@@ -43,7 +43,7 @@ function initialize() {
 
     var mapProp = {
         center: myCenter,
-        zoom: 5,
+        zoom: 9,
         draggable: true,
         scrollwheel: true,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
@@ -232,7 +232,7 @@ function initialize() {
             return $(this).val();
         }).get();
         
-        validateQueryParameters(area, selectedKeys)
+        if (!validateQueryParameters(area, selectedKeys)) return;
 
         // Construct the polygon.
         areaRect = new google.maps.Polygon({
@@ -286,19 +286,19 @@ function validateQueryParameters(area, selectedKeys) {
     //validate inputs
 
     if (area > 100000) {
-        bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search.  <br> Please limit search area to less than 100000 sq km and/or reduce search keywords.<h4>")
-        return
+        bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search.  <br> Please limit search area to less than 100000 sq km and/or reduce search keywords (max 4).<h4>")
+        return false;
     }
 
     if (area > 25000 && selectedKeys.length == 0) {
-        bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search for All keywords.  <br> Please limit search area to less than 25000 sq km and/or reduce search keywords.<h4>")
-        return
+        bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search for All keywords.  <br> Please limit search area to less than 25000 sq km and/or reduce search keywords (max 4) .<h4>")
+        return false;
     }
-    if (area > 500000 && selectedKeys.length == 1) {
+    if (area > 50000 && selectedKeys.length == 1) {
 
-        if (area > 500000) {
-            bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search.  <br> Please limit search area to less than 50000 sq km and/or reduce search keywords .<h4>")
-            return
+        if (area > 50000) {
+            bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search.  <br> Please limit search area to less than 50000 sq km and/or reduce search keywords (max 4).<h4>")
+            return false;
         }
         else {
             bootbox.confirm("<h4>Current selected area is " + area + " sq km. This search can take a long time. Do you want to continue?<h4>", function () {
@@ -309,10 +309,10 @@ function validateQueryParameters(area, selectedKeys) {
     }
     else {
 
-        if (area > 25000 && selectedKeys.length > 5) {
+        if (area > 25000 && area < 50000 && selectedKeys.length > 5) {
             bootbox.alert("<h4>Current selected area is " + area + " sq km and you have cselecte more than 4 keywords. Please reduce area or number of keywords?<h4>", function () {
 
-                return;
+                return false;
             });
         }
         if (area > 25000 && selectedKeys.length < 5) {
@@ -334,6 +334,7 @@ function validateQueryParameters(area, selectedKeys) {
         }
         
     }
+    return true;
 }
 
 function getMapHeight()
@@ -418,13 +419,14 @@ function toggleSidePanelControl(controlDiv, map)
 
         // Set CSS for the control border
         var controlUI = document.createElement('div');
-        controlUI.style.backgroundColor = 'red';
+        //controlUI.style.backgroundColor = 'red';
         controlUI.style.border = '1px';
         controlUI.style.borderRadius = '3px';
         controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
         controlUI.style.cursor = 'pointer';
         controlUI.style.marginBottom = '2px';
         controlUI.style.textAlign = 'center';
+        controlUI.style.verticalAlign = 'middle';
         controlUI.title = 'Click to show/hide side panel';
         controlDiv.appendChild(controlUI);
        
@@ -435,10 +437,12 @@ function toggleSidePanelControl(controlDiv, map)
         controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
         controlText.style.fontSize = '16px';
         controlText.style.lineHeight = '25px';
-        controlText.style.paddingTop = '15px';
+        
+        controlText.style.paddingTop = '10px';
         controlText.style.paddingLeft = '3px';
         controlText.style.paddingRight = '3px';
-        controlText.style.border = '5px'
+        controlText.style.border = '5px';
+        
         controlText.innerHTML = '< >';
         controlText.id = 'trigger';
         controlUI.appendChild(controlText);
@@ -813,20 +817,22 @@ function updateMap(isNewRequest) {
   
     if (clusteredMarkersArray.length == 0 && isNewRequest == false) return;//only map navigation
     $("#pageloaddiv").show();
-    
+    var formData = getFormData();
 
     //get the action-url of the form
     var actionurl = '/home/updateMarkers';
-    //Clean up
-    if (clusteredMarkersArray.length == 0 || isNewRequest == true) {
+    
+    if (clusteredMarkersArray.length == 0) {
 
-        var formData = getFormData();
+
         formData.push({ name: "isNewRequest", value: true });
     }
     else {
-   
-        deleteClusteredMarkersOverlays()
+        formData.push({ name: "isNewRequest", value: false });
     }
+   //Clean up
+        deleteClusteredMarkersOverlays()
+   // }
    //get Markers
     var actionurl = '/home/updateMarkers';
     
@@ -1617,7 +1623,7 @@ function setfooterFilters(tableId, columnsArray) {
                 });
 
             column.data().unique().sort().each(function (d, j) {
-                select.append('<option value="' + d + '">' + d.substring(0,45) + '</option>')
+                select.append('<option value="' + d + '">' + d + '</option>')
             });
         }
     });
@@ -2082,7 +2088,8 @@ function serviceFailed(xmlhttprequest, textstatus, message)
     //}
     //else 
     //{
-    bootbox.alert('Service call failed with Error ' + xmlhttprequest.statusText + ' Please limit search extent, date range or Concepts.');
+    var msg = JSON.parse(xmlhttprequest.responseText)
+    bootbox.alert(msg.Message );
     //clean up
     resetMap()
     //}
