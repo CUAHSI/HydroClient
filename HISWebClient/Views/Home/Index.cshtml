@@ -74,10 +74,12 @@ var n, o, d, i, s, a = [],
                         <form id="Search" class="searchForm" >
                             <!-- Button trigger modal -->
                             <fieldset>
-                                <legend style="margin-bottom: 0.25em;">Date Range:</legend>
+                                <legend style="margin-bottom: 0.5em;">
+                                    <button class="btn btn-primary btn-block" id="btnDateRange" data-toggle="modal" data-target="#SelectDateModal">Select Date Range</button>
+                                </legend>
                                 <div class="input-daterange">
-                                    <label style="margin-left: 2em;">From: <input id="startDate" value=@DateTime.Now.AddYears(-1).ToShortDateString() /></label>
-                                    <label style="margin-left: 2em;">To:<input id="endDate" value=@DateTime.Now.ToShortDateString() style="margin-left: 1.5em;" /></label>
+                                    <label style="margin-left: 2em;">From: <input id="startDate"/></label>
+                                    <label style="margin-left: 2em;">To:<input id="endDate" style="margin-left: 1.5em;" /></label>
                                 </div>
                             </fieldset>
                             <fieldset style="margin-top: 1em;">
@@ -94,7 +96,8 @@ var n, o, d, i, s, a = [],
                                 <legend style="margin-bottom: 0.25em;">
                                     <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectServicesModal">Select Services(s)</button>
                                 </legend>
-                                <div style="overflow-y: scroll; max-height: 10em;">
+                                @*<div style="overflow-y: scroll; max-height: 10em;">*@
+                                <div style="max-height: 10em;">
                                     <ol id="olServices" style="list-style: circle;">
                                         <li>All</li>
                                     </ol>
@@ -215,15 +218,15 @@ var n, o, d, i, s, a = [],
                 <div class="col-md-12">
                     <div class="row">
                         <div class="input-daterange">
-                            <input id="startDate" value=@DateTime.Now.AddYears(-1).ToShortDateString() />
+                            <input id="startDateModal" />
                             <span class="add-on">to</span>
-                            <input id="endDate" value=@DateTime.Now.ToShortDateString() />
+                            <input id="endDateModal" />
                             
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-default btn-primary" data-dismiss="modal">Save</button></div>
+            <div class="modal-footer"><button type="button" id="btnDateRangeModalSave" class="btn btn-default btn-primary" data-dismiss="modal">Save</button></div>
 
             <!-- /.modal-content -->
         </div>

@@ -10,7 +10,6 @@ var myServicesList;
 var myServicesDatatable;
 
 var mySelectedServices = [];
-var mySelectedServiceCodes = [];
 var mySelectedTimeSeries = [];
 var sessionGuid;
 var randomId;
@@ -21,6 +20,11 @@ var sidepanelVisible = false;
 
 var selectedTimeSeriesCount = 0;
 var selectedTimeSeriesMax = 50;
+
+//var selectedConceptsCommonCount = 0;
+//var selectedConceptsFullCount = 0;
+var selectedConceptsMax = 4;
+
 //lisy of services that only have 
 var ArrayOfNonObservedServices = ["1","3","4","8","226","243","244","262","267","274"]
 
@@ -82,7 +86,7 @@ function initialize() {
     sidepanelVisible = true;
   
     addLocationSearch();
-
+    
     //triger update of map on these events
     google.maps.event.addListener(map, 'dblclick', function () {
         if ((clusteredMarkersArray.length > 0)) {
@@ -136,7 +140,27 @@ function initialize() {
    
 
     //initialize datepicker
-    $('.input-daterange').datepicker()
+    $('.input-daterange').datepicker();
+
+    //Set start and end of date range...
+    var initDate = new Date();
+
+    $('#startDate').val((initDate.getMonth() + 1).toString() + '/' + initDate.getDate().toString() + '/' + (initDate.getFullYear() - 1).toString());
+    $('#endDate').val((initDate.getMonth() + 1).toString() + '/' + initDate.getDate().toString() + '/' + (initDate.getFullYear()).toString());
+
+    //Button click handler for Select Date Range...
+    $('#btnDateRange').on('click', function (event) {
+        //Assign current start and end date values to their modal counterparts...
+        $('#startDateModal').val($('#startDate').val());
+        $('#endDateModal').val($('#endDate').val());
+    });
+
+    //Button click handler for Date Range Modal Save 
+    $('#btnDateRangeModalSave').on('click', function (event) {
+        //Assign current start and end date values to their modal counterparts...
+        $('#startDate').val($('#startDateModal').val());
+        $('#endDate').val($('#endDateModal').val());
+    });
 
     //initialize show/hide for search box
     $('.expander').on('click', function () {
@@ -165,7 +189,23 @@ function initialize() {
        });
    });
 
+    //Click handler for 'Most Common' concept checkboxes...
+   $('.topCategories').click(function (event) {
     
+       if (!$(event.target).prop('checked')) {
+           //Checkbox unchecked - enable all unchecked checkboxes
+           ($("input[name='keywords']").not(':checked')).prop( "disabled", false );
+       }
+       else {
+           //Checkbox checked - if maximum reached, disable all unchecked checboxes
+           var checked = $("input[name='keywords']:checked");
+           var length = checked.length;
+
+           if (selectedConceptsMax <= length) {
+               ($("input[name='keywords']").not(':checked')).prop("disabled", true);
+           }
+        }
+   });
 
     $('#btnTopSelect').click(function () {
         $("#tree").fancytree("getTree").visit(function (node) {
@@ -178,7 +218,7 @@ function initialize() {
         
         //Clear and re-populate concepts list...
         var list = $('#olConcepts');
-
+        
         list.empty();
                     
         var checked = $("input[name='keywords']:checked");
@@ -204,6 +244,41 @@ function initialize() {
                 
         //return false;
     });
+
+    $('#btnTopSelect').click(function () {
+        $("#tree").fancytree("getTree").visit(function (node) {
+            node.setSelected(false);
+        });
+        //return false;
+
+
+
+        //Clear and re-populate concepts list...
+        var list = $('#olConcepts');
+        //Clear and re-populate concepts list...
+        var list = $('#olConcepts');
+
+        list.empty();
+
+        var tree = $("#tree").fancytree("getTree");
+
+        //var checked = $("input[name='keywords']:checked");
+        //var length = checked.length;
+        var selectedNodes = tree.getSelectedNodes();
+        var length = selectedNodes.length;
+
+        if (0 < length) {
+            //Certain concepts selected...
+            for(var i = 0; i < length; ++i) {
+                list.append('<li>' + selectedNodes[i].title + '</li>');
+            }
+        }
+        else {
+            //All concepts selected...
+            list.append('All');
+        }
+    });
+
 
     $("input[name='checkOnlyObservedValues']").change(function (e) {
 
@@ -260,7 +335,7 @@ function initialize() {
         var selectedKeys = $("input[name='keywords']:checked").map(function () {
             return $(this).val();
         }).get();
-        
+           
         if (!validateQueryParameters(area, selectedKeys)) return;
 
         // Construct the polygon.
@@ -290,7 +365,7 @@ function initialize() {
             var table = $('#dtTimeseries').DataTable();
             table.order([0, 'asc']).draw();
             ////hide sidebar
-            // slider.slideReveal("hide")
+           // slider.slideReveal("hide")
             
         }
          if (e.target.id == "mapTab")
@@ -312,7 +387,7 @@ function initialize() {
     });
 
 };
-
+  
 function validateQueryParameters(area, selectedKeys) {
     //validate inputs
 
@@ -1235,21 +1310,15 @@ function setupServices()
     $('#dtServices tbody').on('click', 'tr', function () {
         $(this).toggleClass('selected');
         var id = this.cells[0].innerHTML;
-        var serviceCode = this.cells[2].innerHTML;
         if ($.inArray(id, mySelectedServices ) == -1) {
             //add
             mySelectedServices.push(id);
-            mySelectedServiceCodes.push(serviceCode);
         }
         else {            
             //remove
             mySelectedServices = $.grep(mySelectedServices, function (element, index) {
                 return element !== id;
             });
-
-            mySelectedServiceCodes = $.grep(mySelectedServiceCodes, function(element, index) {
-                return element !== serviceCode;
-    });
         }
     });
 
@@ -1258,15 +1327,13 @@ function setupServices()
        
         //Clear and re-populate services list...
         var list = $('#olServices');
-        var length = mySelectedServiceCodes.length;
+        var length = mySelectedServices.length;
 
         list.empty();
         
         if (0 < length) {
             //Certain services selected...
-            for (var i = 0; i < length; ++i) {
-                list.append( '<li>' + mySelectedServiceCodes[i] + '</li>');
-            }
+              list.append('<li>' + length.toString() + '</li>');
         }
         else {
             //All services selected...
@@ -1332,7 +1399,7 @@ function setUpDatatables(clusterid)
             { "data": "ServURL", "visible": false },
             { "data": "SiteCode", "visible": false },
             { "data": "VariableCode", "visible": false },
-            { "data": "VariableName","width": "50px", "sTitle": "Variable Name"},
+              { "data": "VariableName","width": "50px", "sTitle": "Variable Name"},
             { "data": "BeginDate", "sTitle": "Start Date" },
             { "data": "EndDate","sTitle": "End Date" },
             { "data": "ValueCount" },
@@ -1348,12 +1415,12 @@ function setUpDatatables(clusterid)
            
             { "data": "IsRegular", "visible": true },
             //{ "data": "VariableUnits","visible": false },
-            //{ "data": "Citation", "visible": false }  
+            //{ "data": "Citation", "visible": false }            
             { "data": "SeriesId" }
         ],
         
          "scrollX": true, //removed to fix column alignment 
-
+         
          "createdRow": function (row, data, index) {
 
              //BC - TEST - if row is in top '50', mark the row as selected per check box state...
@@ -1416,7 +1483,7 @@ function setUpDatatables(clusterid)
              //}
          },
         initComplete: function () {
-          
+
             setfooterFilters('#dtMarkers', [0,1,2,3,4]);
         
            // oTable.fnAdjustColumnSizing();
@@ -1583,7 +1650,7 @@ function setUpTimeseriesDatatable() {
             { "data": "TimeUnit", "visible": true },
             //{ "data": "GeneralCategory", "visible": false },
             { "data": "TimeSupport", "visible": true },
-           
+
             { "data": "IsRegular", "visible": true },
             //{ "data": "VariableUnits","visible": false },
             //{ "data": "Citation", "visible": false }  
@@ -1634,7 +1701,7 @@ function setUpTimeseriesDatatable() {
         }
 
     });
-
+          
     //BC - Test - make each table row selectable by clicking anywhere on the row...
     //Source: https://datatables.net/examples/api/select_row.html
     //Avoid multiple registrations of the same handler...
@@ -1652,7 +1719,7 @@ function setUpTimeseriesDatatable() {
     $('#dtTimeseries').on('xhr.dt', { 'chkbxId': '#chkbxSelectAllTS' }, dataTableLoad);
 
     //Add click handlers...
-
+                        
     //Avoid multiple registrations of the same handler...
     $('#chkbxSelectAllTS').off('click', selectAll);
     $('#chkbxSelectAllTS').on('click', { 'tableId': '#dtTimeseries', 'chkbxId': '#chkbxSelectAllTS', 'btnId': '#btnZipSelectionsTS' }, selectAll);
@@ -1792,8 +1859,8 @@ function selectAll(event) {
                 if ((null != jqueryObject) && (!jqueryObject.hasClass(className))) {
                     jqueryObject.addClass(className);
                     ++selectedTimeSeriesCount;
-    }
-    }
+                }
+            }
     }
     }
 
