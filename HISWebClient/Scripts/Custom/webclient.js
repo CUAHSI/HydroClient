@@ -1809,12 +1809,12 @@ function addRowStylesDM(newrow) {
     //Cell: 2
     td = newrow.find('td:eq(2)');
     td.addClass('text-center');
-    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '15%' });
+    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '25%' });
 
     //Cell: 3
     td = newrow.find('td:eq(3)');
     td.addClass('text-center');
-    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '50%', 'overflow': 'hidden', 'text-overflow': 'ellipsis' });
+    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '40%', 'overflow': 'hidden', 'text-overflow': 'ellipsis' });
 
     //Cell: 4
     td = newrow.find('td:eq(4)');
