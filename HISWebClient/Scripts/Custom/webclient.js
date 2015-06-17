@@ -21,8 +21,6 @@ var sidepanelVisible = false;
 var selectedTimeSeriesCount = 0;
 var selectedTimeSeriesMax = 50;
 
-//var selectedConceptsCommonCount = 0;
-//var selectedConceptsFullCount = 0;
 var selectedConceptsMax = 4;
 
 //lisy of services that only have 
@@ -207,15 +205,16 @@ function initialize() {
         }
    });
 
-    $('#btnTopSelect').click(function () {
+   $('#btnTopSelect').click(function () {
+
+        //Unset/enable all 'Full' tab entries...
         $("#tree").fancytree("getTree").visit(function (node) {
                             node.setSelected(false);
-                        });
+                            node.unselectable = false;
+                            node.hideCheckbox = false;
+        });
                         //return false;
-    })
 
-    $('#btnHierarchySelect').click(function () {
-        
         //Clear and re-populate concepts list...
         var list = $('#olConcepts');
         
@@ -240,21 +239,12 @@ function initialize() {
 
     $('#btnHierarchySelect').click(function () {
                         
+        //Uncheck/enable all 'Common' tab checkboxes
         $("input[name='keywords']:checked").attr('checked', false);
-                
-        //return false;
-    });
+        $("input[name='keywords']").prop("disabled", false);
 
-    $('#btnTopSelect').click(function () {
-        $("#tree").fancytree("getTree").visit(function (node) {
-            node.setSelected(false);
-        });
         //return false;
 
-
-
-        //Clear and re-populate concepts list...
-        var list = $('#olConcepts');
         //Clear and re-populate concepts list...
         var list = $('#olConcepts');
 
