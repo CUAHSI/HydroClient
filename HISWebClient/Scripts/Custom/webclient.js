@@ -18,8 +18,7 @@ var timeSeriesRequestStatus;
 var slider;
 var sidepanelVisible = false;
 
-var selectedTimeSeriesCount = 0;
-var selectedTimeSeriesMax = 50;
+var selectedTimeSeriesMax = 25;
 
 var selectedConceptsMax = 4;
 
@@ -41,8 +40,8 @@ function initialize() {
     //var myCenter = new google.maps.LatLng(42.3, -71);//boston
    // var myCenter = new google.maps.LatLng(41.7, -111.9);//Salt Lake
     
-
-    //infoWindow = new google.maps.InfoWindow();
+      //BC - disable infoWindow for now...
+//    infoWindow = new google.maps.InfoWindow();
 
     //init list od datatables for modal 
     myServicesList = setupServices();
@@ -1022,6 +1021,8 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
         });
 
+        //BC - disable mouse event listening for now...
+        //setMouseEventListeners(map, marker, clusterid);
 
         //        icon = "./images/markers/assessments/" + icontype + ".png";
         //        size = new google.maps.Size(15, 15);
@@ -1147,6 +1148,9 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
         });
 
+        //BC - disable mouse event listening for now...
+        //setMouseEventListeners(map, marker, clusterid);
+
         //   var marker = clusteredMarkersArray[clusteredMarkersIndex]
         //    marker.setVisible(true);
         //    marker.setIcon(icon);
@@ -1221,9 +1225,9 @@ function getDetailsForMarker(clusterid)
 
 function createInfoWindowContent()
 {
-    $('#example').DataTable();
+    //$('#example').DataTable();
    
-    var $modal = $('#ajax-modal');
+    //var $modal = $('#ajax-modal');
     //$modal.show();
     //$modal.on('click', '.update', function () {
     //    $modal.modal('loading');
@@ -1237,6 +1241,28 @@ function createInfoWindowContent()
     //    }, 1000);
     //});
 }
+
+//BC - disable mouse event listening for now...
+/*
+function setMouseEventListeners(map, marker, clusterId) {
+
+    //mouseover - set infowindow content and open...
+    google.maps.event.clearListeners(marker, 'mouseover');
+    google.maps.event.addListener(marker, 'mouseover', function () {
+
+        infoWindow.setContent('Cluster Id:' + clusterId.toString());
+        infoWindow.open(map, marker);
+    });
+
+    //mouseout - close infowindow...
+    google.maps.event.clearListeners(marker, 'mouseout');
+    google.maps.event.addListener(marker, 'mouseout', function () {
+
+        infoWindow.close();
+    });
+
+}
+*/
 
 function setupServices()
 {
@@ -1363,7 +1389,6 @@ function setUpDatatables(clusterid)
         "autoWidth": true,
         "jQueryUI": false,
         "deferRender": true,
-        "aaSorting": [],        //Disable initial sorting...
         "dom": 'C<"clear">l<"toolbar">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
          //colVis: {
          //    //restore: "Restore",
@@ -1413,16 +1438,20 @@ function setUpDatatables(clusterid)
          
          "createdRow": function (row, data, index) {
 
-             //BC - TEST - if row is in top '50', mark the row as selected per check box state...
+             //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
              if ($('#chkbxSelectAll').prop('checked')) {
-                 if (index < selectedTimeSeriesMax) {
+
+                 //Find the position of the new row per the current sort/search order...
+                 var table = $('#dtMarkers').DataTable();
+                 var position = table.rows()[0].indexOf(index);
+
+                 if (position < selectedTimeSeriesMax) {
                  var jqueryObject = $(row);
                      var className = 'selected';
 
                      if (!jqueryObject.hasClass(className)) {
                          jqueryObject.addClass(className);
-                         ++selectedTimeSeriesCount;
-             }
+                    }
                  }                 
              }
 
@@ -1493,7 +1522,8 @@ function setUpDatatables(clusterid)
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-    $("div.toolbar").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAll" style="float:left;"/>&nbsp;Select Top 50?</span>' +
+    $("div.toolbar").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAll" style="float:left;"/>&nbsp;Select Top ' + 
+                          selectedTimeSeriesMax.toString() + '?</span>' +
                           '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelections" value="Zip Selections"/>' +
                           '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;"></span>');
     //$("div.toolbar").css('border', '1px solid red');
@@ -1583,141 +1613,6 @@ function setUpDatatables(clusterid)
 
     });
    
-}
-//Data table for data tab
-function setUpTimeseriesDatatable() {
-    if (clusteredMarkersArray.length == 0) {
-        return;
-    }
-    // $('#dtTimeseries').(':visible')
-    $('#dtTimeseries').removeClass("hidden");
-
-    $.fn.DataTable.isDataTable("#dtTimeseries")
-    {
-        $('#dtTimeseries').DataTable().clear().destroy();
-    }
-
-    //Set page title...
-    $('#dataview #myModalLabel').html('List of Timeseries for Selected Area');
-
-
-    //var dataSet = getDetailsForMarker(clusterid)
-    var actionUrl = "/home/getTimeseries"
-    // $('#example').DataTable().clear()
-    // $('#demo').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example"></table>' );
-    var oTable = $('#dtTimeseries').dataTable({
-        "ajax": actionUrl,
-        "dom": 'C<"clear">l<"toolbarTS">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-        "deferRender": true,
-        
-        //colVis: {
-        //    activate: "mouseover",
-        //    exclude: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
-        //    groups: [
-        //   {
-        //       title: "Show All Columns",
-        //       columns: [2, 3, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
-        //   }
-        //    ]
-        //},
-        "columns": [
-             { "data": "Organization", "width": "50px", "visible": true },
-            { "data": "ServCode", "sTitle": "Service Name", "visible": true },
-            { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
-            { "data": "ServURL", "visible": false },
-            { "data": "SiteCode", "visible": false },
-            { "data": "VariableCode", "visible": false },
-            { "data": "VariableName","width": "50px", "sTitle": "Variable Name"},
-            { "data": "BeginDate", "sTitle": "Start Date" },
-            { "data": "EndDate","sTitle": "End Date" },
-            { "data": "ValueCount" },
-            { "data": "SiteName", "sTitle": "Site Name" },
-            //{ "data": "Latitude", "visible": true },
-            //{ "data": "Longitude", "visible": true },
-            { "data": "DataType", "visible": true },
-            { "data": "ValueType", "visible": true },
-            { "data": "SampleMedium", "visible": true },
-            { "data": "TimeUnit", "visible": true },
-            //{ "data": "GeneralCategory", "visible": false },
-            { "data": "TimeSupport", "visible": true },
-
-            { "data": "IsRegular", "visible": true },
-            //{ "data": "VariableUnits","visible": false },
-            //{ "data": "Citation", "visible": false }  
-            { "data": "SeriesId" }
-        ],
-        "scrollX": true, //removed to fix column alignment 
-        "createdRow": function (row, data, index) {
-
-            //BC - TEST - mark the row as selected per check box state...
-            if ($('#chkbxSelectAllTS').prop('checked')) {
-                var jqueryObject = $(row);
-                jqueryObject.addClass('selected');
-            }
-
-            //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
-
-            //var id = $('td', row).eq(14).html();//only visible count
-            //var d = $('td', row).eq(4).html();
-
-            /* BC - TEST - Do not include download icon or href in any table row...
-            $('td', row).eq(0).append("<a href='/Export/downloadFile/" + id + "' id=" + id + "<span><img  src='/Content/Images/download-icon-25.png' ></span> </a>");
-            $('td', row).eq(0).click(function () {
-                //downloadtimeseries('csv', id); return false;/Content/Images/ajax-loader-green.gif
-                //$('#spinner' + id).removeClass('hidden')
-                $(this).append("<span><img class='spinner' src='/Content/Images/ajax-loader-green.gif' style='padding-left:4px;padding-right:4px'></span>");
-                //$.fileDownload($(this).prop('href'), {
-                //    preparingMessageHtml: "We are preparing your report, please wait...",
-                //    failMessageHtml: "There was a problem generating your report, please try again."
-                //})
-
-                $.fileDownload($(this).prop('href'))
-                    .done(function () {
-                        $('.spinner').addClass('hidden');
-                        $('.spinner').parent().parent().addClass('selected');
-
-                    })
-                    .fail(function () {
-                        $('.spinner').addClass('hidden');
-                        $('.spinner').parent().parent().addClass('downloadFail');
-                    });
-
-            });
-*/
-        },
-        initComplete: function () {
-
-            setfooterFilters('#dtTimeseries', [0,1,2,3,4]);
-        }
-
-    });
-          
-    //BC - Test - make each table row selectable by clicking anywhere on the row...
-    //Source: https://datatables.net/examples/api/select_row.html
-    //Avoid multiple registrations of the same handler...
-    $('#dtTimeseries tbody').off('click', 'tr', toggleSelected);
-    $('#dtTimeseries tbody').on('click', 'tr', { 'tableId': '#dtTimeseries', 'btnId': '#btnZipSelectionsTS' }, toggleSelected);
-
-    //BC - Test - add a custom toolbar to the table...
-    //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-    $("div.toolbarTS").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS" style="float:left;"/>&nbsp;Select All?</span>' +
-                            '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelectionsTS" value="Zip Selections"/>' +
-                            '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;">Zip started.  To download the archive, please open Download Manager</span>');
-
-    //Add data load event handler...
-    $('#dtTimeseries').off('xhr.dt', dataTableLoad);
-    $('#dtTimeseries').on('xhr.dt', { 'chkbxId': '#chkbxSelectAllTS' }, dataTableLoad);
-
-    //Add click handlers...
-                        
-    //Avoid multiple registrations of the same handler...
-    $('#chkbxSelectAllTS').off('click', selectAll);
-    $('#chkbxSelectAllTS').on('click', { 'tableId': '#dtTimeseries', 'chkbxId': '#chkbxSelectAllTS', 'btnId': '#btnZipSelectionsTS' }, selectAll);
-
-    //Avoid multiple registrations of the same handler...
-    $('#btnZipSelectionsTS').off('click', zipSelections);
-    $('#btnZipSelectionsTS').on('click', { 'tableId': '#dtTimeseries', 'chkbxId': '#chkbxSelectAllTS' }, zipSelections);
-    return oTable;
 }
 
 //Create 'select'-based filters for the input tableId and columns array
@@ -1814,44 +1709,37 @@ function addRowStylesDM(newrow) {
 
 function selectAll(event) {
 
-    //Check for disabled button...
-//    if ($(this).hasClass("disabled")) {
-//        event.preventDefault();
-//        return false;
-//    }
-
-    //Retrieve all the table's RENDERED <tr> elements whether visible or not...
+    //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
     //Source: http://datatables.net/reference/api/rows().nodes()
-    //var table = $('#dtMarkers').DataTable();
     var table = $(event.data.tableId).DataTable();
-    var rows = table.rows();
-    var nodesRendered = rows.nodes();
-
+    var rows = table.rows({'order': 'current', 'search': 'applied'});    //Retrieve rows per current sort/search order...
+    var nodesRendered = rows.nodes();                                    //Retrieve all the rendered nodes for these rows
+                                                                         //NOTE: Rendered nodes retrieved in the same order as the rows...
     var jqueryObjects = nodesRendered.to$();    //Convert to jQuery Objects!!
     var className = 'selected';
 
-    //Remove selected class from all rows...
+    //Remove selected class from all rendered rows...
     jqueryObjects.removeClass(className);
-    selectedTimeSeriesCount = 0;
 
-    //Apply 'selected' class to 'top 50' rows, if indicated 
+    //Apply 'selected' class to the 'top' <selectedTimeSeriesMax> rendered nodes, if indicated 
     if ($(event.data.chkbxId).prop("checked")) {
         var length = nodesRendered.length;
-
+        
+        //For each rendered node...
         for (var i = 0; i < length; ++i) {
-            var node = nodesRendered[i];
-            //var indx = node.rowIndex; 
-            var indx = node._DT_RowIndex;
-            if ((0 <= indx) && (indx < selectedTimeSeriesMax)) {
-                var jqueryObject = $(node);
-    var className = 'selected';
 
-                if ((null != jqueryObject) && (!jqueryObject.hasClass(className))) {
-                    jqueryObject.addClass(className);
-                    ++selectedTimeSeriesCount;
+            //Determine the position of the associated row in the current sort/search order...
+            var position = rows[0].indexOf(nodesRendered[i]._DT_RowIndex)
+            
+            if (position < selectedTimeSeriesMax) {
+                //Row is within the 'top' <selectedTimeSeriesMax> - apply class...
+                var jqueryObject = $(nodesRendered[i]);
+
+                if (null !== jqueryObject) {
+                    jqueryObject.addClass(className);   //Apply class...
                 }
             }
-    }
+        }
     }
 
     //Check state of 'Zip Selections' button...
@@ -2190,6 +2078,7 @@ function getNextTaskId() {
     return ((++taskCount).toString() + '@' + date.getHours().toString() + ':' + date.getMinutes().toString() + ':' + date.getSeconds().toString()); 
 }
 
+//Data table for data tab
 function setUpTimeseriesDatatable() {
     if (clusteredMarkersArray.length == 0)
     {
@@ -2215,7 +2104,6 @@ function setUpTimeseriesDatatable() {
         "ajax": actionUrl,
         "dom": 'C<"clear">l<"toolbarTS">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
         "deferRender": true,
-        "aaSorting": [],        //Disable initial sorting...
         colVis: {
             activate: "mouseover",
             exclude: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
@@ -2253,17 +2141,21 @@ function setUpTimeseriesDatatable() {
         "scrollX": true, //removed to fix column alignment 
         "createdRow": function (row, data, index) {
 
-            //BC - TEST - if row is in top '50', mark the row as selected per check box state...
+            //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
            if ($('#chkbxSelectAllTS').prop('checked')) {
-                 if (index < selectedTimeSeriesMax) {
-                     var jqueryObject = $(row);
-                     var className = 'selected';
 
-                     if (!jqueryObject.hasClass(className)) {
-                         jqueryObject.addClass(className);
-                         ++selectedTimeSeriesCount;
-                    }
-                }
+               //Find the position of the new row per the current sort/search order...
+               var table = $('#dtTimeseries').DataTable();
+               var position = table.rows()[0].indexOf(index);
+
+               if (position < selectedTimeSeriesMax) {
+                   var jqueryObject = $(row);
+                   var className = 'selected';
+
+                   if (!jqueryObject.hasClass(className)) {
+                       jqueryObject.addClass(className);
+                   }
+               }
            }
 
             //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
@@ -2311,7 +2203,8 @@ function setUpTimeseriesDatatable() {
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-    $("div.toolbarTS").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS" style="float:left;"/>&nbsp;Select Top 50?</span>' +
+    $("div.toolbarTS").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS" style="float:left;"/>&nbsp;Select Top ' +
+                            selectedTimeSeriesMax.toString() + '?</span>' +
                             '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelectionsTS" value="Zip Selections"/>' +
                             '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;"></span>');
 
