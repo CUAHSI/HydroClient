@@ -17,15 +17,13 @@
             mode: "hide",
             autoApply: true
         },
-
         activate: function (event, data) {
             var title = data.node.title;
             //FT.debug("activate: event=", event, ", data=", data);
             if (!$.isEmptyObject(title)) {
                 //alert("custom node data: " + JSON.stringify(title));
             }
-        }
-        ,
+        },
         lazyLoad: function (event, data) {
              //we can't return values from an event handler, so we
              //pass the result as `data`attribute.
@@ -35,36 +33,44 @@
                
                 dataType: "json"
             });
-        },
+        }//,
+        //BC - 19-Jun-2015 - Disable concept counting - possible later use...
         //BC - Add select handler...
-        select: function (event, data) {
-            var tree = $("#tree").fancytree("getTree");
+        //select: function (event, data) {
+        //    var tree = $("#tree").fancytree("getTree");
 
-            //Check selected 'top' nodes
-            var selectedNodes = tree.getSelectedNodes(true);
-            var length = selectedNodes.length;
+        //    //Check for selected 'second-level' nodes (direct children of the 'top-level' nodes)
+        //    var selectedNodes = tree.getSelectedNodes(true);
+        //    var length = selectedNodes.length;
+        //    var toplevelCount = 0;
 
-            if (selectedConceptsMax <= length) {
-                //Maximum nodes 'top' selected - make all unselected nodes 'unselectable' ...
-                tree.visit(function (node) {                    
-                    if (!node.isSelected()) {
-                        node.unselectable = true;
-                        node.hideCheckbox = true;
-                        node.render(true);
-                    }
-                });
-            }
-            else {
-                //Maximum nodes 'top' NOT selected - make all unselected nodes 'selectable'...
-                tree.visit(function (node) {
-                    if (!node.isSelected()) {
-                        node.unselectable = false;
-                        node.hideCheckbox = false;
-                        node.render(true);
-                    }
-                });
-            }
-        }
+        //    for (var i = 0; i < length; ++i) {
+        //        var parent = selectedNodes[i].parent;
+
+        //        ((null !== parent) && (parent.isTopLevel())) ? ++toplevelCount : toplevelCount;
+        //    }
+
+        //    if (selectedConceptsMax <= toplevelCount) {
+        //        //Maximum 'top-level' nodes selected - make all unselected 'top-level' nodes 'unselectable' ...
+        //        tree.visit(function (node) {                    
+        //            if (node.isTopLevel() && (!node.isSelected())) {
+        //                node.unselectable = true;
+        //                //node.hideCheckbox = true;
+        //                node.render();
+        //            }
+        //        });
+        //    }
+        //    else {
+        //        //Maximum 'top-level' nodes NOT selected - make all unselected 'top-level' nodes 'selectable'...
+        //        tree.visit(function (node) {
+        //            if (node.isTopLevel() && (!node.isSelected())) {
+        //                node.unselectable = false;
+        //                //node.hideCheckbox = false;
+        //                node.render();
+        //            }
+        //        });
+        //    }
+        //}
     });
     
 

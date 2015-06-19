@@ -20,7 +20,8 @@ var sidepanelVisible = false;
 
 var selectedTimeSeriesMax = 25;
 
-var selectedConceptsMax = 4;
+//BC - 19-Jun-2015 - Disable concept counting - possible later use...
+//var selectedConceptsMax = 4;
 
 //lisy of services that only have 
 var ArrayOfNonObservedServices = ["1","3","4","8","226","243","244","262","267","274"]
@@ -186,23 +187,24 @@ function initialize() {
        });
    });
 
+    //BC - 19-Jun-2015 - Disable concept counting - possible later use...
     //Click handler for 'Most Common' concept checkboxes...
-   $('.topCategories').click(function (event) {
+   //$('.topCategories').click(function (event) {
     
-       if (!$(event.target).prop('checked')) {
-           //Checkbox unchecked - enable all unchecked checkboxes
-           ($("input[name='keywords']").not(':checked')).prop( "disabled", false );
-       }
-       else {
-           //Checkbox checked - if maximum reached, disable all unchecked checboxes
-           var checked = $("input[name='keywords']:checked");
-           var length = checked.length;
+   //    if (!$(event.target).prop('checked')) {
+   //        //Checkbox unchecked - enable all unchecked checkboxes
+   //        ($("input[name='keywords']").not(':checked')).prop( "disabled", false );
+   //    }
+   //    else {
+   //        //Checkbox checked - if maximum reached, disable all unchecked checboxes
+   //        var checked = $("input[name='keywords']:checked");
+   //        var length = checked.length;
 
-           if (selectedConceptsMax <= length) {
-               ($("input[name='keywords']").not(':checked')).prop("disabled", true);
-           }
-        }
-   });
+   //        if (selectedConceptsMax <= length) {
+   //            ($("input[name='keywords']").not(':checked')).prop("disabled", true);
+   //        }
+   //     }
+   //});
 
    $('#btnTopSelect').click(function () {
 
