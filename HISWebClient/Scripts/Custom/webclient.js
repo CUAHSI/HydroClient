@@ -1325,8 +1325,9 @@ function setupServices()
 
     $('#dtServices tbody').on('click', 'tr', function () {
         $(this).toggleClass('selected');
-        var id = this.cells[0].innerHTML;
-        if ($.inArray(id, mySelectedServices ) == -1) {
+        //BC - Correct cell value reference for service id...
+        var id = this.cells[5].innerHTML;
+        if ($.inArray(id, mySelectedServices) == -1) {
             //add
             mySelectedServices.push(id);
         }
