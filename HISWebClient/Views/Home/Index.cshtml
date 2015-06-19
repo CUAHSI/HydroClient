@@ -71,22 +71,33 @@ var n, o, d, i, s, a = [],
                 <div id="menu">
                     @*   <div><img class="expander" alt="Expand" src="~/Content/Images/closetop.png" /></div>*@
                     <div class="" id="selectors">
-                        <form id="Search" class="searchForm" >
+                        <form id="Search" class="searchForm ">
                             <!-- Button trigger modal -->
                             <fieldset>
                                 <legend style="margin-bottom: 0.5em;">
                                     <button class="btn btn-primary btn-block" id="btnDateRange" data-toggle="modal" data-target="#SelectDateModal">Select Date Range</button>
                                 </legend>
-                                <div class="input-daterange">
-                                    <label style="margin-left: 2em;">From: <input id="startDate"/></label>
-                                    <label style="margin-left: 2em;">To:<input id="endDate" style="margin-left: 1.5em;" /></label>
-                                </div>
+                              
+
+                                <div style="width:40px;display:inline-block;vertical-align:top;font-weight:bold;margin-left:0.5em">From: </div>
+                                <div style="display:inline-block;">
+                                    <div style="display:inline-block;">
+                                        <input disabled type="text" style="margin:0;padding:0;" size="12" readonly id="startDate" />  <br />                                        
+                                    </div>
+                                    
+                                </div> 
+                                <div style="width:40px;display:inline-block;vertical-align:top;font-weight:bold;margin-left:0.5em">To: </div>
+                                <div style="display:inline-block;">
+                                    <div style="display:inline-block;">
+                                        <input disabled type="text" style="margin:0;padding:0;" size="12" readonly id="endDate" />  <br />
+                                    </div>
+                                </div>      
                             </fieldset>
                             <fieldset style="margin-top: 1em;">
                                 <legend style="margin-bottom: 0.25em;">
                                     <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectVariableModal">Select Concepts(s)</button>
                                 </legend>
-                                <div style="overflow-y: scroll; max-height: 10em;">
+                                <div style="overflow-y: scroll; max-height: 20em;">
                                     <ol id="olConcepts" style="list-style: circle;">
                                         <li>All</li>
                                     </ol>
@@ -218,10 +229,9 @@ var n, o, d, i, s, a = [],
                 <div class="col-md-12">
                     <div class="row">
                         <div class="input-daterange">
-                            <input id="startDateModal" />
+                            <input class="input-msclear" id="startDateModal"  />
                             <span class="add-on">to</span>
-                            <input id="endDateModal" />
-                            
+                            <input class="input-msclear" id="endDateModal" />                            
                         </div>
                     </div>
                 </div>
@@ -239,12 +249,12 @@ var n, o, d, i, s, a = [],
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 class="modal-title" id="myModalLabel">Please select your Keyword(s) </h3>
+                <h3 class="modal-title" id="myModalLabel">Please select your Keyword(s)</h3>
                 <h6>(No selection searches all)</h6>
 
             </div>
             <div class="modal-body">
-                <div class="col-md-12">
+                <div class="col-lg-12">
                     <div class="tabbable">
                         <!-- Only required for left/right tabs -->
                         <ul class="nav nav-tabs">
@@ -252,9 +262,9 @@ var n, o, d, i, s, a = [],
                             <li><a href="#tab2" data-toggle="tab">Full List</a></li>
                         </ul>
                         <div class="tab-content">
-                            <div class="tab-pane active" id="tab1">
+                            <div class="tab-pane active  id="tab1">
                                 <div class="row">
-                                    <div class="controls col-md-4">
+                                    <div class="controls col-lg-4">
 
                                         <label class="checkbox">
                                             <input type="checkbox" name="keywords" value="Discharge, stream" id="inlineCheckbox2" class="topCategories"> Discharge
@@ -269,11 +279,11 @@ var n, o, d, i, s, a = [],
                                             <input type="checkbox" name="keywords" value="Groundwater Level" id="inlineCheckbox4" class="topCategories"> Groundwater Level
                                         </label>
                                         @*<label class="checkbox">
-                                                <input type="checkbox" name="keywords" value="dissolved solids, total" id="inlineCheckbox5" class="topCategories"> Total Dissolved Solids
-                                            </label>
-                                            <label class="checkbox">
-                                                <input type="checkbox" name="keywords" value="Methane" id="inlineCheckbox6" class="topCategories"> Methane
-                                            </label>*@
+                        <input type="checkbox" name="keywords" value="dissolved solids, total" id="inlineCheckbox5" class="topCategories"> Total Dissolved Solids
+                    </label>
+                    <label class="checkbox">
+                        <input type="checkbox" name="keywords" value="Methane" id="inlineCheckbox6" class="topCategories"> Methane
+                    </label>*@
                                         <label class="checkbox">
                                             <input type="checkbox" name="keywords" value="Temperature, Air" id="inlineCheckbox7" class="topCategories">	Air Temperature
                                         </label>
@@ -286,7 +296,7 @@ var n, o, d, i, s, a = [],
                                         </label>
                                     </div>
 
-                                    <div class="controls col-md-4">
+                                    <div class="controls col-lg-4">
                                         <label class="checkbox">
                                             <input type="checkbox" name="keywords" value="Nutrient" id="inlineCheckbox9" class="topCategories">	Nutrient
                                         </label>
@@ -371,7 +381,7 @@ var n, o, d, i, s, a = [],
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h3 class="modal-title" id="myModalLabel">Click to select Data Services (No selection searches all)</h3>
-                <input type="checkbox" name="checkOnlyObservedValues" id="checkOnlyObservedValues" class="" data-inline="true" data-mini="true" /><label for="checkOnlyObservedValues">Select Only services with observed values</label>                                         
+                <input type="checkbox" name="checkOnlyObservedValues" id="checkOnlyObservedValues" class="" data-inline="true" data-mini="true" /><label for="checkOnlyObservedValues">Exclude Gridded data services ()</label>                                         
 
             </div>
             <div class="modal-body-full">
@@ -459,7 +469,7 @@ var n, o, d, i, s, a = [],
 @*<script src="//cdn.datatables.net/colvis/1.1.1/js/dataTables.colVis.min.js"></script>*@
 
 
-<script src="~/Scripts/Google/keydragzoom_packed.js"></script>
+@*<script src="~/Scripts/Google/keydragzoom_packed.js"></script>*@
 @*<script src="~/Scripts/bootstrap-contextmenu.js"></script>*@
 <script src="~/Scripts/Custom/webclient.js"></script>
 <script src="~/Scripts/Custom/randomId.js"></script>

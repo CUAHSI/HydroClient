@@ -37,34 +37,34 @@
             });
         },
         //BC - Add select handler...
-        select: function (event, data) {
-            var tree = $("#tree").fancytree("getTree");
+        //select: function (event, data) {
+        //    var tree = $("#tree").fancytree("getTree");
 
-            //Check selected 'top' nodes
-            var selectedNodes = tree.getSelectedNodes(true);
-            var length = selectedNodes.length;
+        //    //Check selected 'top' nodes
+        //    var selectedNodes = tree.getSelectedNodes(true);
+        //    var length = selectedNodes.length;
 
-            if (selectedConceptsMax <= length) {
-                //Maximum nodes 'top' selected - make all unselected nodes 'unselectable' ...
-                tree.visit(function (node) {                    
-                    if (!node.isSelected()) {
-                        node.unselectable = true;
-                        node.hideCheckbox = true;
-                        node.render(true);
-                    }
-                });
-            }
-            else {
-                //Maximum nodes 'top' NOT selected - make all unselected nodes 'selectable'...
-                tree.visit(function (node) {
-                    if (!node.isSelected()) {
-                        node.unselectable = false;
-                        node.hideCheckbox = false;
-                        node.render(true);
-                    }
-                });
-            }
-        }
+        //    if (selectedConceptsMax <= length) {
+        //        //Maximum nodes 'top' selected - make all unselected nodes 'unselectable' ...
+        //        tree.visit(function (node) {                    
+        //            if (!node.isSelected()) {
+        //                node.unselectable = true;
+        //                node.hideCheckbox = true;
+        //                node.render(true);
+        //            }
+        //        });
+        //    }
+        //    else {
+        //        //Maximum nodes 'top' NOT selected - make all unselected nodes 'selectable'...
+        //        tree.visit(function (node) {
+        //            if (!node.isSelected()) {
+        //                node.unselectable = false;
+        //                node.hideCheckbox = false;
+        //                node.render(true);
+        //            }
+        //        });
+        //    }
+        //}
     });
     
 

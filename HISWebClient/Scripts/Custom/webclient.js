@@ -24,7 +24,7 @@ var selectedTimeSeriesMax = 50;
 var selectedConceptsMax = 4;
 
 //lisy of services that only have 
-var ArrayOfNonObservedServices = ["1","3","4","8","226","243","244","262","267","274"]
+var ArrayOfNonObservedServices = ["84","187","189","226","262","267","274"]
 
 var taskCount = 0;
 
@@ -32,7 +32,7 @@ $(document).ready(function () {
 
     $("#pageloaddiv").hide();
     initialize();
-   
+
 })
 
 function initialize() {
@@ -56,6 +56,8 @@ function initialize() {
         mapTypeControl: true,
         scaleControl: true,
         overviewMapControl: true,
+        overviewMapControlOptions: {
+            opened: true },     
         zoomControl: true,
         panControl:false,        
         zoomControlOptions: {     
@@ -69,8 +71,7 @@ function initialize() {
         },
     };
 
-    $("#map-canvas").height(getMapHeight()) //setMapHeight
-    $("#map-canvas").width(getMapWidth()) //setMapWidth
+    //get refernce to map sizing of window happens later to prevent gap   
     map = new google.maps.Map(document.getElementById("map-canvas"), mapProp);
     
 
@@ -149,8 +150,8 @@ function initialize() {
     //Button click handler for Select Date Range...
     $('#btnDateRange').on('click', function (event) {
         //Assign current start and end date values to their modal counterparts...
-        $('#startDateModal').val($('#startDate').val());
-        $('#endDateModal').val($('#endDate').val());
+       // $('#startDateModal').val($('#startDate').val());
+       // $('#endDateModal').val($('#endDate').val());
     });
 
     //Button click handler for Date Range Modal Save 
@@ -376,6 +377,9 @@ function initialize() {
         return false;
     });
 
+    $("#map-canvas").height(getMapHeight()) //setMapHeight
+    $("#map-canvas").width(getMapWidth) //setMapWidth
+    google.maps.event.trigger(map, "resize");
 };
   
 function validateQueryParameters(area, selectedKeys) {
@@ -433,6 +437,7 @@ function validateQueryParameters(area, selectedKeys) {
     return true;
 }
 
+
 function getMapHeight()
 {
     
@@ -446,10 +451,12 @@ function getMapWidth(panelVisible)
     var panelwidth = 0;
     //panelVisible
     //if (panelVisible) 
+    //to fix browser problems calculating size
+    var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;  
     panelwidth = $('#slider').width();
-
+    //alert(width + ',' + panelwidth)
     //var mapWidth = $(window).width() - panelwidth + "px";
-    var mapWidth = $(window).width() - panelwidth + "px";
+    var mapWidth = width - panelwidth + "px";
     return mapWidth;
 }
 
@@ -472,7 +479,7 @@ function addSlider()
 {
     var _slider = $("#slider").slideReveal({
         //BC - Increase slider panel width...
-        width: 300,
+        width: 225,
         push: false,
         position: "right",
         top: 50,
@@ -823,7 +830,9 @@ function getFormData()
     var ne = bounds.getNorthEast(); // LatLng of the north-east corner
     var sw = bounds.getSouthWest(); // LatLng of the south-west corder 
     var startDate = $("#startDate").val()
+    if (checkReg2(startDate)) { bootbox.alert("Please validate your From: date"); return}
     var endDate = $("#endDate").val()
+    if (checkReg2(endDate)) { bootbox.alert("Please validate your To: date"); return }
     var keywords = new Array();
     //variable.push  = $("#variable").val()
 
@@ -904,18 +913,31 @@ function getFormData()
 
     return formdata;
 }
+//http://stackoverflow.com/questions/5465375/javascript-date-regex-dd-mm-yyyy
 
+function checkReg2(date) {
+    var reg = /^(((0[1-9]|[12]\d|3[01])\/(0[13578]|1[02])\/((19|[2-9]\d)\d{2}))|((0[1-9]|[12]\d|30)\/(0[13456789]|1[012])\/((19|[2-9]\d)\d{2}))|((0[1-9]|1\d|2[0-8])\/02\/((19|[2-9]\d)\d{2}))|(29\/02\/((1[6-9]|[2-9]\d)(0[48]|[2468][048]|[13579][26])|((16|[2468][048]|[3579][26])00))))$/g;
+
+    if (reg.test(date)) {
+        return true
+
+    } else {
+        return false
+    }
+}
 //upddate map wit new clusters
 function updateMap(isNewRequest) {
     
   
     if (clusteredMarkersArray.length == 0 && isNewRequest == false) return;//only map navigation
-    $("#pageloaddiv").show();
     var formData = getFormData();
+    if (typeof formData == "undefined") return; //error in formdate retrieval
 
+    $("#pageloaddiv").show();   
+    
     //get the action-url of the form
     var actionurl = '/home/updateMarkers';
-    
+   
     if (clusteredMarkersArray.length == 0) {
 
 
@@ -1299,7 +1321,7 @@ function setupServices()
 
     $('#dtServices tbody').on('click', 'tr', function () {
         $(this).toggleClass('selected');
-        var id = this.cells[0].innerHTML;
+        var id = this.cells[5].innerHTML;
         if ($.inArray(id, mySelectedServices ) == -1) {
             //add
             mySelectedServices.push(id);
