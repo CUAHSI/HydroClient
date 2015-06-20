@@ -43,13 +43,15 @@ var n, o, d, i, s, a = [],
             <li class="btn-separator"></li>
             <!-- li class="glyphicon glyphicon-option-vertical"></li -->
             <li class="navbar-custom"><a href="" id="downloadmanagerTab" data-toggle="modal" data-target="#dmModal"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</a></li>
+            <li class="btn-separator"></li>
+            <li class="navbar-custom"><a href="" id="contactTab" data-toggle="modal" data-target="#contactModal"><span class="glyphicon glyphicon-earphone"></span> Contact</a></li>
         </ul>
     </div>
     <div class="tab-content">
         <div class="tab-pane" id="dataview">
             <div class="modal-header-full">
                 <h3 class="modal-title" id="myModalLabel">Timeseries in Current Map Area</h3>
-                <h5 style="margin-bottom: 1em;">To zip one or more data files, please click the associated table row(s) and then click the 'Zip Selections' button.</h5>
+                <h5 style="margin-bottom: 1em;">To download one or more data files, please click the associated table row(s) and click the 'Zip Selections' button.</h5>
             </div>
             <table id="dtTimeseries" class="display" cellspacing="0">
                 <thead>
@@ -82,20 +84,20 @@ var n, o, d, i, s, a = [],
                                 <div style="width:40px;display:inline-block;vertical-align:top;font-weight:bold;margin-left:0.5em">From: </div>
                                 <div style="display:inline-block;">
                                     <div style="display:inline-block;">
-                                        <input disabled type="text" style="margin:0;padding:0;" size="12" readonly id="startDate" />  <br />                                        
-                                    </div>
+                                        <input readonly type="text" style="margin:0;padding:0;" size="12"  id="startDate" />  <br />                                        
+                                </div>
                                     
                                 </div> 
                                 <div style="width:40px;display:inline-block;vertical-align:top;font-weight:bold;margin-left:0.5em">To: </div>
                                 <div style="display:inline-block;">
                                     <div style="display:inline-block;">
-                                        <input disabled type="text" style="margin:0;padding:0;" size="12" readonly id="endDate" />  <br />
+                                        <input readonly type="text" style="margin:0;padding:0;" size="12" id="endDate" />  <br />
                                     </div>
                                 </div>      
                             </fieldset>
                             <fieldset style="margin-top: 1em;">
                                 <legend style="margin-bottom: 0.25em;">
-                                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectVariableModal">Select Concepts(s)</button>
+                                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectVariableModal">Select Keyword(s)</button>
                                 </legend>
                                 <div style="overflow-y: scroll; max-height: 20em;">
                                     <ol id="olConcepts" style="list-style: circle;">
@@ -105,7 +107,7 @@ var n, o, d, i, s, a = [],
                             </fieldset>
                             <fieldset style="margin-top: 1em;">
                                 <legend style="margin-bottom: 0.25em;">
-                                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectServicesModal">Select Services(s)</button>
+                                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectServicesModal">Select Data Services(s)</button>
                                 </legend>
                                 @*<div style="overflow-y: scroll; max-height: 10em;">*@
                                 <div style="max-height: 10em;">
@@ -218,6 +220,39 @@ var n, o, d, i, s, a = [],
     </div>
 </div>
 
+<!-- Modal dialog for Contact -->
+<div class="modal fade" id="contactModal" tabindex="-1" role="dialog" aria-labelledby="contactModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
+                <h3 class="modal-title" id="myModalLabel">Contact</h3>
+            </div>
+            <div class="modal-body">
+
+                <div style="margin-left: 2.0em;">
+                    <address style="margin-top: 2.0em;">
+                        Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)<br />
+                        Boston Office<br />
+                        196 Boston Ave, Suite 3000<br />
+                        Medford, MA 02155<br />
+                        Phone: (339) 221-5400<br />
+                        Fax: (781) 219-4029<br />
+                    </address>
+
+                    <address>
+                        <strong>Support:</strong>   <a href="mailto:help@cuahsi.org">help@cuahsi.org</a><br />
+                    </address>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <!--p>This is the modal footer!!</p-->
+            </div>
+       </div>
+    </div>
+</div>
+
+
 <div class="modal fade" id="SelectDateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -229,7 +264,7 @@ var n, o, d, i, s, a = [],
                 <div class="col-md-12">
                     <div class="row">
                         <div class="input-daterange">
-                            <input class="input-msclear" id="startDateModal"  />
+                            <input class="input-msclear" id="startDateModal" value="" />
                             <span class="add-on">to</span>
                             <input class="input-msclear" id="endDateModal" />                            
                         </div>
@@ -262,7 +297,7 @@ var n, o, d, i, s, a = [],
                             <li><a href="#tab2" data-toggle="tab">Full List</a></li>
                         </ul>
                         <div class="tab-content">
-                            <div class="tab-pane active  id="tab1">
+                            <div class="tab-pane active"  id="tab1">
                                 <div class="row">
                                     <div class="controls col-lg-4">
 
@@ -279,11 +314,11 @@ var n, o, d, i, s, a = [],
                                             <input type="checkbox" name="keywords" value="Groundwater Level" id="inlineCheckbox4" class="topCategories"> Groundwater Level
                                         </label>
                                         @*<label class="checkbox">
-                        <input type="checkbox" name="keywords" value="dissolved solids, total" id="inlineCheckbox5" class="topCategories"> Total Dissolved Solids
-                    </label>
-                    <label class="checkbox">
-                        <input type="checkbox" name="keywords" value="Methane" id="inlineCheckbox6" class="topCategories"> Methane
-                    </label>*@
+                                                <input type="checkbox" name="keywords" value="dissolved solids, total" id="inlineCheckbox5" class="topCategories"> Total Dissolved Solids
+                                            </label>
+                                            <label class="checkbox">
+                                                <input type="checkbox" name="keywords" value="Methane" id="inlineCheckbox6" class="topCategories"> Methane
+                                            </label>*@
                                         <label class="checkbox">
                                             <input type="checkbox" name="keywords" value="Temperature, Air" id="inlineCheckbox7" class="topCategories">	Air Temperature
                                         </label>
@@ -381,11 +416,11 @@ var n, o, d, i, s, a = [],
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h3 class="modal-title" id="myModalLabel">Click to select Data Services (No selection searches all)</h3>
-                <input type="checkbox" name="checkOnlyObservedValues" id="checkOnlyObservedValues" class="" data-inline="true" data-mini="true" /><label for="checkOnlyObservedValues">Exclude Gridded data services ()</label>                                         
+                <input type="checkbox" name="checkOnlyObservedValues" id="checkOnlyObservedValues" class="" data-inline="true"  /><label for="checkOnlyObservedValues"> Exclude Gridded data services, e.g. NLDAS</label>                                         
 
             </div>
             <div class="modal-body-full">
-                <table id="dtServices" class="display" cellspacing="0" >
+                            <table id="dtServices" class="display" cellspacing="0">
                     <thead>
                         <tr>
                             @Html.Partial("_DatatableDataservicesColumns")
@@ -400,8 +435,8 @@ var n, o, d, i, s, a = [],
                 </table>
             </div>
             <div class="modal-footer">
-                <button type="button" id="cancelServiceSelection" class="btn btn-default alert-info" data-dismiss="modal">Cancel</button>
-                <button type="button" id="saveServiceSelection" class="btn btn-default btn-primary" data-dismiss="modal">Save Selection</button>
+                @*<button type="button" id="cancelServiceSelection" class="btn btn-default alert-info" data-dismiss="modal">Cancel</button>*@
+                <button type="button" id="saveServiceSelection" class="btn btn-default btn-primary" data-dismiss="modal">Close</button>
             </div>
 
             <!-- /.modal-content -->

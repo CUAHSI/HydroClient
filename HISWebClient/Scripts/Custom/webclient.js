@@ -18,10 +18,10 @@ var timeSeriesRequestStatus;
 var slider;
 var sidepanelVisible = false;
 
-var selectedTimeSeriesCount = 0;
-var selectedTimeSeriesMax = 50;
+var selectedTimeSeriesMax = 25;
 
-var selectedConceptsMax = 4;
+//BC - 19-Jun-2015 - Disable concept counting - possible later use...
+//var selectedConceptsMax = 4;
 
 //lisy of services that only have 
 var ArrayOfNonObservedServices = ["84","187","189","226","262","267","274"]
@@ -32,7 +32,7 @@ $(document).ready(function () {
 
     $("#pageloaddiv").hide();
     initialize();
-
+   
 })
 
 function initialize() {
@@ -41,15 +41,15 @@ function initialize() {
     //var myCenter = new google.maps.LatLng(42.3, -71);//boston
    // var myCenter = new google.maps.LatLng(41.7, -111.9);//Salt Lake
     
-
-    //infoWindow = new google.maps.InfoWindow();
+      //BC - disable infoWindow for now...
+//    infoWindow = new google.maps.InfoWindow();
 
     //init list od datatables for modal 
     myServicesList = setupServices();
 
     var mapProp = {
         center: myCenter,
-        zoom: 9,
+        zoom: 5,
         draggable: true,
         scrollwheel: true,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
@@ -144,20 +144,26 @@ function initialize() {
     //Set start and end of date range...
     var initDate = new Date();
 
-    $('#startDate').val((initDate.getMonth() + 1).toString() + '/' + initDate.getDate().toString() + '/' + (initDate.getFullYear() - 1).toString());
-    $('#endDate').val((initDate.getMonth() + 1).toString() + '/' + initDate.getDate().toString() + '/' + (initDate.getFullYear()).toString());
+    $('#startDate').val(('0' +(initDate.getMonth() + 1).toString().slice(-2)) + '/' + initDate.getDate().toString() + '/' + (initDate.getFullYear() - 1).toString());
+    $('#endDate').val(('0' +(initDate.getMonth() + 1).toString().slice(-2)) + '/' + initDate.getDate().toString() + '/' + (initDate.getFullYear()).toString());
 
     //Button click handler for Select Date Range...
     $('#btnDateRange').on('click', function (event) {
         //Assign current start and end date values to their modal counterparts...
-       // $('#startDateModal').val($('#startDate').val());
-       // $('#endDateModal').val($('#endDate').val());
+        $('#startDateModal').val($('#startDate').val());
+        $('#endDateModal').val($('#endDate').val());
     });
 
     //Button click handler for Date Range Modal Save 
     $('#btnDateRangeModalSave').on('click', function (event) {
         //Assign current start and end date values to their modal counterparts...
+       
+        var startDateModal = $("#startDateModal").val()
+        if (checkReg2(startDateModal) == false) { bootbox.alert("Please validate your From: date"); return }
         $('#startDate').val($('#startDateModal').val());
+
+        var endDateModal = $("#endDateModal").val()
+        if (checkReg2(endDateModal)==false) { bootbox.alert("Please validate your To: date"); return }
         $('#endDate').val($('#endDateModal').val());
     });
 
@@ -188,88 +194,59 @@ function initialize() {
        });
    });
 
+    //BC - 19-Jun-2015 - Disable concept counting - possible later use...
     //Click handler for 'Most Common' concept checkboxes...
-   $('.topCategories').click(function (event) {
+   //$('.topCategories').click(function (event) {
     
-       if (!$(event.target).prop('checked')) {
-           //Checkbox unchecked - enable all unchecked checkboxes
-           ($("input[name='keywords']").not(':checked')).prop( "disabled", false );
-       }
-       else {
-           //Checkbox checked - if maximum reached, disable all unchecked checboxes
-           var checked = $("input[name='keywords']:checked");
-           var length = checked.length;
+   //    if (!$(event.target).prop('checked')) {
+   //        //Checkbox unchecked - enable all unchecked checkboxes
+   //        ($("input[name='keywords']").not(':checked')).prop( "disabled", false );
+   //    }
+   //    else {
+   //        //Checkbox checked - if maximum reached, disable all unchecked checboxes
+   //        var checked = $("input[name='keywords']:checked");
+   //        var length = checked.length;
 
-           if (selectedConceptsMax <= length) {
-               ($("input[name='keywords']").not(':checked')).prop("disabled", true);
-           }
-        }
-   });
+   //        if (selectedConceptsMax <= length) {
+   //            ($("input[name='keywords']").not(':checked')).prop("disabled", true);
+   //        }
+   //     }
+   //});
 
    $('#btnTopSelect').click(function () {
 
-        //Unset/enable all 'Full' tab entries...
-        $("#tree").fancytree("getTree").visit(function (node) {
-                            node.setSelected(false);
-                            node.unselectable = false;
-                            node.hideCheckbox = false;
-        });
-                        //return false;
-
-        //Clear and re-populate concepts list...
-        var list = $('#olConcepts');
-        
-        list.empty();
-                    
-        var checked = $("input[name='keywords']:checked");
-        var length = checked.length;
-
-        if (0 < length) {
-            //Certain concepts selected...
-            for(var i = 0; i < length; ++i) {
-                list.append('<li>' + checked[i].value + '</li>');
-            }
-
-        }
-        else {
-            //All concepts selected...
-            list.append('All');
-        }
+       updateKeywordList("Common");       
 
     });
 
     $('#btnHierarchySelect').click(function () {
                         
-        //Uncheck/enable all 'Common' tab checkboxes
-        $("input[name='keywords']:checked").attr('checked', false);
-        $("input[name='keywords']").prop("disabled", false);
+        updateKeywordList();
+        //if (0 < length) {
+        //    //Certain concepts selected...
+        //    for (var i = 0; i < length; ++i) {
 
-        //return false;
+        //        if (selectedNodes[i].children !== null)//all children are selected
+        //        {
+        //            //$.map(node.children, function (node) {
+        //            //       return  node.title ;
+        //            //});
+        //            allChildrenSelected = true;
+        //            list.append('<li>' + selectedNodes[i].title + '</li>');
+                    
 
-        //Clear and re-populate concepts list...
-        var list = $('#olConcepts');
-
-        list.empty();
-
-        var tree = $("#tree").fancytree("getTree");
-
-        //var checked = $("input[name='keywords']:checked");
-        //var length = checked.length;
-        var selectedNodes = tree.getSelectedNodes();
-        var length = selectedNodes.length;
-
-        if (0 < length) {
-            //Certain concepts selected...
-            for(var i = 0; i < length; ++i) {
-                list.append('<li>' + selectedNodes[i].title + '</li>');
-            }
-        }
-        else {
-            //All concepts selected...
-            list.append('All');
-        }
+        //        }
+        //        if (!allChildrenSelected) {
+        //            list.append('<li>' + selectedNodes[i].title + '</li>');
+        //        }
+                
+        //    }
+        //}
+        //else {
+        //    //All concepts selected...
+        //    list.append('All');
+        //}
     });
-
 
     $("input[name='checkOnlyObservedValues']").change(function (e) {
 
@@ -308,7 +285,7 @@ function initialize() {
                 
             }
         }
-        
+        updateServicesList();
     });
 
     $("#Search").submit(function (e) {       
@@ -327,6 +304,8 @@ function initialize() {
             return $(this).val();
         }).get();
            
+        var list = $('#olConcepts');
+
         if (!validateQueryParameters(area, selectedKeys)) return;
 
         // Construct the polygon.
@@ -386,36 +365,36 @@ function validateQueryParameters(area, selectedKeys) {
     //validate inputs
 
     if (area > 100000) {
-        bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search.  <br> Please limit search area to less than 100000 sq km and/or reduce search keywords (max 4).<h4>")
+        bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search.  <br> Please limit search area to less than 100000 sq km and/or reduce search keywords.<h4>")
         return false;
     }
 
     if (area > 25000 && selectedKeys.length == 0) {
-        bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search for All keywords.  <br> Please limit search area to less than 25000 sq km and/or reduce search keywords (max 4) .<h4>")
+        bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search for <strong>All</strong> keywords.  <br> Please limit search area to less than 25000 sq km and/or reduce search keywords.<h4>")
         return false;
     }
-    if (area > 50000 && selectedKeys.length == 1) {
+    if (area > 25000 && selectedKeys.length == 1) {
 
-        if (area > 50000) {
-            bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search.  <br> Please limit search area to less than 50000 sq km and/or reduce search keywords (max 4).<h4>")
-            return false;
-        }
-        else {
+        //if (area > 50000) {
+        //    bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search.  <br> Please limit search area to less than 50000 sq km and/or reduce search keywords.<h4>")
+        //    return false;
+        //}
+        //else {
             bootbox.confirm("<h4>Current selected area is " + area + " sq km. This search can take a long time. Do you want to continue?<h4>", function () {
 
                 updateMap(true)
             });
-        }
+        //}
     }
     else {
 
-        if (area > 25000 && area < 50000 && selectedKeys.length > 5) {
-            bootbox.alert("<h4>Current selected area is " + area + " sq km and you have cselecte more than 4 keywords. Please reduce area or number of keywords?<h4>", function () {
+        if (area > 25000 && selectedKeys.length > 1) {
+            bootbox.alert("<h4>Current selected area is " + area + " sq km and you have cselecte more than 1 keywords. Please reduce area or number of keywords to 1?<h4>", function () {
 
                 return false;
             });
         }
-        if (area > 25000 && selectedKeys.length < 5) {
+        if (area < 25000 && selectedKeys.length > 1) {
             bootbox.confirm("<h4>Current selected area larger than 2500 sq km and you selected several keywords. This search can take a long time and might timeout. Do you want to continue?<h4>", function () {
 
                 updateMap(true)
@@ -437,6 +416,73 @@ function validateQueryParameters(area, selectedKeys) {
     return true;
 }
 
+function updateKeywordList(type) {
+    if (type == "Common") {
+        //Unset/enable all 'Full' tab entries...
+        $("#tree").fancytree("getTree").visit(function (node) {
+            node.setSelected(false);
+            node.unselectable = false;
+            node.hideCheckbox = false;
+        });
+        //return false;
+
+        //Clear and re-populate concepts list...
+        var list = $('#olConcepts');
+
+        list.empty();
+
+        var checked = $("input[name='keywords']:checked");
+        var length = checked.length;
+
+        if (0 < length) {
+            //Certain concepts selected...
+            for (var i = 0; i < length; ++i) {
+                list.append('<li>' + checked[i].value + '</li>');
+            }
+
+        }
+        else {
+            //All concepts selected...
+            list.append('All');
+        }
+
+    }
+    else //hierearchy
+    {
+        //Uncheck/enable all 'Common' tab checkboxes
+        $("input[name='keywords']:checked").attr('checked', false);
+        $("input[name='keywords']").prop("disabled", false);
+
+        //return false;
+
+        //Clear and re-populate concepts list...
+        var list = $('#olConcepts');
+
+        list.empty();
+
+        var tree = $("#tree").fancytree("getTree");
+
+        //var checked = $("input[name='keywords']:checked");
+        //var length = checked.length;
+        // var selectedNodes = tree.getSelectedNodes();
+        //var length = selectedNodes.length;
+        var selKeys = $.map(tree.getSelectedNodes(true), function (node) { //true switch returnes all top level nodes
+
+            return node.title;
+
+
+        }).join("##");
+
+        if (selKeys.split('##').length > 0) {
+            for (var i = 0; i < (selKeys.split('##').length) ; i++) {
+
+                list.append('<li>' + selKeys.split('##')[i] + '</li>');
+                //list.append(selKeys[i]);
+            }
+            //list.append('<li>' + selectedNodes[i].title + '</li>');
+        }
+    }
+}
 
 function getMapHeight()
 {
@@ -829,10 +875,10 @@ function getFormData()
     var bounds = map.getBounds();
     var ne = bounds.getNorthEast(); // LatLng of the north-east corner
     var sw = bounds.getSouthWest(); // LatLng of the south-west corder 
-    var startDate = $("#startDate").val()
-    if (checkReg2(startDate)) { bootbox.alert("Please validate your From: date"); return}
+    var startDate = $("#startDate").val().toString();
+    if (checkReg2(startDate)==false) { bootbox.alert("Please validate your From: date"); return}
     var endDate = $("#endDate").val()
-    if (checkReg2(endDate)) { bootbox.alert("Please validate your To: date"); return }
+    if (checkReg2(endDate)==false) { bootbox.alert("Please validate your To: date"); return }
     var keywords = new Array();
     //variable.push  = $("#variable").val()
 
@@ -845,8 +891,6 @@ function getFormData()
         return $(this).val();
     }).get().join("##");
 
-   
-
 
     if (selectedKeys.length != 0) {
         keywords.push(selectedKeys)
@@ -855,23 +899,10 @@ function getFormData()
         {
         var tree = $("#tree").fancytree("getTree");
         var allChildrenSelected = false;
-        var selKeys = $.map(tree.getSelectedNodes(), function (node) {
-            
-            
-            if (node.children !== null)//all children are selected
-            {
-                 //$.map(node.children, function (node) {
-                 //       return  node.title ;
-                //});
-                allChildrenSelected = true;
-                 return node.title
-                 
-            }
-            if  (!allChildrenSelected)
-            {
-                return node.title;
-            }
-                       
+        var selKeys = $.map(tree.getSelectedNodes(true), function (node) { //true switch returnes all top level nodes
+
+            return node.title;
+
 
         }).join("##");
         //var selKeys = $.map(selNodes, function (node) {
@@ -916,13 +947,9 @@ function getFormData()
 //http://stackoverflow.com/questions/5465375/javascript-date-regex-dd-mm-yyyy
 
 function checkReg2(date) {
-    var reg = /^(((0[1-9]|[12]\d|3[01])\/(0[13578]|1[02])\/((19|[2-9]\d)\d{2}))|((0[1-9]|[12]\d|30)\/(0[13456789]|1[012])\/((19|[2-9]\d)\d{2}))|((0[1-9]|1\d|2[0-8])\/02\/((19|[2-9]\d)\d{2}))|(29\/02\/((1[6-9]|[2-9]\d)(0[48]|[2468][048]|[13579][26])|((16|[2468][048]|[3579][26])00))))$/g;
-
-    if (reg.test(date)) {
-        return true
-
-    } else {
-        return false
+    var date_regex = /^(0[1-9]|1[0-2])\/(0[1-9]|1\d|2\d|3[01])\/(19|20)\d{2}$/;
+    if (!(date_regex.test(date))) {
+        return false;
     }
 }
 //upddate map wit new clusters
@@ -933,11 +960,11 @@ function updateMap(isNewRequest) {
     var formData = getFormData();
     if (typeof formData == "undefined") return; //error in formdate retrieval
 
-    $("#pageloaddiv").show();   
-    
+    $("#pageloaddiv").show();
+
     //get the action-url of the form
     var actionurl = '/home/updateMarkers';
-   
+    
     if (clusteredMarkersArray.length == 0) {
 
 
@@ -1044,6 +1071,8 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
         });
 
+        //BC - disable mouse event listening for now...
+        //setMouseEventListeners(map, marker, clusterid);
 
         //        icon = "./images/markers/assessments/" + icontype + ".png";
         //        size = new google.maps.Size(15, 15);
@@ -1169,6 +1198,9 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
         });
 
+        //BC - disable mouse event listening for now...
+        //setMouseEventListeners(map, marker, clusterid);
+
         //   var marker = clusteredMarkersArray[clusteredMarkersIndex]
         //    marker.setVisible(true);
         //    marker.setIcon(icon);
@@ -1243,9 +1275,9 @@ function getDetailsForMarker(clusterid)
 
 function createInfoWindowContent()
 {
-    $('#example').DataTable();
+    //$('#example').DataTable();
    
-    var $modal = $('#ajax-modal');
+    //var $modal = $('#ajax-modal');
     //$modal.show();
     //$modal.on('click', '.update', function () {
     //    $modal.modal('loading');
@@ -1259,6 +1291,28 @@ function createInfoWindowContent()
     //    }, 1000);
     //});
 }
+
+//BC - disable mouse event listening for now...
+/*
+function setMouseEventListeners(map, marker, clusterId) {
+
+    //mouseover - set infowindow content and open...
+    google.maps.event.clearListeners(marker, 'mouseover');
+    google.maps.event.addListener(marker, 'mouseover', function () {
+
+        infoWindow.setContent('Cluster Id:' + clusterId.toString());
+        infoWindow.open(map, marker);
+    });
+
+    //mouseout - close infowindow...
+    google.maps.event.clearListeners(marker, 'mouseout');
+    google.maps.event.addListener(marker, 'mouseout', function () {
+
+        infoWindow.close();
+    });
+
+}
+*/
 
 function setupServices()
 {
@@ -1332,25 +1386,13 @@ function setupServices()
                 return element !== id;
             });
         }
+        updateServicesList();
     });
 
     $('#saveServiceSelection').click(function () {
        // alert(myServicesDatatable[0].rows('.selected').data().length + ' row(s) selected');
        
-        //Clear and re-populate services list...
-        var list = $('#olServices');
-        var length = mySelectedServices.length;
-
-        list.empty();
-        
-        if (0 < length) {
-            //Certain services selected...
-              list.append('<li>' + length.toString() + '</li>');
-        }
-        else {
-            //All services selected...
-            list.append('All');
-        }
+       
        
     });
 
@@ -1385,7 +1427,6 @@ function setUpDatatables(clusterid)
         "autoWidth": true,
         "jQueryUI": false,
         "deferRender": true,
-        "aaSorting": [],        //Disable initial sorting...
         "dom": 'C<"clear">l<"toolbar">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
          //colVis: {
          //    //restore: "Restore",
@@ -1435,15 +1476,19 @@ function setUpDatatables(clusterid)
          
          "createdRow": function (row, data, index) {
 
-             //BC - TEST - if row is in top '50', mark the row as selected per check box state...
+             //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
              if ($('#chkbxSelectAll').prop('checked')) {
-                 if (index < selectedTimeSeriesMax) {
+
+                 //Find the position of the new row per the current sort/search order...
+                 var table = $('#dtMarkers').DataTable();
+                 var position = table.rows()[0].indexOf(index);
+
+                 if (position < selectedTimeSeriesMax) {
                  var jqueryObject = $(row);
                      var className = 'selected';
 
                      if (!jqueryObject.hasClass(className)) {
                          jqueryObject.addClass(className);
-                         ++selectedTimeSeriesCount;
              }
                  }                 
              }
@@ -1496,7 +1541,7 @@ function setUpDatatables(clusterid)
          },
         initComplete: function () {
 
-            setfooterFilters('#dtMarkers', [0,1,2,3,4]);
+            setfooterFilters('#dtMarkers', [0,1,2,3,5]);
         
            // oTable.fnAdjustColumnSizing();
         }
@@ -1515,7 +1560,8 @@ function setUpDatatables(clusterid)
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-    $("div.toolbar").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAll" style="float:left;"/>&nbsp;Select Top 50?</span>' +
+    $("div.toolbar").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAll" style="float:left;"/>&nbsp;Select Top ' + 
+                          selectedTimeSeriesMax.toString() + '?</span>' +
                           '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelections" value="Zip Selections"/>' +
                           '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;"></span>');
     //$("div.toolbar").css('border', '1px solid red');
@@ -1603,144 +1649,9 @@ function setUpDatatables(clusterid)
     $('#dtMarkers tbody').on('click', 'tr', function () {
         //$(this).addClass('selected');
 
-    });
-   
-}
-//Data table for data tab
-function setUpTimeseriesDatatable() {
-    if (clusteredMarkersArray.length == 0) {
-        return;
-    }
-    // $('#dtTimeseries').(':visible')
-    $('#dtTimeseries').removeClass("hidden");
-
-    $.fn.DataTable.isDataTable("#dtTimeseries")
-    {
-        $('#dtTimeseries').DataTable().clear().destroy();
-    }
-
-    //Set page title...
-    $('#dataview #myModalLabel').html('List of Timeseries for Selected Area');
-
-
-    //var dataSet = getDetailsForMarker(clusterid)
-    var actionUrl = "/home/getTimeseries"
-    // $('#example').DataTable().clear()
-    // $('#demo').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example"></table>' );
-    var oTable = $('#dtTimeseries').dataTable({
-        "ajax": actionUrl,
-        "dom": 'C<"clear">l<"toolbarTS">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-        "deferRender": true,
-        
-        //colVis: {
-        //    activate: "mouseover",
-        //    exclude: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
-        //    groups: [
-        //   {
-        //       title: "Show All Columns",
-        //       columns: [2, 3, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
-        //   }
-        //    ]
-        //},
-        "columns": [
-             { "data": "Organization", "width": "50px", "visible": true },
-            { "data": "ServCode", "sTitle": "Service Name", "visible": true },
-            { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
-            { "data": "ServURL", "visible": false },
-            { "data": "SiteCode", "visible": false },
-            { "data": "VariableCode", "visible": false },
-            { "data": "VariableName","width": "50px", "sTitle": "Variable Name"},
-            { "data": "BeginDate", "sTitle": "Start Date" },
-            { "data": "EndDate","sTitle": "End Date" },
-            { "data": "ValueCount" },
-            { "data": "SiteName", "sTitle": "Site Name" },
-            //{ "data": "Latitude", "visible": true },
-            //{ "data": "Longitude", "visible": true },
-            { "data": "DataType", "visible": true },
-            { "data": "ValueType", "visible": true },
-            { "data": "SampleMedium", "visible": true },
-            { "data": "TimeUnit", "visible": true },
-            //{ "data": "GeneralCategory", "visible": false },
-            { "data": "TimeSupport", "visible": true },
-
-            { "data": "IsRegular", "visible": true },
-            //{ "data": "VariableUnits","visible": false },
-            //{ "data": "Citation", "visible": false }  
-            { "data": "SeriesId" }
-        ],
-        "scrollX": true, //removed to fix column alignment 
-        "createdRow": function (row, data, index) {
-
-            //BC - TEST - mark the row as selected per check box state...
-            if ($('#chkbxSelectAllTS').prop('checked')) {
-                var jqueryObject = $(row);
-                jqueryObject.addClass('selected');
-            }
-
-            //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
-
-            //var id = $('td', row).eq(14).html();//only visible count
-            //var d = $('td', row).eq(4).html();
-
-            /* BC - TEST - Do not include download icon or href in any table row...
-            $('td', row).eq(0).append("<a href='/Export/downloadFile/" + id + "' id=" + id + "<span><img  src='/Content/Images/download-icon-25.png' ></span> </a>");
-            $('td', row).eq(0).click(function () {
-                //downloadtimeseries('csv', id); return false;/Content/Images/ajax-loader-green.gif
-                //$('#spinner' + id).removeClass('hidden')
-                $(this).append("<span><img class='spinner' src='/Content/Images/ajax-loader-green.gif' style='padding-left:4px;padding-right:4px'></span>");
-                //$.fileDownload($(this).prop('href'), {
-                //    preparingMessageHtml: "We are preparing your report, please wait...",
-                //    failMessageHtml: "There was a problem generating your report, please try again."
-                //})
-
-                $.fileDownload($(this).prop('href'))
-                    .done(function () {
-                        $('.spinner').addClass('hidden');
-                        $('.spinner').parent().parent().addClass('selected');
-
-                    })
-                    .fail(function () {
-                        $('.spinner').addClass('hidden');
-                        $('.spinner').parent().parent().addClass('downloadFail');
                     });
 
-            });
-*/
-        },
-        initComplete: function () {
-
-            setfooterFilters('#dtTimeseries', [0,1,2,3,4]);
         }
-
-    });
-          
-    //BC - Test - make each table row selectable by clicking anywhere on the row...
-    //Source: https://datatables.net/examples/api/select_row.html
-    //Avoid multiple registrations of the same handler...
-    $('#dtTimeseries tbody').off('click', 'tr', toggleSelected);
-    $('#dtTimeseries tbody').on('click', 'tr', { 'tableId': '#dtTimeseries', 'btnId': '#btnZipSelectionsTS' }, toggleSelected);
-
-    //BC - Test - add a custom toolbar to the table...
-    //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-    $("div.toolbarTS").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS" style="float:left;"/>&nbsp;Select All?</span>' +
-                            '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelectionsTS" value="Zip Selections"/>' +
-                            '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;">Zip started.  To download the archive, please open Download Manager</span>');
-
-    //Add data load event handler...
-    $('#dtTimeseries').off('xhr.dt', dataTableLoad);
-    $('#dtTimeseries').on('xhr.dt', { 'chkbxId': '#chkbxSelectAllTS' }, dataTableLoad);
-
-    //Add click handlers...
-                        
-    //Avoid multiple registrations of the same handler...
-    $('#chkbxSelectAllTS').off('click', selectAll);
-    $('#chkbxSelectAllTS').on('click', { 'tableId': '#dtTimeseries', 'chkbxId': '#chkbxSelectAllTS', 'btnId': '#btnZipSelectionsTS' }, selectAll);
-
-    //Avoid multiple registrations of the same handler...
-    $('#btnZipSelectionsTS').off('click', zipSelections);
-    $('#btnZipSelectionsTS').on('click', { 'tableId': '#dtTimeseries', 'chkbxId': '#chkbxSelectAllTS' }, zipSelections);
-    return oTable;
-}
 
 //Create 'select'-based filters for the input tableId and columns array
 function setfooterFilters(tableId, columnsArray) {
@@ -1768,6 +1679,24 @@ function setfooterFilters(tableId, columnsArray) {
     $(tableId).dataTable().fnAdjustColumnSizing();
 }
 
+function updateServicesList()
+{
+    //Clear and re-populate services list...
+    var list = $('#olServices');
+    var length = mySelectedServices.length;
+    
+
+    list.empty();
+
+    if (0 < length) {
+        //Certain services selected...
+        list.append('Selected ' + length.toString() + ' of ' + myServicesDatatable.fnGetData().length + ' .');
+    }
+    else {
+        //All services selected...
+        list.append('Selected All of ' + myServicesDatatable.fnGetData().length + '');
+    }
+}
 
 function toggleSelected(event) {
     $(this).toggleClass('selected');
@@ -1836,41 +1765,34 @@ function addRowStylesDM(newrow) {
 
 function selectAll(event) {
 
-    //Check for disabled button...
-//    if ($(this).hasClass("disabled")) {
-//        event.preventDefault();
-//        return false;
-//    }
-
-    //Retrieve all the table's RENDERED <tr> elements whether visible or not...
+    //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
     //Source: http://datatables.net/reference/api/rows().nodes()
-    //var table = $('#dtMarkers').DataTable();
     var table = $(event.data.tableId).DataTable();
-    var rows = table.rows();
-    var nodesRendered = rows.nodes();
-
+    var rows = table.rows({'order': 'current', 'search': 'applied'});    //Retrieve rows per current sort/search order...
+    var nodesRendered = rows.nodes();                                    //Retrieve all the rendered nodes for these rows
+                                                                         //NOTE: Rendered nodes retrieved in the same order as the rows...
     var jqueryObjects = nodesRendered.to$();    //Convert to jQuery Objects!!
     var className = 'selected';
 
-    //Remove selected class from all rows...
+    //Remove selected class from all rendered rows...
     jqueryObjects.removeClass(className);
-    selectedTimeSeriesCount = 0;
 
-    //Apply 'selected' class to 'top 50' rows, if indicated 
+    //Apply 'selected' class to the 'top' <selectedTimeSeriesMax> rendered nodes, if indicated 
     if ($(event.data.chkbxId).prop("checked")) {
         var length = nodesRendered.length;
 
+        //For each rendered node...
         for (var i = 0; i < length; ++i) {
-            var node = nodesRendered[i];
-            //var indx = node.rowIndex; 
-            var indx = node._DT_RowIndex;
-            if ((0 <= indx) && (indx < selectedTimeSeriesMax)) {
-                var jqueryObject = $(node);
-    var className = 'selected';
 
-                if ((null != jqueryObject) && (!jqueryObject.hasClass(className))) {
-                    jqueryObject.addClass(className);
-                    ++selectedTimeSeriesCount;
+            //Determine the position of the associated row in the current sort/search order...
+            var position = rows[0].indexOf(nodesRendered[i]._DT_RowIndex)
+            
+            if (position < selectedTimeSeriesMax) {
+                //Row is within the 'top' <selectedTimeSeriesMax> - apply class...
+                var jqueryObject = $(nodesRendered[i]);
+
+                if (null !== jqueryObject) {
+                    jqueryObject.addClass(className);   //Apply class...
                 }
             }
     }
@@ -2236,54 +2158,49 @@ function setUpTimeseriesDatatable() {
     var oTable = $('#dtTimeseries').dataTable({
         "ajax": actionUrl,
         "dom": 'C<"clear">l<"toolbarTS">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-        "deferRender": true,
-        "aaSorting": [],        //Disable initial sorting...
-        colVis: {
-            activate: "mouseover",
-            exclude: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
-            groups: [
-           {
-               title: "Show All Columns",
-               columns: [2, 3, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
-           }
-            ]
-        },
+        "deferRender": true,        
         "columns": [
-           { "data": "SeriesId" },
-           { "data": "ServCode", "sTitle": "Service Name" },
-           { "data": "ServURL", "visible": false },
-           { "data": "SiteCode", "visible": false },
-           { "data": "VariableCode", "visible": false },
-           { "data": "VariableName" },
-           { "data": "BeginDate", "visible": false},
-           { "data": "EndDate", "visible": false},
-           { "data": "ValueCount", "visible": false },
-           { "data": "SiteName" },
-           { "data": "Latitude", "visible": false },
-           { "data": "Longitude", "visible": false },
-           { "data": "DataType", "visible": false },
-           { "data": "ValueType", "visible": false },
-           { "data": "SampleMedium", "visible": false },
-           { "data": "TimeUnit", "visible": false },
-           { "data": "GeneralCategory", "visible": false },
-           { "data": "TimeSupport", "visible": false },
-           { "data": "ConceptKeyword", "visible": false },
-           { "data": "IsRegular", "visible": false },
-           { "data": "VariableUnits", "visible": false },
-           { "data": "Citation", "visible": false }
+            { "data": "Organization", "width": "50px", "visible": true },
+            { "data": "ServCode", "sTitle": "Service Name", "visible": true },
+            { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
+            { "data": "ServURL", "visible": false },
+            { "data": "SiteCode", "visible": false },
+            { "data": "VariableCode", "visible": false },
+              { "data": "VariableName", "width": "50px", "sTitle": "Variable Name" },
+            { "data": "BeginDate", "sTitle": "Start Date" },
+            { "data": "EndDate", "sTitle": "End Date" },
+            { "data": "ValueCount" },
+            { "data": "SiteName", "sTitle": "Site Name" },
+            //{ "data": "Latitude", "visible": true },
+            //{ "data": "Longitude", "visible": true },
+            { "data": "DataType", "visible": true },
+            { "data": "ValueType", "visible": true },
+            { "data": "SampleMedium", "visible": true },
+            { "data": "TimeUnit", "visible": true },
+            //{ "data": "GeneralCategory", "visible": false },
+            { "data": "TimeSupport", "visible": true },
+
+            { "data": "IsRegular", "visible": true },
+            //{ "data": "VariableUnits","visible": false },
+            //{ "data": "Citation", "visible": false }            
+            { "data": "SeriesId" }
            ],
         "scrollX": true, //removed to fix column alignment 
         "createdRow": function (row, data, index) {
 
-            //BC - TEST - if row is in top '50', mark the row as selected per check box state...
+            //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
            if ($('#chkbxSelectAllTS').prop('checked')) {
-                 if (index < selectedTimeSeriesMax) {
+
+               //Find the position of the new row per the current sort/search order...
+               var table = $('#dtTimeseries').DataTable();
+               var position = table.rows()[0].indexOf(index);
+
+               if (position < selectedTimeSeriesMax) {
                      var jqueryObject = $(row);
                      var className = 'selected';
 
                      if (!jqueryObject.hasClass(className)) {
                          jqueryObject.addClass(className);
-                         ++selectedTimeSeriesCount;
                     }
                 }
            }
@@ -2333,7 +2250,8 @@ function setUpTimeseriesDatatable() {
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-    $("div.toolbarTS").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS" style="float:left;"/>&nbsp;Select Top 50?</span>' +
+    $("div.toolbarTS").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS" style="float:left;"/>&nbsp;Select Top ' +
+                            selectedTimeSeriesMax.toString() + '?</span>' +
                             '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelectionsTS" value="Zip Selections"/>' +
                             '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;"></span>');
 
@@ -2403,10 +2321,20 @@ function serviceFailed(xmlhttprequest, textstatus, message)
     //}
     //else 
     //{
-    var msg = JSON.parse(xmlhttprequest.responseText)
-    bootbox.alert(msg.Message );
+
+    if (typeof (xmlhttprequest.responseText) != 'undefined')
+    {
+        
+        var msg = JSON.parse(xmlhttprequest.responseText)
+        bootbox.alert(msg.Message);
+    }
+    else {
+        bootbox.alert("An error accored: " + message + ". Please limit search area or Keywords. Please contact support if the problem pwesists.");
+
+    }
     //clean up
-    resetMap()
+    $("#pageloaddiv").hide();
+    resetMap();
     //}
 
 };

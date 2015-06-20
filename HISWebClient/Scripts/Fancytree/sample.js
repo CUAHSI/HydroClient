@@ -17,15 +17,13 @@
             mode: "hide",
             autoApply: true
         },
-
         activate: function (event, data) {
             var title = data.node.title;
             //FT.debug("activate: event=", event, ", data=", data);
             if (!$.isEmptyObject(title)) {
                 //alert("custom node data: " + JSON.stringify(title));
             }
-        }
-        ,
+        },
         lazyLoad: function (event, data) {
              //we can't return values from an event handler, so we
              //pass the result as `data`attribute.
@@ -35,14 +33,15 @@
                
                 dataType: "json"
             });
-        },
+        }//,
+        //BC - 19-Jun-2015 - Disable concept counting - possible later use...
         //BC - Add select handler...
         //select: function (event, data) {
         //    var tree = $("#tree").fancytree("getTree");
 
-        //    //Check selected 'top' nodes
-        //    var selectedNodes = tree.getSelectedNodes(true);
-        //    var length = selectedNodes.length;
+            //Check selected 'top' nodes
+            //var selectedNodes = tree.getSelectedNodes(true);
+            //var length = selectedNodes.length;
 
         //    if (selectedConceptsMax <= length) {
         //        //Maximum nodes 'top' selected - make all unselected nodes 'unselectable' ...
