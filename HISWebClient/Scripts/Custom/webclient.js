@@ -328,22 +328,27 @@ function initialize() {
                 resetMap()
             })
     //click event for tab
-    $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
-        if (e.target.id == "tableTab")
-        {
-            setUpTimeseriesDatatable();
+    $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+         if (e.target.id == "tableTab") {
+             //Hide the zendesk iframe...
+             $('#launcher').hide();
+
+             setUpTimeseriesDatatable();
             var table = $('#dtTimeseries').DataTable();
             table.order([0, 'asc']).draw();
             ////hide sidebar
-           // slider.slideReveal("hide")
-            
-        }
-         if (e.target.id == "mapTab")
-        {
+            // slider.slideReveal("hide")
+
+            }
+         if (e.target.id == "mapTab") {
+             //Show the zendesk iframe...
+             $('#launcher').show();
+
              google.maps.event.trigger(map, "resize");
              if (!sidepanelVisible) {
                  slider.slideReveal("show")
              }
+    
         }
         // activated tab
     })
