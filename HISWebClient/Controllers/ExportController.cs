@@ -127,7 +127,7 @@ namespace HISWebClient.Controllers
             var filename = GenerateFileName(seriesMetaData);
             var fileType = "text/csv";
 
-            logger.Info("DownloadFile Starts for: " + filename );
+            //logger.Info("DownloadFile Starts for: " + filename );
 
             try
             {
@@ -135,14 +135,14 @@ namespace HISWebClient.Controllers
                 //var memoryStream = new MemoryStream(result);
 
 
-                logger.Info("DownloadFile returns for: " + filename);
+                //logger.Info("DownloadFile returns for: " + filename);
 
                 //filestream.Write(result, 0, result.Count);
                 return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename };
             }
             catch( Exception ex )
             {
-                logger.Info("DownloadFile Errors for: " + filename + " message: " + ex.Message );
+                logger.Error("DownloadFile Errors for: " + filename + " message: " + ex.Message );
 
                 string input = "An error occured downloading file: " + filename;
 
@@ -170,7 +170,7 @@ namespace HISWebClient.Controllers
             var filename = GenerateFileName(seriesMetaData);
             var fileType = "text/csv";
 
-            logger.Info("DownloadFile Starts for: " + filename );
+            //logger.Info("DownloadFile Starts for: " + filename );
 
             try
             {
@@ -178,14 +178,14 @@ namespace HISWebClient.Controllers
                 //var memoryStream = new MemoryStream(result);
 
 
-                logger.Info("DownloadFile returns for: " + filename);
+                //logger.Info("DownloadFile returns for: " + filename);
 
                 //filestream.Write(result, 0, result.Count);
                 return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename };
             }
             catch( Exception ex )
             {
-                logger.Info("DownloadFile Errors for: " + filename + " message: " + ex.Message );
+                logger.Error("DownloadFile Errors for: " + filename + " message: " + ex.Message );
 
                 string input = "An error occured downloading file: " + filename;
 
@@ -244,10 +244,19 @@ namespace HISWebClient.Controllers
                 var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
                 var retrievedSeries = (List<TimeSeriesViewModel>)httpContext.Session["Series"];
 
+                //Get user data...
+                string userIpAddress = GetIPAddress();
+                DateTime requestTimeStamp = httpContext.Timestamp;
+
+
                 List<TimeSeriesViewModel> currentSeries = new List<TimeSeriesViewModel>();
                 foreach (TimeSeriesViewModel tsvm in retrievedSeries)
                 {
                     currentSeries.Add(new TimeSeriesViewModel(tsvm));
+                    //Log each time series requested...     
+                    string logEntry = String.Format("User IP Address: {0} DateTime: {1} Timeseries: {2}", userIpAddress, requestTimeStamp.ToString(), tsvm.ToString());
+
+                    logger.Info( logEntry );
                 }
 
                 Task.Run( async () =>
@@ -772,6 +781,25 @@ namespace HISWebClient.Controllers
 
 
             return new SeriesMetadata(metadata);
+        }
+
+
+        //Utility methods...
+        protected string GetIPAddress()
+        {
+            System.Web.HttpContext context = System.Web.HttpContext.Current;
+            string ipAddress = context.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
+
+            if (!string.IsNullOrEmpty(ipAddress))
+            {
+                string[] addresses = ipAddress.Split(',');
+                if (addresses.Length != 0)
+                {
+                    return addresses[0];
+                }
+            }
+
+            return context.Request.ServerVariables["REMOTE_ADDR"];
         }
       
 
