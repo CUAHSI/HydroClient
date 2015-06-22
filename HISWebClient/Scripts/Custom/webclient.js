@@ -13,7 +13,8 @@ var mySelectedServices = [];
 var mySelectedTimeSeries = [];
 var sessionGuid;
 var randomId;
-var currentPlaceAddress;
+var currentPlaceName = '';
+var currentMarkerPlaceName = '';
 var timeSeriesRequestStatus;
 var slider;
 var sidepanelVisible = false;
@@ -354,6 +355,9 @@ function initialize() {
              //Hide the zendesk iframe...
              $('#launcher').hide();
 
+             //Reset the current marker place name...
+             currentMarkerPlaceName = '';
+
              setUpTimeseriesDatatable();
             var table = $('#dtTimeseries').DataTable();
             table.order([0, 'asc']).draw();
@@ -684,7 +688,7 @@ function addLocationSearch()
         }
 
         //Retain the current place name
-        currentPlaceAddress = place.formatted_address;
+        currentPlaceName = place.formatted_address;
         //infowindow.setContent('<div><strong>' + place.name + '</strong><br>' + address);
         //infowindow.open(map, marker);
     });
@@ -986,6 +990,36 @@ function deleteOverlays(arrayName) {
     }
 }
 
+
+//Attempt to retrieve the position name from the input marker's position...
+//Source: https://developers.google.com/maps/documentation/javascript/examples/geocoding-reverse
+//More information: https://developers.google.com/maps/documentation/javascript/geocoding
+//                  https://developers.google.com/maps/articles/geocodestrat
+function getMarkerPositionName(marker) {
+    var geocoder = new google.maps.Geocoder();
+
+    //NOTE: Asynchronous call - 
+    //ASSUMPTION: This call returns before the user issues a time series request to the server...
+    geocoder.geocode({ 'latLng': marker.getPosition() }, function (results, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+            if (results[0]) { //NOTE: Using the most detailed place name available...
+                //Marker place name found - set variable
+                currentMarkerPlaceName = results[0].formatted_address;
+                $('#SeriesModal #myModalLabel').html('List of Timeseries for: ' + currentMarkerPlaceName );
+
+            } else {
+                //No marker place name found - reset variable
+                currentMarkerPlaceName = '';
+            }
+        } else {
+            //Failure - reset variable
+            currentMarkerPlaceName = '';
+        }
+    });
+}
+
+
+
 function updateClusteredMarker(map, point, count, icontype, id, clusterid, label) {
 
     var icon_choice;
@@ -1068,9 +1102,11 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             //infoWindow.setContent(c);
             //infoWindow.open(map, this);
             //$('#example').DataTable();
-            setUpDatatables(clusterid);
 
             $('#SeriesModal #myModalLabel').html('List of Timeseries for Selected Marker');
+            getMarkerPositionName(marker);
+
+            setUpDatatables(clusterid);
 
             $('#SeriesModal').modal('show')
             //var details = getDetailsForMarker(clusterid)
@@ -1184,8 +1220,11 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             //infoWindow.setContent(c);
             //infoWindow.open(map, this);
             //$('#example').DataTable();
-            setUpDatatables(clusterid);
+
             $('#SeriesModal #myModalLabel').html('List of Timeseries for Selected Marker');
+            getMarkerPositionName(marker);
+
+            setUpDatatables(clusterid);
                 
             $('#SeriesModal').modal('show')
             //var details = getDetailsForMarker(clusterid)
@@ -1856,9 +1895,17 @@ function zipSelections(event) {
     var requestId = randomId.generateId();
     var requestName = 'SelectedArea';
 
-    if (('undefined' !== typeof currentPlaceAddress) && (null !== currentPlaceAddress)) {
-        requestName = currentPlaceAddress.replace(/\s*,\s*/g, '-');  //Replace whitespace and commas with '_' 
+    //Set request name from marker place name (more precise) --OR-- place name (less precise)...
+    var regexp = /\s*[, ]\s*/g;
+    if (('undefined' !== typeof currentMarkerPlaceName) && (null !== currentMarkerPlaceName) && ('' !== currentMarkerPlaceName)) {
+        requestName = currentMarkerPlaceName.replace(regexp, '-');  //Replace whitespace and commas with '_' 
     }
+    else {
+        if (('undefined' !== typeof currentPlaceName) && (null !== currentPlaceName) && ('' !== currentPlaceName)) {
+            requestName = currentPlaceName.replace(regexp, '-');  //Replace whitespace and commas with '_' 
+        }
+    }
+
 
     var timeSeriesRequest = {
         "RequestName": requestName,
@@ -2101,9 +2148,9 @@ function setUpTimeseriesDatatable() {
     }
 
     //Set page title...
-    $('#dataview #myModalLabel').html('List of Timeseries for Selected Area');
-
-
+//    $('#dataview #myModalLabel').html('List of Timeseries for Selected Area');
+    $('#dataview #myModalLabel').html('List of Timeseries for: ' + currentPlaceName);
+        
     //var dataSet = getDetailsForMarker(clusterid)
     var actionUrl = "/home/getTimeseries"
     // $('#example').DataTable().clear()
