@@ -151,8 +151,8 @@ namespace HISWebClient.Controllers
                 //{
                 //    keywords[k] = keywords[k].Replace("_", ",");
                 //}
-                var tileWidth = 1;
-                var tileHeight = 1;
+                var tileWidth = 5;
+                var tileHeight = 5;
                 List<int> webServiceIds = null;
                 try
                 {
@@ -391,29 +391,30 @@ namespace HISWebClient.Controllers
 
             var obj = new TimeSeriesViewModel();           
             
-                    obj.SeriesId = id;
-                    obj.ServCode = dc.ServCode;
-                    obj.ServURL = dc.ServURL;
-                    obj.SiteCode = dc.SiteCode;
-                    obj.VariableCode = dc.VariableCode;
-                    obj.SiteName = dc.SiteName;
-                    obj.VariableName = dc.VariableName;
-                    obj.BeginDate = dc.BeginDate;
-                    obj.EndDate = dc.EndDate;
-                    obj.ValueCount = dc.ValueCount;
-                    obj.Latitude = dc.Latitude;
-                    obj.Longitude = dc.Longitude;
-                    obj.DataType = dc.DataType;
-                    obj.ValueType = dc.ValueType;
-                    obj.SampleMedium = dc.SampleMedium;
-                    obj.TimeUnit = dc.TimeUnit;
-                    //obj.GeneralCategory = dc.GeneralCategory;
-                    obj.TimeSupport = dc.TimeSupport;
-                    obj.ConceptKeyword = dc.ConceptKeyword;
-                    obj.IsRegular = dc.IsRegular;
-                    //obj.VariableUnits = dc.VariableUnits;
-                    //obj.Citation = dc.Citation;
-                    obj.Organization = dict.FirstOrDefault(x => x.Key == dc.ServCode).Value;
+            obj.SeriesId = id;
+            obj.ServCode = dc.ServCode;
+            obj.ServURL = dc.ServURL;
+            obj.SiteCode = dc.SiteCode;
+            obj.VariableCode = dc.VariableCode;
+            obj.SiteName = dc.SiteName;
+            obj.VariableName = dc.VariableName;
+            obj.BeginDate = dc.BeginDate;
+            obj.EndDate = dc.EndDate;
+            obj.ValueCount = dc.ValueCount;
+            obj.Latitude = dc.Latitude;
+            obj.Longitude = dc.Longitude;
+            obj.DataType = dc.DataType;
+            obj.ValueType = dc.ValueType;
+            obj.SampleMedium = dc.SampleMedium;
+            obj.TimeUnit = dc.TimeUnit;
+            //obj.GeneralCategory = dc.GeneralCategory;
+            obj.TimeSupport = dc.TimeSupport;
+            obj.ConceptKeyword = dc.ConceptKeyword;
+            obj.IsRegular = dc.IsRegular;
+            //obj.VariableUnits = dc.VariableUnits;
+            //obj.Citation = dc.Citation;
+            obj.Organization = dict.FirstOrDefault(x => x.Key == dc.ServCode).Value;
+
             return obj;
         }
 

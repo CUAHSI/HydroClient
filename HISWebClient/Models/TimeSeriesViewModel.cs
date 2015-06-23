@@ -25,8 +25,8 @@ namespace HISWebClient.Models
             EndDate = tsvm.EndDate;
             ValueCount = tsvm.ValueCount;
             SiteName = tsvm.SiteName;
-            //Latitude = tsvm.Latitude;
-            //Longitude = tsvm.Longitude;
+            Latitude = tsvm.Latitude;
+            Longitude = tsvm.Longitude;
             DataType = tsvm.DataType;
             ValueType = tsvm.ValueType;
             SampleMedium = tsvm.SampleMedium;

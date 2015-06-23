@@ -1546,7 +1546,7 @@ function setUpDatatables(clusterid)
          },
         initComplete: function () {
 
-            setfooterFilters('#dtMarkers', [0,1,2,3,5]);
+            setfooterFilters('#dtMarkers', [0,1,2,6]);
         
            // oTable.fnAdjustColumnSizing();
         }
@@ -2242,7 +2242,7 @@ function setUpTimeseriesDatatable() {
         },
         initComplete: function () {
 
-            setfooterFilters('#dtTimeseries', [1, 2, 3, 5]);
+            setfooterFilters('#dtTimeseries', [0,1, 2, 6]);
         }
 
     });
@@ -2334,7 +2334,7 @@ function serviceFailed(xmlhttprequest, textstatus, message)
         bootbox.alert(msg.Message);
     }
     else {
-        bootbox.alert("An error accored: " + message + ". Please limit search area or Keywords. Please contact support if the problem pwesists.");
+        bootbox.alert("<H4>An error accored: " + message + ". Please limit search area or Keywords. Please contact Support if the problem persists.</H4>");
 
     }
     //clean up
