@@ -40,7 +40,10 @@ function initialize() {
 
     var myCenter = new google.maps.LatLng(39, -92); //us
     //var myCenter = new google.maps.LatLng(42.3, -71);//boston
-   // var myCenter = new google.maps.LatLng(41.7, -111.9);//Salt Lake
+    // var myCenter = new google.maps.LatLng(41.7, -111.9);//Salt Lake
+
+    //NOTE: Set the place name to match the initial latitude and longitude 
+    currentPlaceName = 'United States';
     
       //BC - disable infoWindow for now...
 //    infoWindow = new google.maps.InfoWindow();
