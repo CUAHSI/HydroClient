@@ -89,6 +89,8 @@ function initialize() {
     sidepanelVisible = true;
   
     addLocationSearch();
+
+
     
     //triger update of map on these events
     google.maps.event.addListener(map, 'dblclick', function () {
@@ -368,9 +370,17 @@ function initialize() {
         return false;
     });
 
+
+    
+
+
+
     $("#map-canvas").height(getMapHeight()) //setMapHeight
     $("#map-canvas").width(getMapWidth) //setMapWidth
     google.maps.event.trigger(map, "resize");
+
+
+
 };
   
 function validateQueryParameters(area, selectedKeys) {
@@ -531,6 +541,31 @@ function addCustomMapControls()
 
     AreaSize.index = 1;
     map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(AreaSizeDiv);
+
+    //Custom close button for streetview
+    window.addEventListener('DOMContentLoaded', function (e) {
+
+        // Get close button and insert it into streetView
+        // #button can be anyt dom element
+        var closeButton = document.querySelector('#StreetViewCloseButton'),
+            controlPosition = google.maps.ControlPosition.RIGHT_CENTER;
+
+        // Assumes map has been initiated 
+        var streetView = map.getStreetView();
+
+        // Hide useless and tiny default close button
+        streetView.setOptions({ enableCloseButton: false });
+
+        // Add to street view
+        streetView.controls[controlPosition].push(closeButton);
+
+        // Listen for click event on custom button
+        // Can also be $(document).on('click') if using jQuery
+        google.maps.event.addDomListener(closeButton, 'click', function () {
+            streetView.setVisible(false);
+        });
+
+    });
 }
 
 function addSlider()

@@ -401,3 +401,12 @@ th {
   padding: 100 !important;
   margin: 0 !important;
 }
+/*Streetview close button*/
+.button {
+  font-size: 20px;
+  background-color: white;
+  padding: .2em .4em;
+  border: 0;
+  margin-right: 5px;
+  cursor: pointer;
+}
