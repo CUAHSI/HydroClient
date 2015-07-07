@@ -558,7 +558,7 @@ namespace HISWebClient.Controllers
                     meta.VarCode,
                     meta.StartDate,
                     DateTime.UtcNow,
-                    Convert.ToInt32(10000));
+                    Convert.ToInt32(30000));
         }
 
     }

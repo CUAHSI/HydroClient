@@ -74,11 +74,19 @@ function initialize() {
             mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.TERRAIN]
         },
     };
+    
+
 
     //get refernce to map sizing of window happens later to prevent gap   
     map = new google.maps.Map(document.getElementById("map-canvas"), mapProp);
     
+    //var Item_1 = new google.maps.LatLng(48.36174468172024, -115.53271484375);
 
+    //var myPlace = new google.maps.LatLng(28.214896947346478, -68.46728515625);
+    //var bounds = new google.maps.LatLngBounds();
+    //bounds.extend(myPlace);
+    //bounds.extend(Item_1);
+    //map.fitBounds(bounds);
     //UI
     
     addCustomMapControls();
@@ -96,26 +104,29 @@ function initialize() {
     google.maps.event.addListener(map, 'dblclick', function () {
         if ((clusteredMarkersArray.length > 0)) {
             updateMap(false)
-            //$("#MapAreaControl").html(getMapAreaSize());
+            //
         }
+        //$("#MapAreaControl").html(getMapAreaSize());
     });
     google.maps.event.addListener(map, 'dragend', function () {
         if ((clusteredMarkersArray.length > 0)) {
             updateMap(false)
-            //$("#MapAreaControl").html(getMapAreaSize());
+            
         }
+        //$("#MapAreaControl").html(getMapAreaSize());
     });
     
     google.maps.event.addListener(map, 'zoom_changed', function () {
         if ((clusteredMarkersArray.length > 0)) {
             updateMap(false)
             
-            //$("#MapAreaControl").html(getMapAreaSize());
+           
             
         }
+        
     });
     //added to load size on startup
-    google.maps.event.addListener(map, 'bounds_changed', function () {
+    google.maps.event.addListener(map, 'idle', function () {
         //if ((clusteredMarkersArray.length > 0)) {
             //updateMap(false)
 
@@ -141,6 +152,7 @@ function initialize() {
         {
             slider.slideReveal("show")
         }
+       
     });
    
 
@@ -165,12 +177,12 @@ function initialize() {
         //Assign current start and end date values to their modal counterparts...
        
         var startDateModal = $("#startDateModal").val()
-        if (checkReg2(startDateModal) == false) { bootbox.alert("Please validate your From: date"); return }
-        $('#startDate').val($('#startDateModal').val());
+        //if (checkReg2(startDateModal) == false) { bootbox.alert("Please validate your From: date"); return }
+        //$('#startDate').val($('#startDateModal').val());
 
         var endDateModal = $("#endDateModal").val()
-        if (checkReg2(endDateModal)==false) { bootbox.alert("Please validate your To: date"); return }
-        $('#endDate').val($('#endDateModal').val());
+        //if (checkReg2(endDateModal)==false) { bootbox.alert("Please validate your To: date"); return }
+        //$('#endDate').val($('#endDateModal').val());
     });
 
     //initialize show/hide for search box
@@ -295,7 +307,7 @@ function initialize() {
     });
 
     $("#Search").submit(function (e) {       
-
+         
         resetMap()
         //prevent Default functionality
         e.preventDefault();
@@ -325,6 +337,8 @@ function initialize() {
         });
 
         areaRect.setMap(map);
+        var areaLeft = google.maps.geometry.spherical.computeArea(areaRect.getPath());
+
 
         
     })
@@ -379,6 +393,7 @@ function initialize() {
     $("#map-canvas").width(getMapWidth) //setMapWidth
     google.maps.event.trigger(map, "resize");
 
+   // $("#MapAreaControl").html(getMapAreaSize());
 
 
 };
@@ -386,16 +401,16 @@ function initialize() {
 function validateQueryParameters(area, selectedKeys) {
     //validate inputs
 
-    if (area > 100000) {
-        bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search.  <br> Please limit search area to less than 100000 sq km and/or reduce search keywords.<h4>")
+    if (area > 1000000) {
+        bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search.  <br> Please limit search area to less than 1.000.000 sq km and/or reduce search keywords.<h4>")
         return false;
     }
 
-    if (area > 25000 && selectedKeys.length == 0) {
-        bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search for <strong>All</strong> keywords.  <br> Please limit search area to less than 25000 sq km and/or reduce search keywords.<h4>")
+    if (area > 250000 && selectedKeys.length == 0) {
+        bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search for <strong>All</strong> keywords.  <br> Please limit search area to less than 250.000 sq km and/or reduce search keywords.<h4>")
         return false;
     }
-    if (area > 25000 && selectedKeys.length == 1) {
+    if (area > 250000 && selectedKeys.length == 1) {
 
         //if (area > 50000) {
         //    bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search.  <br> Please limit search area to less than 50000 sq km and/or reduce search keywords.<h4>")
@@ -410,14 +425,14 @@ function validateQueryParameters(area, selectedKeys) {
     }
     else {
 
-        if (area > 25000 && selectedKeys.length > 1) {
-            bootbox.alert("<h4>Current selected area is " + area + " sq km and you have cselecte more than 1 keywords. Please reduce area or number of keywords to 1?<h4>", function () {
+        if (area > 250000 && selectedKeys.length > 1) {
+            bootbox.alert("<h4>Current selected area is " + area + " sq km and you have selected more than 1 keywords. Please reduce area to less than 250.000sq km or number of keywords to 1?<h4>", function () {
 
                 return false;
             });
         }
-        if (area < 25000 && selectedKeys.length > 1) {
-            bootbox.confirm("<h4>Current selected area larger than 2500 sq km and you selected several keywords. This search can take a long time and might timeout. Do you want to continue?<h4>", function () {
+        if (area < 250000 && selectedKeys.length > 1) {
+            bootbox.confirm("<h4>Current selected area larger than 250.000 sq km and you selected more than 1 keywords. This search can take a long time and might timeout. Do you want to continue?<h4>", function () {
 
                 updateMap(true)
             });
@@ -923,9 +938,9 @@ function getFormData()
     var ne = bounds.getNorthEast(); // LatLng of the north-east corner
     var sw = bounds.getSouthWest(); // LatLng of the south-west corder 
     var startDate = $("#startDate").val().toString();
-    if (checkReg2(startDate)==false) { bootbox.alert("Please validate your From: date"); return}
+    //if (checkReg2(startDate)==false) { bootbox.alert("Please validate your From: date"); return}
     var endDate = $("#endDate").val()
-    if (checkReg2(endDate)==false) { bootbox.alert("Please validate your To: date"); return }
+    //if (checkReg2(endDate)==false) { bootbox.alert("Please validate your To: date"); return }
     var keywords = new Array();
     //variable.push  = $("#variable").val()
 
@@ -2436,7 +2451,9 @@ function GetAreainAcres(poly) {
 
 function GetAreainSqareKilometers(path) {
     
-    var result = parseFloat(google.maps.geometry.spherical.computeArea(path)) * 0.0000001;
+    
+
+    var result = parseFloat(google.maps.geometry.spherical.computeArea(path)) * 0.000001;
     //if (_result > 10000) result = result.toFixed(0);
     if (result < 100) { return result.toFixed(3); }
     if (result < 1000) { return result.toFixed(2); }
@@ -2449,16 +2466,18 @@ function GetPathForBounds(bounds)
     var ne = bounds.getNorthEast(); // LatLng of the north-east corner
     var sw = bounds.getSouthWest(); // LatLng of the south-west corder 
 
-    var xMin = Math.min(ne.lng(), sw.lng())
-    var xMax = Math.max(ne.lng(), sw.lng())
-    var yMin = Math.min(ne.lat(), sw.lat())
-    var yMax = Math.max(ne.lat(), sw.lat())
+    //var xMin = Math.min(ne.lng(), sw.lng())
+    //var xMax = Math.max(ne.lng(), sw.lng())
+    //var yMin = Math.min(ne.lat(), sw.lat())
+    //var yMax = Math.max(ne.lat(), sw.lat())
 
     var path = [];
-    path.push (ne)
-    path.push(new google.maps.LatLng(sw.lat(),ne.lng()))
+
+    path.push(new google.maps.LatLng(ne.lat(), sw.lng())),
+    path.push(ne),
+    path.push(new google.maps.LatLng(sw.lat(), ne.lng())),
     path.push(sw)
-    path.push(new google.maps.LatLng(ne.lat(),sw.lng()))
+
     return path;
 }
 
