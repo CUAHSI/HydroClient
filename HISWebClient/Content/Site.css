@@ -142,6 +142,7 @@ table
     /*background-color:red;*/
 }
 
+
 /* Assure proper alignment of control elements in a dataTable which includes a custom toolbar*/
 .toolbar, .toolbarTS{
     float: left;
@@ -378,12 +379,15 @@ font-weight: 300;
 */
 
 .table-fixed thead {
-  width: 97%;
+  /*width: 97%; */
+  width: 95%;
 }
 .table-fixed tbody {
-  height: 230px;
+  /* height: 230px; */
+  height: 30em;
   overflow-y: auto;
   width: 100%;
+  border: 1px solid red;
 }
 .table-fixed thead, .table-fixed tbody, .table-fixed tr, .table-fixed td, .table-fixed th {
   display: block;
@@ -398,7 +402,7 @@ font-weight: 300;
     background-color: red;
 }
 th {
-  padding: 100 !important;
+  padding: 10px !important;
   margin: 0 !important;
 }
 /*Streetview close button*/

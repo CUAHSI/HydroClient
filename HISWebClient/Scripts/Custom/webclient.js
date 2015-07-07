@@ -10,6 +10,8 @@ var myServicesList;
 var myServicesDatatable;
 
 var mySelectedServices = [];
+var mySavedServices = [];
+var bObservedValuesOnly = false;
 var mySelectedTimeSeries = [];
 var sessionGuid;
 var randomId;
@@ -20,6 +22,8 @@ var slider;
 var sidepanelVisible = false;
 
 var selectedTimeSeriesMax = 25;
+
+var conceptsType = '';
 
 //BC - 19-Jun-2015 - Disable concept counting - possible later use...
 //var selectedConceptsMax = 4;
@@ -74,19 +78,11 @@ function initialize() {
             mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.TERRAIN]
         },
     };
-    
 
-
-    //get refernce to map sizing of window happens later to prevent gap   
+    //get reference to map sizing of window happens later to prevent gap   
     map = new google.maps.Map(document.getElementById("map-canvas"), mapProp);
     
-    //var Item_1 = new google.maps.LatLng(48.36174468172024, -115.53271484375);
 
-    //var myPlace = new google.maps.LatLng(28.214896947346478, -68.46728515625);
-    //var bounds = new google.maps.LatLngBounds();
-    //bounds.extend(myPlace);
-    //bounds.extend(Item_1);
-    //map.fitBounds(bounds);
     //UI
     
     addCustomMapControls();
@@ -97,8 +93,6 @@ function initialize() {
     sidepanelVisible = true;
   
     addLocationSearch();
-
-
     
     //triger update of map on these events
     google.maps.event.addListener(map, 'dblclick', function () {
@@ -152,18 +146,50 @@ function initialize() {
         {
             slider.slideReveal("show")
         }
-       
     });
    
 
-    //initialize datepicker
-    $('.input-daterange').datepicker();
+    //initialize datepicker for the nonmodal date range...
+    //NOTE: The datepicker can be initialized only once!!  
+    //$('.non-modal-inputs').datepicker({ 'inputs': $('.non-modal-date-range').toArray(), 'todayHighlight': true });
+
+    //Set modal datepicker options...
+    //$('.modal-inputs').datepicker({ 'inputs': $('.modal-date-range').toArray(), 'todayHighlight': true });
+
+    //Assign click handlers to panel date inputs
+    $('#startDate').on('click', function () { $('#btnDateRange').click() });
+    $('#endDate').on('click', function () { $('#btnDateRange').click() });
+
+
+    //Initialize multiple datepicker instances on different input ids...
+    $('#startDateModal').datepicker({ 'todayHighlight': true });
+    $('#endDateModal').datepicker({ 'todayHighlight': true });
+
+
 
     //Set start and end of date range...
     var initDate = new Date();
 
-    $('#startDate').val(('0' +(initDate.getMonth() + 1).toString().slice(-2)) + '/' + initDate.getDate().toString() + '/' + (initDate.getFullYear() - 1).toString());
-    $('#endDate').val(('0' +(initDate.getMonth() + 1).toString().slice(-2)) + '/' + initDate.getDate().toString() + '/' + (initDate.getFullYear()).toString());
+    initializeDate(initDate, 'endDate');
+
+    //Calculate start date as one year earlier...
+    //NOTE: For an end date === 29-Feb-<YYYY>, the resulting start date === 01-Mar-<YYYY - 1>
+    //      Since setFullYear() returns a number, not a Date object, the setFullYear(...) expression cannot passed to initializeDate(...) directly!!
+    initDate.setFullYear(initDate.getFullYear() - 1);
+    initializeDate(initDate, 'startDate');
+
+    //Assign date validation handlers...
+    //$('#startDate').on('blur', { 'groupId': 'grpStartDate', 'errorLabelId': 'lblStartDateError' }, validateDateString);
+    //$('#endDate').on('blur', { 'groupId': 'grpEndDate', 'errorLabelId': 'lblEndDateError' }, validateDateString);
+
+    $('#startDateModal').on('blur', { 'groupId': 'grpStartDateModal', 'errorLabelId': 'lblStartDateErrorModal' }, validateDateString);
+    $('#endDateModal').on('blur', { 'groupId': 'grpEndDateModal', 'errorLabelId': 'lblEndDateErrorModal' }, validateDateString);
+
+
+    //Assign future date checks...
+    $('#startDate, #endDate').on('blur', { 'groupId': 'grpStartDate', 'errorLabelId': 'lblStartDateError', 'inputIdStartDate': 'startDate', 'inputIdEndDate': 'endDate' }, compareFromDateAndToDate);
+
+    $('#startDateModal, #endDateModal').on('blur', { 'groupId': 'grpStartDateModal', 'errorLabelId': 'lblStartDateErrorModal', 'inputIdStartDate': 'startDateModal', 'inputIdEndDate': 'endDateModal' }, compareFromDateAndToDate);
 
     //Button click handler for Select Date Range...
     $('#btnDateRange').on('click', function (event) {
@@ -174,15 +200,25 @@ function initialize() {
 
     //Button click handler for Date Range Modal Save 
     $('#btnDateRangeModalSave').on('click', function (event) {
-        //Assign current start and end date values to their modal counterparts...
-       
-        var startDateModal = $("#startDateModal").val()
-        //if (checkReg2(startDateModal) == false) { bootbox.alert("Please validate your From: date"); return }
-        //$('#startDate').val($('#startDateModal').val());
 
-        var endDateModal = $("#endDateModal").val()
+        //Simulate 'blurs' to start and end date inputs to invoke date validation checking...
+        $('#startDateModal').blur();
+        $('#endDateModal').blur();
+
+        //Check for date validation errors...
+        if ($('#startDateModal').hasClass('has-error') || $('#endDateModal').hasClass('has-error')) {
+            return false;   //Validation error(s) - DO NOT close the dialog...
+        }
+
+        //Assign current modal start and end date values to their main page counterparts...
+       
+        //var startDateModal = $("#startDateModal").val()
+        //if (checkReg2(startDateModal) == false) { bootbox.alert("Please validate your From: date"); return }
+        $('#startDate').val($('#startDateModal').val());
+
+        //var endDateModal = $("#endDateModal").val()
         //if (checkReg2(endDateModal)==false) { bootbox.alert("Please validate your To: date"); return }
-        //$('#endDate').val($('#endDateModal').val());
+        $('#endDate').val($('#endDateModal').val());
     });
 
     //initialize show/hide for search box
@@ -303,11 +339,19 @@ function initialize() {
                 
             }
         }
-        updateServicesList();
+
+        //Enable 'Clear Selections' button, if indicated...
+        if (0 < mySelectedServices.length) {
+            $('#btnClearSelectionsDS').prop('disabled', false);
+        }
+        else {
+            $('#btnClearSelectionsDS').prop('disabled', true);
+        }
+
     });
 
     $("#Search").submit(function (e) {       
-         
+
         resetMap()
         //prevent Default functionality
         e.preventDefault();
@@ -315,7 +359,7 @@ function initialize() {
         //var formData = getFormData();
         var path=[];
         path = GetPathForBounds(map.getBounds())
-        var area = GetAreainSqareKilometers(path)
+        var area = GetAreaInSquareKilometers(path)
         
 
         var selectedKeys = $("input[name='keywords']:checked").map(function () {
@@ -343,10 +387,16 @@ function initialize() {
         
     })
 
-    $("#clear").on('click', function()
-            {
-                resetMap()
-            })
+    //BCC - 02-Jul-2015 - External QA Issue #48 
+    $("#btnSetDefaults").on('click', function () {
+        //Remove all map markers, if any...
+        resetMap();
+
+        //reset search parameters...
+        resetSearchParameters();
+
+    });
+
     //click event for tab
     $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
          if (e.target.id == "tableTab") {
@@ -358,8 +408,14 @@ function initialize() {
 
              setUpTimeseriesDatatable();
             var table = $('#dtTimeseries').DataTable();
+
+             //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
+             //Assign a handler to the DataTable 'draw.dt' event
+             table.off('draw.dt', addFilterPlaceholders);
+             table.on('draw.dt', { 'tableId': 'dtTimeseries' }, addFilterPlaceholders);
+
             table.order([0, 'asc']).draw();
-            ////hide sidebar
+            //hide sidebar
             // slider.slideReveal("hide")
 
             }
@@ -384,84 +440,225 @@ function initialize() {
         return false;
     });
 
-
-    
-
-
-
     $("#map-canvas").height(getMapHeight()) //setMapHeight
     $("#map-canvas").width(getMapWidth) //setMapWidth
     google.maps.event.trigger(map, "resize");
 
-   // $("#MapAreaControl").html(getMapAreaSize());
+    //BCC - 26-Jun-2015 - QA Issue #20 - Select Keywords: selected keywords saved even popup were closed without user click Save
+    //Click handler for 'Select Keyword(s)' button
+    $('#btnSelectKeywords').on('click', clickSelectKeywords);
 
 
-};
-  
+    $('#btnSelectDataServices').on('click', clickSelectDataServices);
+
+    //Set up tooltips...
+    //setUpTooltips();
+
+}
+
+//Return all search parameters to initial state
+function resetSearchParameters() {
+    //Reset 'From' and 'To' Dates...
+    var initDate = new Date();
+
+    initializeDate(initDate, 'endDate');
+    initDate.setFullYear(initDate.getFullYear() - 1);
+    initializeDate(initDate, 'startDate');
+
+    //Reset Keyword(s)...
+    initializeKeywordList('Common');
+    initializeKeywordList('Full');
+
+    //Reset Data Service(s)...
+    initializeDataServices();
+}
+
+//Initialize the input id to the current date
+function initializeDate(date, inputId) {
+
+    $('#' + inputId).val(('0' + (date.getMonth() + 1).toString().slice(-2)) + '/' + ('0' + date.getDate()).toString().slice(-2) + '/' + (date.getFullYear()).toString());
+}
+
+//Initialize the keyword list per the input list type
+function initializeKeywordList(type) {
+
+    if ('Common' === type) {
+        //'Most Common' keywords...
+        $("input[name='keywords']:checked").attr('checked', false);
+        $("input[name='keywords']").prop("disabled", false);
+    }
+    else {
+        if ('Full' === type) {
+            //'Full' keywords...
+            $("#tree").fancytree("getTree").visit(function (node) {
+                node.setSelected(false);
+                node.unselectable = false;
+                node.hideCheckbox = false;
+            });
+        }
+    }
+
+    //Clear the concepts list
+    var list = $('#olConcepts');
+
+    list.empty();
+    list.append('<li>All</li>');
+}
+
+//Initialize the data services table
+function initializeDataServices() {
+
+    //Uncheck gridded data services checkbox
+    $('#checkOnlyObservedValues').attr('checked', false);
+
+    //Unselect all table rows
+    if ($.fn.DataTable.isDataTable('#dtServices')) {
+        //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
+        //Source: http://datatables.net/reference/api/rows().nodes()
+        var table = $('#dtServices').DataTable();
+        var rows = table.rows({ 'order': 'current', 'search': 'applied' });    //Retrieve rows per current sort/search order...
+        var nodesRendered = rows.nodes();                                    //Retrieve all the rendered nodes for these rows
+        //NOTE: Rendered nodes retrieved in the same order as the rows...
+        var jqueryObjects = nodesRendered.to$();    //Convert to jQuery Objects!!
+        var className = 'selected';
+
+        //Remove selected class from all rendered rows...
+        jqueryObjects.removeClass(className);
+    }
+
+    //Clear the services list/reset global array
+    mySelectedServices =[];
+    mySavedServices = [];
+    list = $('#olServices');
+
+    list.empty();
+    list.append('<li>All</li>');
+}
+
+    
+//Validate the input date string - return true: valid, false otherwise
+function validateDateString(event) {
+
+    var jqueryObj = $(this);
+    var dateString = jqueryObj.val();
+    var jqueryGrpObj = $(('#' + event.data.groupId));
+    var jqueryLabelObj = $(('#' + event.data.errorLabelId));
+
+    if (! isNaN(Date.parse(dateString))) {
+        //Date string valid - remove error class, hide error message
+        jqueryLabelObj.text('');
+        jqueryLabelObj.hide();
+        jqueryGrpObj.removeClass('has-error');
+        jqueryObj.removeClass('has-error');
+    }
+    else {
+        //Date string invalid - set error class, show error message
+        jqueryLabelObj.text('Please enter a valid date...');
+        jqueryLabelObj.show();
+        jqueryGrpObj.addClass('has-error');
+        jqueryObj.addClass('has-error');
+        //jqueryObj.focus();    //Allow change of focus for bootstrap datepicker!!
+    }
+}
+
+//Validate the 'from' date string is earlier than or equal to the 'to' date
+function compareFromDateAndToDate(event) {
+
+    //Retrieve 'from' and 'to' date strings...
+    var jqueryStartDate = $(('#' + event.data.inputIdStartDate));
+    var jqueryEndDate = $(('#' + event.data.inputIdEndDate));
+
+    var dateStringStart = jqueryStartDate.val();
+    var dateStringEnd = jqueryEndDate.val();
+
+    var jqueryGrpObj = $(('#' + event.data.groupId));
+    var jqueryLabelObj = $(('#' + event.data.errorLabelId));
+
+
+    //Parse both date strings...
+    var msStart = Date.parse(dateStringStart);
+    var msEnd = Date.parse(dateStringEnd);
+
+    if ((!isNaN(msStart)) && (!isNaN(msEnd))) {
+        //Date strings represent valid dates - compare 
+
+        if (msStart <= msEnd) {
+            //Success - remove error class, hide error message
+            jqueryLabelObj.text('');
+            jqueryLabelObj.hide();
+            jqueryGrpObj.removeClass('has-error');
+            jqueryStartDate.removeClass('has-error');
+        }
+        else {
+            //Failure - set error class, show error message
+            jqueryLabelObj.text("Please enter a 'From' date earlier than or equal to the 'To' date...");
+            jqueryLabelObj.show();
+            jqueryGrpObj.addClass('has-error');
+            jqueryStartDate.addClass('has-error');
+        }
+    }
+
+    //If either date string is invalid - take no action
+    return;
+}
+
+
+//BCC - 26-Jun-2015 - Various fixes related to QA Issue #15 - Warning messages: typos in warning message when selecting 2+ keywords and area is 25sq km+
 function validateQueryParameters(area, selectedKeys) {
     //validate inputs
 
-    if (area > 1000000) {
-        bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search.  <br> Please limit search area to less than 1.000.000 sq km and/or reduce search keywords.<h4>")
+    area *= 1;  //Convert to numeric value...
+
+    var max = 100000;
+    if (area > max) {
+        
+        bootbox.alert("<h4>The selected area (" + area.toLocaleString() + " sq km) is too large to search. <br> Please limit search area to less than " + max.toLocaleString() + " sq km and/or reduce search keywords.</h4>");
         return false;
     }
 
-    if (area > 250000 && selectedKeys.length == 0) {
-        bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search for <strong>All</strong> keywords.  <br> Please limit search area to less than 250.000 sq km and/or reduce search keywords.<h4>")
+    max = 25000;
+    if (area > max && selectedKeys.length == 0) {
+        bootbox.alert("<h4>The selected area (" + area.toLocaleString() + " sq km) is too large to search for <strong>All</strong> keywords. <br> Please limit search area to less than " + max.toLocaleString() + " sq km and/or limit keywords.</h4>");
         return false;
     }
-    if (area > 250000 && selectedKeys.length == 1) {
+    if (area > max && selectedKeys.length == 1) {
+        bootbox.confirm("<h4>Searching the selected area (" + area.toLocaleString() + " sq km) can take a long time. Do you want to continue?</h4>", function (bContinue) {
 
-        //if (area > 50000) {
-        //    bootbox.alert("<h4>Current selected area is " + area + " sq km. This is too large to search.  <br> Please limit search area to less than 50000 sq km and/or reduce search keywords.<h4>")
-        //    return false;
-        //}
-        //else {
-            bootbox.confirm("<h4>Current selected area is " + area + " sq km. This search can take a long time. Do you want to continue?<h4>", function () {
-
-                updateMap(true)
+                if (bContinue) {
+                    updateMap(true);
+                }
             });
-        //}
     }
     else {
-
-        if (area > 250000 && selectedKeys.length > 1) {
-            bootbox.alert("<h4>Current selected area is " + area + " sq km and you have selected more than 1 keywords. Please reduce area to less than 250.000sq km or number of keywords to 1?<h4>", function () {
-
+            if (area > max && selectedKeys.length > 1) {
+                bootbox.alert("<h4>For the selected area (" + area.toLocaleString() + " sq km), you selected more than one keyword. <br> Please reduce area or select only one keyword.</h4>");
                 return false;
-            });
         }
-        if (area < 250000 && selectedKeys.length > 1) {
-            bootbox.confirm("<h4>Current selected area larger than 250.000 sq km and you selected more than 1 keywords. This search can take a long time and might timeout. Do you want to continue?<h4>", function () {
+            if (area < max && selectedKeys.length > 1) {
+                bootbox.confirm("<h4>For the selected area (" + area.toLocaleString() + " sq km), you selected several keywords. This search can take a long time and might timeout. Do you want to continue?</h4>", function (bContinue) {
 
-                updateMap(true)
+                    if (bContinue) {
+                        updateMap(true);
+                    }
             });
-            //if (area > 100000 && selectedKeys.length > 5) { 
-            //    bootbox.confirm("<h4>Current selected area is " + area + " sq km. This search can take a long time. Do you want to continue?<h4>", function () {
-
-            //        updateMap(true) 
-            //    });
-
-               
         }
         else
         {
             updateMap(true)
+            }     
         }
-        
-    }
+
     return true;
 }
 
 function updateKeywordList(type) {
-    if (type == "Common") {
+    if (type === "Common") {
+
+        //Retain the current concepts type
+        conceptsType = type;
+
         //Unset/enable all 'Full' tab entries...
-        $("#tree").fancytree("getTree").visit(function (node) {
-            node.setSelected(false);
-            node.unselectable = false;
-            node.hideCheckbox = false;
-        });
-        //return false;
+        initializeKeywordList('Full');
 
         //Clear and re-populate concepts list...
         var list = $('#olConcepts');
@@ -480,17 +677,17 @@ function updateKeywordList(type) {
         }
         else {
             //All concepts selected...
-            list.append('All');
+            list.append('<li>All</li>');
         }
 
     }
-    else //hierearchy
+    else //hierarchy
     {
-        //Uncheck/enable all 'Common' tab checkboxes
-        $("input[name='keywords']:checked").attr('checked', false);
-        $("input[name='keywords']").prop("disabled", false);
+        //Retain the current concepts type
+        conceptsType = 'Hierarchy';
 
-        //return false;
+        //Uncheck/enable all 'Common' tab checkboxes
+        initializeKeywordList('Common');
 
         //Clear and re-populate concepts list...
         var list = $('#olConcepts');
@@ -503,14 +700,15 @@ function updateKeywordList(type) {
         //var length = checked.length;
         // var selectedNodes = tree.getSelectedNodes();
         //var length = selectedNodes.length;
-        var selKeys = $.map(tree.getSelectedNodes(true), function (node) { //true switch returnes all top level nodes
+        var titleCount = 0;
+        var selKeys = $.map(tree.getSelectedNodes(true), function (node) { //true switch returns all top level nodes
 
+            ++titleCount;
             return node.title;
-
 
         }).join("##");
 
-        if (selKeys.split('##').length > 0) {
+        if ((0 < titleCount) && (selKeys.split('##').length > 0)) {
             for (var i = 0; i < (selKeys.split('##').length) ; i++) {
 
                 list.append('<li>' + selKeys.split('##')[i] + '</li>');
@@ -518,7 +716,89 @@ function updateKeywordList(type) {
             }
             //list.append('<li>' + selectedNodes[i].title + '</li>');
         }
+        else {
+            //All concepts selected...
+            list.append('<li>All</li>');
+        }
     }
+}
+
+
+//BCC - 26-Jun-2015 - QA Issue #20 - Select Keywords: selected keywords saved even popup were closed without user click Save
+//Click handler for 'Select Keyword(s)' button
+function clickSelectKeywords(event) {
+
+    //Clear selections from 'Most Common' and 'Full List' tabs...
+
+    //'Most Common' tab checkboxes
+    $("input[name='keywords']:checked").attr('checked', false);
+
+    //'Full List' tab nodes
+    $("#tree").fancytree("getTree").visit(function (node) {
+        node.setSelected(false);
+    });
+
+    //Retrieve concept values from list...
+    var listItems = $('#olConcepts li');
+    var listArray = [];
+
+    listItems.each(function (index, element) {
+
+        var text = $(this).text();
+        listArray.push(text);
+    });
+
+    //Re-populate tab per current concepts type...
+    if ('Common' === conceptsType) {
+        //'Most Common' tab
+
+        //For each checkbox...
+        $("input[name='keywords']").each(function (index, element) {
+            var checkbox = $(this);
+            if (-1 !== listArray.indexOf(checkbox.attr('value'))) {
+                //Checkbox value found in concepts list - check the checkbox
+                checkbox.prop('checked', true);
+            }
+        });
+    }
+    else {
+        //'Full List' tab... 
+
+        //For each tree node...
+        $("#tree").fancytree("getTree").visit(function (node) {
+            if (-1 !== listArray.indexOf(node.title)) {
+                //Node title found in concepts list - select the node
+                node.setSelected(true);
+            }
+        });
+    }
+}
+
+//Click handler for 'Select Data Service(s)' button
+function clickSelectDataServices(event) {
+
+    //If any data service(s) previously selected - select associated data table rows...
+    mySelectedServices.length = 0;
+    mySelectedServices = mySavedServices.slice(0);
+
+    $('#checkOnlyObservedValues').prop('checked', bObservedValuesOnly);
+
+    var rows = $("#dtServices").dataTable().fnGetNodes();
+    var length = rows.length;
+    var className = 'selected';
+        
+    for (var i = 0; i < length; ++i) {
+        var id = $(rows[i]).find("td:eq(5)").html();
+
+        if (-1 !== mySelectedServices.indexOf(id)) {
+            $(rows[i]).addClass(className);            //Previously selected service Ids contain current id - select the row
+        }
+        else {
+            $(rows[i]).removeClass(className);         //Previously selected service Ids DO NOT contain current id - DO NOT select the row
+    }
+    }
+
+    enableDisableButton('#dtServices', '#btnClearSelectionsDS');
 }
 
 function getMapHeight()
@@ -606,7 +886,7 @@ function addSlider()
             // $("#map-canvas").width(($(window).width() - $('#slider').width())) //setMapWidth
             // $("#map-canvas").position({ left:0 })
             // google.maps.event.trigger(map, "resize");
-            console.log(obj);
+            //console.log(obj);
         },
         hide: function (obj) {
             $("#map-canvas").position({ left: -$('#slider').width() })
@@ -616,7 +896,7 @@ function addSlider()
             sidepanelVisible = false;
         },
         hidden: function (obj) {
-            console.log(obj);
+            //console.log(obj);
         }
     });
     return _slider;
@@ -816,8 +1096,8 @@ function addLocationSearch()
 function getMapAreaSize()
 {
     var path = GetPathForBounds(map.getBounds())
-    var area = GetAreainSqareKilometers(path)
-    return 'Area: ' + area + ' sq km';
+    var area = GetAreaInSquareKilometers(path)
+    return 'Area: ' + (area *= 1).toLocaleString() + ' sq km';
 }
 
 function resetMap()
@@ -836,9 +1116,10 @@ function processMarkers(geoJson)
     //map.data.addGeoJson(geojson);
     //zoom(map);
     if (json != null) {
-        if (json.features.length == 0)
+        if (json.features.length === 0)
         {
-            bootbox.alert(" No timeseries for specified parameters found.")
+            //BCC - 29-Jun-2015 - QA Issue #29 - GUI: "No timeseries for specified parameters found" have different font size. 
+            bootbox.alert("<h4>No timeseries for specified parameters found.</h4>")
             return;
         }
         // set title
@@ -854,7 +1135,9 @@ function processMarkers(geoJson)
         //features = json.features;
         if (typeof json.features != "undefined") {
 
-            $('#tableTab').removeClass('disabled')
+            //BCC - 26-Jun-2015 - Conditionally enable 'Data' button... 
+            //QA Issue #13 - Data tab (usability): if search doesn't return any results, data tab should be disabled
+            var bMarkerFound = false;
 
             for (var i = 0, len = json.features.length; i < len; ++i) {
                 if (json.features[i].geometry.type == "Point") {
@@ -872,7 +1155,9 @@ function processMarkers(geoJson)
                     ///if (document.location.search.indexOf('ThemeName') != -1) {
                     marker = updateClusteredMarker(map, point, count, icontype, id, clusterid, "");
                     clusteredMarkersArray.push(marker);
-                    
+
+                    //QA Issue #13
+                    bMarkerFound = true;
                     //}
                     //else {
 
@@ -923,9 +1208,15 @@ function processMarkers(geoJson)
                     clusteredMarkersArray.push(polygonMarker);
                     polygonMarker.setMap(map);
 
+                    //QA Issue #13
+                    bMarkerFound = true;
                 }
             };
-            
+
+            //QA Issue #13
+            if (bMarkerFound) {
+                $('.data').removeClass('disabled')
+            }
         }
     }
 }
@@ -939,13 +1230,15 @@ function getFormData()
     var sw = bounds.getSouthWest(); // LatLng of the south-west corder 
     var startDate = $("#startDate").val().toString();
     //if (checkReg2(startDate)==false) { bootbox.alert("Please validate your From: date"); return}
-    var endDate = $("#endDate").val()
+    var endDate = $("#endDate").val().toString();
     //if (checkReg2(endDate)==false) { bootbox.alert("Please validate your To: date"); return }
     var keywords = new Array();
     //variable.push  = $("#variable").val()
 
    //selected Services
-    var services = mySelectedServices;
+    //var services = mySelectedServices;
+    var services = mySavedServices;
+
     //alert(myTimeSeriesClusterDatatable.rows('.selected').data().length + ' row(s) selected');
     //only MuddyRiver
     //services.push(181);
@@ -1052,7 +1345,9 @@ function updateMap(isNewRequest) {
         success: function (data) {
             processMarkers(data)
             //setUpTimeseriesDatatable();
-            $('.data').removeClass('disabled');
+            //BCC - 26-Jun-2015 - Conditionally enable 'Data' button... 
+            //QA Issue #13 - Data tab (usability): if search doesn't return any results, data tab should be disabled
+            //$('.data').removeClass('disabled');
             $("#pageloaddiv").hide();
         },
         error: function (xmlhttprequest, textstatus, message) {
@@ -1209,7 +1504,13 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
             setUpDatatables(clusterid);
 
-            $('#SeriesModal').modal('show')
+            //BCC - 29-Jun-2015 - QA Issue #25 - Data tab: table column titles stay in wrong order after sorting table
+            //Remove/add column adjustment event handler...
+            $('#SeriesModal').off('shown.bs.modal', adjustColumns);
+            $('#SeriesModal').on('shown.bs.modal', {'tableId': 'dtMarkers', 'containerId': 'SeriesModal'}, adjustColumns);
+
+            $('#SeriesModal').modal('show');
+
             //var details = getDetailsForMarker(clusterid)
             //createInfoWindowContent()
 
@@ -1326,8 +1627,21 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             getMarkerPositionName(marker);
 
             setUpDatatables(clusterid);
+
+            var table = $('#dtMarkers').dataTable();
+
+            //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
+            //Assign a handler to the DataTable 'draw.dt' event
+            table.off('draw.dt', addFilterPlaceholders);
+            table.on('draw.dt', { 'tableId': 'dtMarkers' }, addFilterPlaceholders);
                 
-            $('#SeriesModal').modal('show')
+            //BCC - 29-Jun-2015 - QA Issue #25 - Data tab: table column titles stay in wrong order after sorting table
+            //Remove/add column adjustment event handler...
+            $('#SeriesModal').off('shown.bs.modal', adjustColumns);
+            $('#SeriesModal').on('shown.bs.modal', { 'tableId': 'dtMarkers', 'containerId': 'SeriesModal' }, adjustColumns);
+
+            $('#SeriesModal').modal('show');
+
             //var details = getDetailsForMarker(clusterid)
             //createInfoWindowContent()
            
@@ -1341,6 +1655,52 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
     }
     return marker
+}
+
+//BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
+//Prepend disabled options as 'placeholders' to filtering selects... 
+//NOTE: When registered with the 'draw.dt', this function is called three times, once for each of the datatables sub-tables: header, body and footer.
+//       The selector only works on the third call for the footer table...
+//       Also, the function is called each time the user applies a filter. Thus the method always removes the 'placeholder' value from the select before prepending it to the select
+//Source: http://stackoverflow.com/questions/22822427/bootstrap-select-dropdown-list-placeholder
+function addFilterPlaceholders(event) {
+
+    var tableId = event.data.tableId;
+    var placeHolders = ['Organization', 'Service Code', 'Keyword', 'Variable Name'];
+
+    var selector = '#' + tableId + '_wrapper > div.dataTables_scroll > div.dataTables_scrollFoot > div > table > tfoot > tr > th > select';
+
+    var selects = $(selector);
+
+    //console.log('Select count: ' +selects.length);
+
+    for(var i = 0; i < placeHolders.length; ++i) {
+        var select = $(selects[i]);
+
+        select.find("option[value='999999']").remove();
+
+        if ('' === select.val()) {
+            //No selection made - prepend 'placeholder' to selections
+            select.prepend('<option value="999999" selected disabled style="color: grey;">Filter by: ' + placeHolders[i] + '</option>');
+        }
+
+
+    }
+}
+
+
+//BCC - 29-Jun-2015 - QA Issue #25 - Data tab: table column titles stay in wrong order after sorting table
+//Force a Datatable redraw to render now visible headers in the correct widths...
+//Source: http://datatables.net/reference/api/columns.adjust()
+function adjustColumns(event) {
+
+    var tableId = event.data.tableId;
+    var containerId = event.data.containerId;
+
+    var table = $(('#' +tableId)).DataTable();
+
+    $(('#' + containerId)).css('display', 'block');
+    table.columns.adjust().draw();
 }
 
 function getDetailsForMarker(clusterid)
@@ -1414,8 +1774,7 @@ function setMouseEventListeners(map, marker, clusterId) {
 function setupServices()
 {
 
-    $.fn.DataTable.isDataTable("#dtServices")
-    {
+    if ($.fn.DataTable.isDataTable("#dtServices")) {
         $('#dtServices').DataTable().clear().destroy();
     }
 
@@ -1424,20 +1783,21 @@ function setupServices()
  
     myServicesDatatable = $('#dtServices').dataTable({
         "ajax": actionUrl,
-        "order": [2,'asc'],
+        "order": [2, 'asc'],
+        "dom": 'l<"toolbarDS">frtip', //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
          "columns": [
-            
+
             { "data": "Organization" },
-            { "data": "ServiceCode", "visible": false},
+           { "data": "ServiceCode", "visible": false },
             { "data": "Title" },
             { "data": "DescriptionUrl", "visible": false },
             { "data": "ServiceUrl", "visible": false },
             { "data": "Checked", "visible": false },
-           
+
             { "data": "Sites", "visible": true },
             { "data": "Variables", "visible": true },
             { "data": "Values", "visible": true },
-            { "data": "ServiceBoundingBox", "visible": false},
+           { "data": "ServiceBoundingBox", "visible": false },
             { "data": "ServiceID" }
          ],
          //"rowCallback": function( row, data ) {
@@ -1445,7 +1805,7 @@ function setupServices()
          //        $(row).addClass('selected');
          //    }
          //},
-         "createdRow": function ( row, data, index ) {
+        "createdRow": function (row, data, index) {
 
              var id = $('td', row).eq(5).html();
              var title = $('td', row).eq(1).html();
@@ -1458,7 +1818,7 @@ function setupServices()
          initComplete: function () {
              this.fnAdjustColumnSizing();
          }
-    })
+    });
     //$('a.toggle-vis').on('click', function (e) {
     //    e.preventDefault();
 
@@ -1483,20 +1843,49 @@ function setupServices()
                 return element !== id;
             });
         }
-        updateServicesList();
+
+        enableDisableButton('#dtServices', '#btnClearSelectionsDS');
     });
 
     $('#saveServiceSelection').click(function () {
        // alert(myServicesDatatable[0].rows('.selected').data().length + ' row(s) selected');
        
-       
-       
+        //Rebuild the saved services array...
+        mySavedServices.length = 0;
+
+        var rows = $("#dtServices").dataTable().fnGetNodes();
+        var length = rows.length;
+
+        for (var i = 0; i < length; ++i) {
+            var row = $(rows[i]);
+
+            if(row.hasClass('selected')) {
+                mySavedServices.push(row.find('td:eq(5)').html());
+            }
+        }
+
+        //Update the services list from the newely rebuilt saved services array...
+        updateServicesList();
+
+        //Retain the state of the 'Exclude gridded...' checkbox
+        bObservedValuesOnly = $('#checkOnlyObservedValues').prop('checked');
+
     });
 
     $('#cancelServiceSelection').click(function () {
         mySelectedServices.length = 0;
 
     });
+
+    //BC - Test - add a custom toolbar to the table...
+    //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+    $("div.toolbarDS").html('<input type="button" style="margin-left: 2em; float:left;" class="btn btn-warning" disabled id="btnClearSelectionsDS" value="Clear Selection(s)"/>');
+
+
+    //Avoid multiple registrations of the same handler...
+    $('#btnClearSelectionsDS').off('click', clearServicesSelections);
+    $('#btnClearSelectionsDS').on('click', { 'tableId': '#dtServices', 'btnId': '#btnClearSelectionsDS' }, clearServicesSelections);
+
     //return table;
 }
 //Datatable for Marker
@@ -1508,8 +1897,7 @@ function setUpDatatables(clusterid)
 //    ['Trident','Internet Explorer 5.0','Win 95+','5','C'],
  
     //];
-    $.fn.DataTable.isDataTable("#dtMarkers")
-    {
+    if ($.fn.DataTable.isDataTable("#dtMarkers")) {
         $('#dtMarkers').DataTable().clear().destroy();
     }
     
@@ -1521,8 +1909,8 @@ function setUpDatatables(clusterid)
  
     var oTable= $('#dtMarkers').dataTable({
         "ajax": actionUrl,
-        "autoWidth": true,
-        "jQueryUI": false,
+        //"autoWidth": true,    //BCC - 29-Jun-2015 - property defaults to true - no need to set here
+        //"jQueryUI": false,    //BCC - 29-Jun-2015 - property defaults to false - no need to set here
         "deferRender": true,
         "dom": 'C<"clear">l<"toolbar">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
          //colVis: {
@@ -1544,7 +1932,7 @@ function setUpDatatables(clusterid)
          //},
          "columns": [
             { "data": "Organization", "width": "50px", "visible": true },
-            { "data": "ServCode", "sTitle": "Service Name", "visible": true },
+            { "data": "ServCode", "sTitle": "Service Code", "visible": true },
             { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
             { "data": "ServURL", "visible": false },
             { "data": "SiteCode", "visible": false },
@@ -1638,7 +2026,9 @@ function setUpDatatables(clusterid)
          },
         initComplete: function () {
 
-            setfooterFilters('#dtMarkers', [0,1,2,6]);
+            setfooterFilters('#dtMarkers', [0, 1, 2, 6]);
+
+            setUpTooltips('dtMarkers');
         
            // oTable.fnAdjustColumnSizing();
         }
@@ -1653,13 +2043,14 @@ function setUpDatatables(clusterid)
     //Source: https://datatables.net/examples/api/select_row.html
     //Avoid multiple registrations of the same handler...
     $('#dtMarkers tbody').off('click', 'tr', toggleSelected);
-    $('#dtMarkers tbody').on('click', 'tr', {'tableId': '#dtMarkers', 'btnId': '#btnZipSelections'},toggleSelected);
+    $('#dtMarkers tbody').on('click', 'tr', {'tableId': '#dtMarkers', 'btnId': '#btnZipSelections', 'btnClearId': '#btnClearSelections'},toggleSelected);
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-    $("div.toolbar").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAll" style="float:left;"/>&nbsp;Select Top ' + 
+    $("div.toolbar").html('<span style="float: left; margin-left: 1em;" id="spanSelectAll"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAll" style="float:left;"/>&nbsp;Select Top ' + 
                           selectedTimeSeriesMax.toString() + '?</span>' +
-                          '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelections" value="Zip Selections"/>' +
+                          '<input type="button" style="margin-left: 2em; float:left;" class="btn btn-warning" disabled id="btnClearSelections" value="Clear Selection(s)"/>' +
+                          '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelections" value="Zip Selection(s)"/>' +
                           '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;"></span>');
     //$("div.toolbar").css('border', '1px solid red');
   
@@ -1672,11 +2063,15 @@ function setUpDatatables(clusterid)
 
     //Avoid multiple registrations of the same handler...
     $('#chkbxSelectAll').off('click', selectAll);
-    $('#chkbxSelectAll').on('click', {'tableId': '#dtMarkers', 'chkbxId': '#chkbxSelectAll', 'btnId': '#btnZipSelections'}, selectAll);
+    $('#chkbxSelectAll').on('click', { 'tableId': '#dtMarkers', 'chkbxId': '#chkbxSelectAll', 'btnId': '#btnZipSelections', 'btnClearId': '#btnClearSelections'}, selectAll);
 
     //Avoid multiple registrations of the same handler...
     $('#btnZipSelections').off('click', zipSelections);
-    $('#btnZipSelections').on('click', { 'tableId': '#dtMarkers', 'chkbxId': '#chkbxSelectAll'}, zipSelections);
+    $('#btnZipSelections').on('click', { 'tableId': '#dtMarkers', 'chkbxId': '#chkbxSelectAll' }, zipSelections);
+
+    //Avoid multiple registrations of the same handler...
+    $('#btnClearSelections').off('click', clearSelections);
+    $('#btnClearSelections').on('click', { 'tableId': '#dtMarkers', 'chkbxId': '#chkbxSelectAll', 'btnId': '#btnZipSelections', 'btnClearId': '#btnClearSelections' }, clearSelections);
 
     //BC - TEST - Retrieve the colvis button control - assign a click handler for scrollx control...
     //var colvis = new $.fn.DataTable.ColVis(oTable);
@@ -1759,7 +2154,8 @@ function setfooterFilters(tableId, columnsArray) {
         if (-1 !== columnsArray.indexOf(i)) {
             var column = api.column(i);
             var data = column.data();
-            var select = $('<select><option value=""></option></select>')
+            //var select = $('<select><option value=""></option></select>')
+            var select = $('<select><option value="">Remove filter...</option></select>')
                 .appendTo($(column.footer()).empty())
                 .on('change', function () {
                     var val = $.fn.dataTable.util.escapeRegex($(this).val());
@@ -1780,18 +2176,19 @@ function updateServicesList()
 {
     //Clear and re-populate services list...
     var list = $('#olServices');
-    var length = mySelectedServices.length;
+    var length = mySavedServices.length;
     
 
     list.empty();
 
     if (0 < length) {
         //Certain services selected...
-        list.append('Selected ' + length.toString() + ' of ' + myServicesDatatable.fnGetData().length + ' .');
+        list.append('<li>Selected ' + length.toString() + ' of ' + myServicesDatatable.fnGetData().length + '</li>');
     }
     else {
         //All services selected...
-        list.append('Selected All of ' + myServicesDatatable.fnGetData().length + '');
+        //list.append('Selected All of ' + myServicesDatatable.fnGetData().length + '');
+        list.append('<li>All</li>');
     }
 }
 
@@ -1800,6 +2197,7 @@ function toggleSelected(event) {
 
     //Check state of 'Zip Selections' button...
     enableDisableButton(event.data.tableId, event.data.btnId);
+    enableDisableButton(event.data.tableId, event.data.btnClearId);
 }
 
 function clovisButtonClick(event) {
@@ -1831,33 +2229,35 @@ function newRow($table, cols) {
     return ($row);
 }
 
+//BCC - 30-Jun-2015 - Revised formatting for QA issue #32 - Download Manager (GUI): table entries arу scattered all over the page
 //Add styles to row for download manager table...
 function addRowStylesDM(newrow) {
 
     //Cell: 0
     var td = newrow.find('td:eq(0)');
     td.addClass('text-center');
-    td.css({ 'vertical-align': 'middle', 'height': '2em', 'display': 'none' });
+    td.css({ 'vertical-align': 'middle', 'display': 'none' });
 
     //Cell: 1
     td = newrow.find('td:eq(1)');
     td.addClass('text-center');
-    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '15%' });
+    td.css({ 'vertical-align': 'middle', 'height': '3em', 'width': '15%' });
 
     //Cell: 2
     td = newrow.find('td:eq(2)');
     td.addClass('text-center');
-    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '25%' });
+    td.css({ 'vertical-align': 'middle', 'height': '3em', 'width': '25%' });
 
     //Cell: 3
     td = newrow.find('td:eq(3)');
     td.addClass('text-center');
-    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '40%', 'overflow': 'hidden', 'text-overflow': 'ellipsis' });
+    //td.attr('title', 'zip archive URL goes here');
+    td.css({ 'vertical-align': 'middle', 'height': '3em', 'width': '40%', 'overflow': 'hidden'});
 
     //Cell: 4
     td = newrow.find('td:eq(4)');
     td.addClass('text-center');
-    td.css({ 'vertical-align': 'middle', 'height': '2em', 'width': '13%' /*, 'margin-left': '-2em' */ });
+    td.css({ 'vertical-align': 'middle', 'height': '3em', 'width': '13%'});
 }
 
 function selectAll(event) {
@@ -1896,6 +2296,54 @@ function selectAll(event) {
     }
 
     //Check state of 'Zip Selections' button...
+    enableDisableButton(event.data.tableId, event.data.btnId);
+    enableDisableButton(event.data.tableId, event.data.btnClearId);
+}
+
+//Clear all table selections...
+function clearSelections(event) {
+
+    //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
+    //Source: http://datatables.net/reference/api/rows().nodes()
+    var table = $(event.data.tableId).DataTable();
+    var rows = table.rows({ 'order': 'current', 'search': 'applied' });     //Retrieve rows per current sort/search order...
+    var nodesRendered = rows.nodes();                                       //Retrieve all the rendered nodes for these rows
+                                                                            //NOTE: Rendered nodes retrieved in the same order as the rows...
+    var jqueryObjects = nodesRendered.to$();    //Convert to jQuery Objects!!
+    var className = 'selected';
+
+    //Remove selected class from all rendered rows...
+    jqueryObjects.removeClass(className);
+
+    //Uncheck the 'top ...' checkbox
+    $(event.data.chkbxId).prop("checked", false);
+
+    //Check button states...
+    enableDisableButton(event.data.tableId, event.data.btnId);
+    enableDisableButton(event.data.tableId, event.data.btnClearId);
+}
+
+//Clear all table selections...
+function clearServicesSelections(event) {
+    //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
+    //Source: http://datatables.net/reference/api/rows().nodes()
+    var table = $(event.data.tableId).DataTable();
+    var rows = table.rows({ 'order': 'current', 'search': 'applied' });     //Retrieve rows per current sort/search order...
+    var nodesRendered = rows.nodes();                                       //Retrieve all the rendered nodes for these rows
+    //NOTE: Rendered nodes retrieved in the same order as the rows...
+    var jqueryObjects = nodesRendered.to$();    //Convert to jQuery Objects!!
+    var className = 'selected';
+
+    //Remove selected class from all rendered rows...
+    jqueryObjects.removeClass(className);
+
+    //Clear the selected services array
+    mySelectedServices.length = 0;
+
+    //Uncheck the 'Exclude Gridded Data Services...' checkbox
+    $("input[name='checkOnlyObservedValues']").attr('checked', false);
+
+    //Check button state...
     enableDisableButton(event.data.tableId, event.data.btnId);
 }
 
@@ -2040,13 +2488,26 @@ function zipSelections(event) {
             //alert("Response received: " + response.Status.toString());
 
             //Add new row to the download manager table
+            //BCC - 30-Jun-2015 - Revised formatting for QA issue #32 - Download Manager (GUI): table entries arу scattered all over the page
             var cols = [];
+            var div = '';
 
+            //Column 0
             cols.push(response.RequestId.toString());
-            cols.push(taskId);
-            cols.push(formatStatusMessage(response.Status));
-            cols.push(response.BlobUri);
 
+            //Column 1
+            div = $('<div class="btn" style="font-size: 1em; font-weight: bold; margin: 0 auto;">' + taskId + '</div>');
+            cols.push(div);
+
+            //Column 2
+            div = $('<div class="btn" style="font-size: 1em; font-weight: bold; margin: 0 auto;">' + formatStatusMessage(response.Status) + '</div>');
+            cols.push(div);
+
+            //Column 3
+            div = $('<div class="btn" id="blobUriText" style="font-size: 0.75em; font-weight: bold; margin: 0 auto; text-overflow: ellipsis;">' + response.BlobUri + '</div>');
+            cols.push(div);
+
+            //Column 4
             var button = $("<button class='stopTask btn btn-warning' style='font-size: 1.5vmin'>Stop Processing</button>");
 
             button.click(function (event) {
@@ -2071,8 +2532,10 @@ function zipSelections(event) {
                             return $(this).text() === statusResponse.RequestId;
                         }).parent("tr");
 
-                        tableRow.find('td:eq(2)').html(statusResponse.Status);
-                        tableRow.find('td:eq(3)').html(statusResponse.BlobUri);
+                        //tableRow.find('td:eq(2)').html(statusResponse.Status);
+                        //tableRow.find('td:eq(3)').html(statusResponse.BlobUri);
+                        tableRow.find('#statusMessageText').html(statusResponse.Status);
+                        tableRow.find('#blobUriText').html(statusResponse.BlobUri);
                         tableRow.find('td:eq(5)').html(statusResponse.RequestStatus);
 
                         //Color table row as 'warning'
@@ -2089,7 +2552,10 @@ function zipSelections(event) {
                     });
             });
             
+            //Column 4 (cont'd) 
             cols.push(button);
+
+            //Column 5
             cols.push(response.RequestStatus);
 
             //Add the new row and hide the RequestStatus column...
@@ -2132,7 +2598,8 @@ function zipSelections(event) {
                         //tableRow.find('td:eq(1)').html(statusResponse.Status);
                         //tableRow.find('td:eq(1)').html(formatStatusMessage(statusResponse.Status));
                         tableRow.find('#statusMessageText').html(statusResponse.Status);
-                        tableRow.find('td:eq(3)').html(statusResponse.BlobUri);
+                        //tableRow.find('td:eq(3)').html(statusResponse.BlobUri);
+                        tableRow.find('#blobUriText').html(statusResponse.BlobUri);
                         tableRow.find('td:eq(5)').html(statusResponse.RequestStatus);
 
                         //Color row as 'info'
@@ -2149,15 +2616,18 @@ function zipSelections(event) {
                                 var baseUri = (statusResponse.BlobUri).split('.zip');
                                 baseUri[0] += '.zip';
 
-                                tableRow.find('td:eq(3)').html(baseUri[0]);
-                                
+                                //Set base blob URI into text in column 3
+                                //tableRow.find('td:eq(3)').attr('title', baseUri[0]);
+                                tableRow.find('#blobUriText').html(baseUri[0]);
+
                                 //Create a download button...
                                 var button = tableRow.find('td:eq(4)');
 
                                 button = $("<button class='zipBlobDownload btn btn-success' style='font-size: 1.5vmin'>Download Archive</button>");
 
                                 button.on('click', function (event) {
-                                    var blobUri = tableRow.find('td:eq(3)').html();
+                                    //var blobUri = tableRow.find('td:eq(3)').html();
+                                    var blobUri = tableRow.find('#blobUriText').html();
                                     location.href = blobUri;
 
                                     //Fade row and remove from table...
@@ -2224,7 +2694,7 @@ function zipSelections(event) {
 //Format the html for the status message as follows - all elements inline:  <h3> - glyphicon spinner </h3> <span> status message text </span> 
 function formatStatusMessage(statusText) {
     
-    var formattedMessage = '<h3 class="text-center" style="display: inline; margin: 0em 0em 0em 0em;">' + 
+    var formattedMessage = '<h3 class="text-center" style="display: inline; vertical-align: middle;">' + 
                            '<span id="glyphiconSpan" class="glyphicon glyphicon-refresh spin" style="color: #32cd32;"></span></h3>' + //color is CSS LimeGreen
                            '<div id="statusMessageText" class="text-center" style="display:inline-block; margin: 0em 0em 0em 1em; vertical-align: top;">' +
                            statusText +
@@ -2239,6 +2709,7 @@ function getNextTaskId() {
     return ((++taskCount).toString() + '@' + date.getHours().toString() + ':' + date.getMinutes().toString() + ':' + date.getSeconds().toString()); 
 }
 
+//Data table for data tab
 function setUpTimeseriesDatatable() {
     if (clusteredMarkersArray.length == 0)
     {
@@ -2263,10 +2734,10 @@ function setUpTimeseriesDatatable() {
     var oTable = $('#dtTimeseries').dataTable({
         "ajax": actionUrl,
         "dom": 'C<"clear">l<"toolbarTS">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-        "deferRender": true,        
+        "deferRender": true,
         "columns": [
             { "data": "Organization", "width": "50px", "visible": true },
-            { "data": "ServCode", "sTitle": "Service Name", "visible": true },
+            { "data": "ServCode", "sTitle": "Service Code", "visible": true },
             { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
             { "data": "ServURL", "visible": false },
             { "data": "SiteCode", "visible": false },
@@ -2312,7 +2783,7 @@ function setUpTimeseriesDatatable() {
 
             //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
 
-            var id = $('td', row).eq(0).html();
+            //var id = $('td', row).eq(0).html();
             //var d = $('td', row).eq(4).html();
 
             /* BC - TEST - Do not include download icon or href in any table row...
@@ -2351,13 +2822,14 @@ function setUpTimeseriesDatatable() {
     //Source: https://datatables.net/examples/api/select_row.html
     //Avoid multiple registrations of the same handler...
     $('#dtTimeseries tbody').off('click', 'tr', toggleSelected);
-    $('#dtTimeseries tbody').on('click', 'tr', { 'tableId': '#dtTimeseries', 'btnId': '#btnZipSelectionsTS' }, toggleSelected);
+    $('#dtTimeseries tbody').on('click', 'tr', { 'tableId': '#dtTimeseries', 'btnId': '#btnZipSelectionsTS', 'btnClearId': '#btnClearSelectionsTS' }, toggleSelected);
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
     $("div.toolbarTS").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS" style="float:left;"/>&nbsp;Select Top ' +
                             selectedTimeSeriesMax.toString() + '?</span>' +
-                            '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelectionsTS" value="Zip Selections"/>' +
+                            '<input type="button" style="margin-left: 2em; float:left;" class="btn btn-warning" disabled id="btnClearSelectionsTS" value="Clear Selection(s)"/>' +
+                            '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelectionsTS" value="Zip Selection(s)"/>' +
                             '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;"></span>');
 
     // BC - Do not respond to data table load event...
@@ -2369,11 +2841,15 @@ function setUpTimeseriesDatatable() {
 
     //Avoid multiple registrations of the same handler...
     $('#chkbxSelectAllTS').off('click', selectAll);
-    $('#chkbxSelectAllTS').on('click', { 'tableId': '#dtTimeseries', 'chkbxId': '#chkbxSelectAllTS', 'btnId': '#btnZipSelectionsTS'}, selectAll);
+    $('#chkbxSelectAllTS').on('click', { 'tableId': '#dtTimeseries', 'chkbxId': '#chkbxSelectAllTS', 'btnId': '#btnZipSelectionsTS', 'btnClearId': '#btnClearSelectionsTS'}, selectAll);
 
     //Avoid multiple registrations of the same handler...
     $('#btnZipSelectionsTS').off('click', zipSelections);
     $('#btnZipSelectionsTS').on('click', { 'tableId': '#dtTimeseries', 'chkbxId': '#chkbxSelectAllTS'}, zipSelections);
+
+    //Avoid multiple registrations of the same handler...
+    $('#btnClearSelectionsTS').off('click', clearSelections);
+    $('#btnClearSelectionsTS').on('click', { 'tableId': '#dtTimeseries', 'chkbxId': '#chkbxSelectAllTS', 'btnId': '#btnZipSelectionsTS', 'btnClearId': '#btnClearSelectionsTS' }, clearSelections);
 
 }
 
@@ -2434,7 +2910,8 @@ function serviceFailed(xmlhttprequest, textstatus, message)
         bootbox.alert(msg.Message);
     }
     else {
-        bootbox.alert("<H4>An error accored: " + message + ". Please limit search area or Keywords. Please contact Support if the problem persists.</H4>");
+        //BCC - 26-Jun-2015 - QA Issue #9 - Timeout error message: typo in word 'occurred'
+        bootbox.alert("<H4>An error occurred: '" + message + "'. Please limit search area or Keywords. Please contact Support if the problem persists.</H4>");
 
     }
     //clean up
@@ -2449,7 +2926,7 @@ function GetAreainAcres(poly) {
     return result.toFixed(4);
 }
 
-function GetAreainSqareKilometers(path) {
+function GetAreaInSquareKilometers(path) {
     
     
 
@@ -2481,4 +2958,67 @@ function GetPathForBounds(bounds)
     return path;
 }
 
+//Set up tooltips...
+function setUpTooltips(elementId) {
 
+    if ('dtMarkers' === elementId) {
+        //dtMarkers table
+
+        //Datatable number of records select...
+        var jqueryObject = $('#dtMarkers_length');
+
+        jqueryObject.tooltip('destroy');
+        jqueryObject.tooltip({
+            'animation': true,
+            'placement': 'auto',
+            'trigger': 'hover',
+            'title': 'Select the number of table entries to view on one page...'
+        });
+
+        //'Top' 25 select...
+        jqueryObject = $('#spanSelectAll');
+
+        //Simulate btn-primary colors...
+        var templateString = '<div class="tooltip" role="tooltip">' +
+                                '<div class="tooltip-arrow"></div>' +
+                                '<div class="tooltip-inner" style="color: #ffffff; background-color: #428bca; border-color: #357ebd;"></div>' + 
+                             '</div>'
+
+        jqueryObject.tooltip('destroy');
+        jqueryObject.tooltip({
+            'animation': true,
+            'placement': 'auto',
+            'trigger': 'hover',
+            'title': 'Select the top 25 rows in the current order...',
+            'template': templateString 
+        });
+
+        //'Zip Selections' button...
+        jqueryObject = $('#btnZipSelections');
+
+        templateString = '<div class="tooltip" role="tooltip">' +
+                                '<div class="tooltip-arrow"></div>' +
+                                '<div style="color: green; background-color: ivory; border-color: red; font-size: 2em;">' +
+                                   '<div>' +
+                                    '<span  class="glyphicon glyphicon-hand-right"></span>' +
+                                    '<span class="tooltip-inner" style="color: green; background-color: ivory;  border-color: red; margin-left: 0.5em; margin-right: 0.5em">' +
+                                    '</span>' +
+                                    '<span  class="glyphicon glyphicon-hand-left"></span>' +
+                                   '</div>' +
+                                '</div>' +
+                             '</div>';
+
+        var titleString = 'Your time series data is only a click away!!!';
+
+        jqueryObject.tooltip('destroy');
+        jqueryObject.tooltip({
+            'animation': true,
+            'placement': 'auto',
+            'trigger': 'hover',
+            'title': titleString,
+            'template': templateString
+        });
+
+    }
+
+}

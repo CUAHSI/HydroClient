@@ -67,23 +67,36 @@
       <conversionPattern value="%date [%thread] %-5level %logger [%ndc] - %message%newline" />
     </layout>
   </appender>
-  
+
+  <!-- BCC - 23-Jun-2015 - Remove TraceAppender references - do not want to write log files to table storage!!-->
+  <!-- 
+  <appender name="TraceAppender" type="log4net.Appender.TraceAppender">
+    <layout type="log4net.Layout.PatternLayout">
+      <conversionPattern value="%date [%thread] %-5level %logger [%property{NDC}] - %message%newline" />
+    </layout>
+  </appender>
+  -->
+
+  <!-- BCC - 23-Jun-2015 - Remove TraceAppender references - do not want to write log files to table storage!!-->
   <root>
     <level value="DEBUG" />
     <appender-ref ref="EventLogAppender"  />
     <!--  <appender-ref ref="LogFileAppender" />-->
     <appender-ref ref="HttpTraceAppender" /> 
     <appender-ref ref="RollingLogFileAppender" />
+    <!-- 
+    <appender-ref ref="TraceAppender" />
+    -->
   </root>
  
   <logger name="QueryLog">
     <!-- this it the file that logs the query-->
-    <level value="INFO" />
+    <level value="DEBUG" />
     <appender-ref ref="QueryLogFileAppender" />
   </logger>
 
   <logger name="PerformanceLog">
-    <level value="INFO" />
+    <level value="DEBUG" />
     <appender-ref ref="PerfEventLogAppender" />
   </logger>
 </log4net>
