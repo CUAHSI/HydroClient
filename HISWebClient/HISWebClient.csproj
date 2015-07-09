@@ -427,6 +427,8 @@
     </Content>
     <None Include="Properties\PublishProfiles\dev-hiswebclient - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\dev-hiswebclient - Web Deploy.pubxml" />
+    <None Include="Properties\PublishProfiles\hiswebclient - FTP.pubxml" />
+    <None Include="Properties\PublishProfiles\hiswebclient - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\hiswebclient.pubxml" />
     <Content Include="Content\FancyTree\skin-xp\ui.fancytree.less" />
     <None Include="Properties\PublishProfiles\qa-hiswebclient - FTP.pubxml" />
