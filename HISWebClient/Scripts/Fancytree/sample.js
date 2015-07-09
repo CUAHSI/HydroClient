@@ -4,6 +4,7 @@
     /* Load tree from Ajax JSON
      */
     $("#tree").fancytree({
+        debugLevel: 0,  //BC - 26-Jun-2015 - Turn off console logging...
         checkbox: true,
         selectMode: 3,
         extensions: ["childcounter", "filter"],
@@ -39,27 +40,34 @@
         //select: function (event, data) {
         //    var tree = $("#tree").fancytree("getTree");
 
-            //Check selected 'top' nodes
-            //var selectedNodes = tree.getSelectedNodes(true);
-            //var length = selectedNodes.length;
+        //    //Check for selected 'second-level' nodes (direct children of the 'top-level' nodes)
+        //    var selectedNodes = tree.getSelectedNodes(true);
+        //    var length = selectedNodes.length;
+        //    var toplevelCount = 0;
 
-        //    if (selectedConceptsMax <= length) {
-        //        //Maximum nodes 'top' selected - make all unselected nodes 'unselectable' ...
+        //    for (var i = 0; i < length; ++i) {
+        //        var parent = selectedNodes[i].parent;
+
+        //        ((null !== parent) && (parent.isTopLevel())) ? ++toplevelCount : toplevelCount;
+        //    }
+
+        //    if (selectedConceptsMax <= toplevelCount) {
+        //        //Maximum 'top-level' nodes selected - make all unselected 'top-level' nodes 'unselectable' ...
         //        tree.visit(function (node) {                    
-        //            if (!node.isSelected()) {
+        //            if (node.isTopLevel() && (!node.isSelected())) {
         //                node.unselectable = true;
-        //                node.hideCheckbox = true;
-        //                node.render(true);
+        //                //node.hideCheckbox = true;
+        //                node.render();
         //            }
         //        });
         //    }
         //    else {
-        //        //Maximum nodes 'top' NOT selected - make all unselected nodes 'selectable'...
+        //        //Maximum 'top-level' nodes NOT selected - make all unselected 'top-level' nodes 'selectable'...
         //        tree.visit(function (node) {
-        //            if (!node.isSelected()) {
+        //            if (node.isTopLevel() && (!node.isSelected())) {
         //                node.unselectable = false;
-        //                node.hideCheckbox = false;
-        //                node.render(true);
+        //                //node.hideCheckbox = false;
+        //                node.render();
         //            }
         //        });
         //    }
@@ -123,7 +131,10 @@
         $("input[name=search]").keyup();
     });
 
+    //Turn off fancy tree console logging
+    //Source: https://github.com/mar10/fancytree/issues/29
 
+    $.ui.fancytree.debugLevel = 0; // 0:quiet, 1:info, 2:debug
 });
 
     

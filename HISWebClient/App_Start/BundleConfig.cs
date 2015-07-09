@@ -34,7 +34,7 @@ namespace HISWebClient
             bundles.Add(new StyleBundle("~/Content/css").Include(
                       "~/Content/bootstrap.css",
                       //"~/Content/sidebar.css",
-                      "~/Content/datepicker3.css",
+                      "~/Content/bootstrap-datepicker3.css",
                       "~/Content/site.css"
                      // "~/Content/bootstrap-modal-bs3patch.css",
                      // "~/Content/bootstrap-modal.css"

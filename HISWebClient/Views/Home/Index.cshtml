@@ -44,15 +44,18 @@ var n, o, d, i, s, a = [],
             <!-- li class="glyphicon glyphicon-option-vertical"></li -->
             <li class="navbar-custom"><a href="" id="downloadmanagerTab" data-toggle="modal" data-target="#dmModal"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</a></li>
             <li class="btn-separator"></li>
-            <li class="navbar-custom"><a href="" id="contactTab" data-toggle="modal" data-target="#contactModal"><span class="glyphicon glyphicon-earphone"></span> Contact</a></li>
+            <li class="navbar-custom" style="margin-right: 1em;"><a href="" id="contactTab" data-toggle="modal" data-target="#contactModal"><span class="glyphicon glyphicon-earphone"></span> Contact</a></li>
         </ul>
     </div>
     <div class="tab-content">
-        <div class="tab-pane" id="dataview">
+        <!--BCC - 29-Jun-2015 - QA Issue #24 - Data tab (GUI): no margins from left and right (need to increase)
+                                Added 1.0em left and right margins to 'data' tab -->
+        <div class="tab-pane" id="dataview" style="margin-left: 1.0em; margin-right: 1.0em;">
             <div class="modal-header-full">
                 <h3 class="modal-title" id="myModalLabel">Timeseries in Current Map Area</h3>
                 <h5 style="margin-bottom: 1em;">To download one or more data files, please click the associated table row(s) and click the 'Zip Selections' button.</h5>
             </div>
+            <div class="modal-body-full">
             <table id="dtTimeseries" class="display" cellspacing="0">
                 <thead>
                     <tr>
@@ -67,47 +70,58 @@ var n, o, d, i, s, a = [],
                 </tfoot>
             </table>
         </div>
+        </div>
         <div class="tab-pane active" id="map">
             <!-- Right panel -->
-            <div id="slider" class="side-panel side-panel-right">
+            <!-- BCC - 30-Jun-2015 - QA Issue #34 - General GUI: no scroll bar when reduce page size (menu items can become unavailable) -->
+            <div id="slider" class="side-panel side-panel-right" style="overflow-y: auto;">
                 <div id="menu">
                     @*   <div><img class="expander" alt="Expand" src="~/Content/Images/closetop.png" /></div>*@
-                    <div class="" id="selectors">
-                        <form id="Search" class="searchForm ">
+                    <div class="container" id="selectors">
+                        <form id="Search" class="searchForm form-horizontal" >
                             <!-- Button trigger modal -->
+                            <div class="form-group">
                             <fieldset>
                                 <legend style="margin-bottom: 0.5em;">
-                                    <button class="btn btn-primary btn-block" id="btnDateRange" data-toggle="modal" data-target="#SelectDateModal">Select Date Range</button>
+                                        @*<button class="btn btn-primary btn-block" id="btnDateRange" style="width: 90%; margin: 0 auto;" data-toggle="modal" data-target="#SelectDateModal">Select Date Range...</button>*@
+                                    <button class="btn btn-primary btn-block" id="btnDateRange" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectDateModal">Select Date Range...</button>
                                 </legend>
-                              
-
-                                <div style="width:40px;display:inline-block;vertical-align:top;font-weight:bold;margin-left:0.5em">From: </div>
-                                <div style="display:inline-block;">
-                                    <div style="display:inline-block;">
-                                        <input readonly type="text" style="margin:0;padding:0;" size="12"  id="startDate" />  <br />                                        
+                                    <div class="non-modal-inputs">
+                                        <div id="grpStartDate" class="form-group" style="margin-bottom: 0em;">
+                                            <label class="control-label col-sm-2 col-sm-offset-1" for="startDate" id="lblStartDate">From: </label>
+                                            <div class="col-sm-7">
+                                                <input id="startDate" class="form-control non-modal-date-range" type="text" style="margin-left: 0.5em;" readonly="readonly" />
+                                                <label id="lblStartDateError" class="help-block" style="display:none;"></label>
+                                            </div>
+                                        </div>
+                                        <div id="grpEndDate" class="form-group">
+                                            <label class="control-label col-sm-2 col-sm-offset-1" for="endDate" id="lblEndDate">To: </label>
+                                            <div class="col-sm-7">
+                                                <input id="endDate" class="form-control non-modal-date-range" type="text" style="margin-left: 0.5em;" readonly="readonly" />
+                                                <label id="lblEndDateError" class="help-block" style="display:none;  margin-left: 0.5em;"></label>
+                                            </div>
                                 </div>
-                                    
-                                </div> 
-                                <div style="width:40px;display:inline-block;vertical-align:top;font-weight:bold;margin-left:0.5em">To: </div>
-                                <div style="display:inline-block;">
-                                    <div style="display:inline-block;">
-                                        <input readonly type="text" style="margin:0;padding:0;" size="12" id="endDate" />  <br />
                                     </div>
-                                </div>      
                             </fieldset>
-                            <fieldset style="margin-top: 1em;">
+                            </div>
+                            <div class="form-group" style="box-sizing: border-box;">
+                                <fieldset>
                                 <legend style="margin-bottom: 0.25em;">
-                                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectVariableModal">Select Keyword(s)</button>
+                                        @*<button class="btn btn-primary btn-block" id="btnSelectKeywords" style="width: 90%; margin: 0 auto;" data-toggle="modal" data-target="#SelectVariableModal">Select Keyword(s)...</button>*@
+                                    <button class="btn btn-primary btn-block" id="btnSelectKeywords" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectVariableModal">Select Keyword(s)...</button>
                                 </legend>
-                                <div style="overflow-y: scroll; max-height: 20em;">
+                                    <div style="overflow-y: scroll; max-height: 10em;">
                                     <ol id="olConcepts" style="list-style: circle;">
                                         <li>All</li>
                                     </ol>
                                 </div>
                             </fieldset>
-                            <fieldset style="margin-top: 1em;">
+                            </div>
+                            <div class="form-group" style="box-sizing: border-box;">
+                                <fieldset>
                                 <legend style="margin-bottom: 0.25em;">
-                                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectServicesModal">Select Data Services(s)</button>
+                                        @*<button class="btn btn-primary btn-block" style="width: 90%; margin: 0 auto;" data-toggle="modal" data-target="#SelectServicesModal">Select Data Service(s)...</button>*@
+                                    <button class="btn btn-primary btn-block" id="btnSelectDataServices" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectServicesModal">Select Data Service(s)...</button>
                                 </legend>
                                 @*<div style="overflow-y: scroll; max-height: 10em;">*@
                                 <div style="max-height: 10em;">
@@ -116,15 +130,16 @@ var n, o, d, i, s, a = [],
                                     </ol>
                                 </div>
                             </fieldset>
-
+                            </div>
                             <div id="SelectedDateRange">
 
                             </div>
-                            <br />
-                            <!-- For click handler see webclient.js $("#Search").submit(function (e) -->
-                            <button type="submit" class="btn btn-success btn-block">Search Map</button><br />
-                            <button id="clear" type="button" class="btn btn-warning btn-block"> Clear map </button>
+                            <div class="form-group" style="box-sizing: border-box;">
 
+                            <!-- For click handler see webclient.js $("#Search").submit(function (e) -->
+                                <button type="submit" class="btn btn-success btn-block" style="margin: 0 auto;">Search Map</button><br />
+                                <button id="btnSetDefaults" type="button" class="btn btn-warning btn-block" style="margin: 0 auto;">Set Defaults</button>
+                            </div>
 
                         </form>
                     </div>
@@ -179,7 +194,7 @@ var n, o, d, i, s, a = [],
                 <label style="float:right; margin-right: 2em"><input type="checkbox" id="chkbxAutoDownload" checked="checked" />&nbsp;Auto Download Archives?</label>
                 <h3 class="modal-title" id="myModalLabel">Download Manager</h3>
             </div>
-            <div class="modal-body-full">
+            <div class="modal-body-full row">
                 <!-- BCC - Try a dynamically sized font here...
                      Source: http://stackoverflow.com/questions/14537611/bootstrap-responsive-text-size
                 -->
@@ -187,7 +202,8 @@ var n, o, d, i, s, a = [],
                 @*<table id="tblDownloadManager" class="table table-hover table-fixed" style="font-size: 2.0vmin;">*@
                 <table id="tblDownloadManager" class="table table-hover table-fixed" style="font-size: 2.0vmin;">
                     <thead>
-                        <tr class="active">
+                        @*<tr class="active">*@
+                        <tr>
                             <th class="text-center" style="display: none; vertical-align: middle;">Request ID</th>
                             <th class="text-center" style="width: 15%; vertical-align: middle;">
                                 <label class="btn" style="font-size: 1em; font-weight: bold; margin: 0 auto;">Task Id</label>
@@ -208,14 +224,14 @@ var n, o, d, i, s, a = [],
                     </thead>
                     <tbody></tbody>
                     <tfoot>
-                        @*<tr>
-                                <td>Footer text goes here</td>
-                            </tr>*@
+                        <tr>
+                                @*<td>Footer text goes here</td>*@
+                        </tr>
                     </tfoot>
                 </table>
             </div>
             <div class="modal-footer">
-                <!--p>This is the modal footer!!</p-->
+                @*<p>This is the modal footer!!</p>*@
             </div>
         </div>
     </div>
@@ -254,23 +270,38 @@ var n, o, d, i, s, a = [],
 </div>
 
 
-<div class="modal fade" id="SelectDateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal fade" id="SelectDateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h3 class="modal-title" id="myModalLabel">Please select your date range:</h3>
             </div>
-            <div class="modal-body">
-                <div class="col-md-12">
-                    <div class="row">
-                        <div class="input-daterange">
-                            <input class="input-msclear" id="startDateModal" value="" />
-                            <span class="add-on">to</span>
-                            <input class="input-msclear" id="endDateModal" />                            
+            <div class="container">
+                <form class="form-horizontal">
+                    <div class="modal-body form-group">
+                        <div class="modal-inputs">
+                            <div id="grpStartDateModal" class="form-group">
+                                <label id="lblStartDateModal" class="control-label col-sm-2" for="startDateModal">From</label>
+                                <div class="col-sm-4">
+                                    <input id="startDateModal" class="form-control modal-date-range" type="text"/>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label id="lblStartDateErrorModal" class="help-block" style="display: none;"></label>
+                                </div>
+                            </div>
+                            <div id="grpEndDateModal" class="form-group">
+                                <label id="lblEndDateModal" class="control-label col-sm-2" for="endDateModal">To</label>
+                                <div class="col-sm-4">
+                                    <input id="endDateModal" class="form-control modal-date-range" type="text"/>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label id="lblEndDateErrorModal" class="help-block" style="display: none;"></label>
+                                </div>
                         </div>
                     </div>
                 </div>
+                </form>
             </div>
             <div class="modal-footer"><button type="button" id="btnDateRangeModalSave" class="btn btn-default btn-primary" data-dismiss="modal">Save</button></div>
 
@@ -300,60 +331,56 @@ var n, o, d, i, s, a = [],
                         <div class="tab-content">
                             <div class="tab-pane active"  id="tab1">
                                 <div class="row">
-                                    <div class="controls col-lg-4">
-
+                                    <div class="controls col-lg-5">
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Discharge, stream" id="inlineCheckbox2" class="topCategories"> Discharge
+                                            <input type="checkbox" name="keywords" value="Evaporation, actual" id="inlineCheckbox1" class="topCategories" />Actual Evaporation
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Precipitation" id="inlineCheckbox12" class="topCategories"> Precipitation
+                                            <input type="checkbox" name="keywords" value="Temperature, Air" id="inlineCheckbox7" class="topCategories" />Air Temperature
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Water Level" id="inlineCheckbox3" class="topCategories"> Water Level
+                                            <input type="checkbox" name="keywords" value="Discharge, stream" id="inlineCheckbox2" class="topCategories"/>Discharge
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Groundwater Level" id="inlineCheckbox4" class="topCategories"> Groundwater Level
+                                            <input type="checkbox" name="keywords" value="Oxygen, dissolved" id="inlineCheckbox10" class="topCategories" />Dissolved Oxygen
                                         </label>
-                                        @*<label class="checkbox">
-                                                <input type="checkbox" name="keywords" value="dissolved solids, total" id="inlineCheckbox5" class="topCategories"> Total Dissolved Solids
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Groundwater Level" id="inlineCheckbox4" class="topCategories" />Groundwater Level
                                             </label>
                                             <label class="checkbox">
-                                                <input type="checkbox" name="keywords" value="Methane" id="inlineCheckbox6" class="topCategories"> Methane
+                                            <input type="checkbox" name="keywords" value="Nutrient" id="inlineCheckbox9" class="topCategories" />Nutrient
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="pH" id="inlineCheckbox11" class="topCategories" />pH
+                                        </label>
+                                        @*<label class="checkbox">
+                                                <input type="checkbox" name="keywords" value="dissolved solids, total" id="inlineCheckbox5" class="topCategories"/> Total Dissolved Solids
+                                        </label>
+                                        <label class="checkbox">
+                                                <input type="checkbox" name="keywords" value="Methane" id="inlineCheckbox6" class="topCategories"/> Methane
                                             </label>*@
-                                        <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Temperature, Air" id="inlineCheckbox7" class="topCategories">	Air Temperature
-                                        </label>
-                                        <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Temperature, Water" id="inlineCheckbox8" class="topCategories"> Water Temperature
-                                        </label>
-
-                                        <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Evaporation, actual" id="inlineCheckbox1" class="topCategories"> Actual Evaporation
-                                        </label>
                                     </div>
-
-                                    <div class="controls col-lg-4">
+                                    <div class="controls col-lg-5">
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Nutrient" id="inlineCheckbox9" class="topCategories">	Nutrient
+                                            <input type="checkbox" name="keywords" value="Precipitation" id="inlineCheckbox12" class="topCategories"/>Precipitation
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Oxygen, dissolved" id="inlineCheckbox10" class="topCategories"> Dissolved Oxygen
+                                            <input type="checkbox" name="keywords" value="Snow Water Equivalent" id="inlineCheckbox14" class="topCategories"/>Snow Water Equivalent
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="pH" id="inlineCheckbox11" class="topCategories">pH
-                                        </label>
-
-                                        <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Specific Conductance" id="inlineCheckbox13" class="topCategories">	Specific Conductance
+                                            <input type="checkbox" name="keywords" value="Soil Moisture" id="inlineCheckbox15" class="topCategories"/>Soil Moisture
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Snow Water Equivalent" id="inlineCheckbox14" class="topCategories"> Snow Water Equivalent
+                                            <input type="checkbox" name="keywords" value="Specific Conductance" id="inlineCheckbox13" class="topCategories" />Specific Conductance
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Soil Moisture" id="inlineCheckbox15" class="topCategories"> Soil Moisture
+                                            <input type="checkbox" name="keywords" value="Solids, total suspended" id="inlineCheckbox16" class="topCategories"/>Total Suspended Solids
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Solids, total suspended" id="inlineCheckbox16" class="topCategories">	Total Suspended Solids
+                                            <input type="checkbox" name="keywords" value="Water Level" id="inlineCheckbox3" class="topCategories" />Water Level
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Temperature, Water" id="inlineCheckbox8" class="topCategories" />Water Temperature
                                         </label>
                                     </div>
                                 </div>
@@ -411,14 +438,20 @@ var n, o, d, i, s, a = [],
 </div>
 <!-- /.modal-dialog -->
 <!-- Modal -->
+<!--BCC - 26-Jun-2015 - Changes for QA Issue #23 - GUI: popup design do not unified -->
 <div class="modal fade full-screen" id="SelectServicesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog-full">
         <div class="modal-content-full">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 class="modal-title" id="myModalLabel">Click to select Data Services (No selection searches all)</h3>
-                <input type="checkbox" name="checkOnlyObservedValues" id="checkOnlyObservedValues" class="" data-inline="true"  /><label for="checkOnlyObservedValues"> Exclude Gridded data services, e.g. NLDAS</label>                                         
-
+                <h3 class="modal-title" id="myModalLabel">Click to select Data Services</h3>
+                @*BCC - 02-Jul-2015 - Internal QA Issue #23 - Move 'Exclude Gridded data services...' checkbox to right *@
+                <div class="form-group" style="position: relative;">
+                    <h6 style="display:inline-block; float: left;"> (No selection searches all)</h6>
+                    <label for="checkOnlyObservedValues" style="float: right;">
+                        <input type="checkbox" name="checkOnlyObservedValues" id="checkOnlyObservedValues" data-inline="true" /> Exclude Gridded data services, e.g. NLDAS
+                    </label>
+                </div>
             </div>
             <div class="modal-body-full">
                             <table id="dtServices" class="display" cellspacing="0">
@@ -437,7 +470,8 @@ var n, o, d, i, s, a = [],
             </div>
             <div class="modal-footer">
                 @*<button type="button" id="cancelServiceSelection" class="btn btn-default alert-info" data-dismiss="modal">Cancel</button>*@
-                <button type="button" id="saveServiceSelection" class="btn btn-default btn-primary" data-dismiss="modal">Close</button>
+                @*BCC - 30-Jun-2015 - QA Issue #44 - Popup 'Click to select Data Services': 'Save' button is missed *@
+                <button type="button" id="saveServiceSelection" class="btn btn-default btn-primary" data-dismiss="modal">Save</button>
             </div>
 
             <!-- /.modal-content -->
@@ -445,7 +479,10 @@ var n, o, d, i, s, a = [],
         <!-- /.modal-dialog -->
     </div>
 </div>
-<div class="modal fade full-screen" id="SeriesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+@*  BCC - 29-Jun-2015 - Remove 'fade' class from modal div to ensure firing of 'shown.bs.modal' event!!
+    Source: http://stackoverflow.com/questions/18568278/bootstrap-3-0-0-modal-events-not-firing
+    <div class="modal fade full-screen" id="SeriesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">*@
+<div class="modal full-screen" id="SeriesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog-full">
         <div class="modal-content-full">
             <div class="modal-header-full">
