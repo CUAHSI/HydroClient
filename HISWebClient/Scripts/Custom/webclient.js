@@ -48,9 +48,9 @@ function initialize() {
 
     //NOTE: Set the place name to match the initial latitude and longitude 
     currentPlaceName = 'United States';
-    
-      //BC - disable infoWindow for now...
-//    infoWindow = new google.maps.InfoWindow();
+
+    //BC - disable infoWindow for now...
+    //    infoWindow = new google.maps.InfoWindow();
 
     //init list od datatables for modal 
     myServicesList = setupServices();
@@ -65,10 +65,11 @@ function initialize() {
         scaleControl: true,
         overviewMapControl: true,
         overviewMapControlOptions: {
-            opened: true },     
+            opened: true
+        },
         zoomControl: true,
-        panControl:false,        
-        zoomControlOptions: {     
+        panControl: false,
+        zoomControlOptions: {
             //style: google.maps.ZoomControlStyle.SMALL,
             position: google.maps.ControlPosition.LEFT_TOP
         },
@@ -81,19 +82,19 @@ function initialize() {
 
     //get reference to map sizing of window happens later to prevent gap   
     map = new google.maps.Map(document.getElementById("map-canvas"), mapProp);
-    
+
 
     //UI
-    
+
     addCustomMapControls();
 
     slider = addSlider();
- 
+
     slider.slideReveal("show");
     sidepanelVisible = true;
-  
+
     addLocationSearch();
-    
+
     //triger update of map on these events
     google.maps.event.addListener(map, 'dblclick', function () {
         if ((clusteredMarkersArray.length > 0)) {
@@ -105,26 +106,26 @@ function initialize() {
     google.maps.event.addListener(map, 'dragend', function () {
         if ((clusteredMarkersArray.length > 0)) {
             updateMap(false)
-            
+
         }
         //$("#MapAreaControl").html(getMapAreaSize());
     });
-    
+
     google.maps.event.addListener(map, 'zoom_changed', function () {
         if ((clusteredMarkersArray.length > 0)) {
             updateMap(false)
-            
-           
-            
+
+
+
         }
-        
+
     });
     //added to load size on startup
     google.maps.event.addListener(map, 'idle', function () {
         //if ((clusteredMarkersArray.length > 0)) {
-            //updateMap(false)
+        //updateMap(false)
 
-            $("#MapAreaControl").html(getMapAreaSize());
+        $("#MapAreaControl").html(getMapAreaSize());
 
         //}
     });
@@ -135,19 +136,18 @@ function initialize() {
     //    infowindow.open(map, marker);
 
     //});
-    
-    
+
+
     google.maps.event.addDomListener(window, "resize", function () {
         $("#map-canvas").height(getMapHeight()) //setMapHeight
         $("#map-canvas").width(getMapWidth()) //setMapWidth
-       
+
         google.maps.event.trigger(map, "resize");
-        if (sidepanelVisible)
-        {
+        if (sidepanelVisible) {
             slider.slideReveal("show")
         }
     });
-   
+
 
     //initialize datepicker for the nonmodal date range...
     //NOTE: The datepicker can be initialized only once!!  
@@ -211,7 +211,7 @@ function initialize() {
         }
 
         //Assign current modal start and end date values to their main page counterparts...
-       
+
         //var startDateModal = $("#startDateModal").val()
         //if (checkReg2(startDateModal) == false) { bootbox.alert("Please validate your From: date"); return }
         $('#startDate').val($('#startDateModal').val());
@@ -226,55 +226,57 @@ function initialize() {
         $('#selectors').slideToggle();
     });
 
- 
+
     //allocate a RandomId instance...
-   randomId = new RandomId( { 'iterationCount': 10,
-                              'characterSets': ['alpha', 'numeric']
-                            } );
+    randomId = new RandomId({
+        'iterationCount': 10,
+        'characterSets': ['alpha', 'numeric']
+    });
 
     //Allocate a TimeSeriesRequestStatus instance...
-   timeSeriesRequestStatus = (new TimeSeriesRequestStatus()).getEnum();
+    timeSeriesRequestStatus = (new TimeSeriesRequestStatus()).getEnum();
 
     //Download All button click handler..
-   $('#btnDownloadAll').on('click', function (event) {
-       //For each zip blob download button element...
-       $("tr > td > button.zipBlobDownload").each(function (index) {
-           //Initiate individual file downloads at three second intervals
-           var buttonThis = this;
-           setTimeout(function () {
-               //$(buttonArray[index]).click();
-               $(buttonThis).click();
-           }, (3000 * index));
-       });
-   });
+    $('#btnDownloadAll').on('click', function (event) {
+        //For each zip blob download button element...
+        $("tr > td > button.zipBlobDownload").each(function (index) {
+            //Initiate individual file downloads at three second intervals
+            var buttonThis = this;
+            setTimeout(function () {
+                //$(buttonArray[index]).click();
+                $(buttonThis).click();
+            }, (3000 * index));
+        });
+    });
 
     //BC - 19-Jun-2015 - Disable concept counting - possible later use...
     //Click handler for 'Most Common' concept checkboxes...
-   //$('.topCategories').click(function (event) {
-    
-   //    if (!$(event.target).prop('checked')) {
-   //        //Checkbox unchecked - enable all unchecked checkboxes
-   //        ($("input[name='keywords']").not(':checked')).prop( "disabled", false );
-   //    }
-   //    else {
-   //        //Checkbox checked - if maximum reached, disable all unchecked checboxes
-   //        var checked = $("input[name='keywords']:checked");
-   //        var length = checked.length;
+    //$('.topCategories').click(function (event) {
 
-   //        if (selectedConceptsMax <= length) {
-   //            ($("input[name='keywords']").not(':checked')).prop("disabled", true);
-   //        }
-   //     }
-   //});
+    //    if (!$(event.target).prop('checked')) {
+    //        //Checkbox unchecked - enable all unchecked checkboxes
+    //        ($("input[name='keywords']").not(':checked')).prop( "disabled", false );
+    //    }
+    //    else {
+    //        //Checkbox checked - if maximum reached, disable all unchecked checboxes
+    //        var checked = $("input[name='keywords']:checked");
+    //        var length = checked.length;
 
-   $('#btnTopSelect').click(function () {
+    //        if (selectedConceptsMax <= length) {
+    //            ($("input[name='keywords']").not(':checked')).prop("disabled", true);
+    //        }
+    //     }
+    //});
 
-       updateKeywordList("Common");       
+    $('#btnTopSelect').click(function () {
+
+        //updateKeywordList("Common");       
+        updateKeywordList();
 
     });
 
     $('#btnHierarchySelect').click(function () {
-                        
+
         updateKeywordList();
         //if (0 < length) {
         //    //Certain concepts selected...
@@ -287,13 +289,13 @@ function initialize() {
         //            //});
         //            allChildrenSelected = true;
         //            list.append('<li>' + selectedNodes[i].title + '</li>');
-                    
+
 
         //        }
         //        if (!allChildrenSelected) {
         //            list.append('<li>' + selectedNodes[i].title + '</li>');
         //        }
-                
+
         //    }
         //}
         //else {
@@ -308,9 +310,9 @@ function initialize() {
         //reset global array
         mySelectedServices = [];
 
-        if ($("input[name='checkOnlyObservedValues']").is(':checked')) {         
-           
-            
+        if ($("input[name='checkOnlyObservedValues']").is(':checked')) {
+
+
             for (var i = 0; i < rows.length; i++) {
                 // Get HTML of 3rd column (for example)
                 //get vvalue from (network)id field 
@@ -325,18 +327,17 @@ function initialize() {
                 }
             }
         }
-        else
-        {
+        else {
             for (var i = 0; i < rows.length; i++) {
                 // Get HTML of 3rd column (for example)
-                
-                //check if value in array of non observed services
-                
 
-                    
-                    //mark with select class
-                    $(rows[i]).removeClass('selected');
-                
+                //check if value in array of non observed services
+
+
+
+                //mark with select class
+                $(rows[i]).removeClass('selected');
+
             }
         }
 
@@ -350,23 +351,35 @@ function initialize() {
 
     });
 
-    $("#Search").submit(function (e) {       
+    $("#Search").submit(function (e) {
 
         resetMap()
         //prevent Default functionality
         e.preventDefault();
         e.stopImmediatePropagation();
         //var formData = getFormData();
-        var path=[];
+        var path = [];
         path = GetPathForBounds(map.getBounds())
         var area = GetAreaInSquareKilometers(path)
-        
 
-        var selectedKeys = $("input[name='keywords']:checked").map(function () {
-            return $(this).val();
-        }).get();
-           
-        var list = $('#olConcepts');
+        //BCC - 10-Jul-2015 
+        // Since keyword selections on 'Common' and 'Full' tabs are kept in sync at all times, 
+        //  retrieve selected keys from 'Full' tab...
+
+        //var selectedKeys = $("input[name='keywords']:checked").map(function () {
+        //    return $(this).val();
+        //}).get();
+
+        //var list = $('#olConcepts');
+
+        var selectedKeys = [];
+
+        $("#tree").fancytree("getTree").visit(function (node) {
+
+            if (node.isSelected()) {
+                selectedKeys.push(node.title);
+            }
+        });
 
         if (!validateQueryParameters(area, selectedKeys)) return;
 
@@ -383,9 +396,7 @@ function initialize() {
         areaRect.setMap(map);
         var areaLeft = google.maps.geometry.spherical.computeArea(areaRect.getPath());
 
-
-        
-    })
+    });
 
     //BCC - 02-Jul-2015 - External QA Issue #48 
     $("#btnSetDefaults").on('click', function () {
@@ -399,35 +410,42 @@ function initialize() {
 
     //click event for tab
     $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-         if (e.target.id == "tableTab") {
-             //Hide the zendesk iframe...
-             $('#launcher').hide();
+        if (e.target.id == "tableTab") {
+            //Hide the zendesk iframe...
+            $('#launcher').hide();
 
-             //Reset the current marker place name...
-             currentMarkerPlaceName = '';
+            //Reset the current marker place name...
+            currentMarkerPlaceName = '';
 
-             setUpTimeseriesDatatable();
+            setUpTimeseriesDatatable();
             var table = $('#dtTimeseries').DataTable();
 
-             //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
-             //Assign a handler to the DataTable 'draw.dt' event
-             table.off('draw.dt', addFilterPlaceholders);
-             table.on('draw.dt', { 'tableId': 'dtTimeseries' }, addFilterPlaceholders);
+            //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
+            //Assign a handler to the DataTable 'draw.dt' event
+            table.off('draw.dt', addFilterPlaceholders);
+            table.on('draw.dt', { 'tableId': 'dtTimeseries' }, addFilterPlaceholders);
+
+            //BCC - 09-Jul-2015 -  - QA Issue #25 - Data tab: table column titles stay in wrong order after sorting table
+            //Remove/add column adjustment event handler...
+            $('#dtTimeSeriesModal').off('shown.bs.modal', adjustColumns);
+            $('#dtTimeSeriesModal').on('shown.bs.modal', {
+                'tableId': 'dtTimeSeries', 'containerId': 'dtTimeSeriesModal'
+            }, adjustColumns);
 
             table.order([0, 'asc']).draw();
             //hide sidebar
             // slider.slideReveal("hide")
 
-            }
-         if (e.target.id == "mapTab") {
-             //Show the zendesk iframe...
-             $('#launcher').show();
+        }
+        if (e.target.id == "mapTab") {
+            //Show the zendesk iframe...
+            $('#launcher').show();
 
-             google.maps.event.trigger(map, "resize");
-             if (!sidepanelVisible) {
-                 slider.slideReveal("show")
-             }
-    
+            google.maps.event.trigger(map, "resize");
+            if (!sidepanelVisible) {
+                slider.slideReveal("show")
+            }
+
         }
         // activated tab
     })
@@ -454,6 +472,9 @@ function initialize() {
     //Set up tooltips...
     //setUpTooltips();
 
+
+    //Click handler for 'Common' keywords checkboxes
+    $('input[name="keywords"]').on('click', clickCommonKeyword);
 }
 
 //Return all search parameters to initial state
@@ -609,14 +630,14 @@ function validateQueryParameters(area, selectedKeys) {
 
     area *= 1;  //Convert to numeric value...
 
-    var max = 100000;
+    var max = 1000000;
     if (area > max) {
         
         bootbox.alert("<h4>The selected area (" + area.toLocaleString() + " sq km) is too large to search. <br> Please limit search area to less than " + max.toLocaleString() + " sq km and/or reduce search keywords.</h4>");
         return false;
     }
 
-    max = 25000;
+    max = 250000;
     if (area > max && selectedKeys.length == 0) {
         bootbox.alert("<h4>The selected area (" + area.toLocaleString() + " sq km) is too large to search for <strong>All</strong> keywords. <br> Please limit search area to less than " + max.toLocaleString() + " sq km and/or limit keywords.</h4>");
         return false;
@@ -651,7 +672,104 @@ function validateQueryParameters(area, selectedKeys) {
     return true;
 }
 
-function updateKeywordList(type) {
+//Fancy tree click handler...
+function keywordClickHandler(event, data) {
+
+    var node = data.node;
+
+    if (( 'undefined' !== typeof node) && (null !== node)) {
+
+        if (node.isSelected()) {
+            console.log( node.title + ' is selected!!');
+        }
+        else {
+            console.log(node.title + ' is NOT selected!!');
+        }
+
+        if (node.isActive()) {
+            console.log(node.title + ' is active!!');
+        }
+        else {
+            console.log(node.title + ' is NOT active!!');
+        }
+
+    }
+}
+
+//Fancy tree activate handler...
+function keywordActivateHandler(event, data) {
+
+    var node = data.node;
+
+    if (('undefined' !== typeof node) && (null !== node)) {
+
+        if (node.isSelected()) {
+            console.log(node.title + ' is selected!!');
+        }
+        else {
+            console.log(node.title + ' is NOT selected!!');
+        }
+
+        if (node.isActive()) {
+            console.log(node.title + ' is active!!');
+        }
+        else {
+            console.log(node.title + ' is NOT active!!');
+        }
+
+    }
+}
+
+//Fancy tree click handler...
+function keywordSelectHandler(event, data) {
+
+    var node = data.node;
+
+    //if (('undefined' !== typeof node) && (null !== node)) {
+
+    //    console.log('Node: ' + node.title + ' selected?  ' + node.isSelected() );
+    //    //console.log('Node: ' + node.title + ' active?  ' + node.isActive());
+    //}
+
+    //Scan the checkboxes on the 'Common' tab for a matching value...
+    $("input[name='keywords']").each(function (index, element) {
+        var checkbox = $(this);
+        if( node.title.toLowerCase() === checkbox.prop('value').toLowerCase() && node.isSelected() !== checkbox.is(':checked')) {
+                //Matching value found but non-matching states, update checkbox state
+                checkbox.prop('checked', node.isSelected());
+        }
+    });
+}
+
+//Update the keyword list from the keyword tab entries
+//NOTE: Since the two tabs, 'Common' and 'Full', are kept in sync at all times, update the keyword list from the 'Full' tab...
+function updateKeywordList() {
+
+    //Clear and re-populate concepts list...
+    var list = $('#olConcepts');
+
+    list.empty();
+
+    var tree = $("#tree").fancytree("getTree");
+
+    var titleCount = 0;
+    var selKeys = $.map(tree.getSelectedNodes(true), function (node) { //true switch returns all top level nodes
+
+            ++titleCount;
+            return node.title;
+
+        }).join("##");
+
+     if ((0 < titleCount) && (selKeys.split('##').length > 0)) {
+            for (var i = 0; i < (selKeys.split('##').length) ; i++) {
+            list.append('<li>' + selKeys.split('##')[i] + '</li>');
+        }
+     }
+     else {
+        //'No' concepts selected means 'All' concepts selected...
+        list.append('<li>All</li>');
+     }
+/*
     if (type === "Common") {
 
         //Retain the current concepts type
@@ -721,6 +839,7 @@ function updateKeywordList(type) {
             list.append('<li>All</li>');
         }
     }
+*/
 }
 
 
@@ -738,6 +857,113 @@ function clickSelectKeywords(event) {
         node.setSelected(false);
     });
 
+    //Load fancytree nodes, if indicated    
+    //NOTE: While this implementation works OK, it does rely on the called data URL to detemine the 
+    //      type of keyword data recieved: Physical, Chemical or Biological.  
+    //      If re-factoring is required later, please refer to the following article for a better
+    //      designed approach:  Roel van Lisdonk - How to pass extra / additional parameters to the deferred.then() function in jQuery, $q (AngularJS) or Q. 
+    //      http://www.roelvanlisdonk.nl/?p=3952 - 
+    var tree = $("#tree").fancytree("getTree");
+    var rootNode = tree.rootNode;
+    if (('undefined' !== typeof rootNode) && (null !== rootNode)) {
+        
+        var children = rootNode.children;
+        if (('undefined' !== typeof children) && (null !== children)) {
+             
+            //For each child node...
+            var bShowModal = true;  //Assume keyword loading dialog will be shown...
+
+            var length = children.length;
+            var callsToGo = 0;
+
+            for (var i = 0; i < length; ++i) {
+                
+                if (! children[i].isLoaded()) {
+                    ++callsToGo;
+                    if (bShowModal) {
+                        bShowModal = false;
+                        $('#keywordModal').modal('show');   //Show the keyword loading dialog
+                    }
+
+                    children[i].load().done(function (data, textStatus, jqXHR) {
+                            //alert('Child node loaded!!');
+
+                        if (('undefined' !== typeof data.testData) && (null !== data.testData)) {
+                            console.log('testData received: ' + data.testData);
+                        }
+
+                        //Determine the keyword category - Physical, Chemical or Biological from the url...
+                        var url = this.url;
+                        var urlComponents = url.split('/');
+                        var keywordCategory = urlComponents[urlComponents.length - 1];
+
+                        var glyphiconSpan = $('#glyphiconSpan' + keywordCategory);
+                        var jqueryText = $('#text' + keywordCategory);
+
+                        glyphiconSpan.removeClass('glyphicon-refresh spin');
+                        glyphiconSpan.addClass('glyphicon-thumbs-up');
+
+                        var text = jqueryText.html();
+                        jqueryText.html(text + ' Completed!!');
+
+                        if (0 >= --callsToGo) {
+                            setTimeout( function() {
+                                //All load calls complete - close the loading dialog...
+                                $( '#keywordModal' ).modal( 'hide' );
+
+                                //Populate keyword tabs
+                                populateKeywordTabs();
+
+                                //Open keywords dialog...
+                                $( '#SelectVariableModal' ).modal( 'show' );
+                            }, 1000 );
+                        }
+                    }).fail(function (data, textStatus, jqXHR) {
+                        //For now - just display an alert...
+                        bootbox.alert('Keyword retrieval error - please try again...');
+                    } );
+                }
+            }
+
+            if (bShowModal) {
+                //Keywords data previously loaded - populate tabs, show the dialog...
+                populateKeywordTabs();
+                $('#SelectVariableModal').modal('show');
+            }
+        }
+    }
+
+
+
+    ////Re-populate tab per current concepts type...
+    //if ('Common' === conceptsType) {
+    //    //'Most Common' tab
+
+    //    //For each checkbox...
+    //    $("input[name='keywords']").each(function (index, element) {
+    //        var checkbox = $(this);
+    //        if (-1 !== listArray.indexOf(checkbox.attr('value'))) {
+    //            //Checkbox value found in concepts list - check the checkbox
+    //            checkbox.prop('checked', true);
+    //        }
+    //    });
+    //}
+    //else {
+    //    //'Full List' tab... 
+
+    //    //For each tree node...
+    //    $("#tree").fancytree("getTree").visit(function (node) {
+    //        if (-1 !== listArray.indexOf(node.title)) {
+    //            //Node title found in concepts list - select the node
+    //            node.setSelected(true);
+    //        }
+    //    });
+    //}
+
+}
+
+//Populate the 'Most Common' and 'Full List' Keyword tabs...
+function populateKeywordTabs() {
     //Retrieve concept values from list...
     var listItems = $('#olConcepts li');
     var listArray = [];
@@ -748,11 +974,8 @@ function clickSelectKeywords(event) {
         listArray.push(text);
     });
 
-    //Re-populate tab per current concepts type...
-    if ('Common' === conceptsType) {
-        //'Most Common' tab
-
-        //For each checkbox...
+    if (0 < listArray.length) {
+        //Re-populate 'Most Common' tab entries...
         $("input[name='keywords']").each(function (index, element) {
             var checkbox = $(this);
             if (-1 !== listArray.indexOf(checkbox.attr('value'))) {
@@ -760,11 +983,9 @@ function clickSelectKeywords(event) {
                 checkbox.prop('checked', true);
             }
         });
-    }
-    else {
-        //'Full List' tab... 
 
-        //For each tree node...
+
+        //Re-populate 'Full List' tab entries...
         $("#tree").fancytree("getTree").visit(function (node) {
             if (-1 !== listArray.indexOf(node.title)) {
                 //Node title found in concepts list - select the node
@@ -772,6 +993,25 @@ function clickSelectKeywords(event) {
             }
         });
     }
+}
+
+
+//Click handler for 'Common' keyword checkboxes
+function clickCommonKeyword(event) {
+
+    //Retrieve the checkbox value and state...
+    var checked = $(event.target).is(':checked');
+    var value = $(event.target).prop('value');
+
+    //console.log('Value: ' + value + ' checked? ' + checked);
+
+    //Update the associated value on the 'Full' tab, if indicated...
+    $("#tree").fancytree("getTree").visit(function (node) {
+        if (value.toLowerCase() === node.title.toLowerCase() && checked !== node.isSelected()) {
+            node.setSelected(checked);
+        }
+    });
+
 }
 
 //Click handler for 'Select Data Service(s)' button
@@ -858,6 +1098,19 @@ function addCustomMapControls()
         // Can also be $(document).on('click') if using jQuery
         google.maps.event.addDomListener(closeButton, 'click', function () {
             streetView.setVisible(false);
+        });
+
+        //Add 'visible changed' listener for street view...
+        //Source: http://stackoverflow.com/questions/7251738/detecting-google-maps-streetview-mode
+        google.maps.event.addListener(streetView, 'visible_changed', function () {
+
+            if (streetView.getVisible()) {
+                // Street view is visible - show the custom close button
+                $('#StreetViewCloseButton').show();
+            } else {
+                // Street view is NOT visible - hide the custom close button
+                $('#StreetViewCloseButton').hide();
+            }
         });
 
     });
@@ -1401,7 +1654,7 @@ function getMarkerPositionName(marker) {
             if (results[0]) { //NOTE: Using the most detailed place name available...
                 //Marker place name found - set variable
                 currentMarkerPlaceName = results[0].formatted_address;
-                $('#SeriesModal #myModalLabel').html('List of Timeseries for: ' + currentMarkerPlaceName );
+                $('#SeriesModal #myModalLabel').html('List of Timeseries near: ' + currentMarkerPlaceName );
 
             } else {
                 //No marker place name found - reset variable
@@ -1499,10 +1752,17 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             //infoWindow.open(map, this);
             //$('#example').DataTable();
 
-            $('#SeriesModal #myModalLabel').html('List of Timeseries for Selected Marker');
+            $('#SeriesModal #myModalLabel').html('List of Timeseries near Selected Marker');
             getMarkerPositionName(marker);
 
             setUpDatatables(clusterid);
+
+            var table = $('#dtMarkers').dataTable();
+
+            //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
+            //Assign a handler to the DataTable 'draw.dt' event
+            table.off('draw.dt', addFilterPlaceholders);
+            table.on('draw.dt', { 'tableId': 'dtMarkers' }, addFilterPlaceholders);
 
             //BCC - 29-Jun-2015 - QA Issue #25 - Data tab: table column titles stay in wrong order after sorting table
             //Remove/add column adjustment event handler...
@@ -1623,7 +1883,7 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             //infoWindow.open(map, this);
             //$('#example').DataTable();
 
-            $('#SeriesModal #myModalLabel').html('List of Timeseries for Selected Marker');
+            $('#SeriesModal #myModalLabel').html('List of Timeseries near Selected Marker');
             getMarkerPositionName(marker);
 
             setUpDatatables(clusterid);
@@ -1867,7 +2127,7 @@ function setupServices()
         //Update the services list from the newely rebuilt saved services array...
         updateServicesList();
 
-        //Retain the state of the 'Exclude gridded...' checkbox
+        //Retain the state of the 'Select all non-gridded...' checkbox
         bObservedValuesOnly = $('#checkOnlyObservedValues').prop('checked');
 
     });
@@ -1955,9 +2215,9 @@ function setUpDatatables(clusterid)
             //{ "data": "VariableUnits","visible": false },
             //{ "data": "Citation", "visible": false }            
             { "data": "SeriesId" }
-        ],
-        
-         "scrollX": true, //removed to fix column alignment 
+         ],
+
+         "scrollX": true,
          
          "createdRow": function (row, data, index) {
 
@@ -2030,13 +2290,13 @@ function setUpDatatables(clusterid)
 
             setUpTooltips('dtMarkers');
         
-           // oTable.fnAdjustColumnSizing();
+            // oTable.fnAdjustColumnSizing();
         }
         
-          
-
+         
         //"retrieve": true
     });
+
     //workaround reorder to align headers
 
     //BC - Test - make each table row selectable by clicking anywhere on the row...
@@ -2340,7 +2600,7 @@ function clearServicesSelections(event) {
     //Clear the selected services array
     mySelectedServices.length = 0;
 
-    //Uncheck the 'Exclude Gridded Data Services...' checkbox
+    //Uncheck the 'Select all non-gridded...' checkbox
     $("input[name='checkOnlyObservedValues']").attr('checked', false);
 
     //Check button state...
@@ -2410,7 +2670,7 @@ function zipSelections(event) {
     var txtClass = '.clsZipStarted';
 
     //Update the text...
-    var txt = 'Task: @@taskId@@ started.  To download the archive, please open Download Manager';
+    var txt = 'Task: @@taskId@@ started.  To check the download status, please open Download Manager';
     var txts = txt.split('@@taskId@@');
 
     $(txtClass).text( txts[0] + taskId.toString() + txts[1]);
@@ -2504,7 +2764,7 @@ function zipSelections(event) {
             cols.push(div);
 
             //Column 3
-            div = $('<div class="btn" id="blobUriText" style="font-size: 0.75em; font-weight: bold; margin: 0 auto; text-overflow: ellipsis;">' + response.BlobUri + '</div>');
+            div = $('<div class="btn" id="blobUriText" style="font-size: 1em; font-weight: bold; margin: 0 auto; text-overflow: ellipsis;">' + response.BlobUri + '</div>');
             cols.push(div);
 
             //Column 4
@@ -2612,22 +2872,27 @@ function zipSelections(event) {
                             timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus) {
                             //If task completed - re-assign 'Stop Task' button to 'Download'
                             if (timeSeriesRequestStatus.Completed === requestStatus) {
-                                //Success - display the base blob URI only 
+                                //Success - retrieve the base blob URI... 
                                 var baseUri = (statusResponse.BlobUri).split('.zip');
-                                baseUri[0] += '.zip';
+                                var blobUri = baseUri[0] += '.zip';
+
+                                //Retrieve the full file name from the base blob URI...
+                                var uriComponents = baseUri[0].split('/');
+                                var fileName = uriComponents[(uriComponents.length - 1)];
 
                                 //Set base blob URI into text in column 3
                                 //tableRow.find('td:eq(3)').attr('title', baseUri[0]);
-                                tableRow.find('#blobUriText').html(baseUri[0]);
+                                tableRow.find('#blobUriText').html(fileName);
 
                                 //Create a download button...
                                 var button = tableRow.find('td:eq(4)');
 
-                                button = $("<button class='zipBlobDownload btn btn-success' style='font-size: 1.5vmin'>Download Archive</button>");
+                                button = $("<button class='zipBlobDownload btn btn-success' style='font-size: 1.5vmin' data-blobUri='" + blobUri +  "'>Download Archive</button>");
 
                                 button.on('click', function (event) {
                                     //var blobUri = tableRow.find('td:eq(3)').html();
-                                    var blobUri = tableRow.find('#blobUriText').html();
+                                    //var blobUri = tableRow.find('#blobUriText').html();
+                                    var blobUri = $(this).attr('data-blobUri');
                                     location.href = blobUri;
 
                                     //Fade row and remove from table...
@@ -2724,8 +2989,8 @@ function setUpTimeseriesDatatable() {
     }
 
     //Set page title...
-//    $('#dataview #myModalLabel').html('List of Timeseries for Selected Area');
-    $('#dataview #myModalLabel').html('List of Timeseries for: ' + currentPlaceName);
+//    $('#dataview #myModalLabel').html('List of Timeseries near Selected Area');
+    $('#dataview #myModalLabel').html('List of Timeseries near: ' + currentPlaceName);
         
     //var dataSet = getDetailsForMarker(clusterid)
     var actionUrl = "/home/getTimeseries"
@@ -2761,7 +3026,7 @@ function setUpTimeseriesDatatable() {
             //{ "data": "Citation", "visible": false }            
             { "data": "SeriesId" }
            ],
-        "scrollX": true, //removed to fix column alignment 
+        "scrollX": true,
         "createdRow": function (row, data, index) {
 
             //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
@@ -2813,7 +3078,7 @@ function setUpTimeseriesDatatable() {
         },
         initComplete: function () {
 
-            setfooterFilters('#dtTimeseries', [0,1, 2, 6]);
+            setfooterFilters('#dtTimeseries', [0, 1, 2, 6]);
         }
 
     });

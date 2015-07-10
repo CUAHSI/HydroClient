@@ -380,14 +380,15 @@ font-weight: 300;
 
 .table-fixed thead {
   /*width: 97%; */
-  width: 95%;
+  width: 98%;
 }
 .table-fixed tbody {
   /* height: 230px; */
   height: 30em;
-  overflow-y: auto;
+  /*overflow-y: auto;*/
+  overflow-y: scroll;
   width: 100%;
-  border: 1px solid red;
+  /*border: 1px solid red;*/
 }
 .table-fixed thead, .table-fixed tbody, .table-fixed tr, .table-fixed td, .table-fixed th {
   display: block;
@@ -397,13 +398,14 @@ font-weight: 300;
   border-bottom-width: 0;
 }
 
+.table-fixed th {
+  padding: 10px !important;
+  margin: 0 !important;
+}
+
 /* Styling for Bootstrap tooltips... */
 #chkbxSelectAll + .tooltip > .tooltip-inner, #chkbxSelectAllTS + .tooltip > .tooltip-inner  {
     background-color: red;
-}
-th {
-  padding: 10px !important;
-  margin: 0 !important;
 }
 /*Streetview close button*/
 .button {
@@ -413,4 +415,11 @@ th {
   border: 0;
   margin-right: 5px;
   cursor: pointer;
+}
+
+/* Set default cursor on read only inputs...
+    Source: http://stackoverflow.com/questions/17319228/use-readonly-attribute-in-input-without-changing-the-cursor
+*/
+input[readonly].default-cursor {
+    cursor: pointer;
 }

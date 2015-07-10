@@ -44,7 +44,9 @@ var n, o, d, i, s, a = [],
             <!-- li class="glyphicon glyphicon-option-vertical"></li -->
             <li class="navbar-custom"><a href="" id="downloadmanagerTab" data-toggle="modal" data-target="#dmModal"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</a></li>
             <li class="btn-separator"></li>
-            <li class="navbar-custom" style="margin-right: 1em;"><a href="" id="contactTab" data-toggle="modal" data-target="#contactModal"><span class="glyphicon glyphicon-earphone"></span> Contact</a></li>
+            <li class="navbar-custom"><a href="" id="contactTab" data-toggle="modal" data-target="#contactModal"><span class="glyphicon glyphicon-earphone"></span> Contact</a></li>
+            <li class="btn-separator"></li>
+            <li class="navbar-custom" style="margin-right: 1em;"><a href="" id="aboutTab" data-toggle="modal" data-target="#aboutModal"><span class="glyphicon glyphicon-info-sign"></span> About</a></li>
         </ul>
     </div>
     <div class="tab-content">
@@ -55,7 +57,7 @@ var n, o, d, i, s, a = [],
                 <h3 class="modal-title" id="myModalLabel">Timeseries in Current Map Area</h3>
                 <h5 style="margin-bottom: 1em;">To download one or more data files, please click the associated table row(s) and click the 'Zip Selections' button.</h5>
             </div>
-            <div class="modal-body-full">
+            <div class="modal-body-full" id="dtTimeSeriesModal">
             <table id="dtTimeseries" class="display" cellspacing="0">
                 <thead>
                     <tr>
@@ -90,14 +92,14 @@ var n, o, d, i, s, a = [],
                                         <div id="grpStartDate" class="form-group" style="margin-bottom: 0em;">
                                             <label class="control-label col-sm-2 col-sm-offset-1" for="startDate" id="lblStartDate">From: </label>
                                             <div class="col-sm-7">
-                                                <input id="startDate" class="form-control non-modal-date-range" type="text" style="margin-left: 0.5em;" readonly="readonly" />
+                                                <input id="startDate" class="form-control default-cursor" type="text" style="margin-left: 0.5em;" readonly="readonly" />
                                                 <label id="lblStartDateError" class="help-block" style="display:none;"></label>
                                             </div>
                                         </div>
                                         <div id="grpEndDate" class="form-group">
                                             <label class="control-label col-sm-2 col-sm-offset-1" for="endDate" id="lblEndDate">To: </label>
                                             <div class="col-sm-7">
-                                                <input id="endDate" class="form-control non-modal-date-range" type="text" style="margin-left: 0.5em;" readonly="readonly" />
+                                                <input id="endDate" class="form-control default-cursor" type="text" style="margin-left: 0.5em;" readonly="readonly" />
                                                 <label id="lblEndDateError" class="help-block" style="display:none;  margin-left: 0.5em;"></label>
                                             </div>
                                 </div>
@@ -108,7 +110,8 @@ var n, o, d, i, s, a = [],
                                 <fieldset>
                                 <legend style="margin-bottom: 0.25em;">
                                         @*<button class="btn btn-primary btn-block" id="btnSelectKeywords" style="width: 90%; margin: 0 auto;" data-toggle="modal" data-target="#SelectVariableModal">Select Keyword(s)...</button>*@
-                                    <button class="btn btn-primary btn-block" id="btnSelectKeywords" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectVariableModal">Select Keyword(s)...</button>
+                                    @*<button class="btn btn-primary btn-block" id="btnSelectKeywords" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectVariableModal">Select Keyword(s)...</button>*@
+                                    <button class="btn btn-primary btn-block" type="button" id="btnSelectKeywords" style="margin: 0 auto;">Select Keyword(s)...</button>
                                 </legend>
                                     <div style="overflow-y: scroll; max-height: 10em;">
                                     <ol id="olConcepts" style="list-style: circle;">
@@ -152,7 +155,7 @@ var n, o, d, i, s, a = [],
 
                     </div>
                     <!--Streetview close button-->
-                    <button id="StreetViewCloseButton" class="btn">&times;</button>
+                    <button id="StreetViewCloseButton" class="btn" style="display: none;">&times;</button>
                     <input id="pac-input" class="searchbarcontrols" type="text"
                            placeholder="Enter a location" />
                     <div id="type-selector" class="searchbarcontrols hidden">
@@ -186,15 +189,15 @@ var n, o, d, i, s, a = [],
 
 <!-- Modal -->
 <!-- Modal dialog for Download Manager... -->
-<div class="modal fade full-screen" id="dmModal" tabindex="-1" role="dialog" aria-labelledby="dmModalLabel" aria-hidden="true" style="z-index: 2000000000000000;">
-    <div class="modal-dialog-full">
-        <div class="modal-content-full">
+<div class="modal fade" id="dmModal" tabindex="-1" role="dialog" aria-labelledby="dmModalLabel" aria-hidden="true" style="z-index: 2000000000000000;">
+    <div class="modal-dialog modal-dialog-full" role="document">
+        <div class="modal-content modal-content-full">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
                 <label style="float:right; margin-right: 2em"><input type="checkbox" id="chkbxAutoDownload" checked="checked" />&nbsp;Auto Download Archives?</label>
                 <h3 class="modal-title" id="myModalLabel">Download Manager</h3>
             </div>
-            <div class="modal-body-full row">
+            <div class="modal-body modal-body-full row">
                 <!-- BCC - Try a dynamically sized font here...
                      Source: http://stackoverflow.com/questions/14537611/bootstrap-responsive-text-size
                 -->
@@ -211,10 +214,10 @@ var n, o, d, i, s, a = [],
                             <th class="text-center" style="width: 25%; vertical-align: middle;">
                                 <label class="btn" style="font-size: 1em; font-weight: bold; margin: 0 auto;">Processing Status</label>
                             </th>
-                            <th class="text-center" style="width: 43%; vertical-align: middle;">
+                            <th class="text-center" style="width: 40%; vertical-align: middle;">
                                 <label class="btn" style="font-size: 1em; font-weight: bold; margin: 0 auto;">Time Series Archive</label>
                             </th>
-                            <th class="text-center" style="width: 12%; vertical-align: middle !important;">
+                            <th class="text-center" style="width: 13%; vertical-align: middle !important;">
                                 <input type="button" class="btn btn-primary text-center" id="btnDownloadAll" style="font-size: 1em; margin: 0 auto;" value="Download All Archives" />
                             </th>
                             @*<th style="width: 2%">
@@ -269,8 +272,117 @@ var n, o, d, i, s, a = [],
     </div>
 </div>
 
+<!-- Modal dialog for About -->
+<div class="modal fade" id="aboutModal" tabindex="-1" role="dialog" aria-labelledby="aboutModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
+                <h3 class="modal-title" id="myModalLabel">About</h3>
+            </div>
+            <div class="modal-body">
 
-            <div class="modal fade" id="SelectDateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div style="margin-left: 2.0em;">
+
+
+                    <h4>Distribution</h4>
+
+                    <p>
+                        HydroClient and all associated source code and documentation are available at the following URL: <a href="http://www.github.com/cuahsi">http://www.github.com/cuahsi</a>.  
+                        HydroClient source code and documentation are provided free of charge under the Berkeley Software Distribution (BSD) license. 
+                        Please see the following license information: Copyright (c) 2015, CUAHSI, All rights reserved.
+                    </p>
+                    <p>
+                        Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met: 
+                    </p>
+                        <ol style="list-style: decimal;">
+                            <li>
+                                Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer. 
+                            </li>
+                            <li>
+                                Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.                       
+                            </li>
+                            <li>
+                                Neither the name of CUAHSI nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.   
+                            </li>
+                        </ol>
+                    <p>
+                        This software is provided by the copyright holders and contributors "as is" and any express or implied warranties, including, but not limited to, 
+                        the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors 
+                        be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute 
+                        goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict 
+                        liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage. 
+                    </p>
+
+                    <h4>
+                        Disclaimer
+                    </h4>
+                    <p>
+                        Although much effort has been expended in the development and testing of the HydroClient, errors and inadequacies may still occur. Users must make the final evaluation 
+                        as to the usefulness of HydroClient for his or her application. HydroClient, CUAHSI HIS, and documentation are supported by National Science Foundation Grant Number EAR-1248152. 
+                        Any opinions, findings, and conclusions or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the National Science Foundation.
+                    </p>
+
+
+                    @*<address style="margin-top: 2.0em;">
+                        Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)<br />
+                        Boston Office<br />
+                        196 Boston Ave, Suite 3000<br />
+                        Medford, MA 02155<br />
+                        Phone: (339) 221-5400<br />
+                        Fax: (781) 219-4029<br />
+                    </address>
+
+                    <address>
+                        <strong>Support:</strong>   <a href="mailto:help@cuahsi.org">help@cuahsi.org</a><br />
+                    </address>*@
+                </div>
+            </div>
+            <div class="modal-footer">
+                <!--p>This is the modal footer!!</p-->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal dialog for Full Keyword loading ...-->
+<div class="modal fade" id="keywordModal" tabindex="-1" role="dialog" aria-labelledby="keywordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                @*<button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>*@
+                <h3 class="modal-title" id="myModalLabel">Loading Keywords...</h3>
+            </div>
+            <div class="modal-body">
+                <div style="margin-left: 2.0em;">
+                    <h2 class="text-center" style="display: inline; vertical-align: middle;">
+                        <span id="glyphiconSpanPhysical" class="glyphicon glyphicon-refresh spin" style="color: #32cd32;"></span>
+                    </h2>
+                    <div id="textPhysical" class="text-center" style="display:inline-block; margin: 0em 0em 0em 1em; vertical-align: top;">Physical</div>
+                    <br/>
+
+                    <h2 class="text-center" style="display: inline; vertical-align: middle;">
+                        <span id="glyphiconSpanChemical" class="glyphicon glyphicon-refresh spin" style="color: #32cd32;"></span>
+                    </h2>
+                    <div id="textChemical" class="text-center" style="display:inline-block; margin: 0em 0em 0em 1em; vertical-align: top;">Chemical</div>
+                    <br />
+
+                    <h2 class="text-center" style="display: inline; vertical-align: middle;">
+                        <span id="glyphiconSpanBiological" class="glyphicon glyphicon-refresh spin" style="color: #32cd32;"></span>
+                    </h2>
+                    <div id="textBiological" class="text-center" style="display:inline-block; margin: 0em 0em 0em 1em; vertical-align: top;">Biological</div>
+                    <br />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <!--p>This is the modal footer!!</p-->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="SelectDateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -376,11 +488,11 @@ var n, o, d, i, s, a = [],
                                         <label class="checkbox">
                                             <input type="checkbox" name="keywords" value="Solids, total suspended" id="inlineCheckbox16" class="topCategories"/>Total Suspended Solids
                                         </label>
-                                        <label class="checkbox">
+                                        @*<label class="checkbox">
                                             <input type="checkbox" name="keywords" value="Water Level" id="inlineCheckbox3" class="topCategories" />Water Level
-                                        </label>
+                                        </label>*@
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Temperature, Water" id="inlineCheckbox8" class="topCategories" />Water Temperature
+                                            <input type="checkbox" name="keywords" value="Temperature, water" id="inlineCheckbox8" class="topCategories" />Water Temperature
                                         </label>
                                     </div>
                                 </div>
@@ -439,60 +551,59 @@ var n, o, d, i, s, a = [],
 <!-- /.modal-dialog -->
 <!-- Modal -->
 <!--BCC - 26-Jun-2015 - Changes for QA Issue #23 - GUI: popup design do not unified -->
-<div class="modal fade full-screen" id="SelectServicesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog-full">
-        <div class="modal-content-full">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 class="modal-title" id="myModalLabel">Click to select Data Services</h3>
-                @*BCC - 02-Jul-2015 - Internal QA Issue #23 - Move 'Exclude Gridded data services...' checkbox to right *@
-                <div class="form-group" style="position: relative;">
-                    <h6 style="display:inline-block; float: left;"> (No selection searches all)</h6>
-                    <label for="checkOnlyObservedValues" style="float: right;">
-                        <input type="checkbox" name="checkOnlyObservedValues" id="checkOnlyObservedValues" data-inline="true" /> Exclude Gridded data services, e.g. NLDAS
-                    </label>
+<div class="modal fade" id="SelectServicesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-full" role="document">
+            <div class="modal-content modal-content-full">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h3 class="modal-title" id="myModalLabel">Click to select Data Services</h3>
+                    @*BCC - 02-Jul-2015 - Internal QA Issue #23 - Move 'Exclude Gridded data services...' checkbox to right *@
+                    <div class="form-group" style="position: relative;">
+                        <h6 style="display:inline-block; float: left;"> (No selection searches all)</h6>
+                        <label for="checkOnlyObservedValues" style="float: right;">
+                            <input type="checkbox" name="checkOnlyObservedValues" id="checkOnlyObservedValues" data-inline="true" /> Select all non-gridded data services, e.g. NLDAS
+                        </label>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-body-full">
-                            <table id="dtServices" class="display" cellspacing="0">
-                    <thead>
-                        <tr>
-                            @Html.Partial("_DatatableDataservicesColumns")
-                        </tr>
-                    </thead>
+                <div class="modal-body modal-body-full">
+                    <table id="dtServices" class="display" cellspacing="0">
+                        <thead>
+                            <tr>
+                                @Html.Partial("_DatatableDataservicesColumns")
+                            </tr>
+                        </thead>
 
-                    <tfoot>
-                        <tr>
-                            @Html.Partial("_DatatableDataservicesColumns")
-                        </tr>
-                    </tfoot>
-                </table>
+                        <tfoot>
+                            <tr>
+                                @Html.Partial("_DatatableDataservicesColumns")
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    @*<button type="button" id="cancelServiceSelection" class="btn btn-default alert-info" data-dismiss="modal">Cancel</button>*@
+                    @*BCC - 30-Jun-2015 - QA Issue #44 - Popup 'Click to select Data Services': 'Save' button is missed *@
+                    <button type="button" id="saveServiceSelection" class="btn btn-default btn-primary" data-dismiss="modal">Save</button>
+                </div>
+                <!-- /.modal-content -->
             </div>
-            <div class="modal-footer">
-                @*<button type="button" id="cancelServiceSelection" class="btn btn-default alert-info" data-dismiss="modal">Cancel</button>*@
-                @*BCC - 30-Jun-2015 - QA Issue #44 - Popup 'Click to select Data Services': 'Save' button is missed *@
-                <button type="button" id="saveServiceSelection" class="btn btn-default btn-primary" data-dismiss="modal">Save</button>
-            </div>
-
-            <!-- /.modal-content -->
+            <!-- /.modal-dialog -->
         </div>
-        <!-- /.modal-dialog -->
     </div>
-</div>
 @*  BCC - 29-Jun-2015 - Remove 'fade' class from modal div to ensure firing of 'shown.bs.modal' event!!
     Source: http://stackoverflow.com/questions/18568278/bootstrap-3-0-0-modal-events-not-firing
     <div class="modal fade full-screen" id="SeriesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">*@
-<div class="modal full-screen" id="SeriesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog-full">
-        <div class="modal-content-full">
-            <div class="modal-header-full">
+<div class="modal" id="SeriesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-full" role="document">
+        <div class="modal-content modal-content-full">
+            <div class="modal-header modal-header-full">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
                 <!--button type="button" id="seriesModal-DM" style="float: right; margin-right: 2em; color: #428bca;"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</button -->
                 <a href="" id="seriesModal-DM" data-toggle="modal" data-target="#dmModal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</a>
                 <h3 class="modal-title" id="myModalLabel">List of Timeseries in area</h3>
                 <h5 style="margin-bottom: 1em;">To zip one or more data files, please click the associated table row(s) and then click the 'Zip Selections' button.</h5>
             </div>
-            <div class="modal-body-full">
+            <div class="modal-body modal-body-full">
                 <table id="dtMarkers" class="display" cellspacing="0">
                     <thead>
                         <tr>                           
@@ -507,7 +618,7 @@ var n, o, d, i, s, a = [],
                     </tfoot>
                 </table>
             </div>
-            <div class="modal-footer-full">
+            <div class="modal-footer modal-footer-full">
                 @*<span>
                         @Html.ActionLink("Download as CSV", "downloadFile", "Export", new { id = 1 }, new { @class = "btn btn-info active pull-right", target = "_blank" })
                     </span>
