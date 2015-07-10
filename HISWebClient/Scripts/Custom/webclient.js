@@ -469,10 +469,6 @@ function initialize() {
 
     $('#btnSelectDataServices').on('click', clickSelectDataServices);
 
-    //Set up tooltips...
-    //setUpTooltips();
-
-
     //Click handler for 'Common' keywords checkboxes
     $('input[name="keywords"]').on('click', clickCommonKeyword);
 }
@@ -2048,7 +2044,7 @@ function setupServices()
          "columns": [
 
             { "data": "Organization" },
-           { "data": "ServiceCode", "visible": false },
+            { "data": "ServiceCode", "visible": false },
             { "data": "Title" },
             { "data": "DescriptionUrl", "visible": false },
             { "data": "ServiceUrl", "visible": false },
@@ -2195,9 +2191,10 @@ function setUpDatatables(clusterid)
             { "data": "ServCode", "sTitle": "Service Code", "visible": true },
             { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
             { "data": "ServURL", "visible": false },
-            { "data": "SiteCode", "visible": false },
-            { "data": "VariableCode", "visible": false },
-              { "data": "VariableName","width": "50px", "sTitle": "Variable Name"},
+            { "data": "VariableName", "width": "50px", "sTitle": "Variable Name" },
+            //BCC - 10-Jul-2015 - Internal QA Issue #29 - Include VariableCode and SiteCode
+            { "data": "SiteCode", "sTitle": "Site Code", "visible": true },
+            { "data": "VariableCode", "sTitle": "Variable Code", "visible": true },
             { "data": "BeginDate", "sTitle": "Start Date" },
             { "data": "EndDate","sTitle": "End Date" },
             { "data": "ValueCount" },
@@ -2214,17 +2211,31 @@ function setUpDatatables(clusterid)
             { "data": "IsRegular", "visible": true },
             //{ "data": "VariableUnits","visible": false },
             //{ "data": "Citation", "visible": false }            
-            { "data": "SeriesId" }
+            { "data": "SeriesId" },
+            //BCC - 10-Jul-2015 - Add links to Description URL and Service URL (WSDL)
+            { "data": null, "sTitle": "Service URL", "visible": true },
+            { "data": "ServURL", "sTitle": "Web Service Description URL", "visible": true }
          ],
 
          "scrollX": true,
          
          "createdRow": function (row, data, index) {
 
-             //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
-             if ($('#chkbxSelectAll').prop('checked')) {
+                 //Create a link to the Service URL
+                 var org = $('td', row).eq(0).html();
+                 var servCode = $('td', row).eq(1).html();
 
-                 //Find the position of the new row per the current sort/search order...
+                 var descUrl = getDescriptionUrl(servCode);
+                 $('td', row).eq(17).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
+
+                 //Create a link to the Web Service Description URL...
+                 var servUrl = $('td', row).eq(18).html();
+                 $('td', row).eq(18).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
+
+                 //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
+                 if ($('#chkbxSelectAll').prop('checked')) {
+
+                     //Find the position of the new row per the current sort/search order...
                  var table = $('#dtMarkers').DataTable();
                  var position = table.rows()[0].indexOf(index);
 
@@ -2234,61 +2245,62 @@ function setUpDatatables(clusterid)
 
                      if (!jqueryObject.hasClass(className)) {
                          jqueryObject.addClass(className);
-             }
+                    }
                  }                 
              }
 
-             //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
+                 //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
 
-             //var id = $('td', row).eq(14).html();//only visible count
-             //var d = $('td', row).eq(4).html();
-             //$('td', row).eq(0).append("<a href='/Export/downloadFile/" + id + "' id=" + id + " <span class='glyphicon glyphicon-download-alt'  aria-hidden='true'> </span> </a>");
+                 //var id = $('td', row).eq(14).html();//only visible count
+                 //var d = $('td', row).eq(4).html();
+                 //$('td', row).eq(0).append("<a href='/Export/downloadFile/" + id + "' id=" + id + " <span class='glyphicon glyphicon-download-alt'  aria-hidden='true'> </span> </a>");
 
-/* BC - TEST - Do not include download icon or href in any table row... 
-              //BC TEST - For IE - can we replace <a> with <span>???
-             //$('td', row).eq(0).append("<a href='/Export/downloadFile/" + id + "' id='" + id + "' <span><img  src='/Content/Images/download-icon-25.png' ></span> </a>");
-             $('td', row).eq(0).append("<span href='/Export/downloadFile/" + id + "' id='" + id + "' <span><img  src='/Content/Images/download-icon-25.png' ></span> </span>");
-             $('td', row).eq(0).click(function (event) {
-
-                 //BC - TEST - Prevent the default action - jquery-filedownload handles the 'GET' request...
-                 event.preventDefault();
-
-                 event.stopImmediatePropagation();  //Does this help with IE's open/save dialog?
-
-                 //downloadtimeseries('csv', id); return false;/Content/Images/ajax-loader-green.gif
-                 //$('#spinner' + id).removeClass('hidden')
-                 $(this).append("<span><img class='spinner' src='/Content/Images/ajax-loader-green.gif' id='" + id  + "'></span>");
-                 //$.fileDownload($(this).prop('href'), {
-                 //    preparingMessageHtml: "We are preparing your report, please wait...",
-                 //    failMessageHtml: "There was a problem generating your report, please try again."
-                 //})
+                 /* BC - TEST - Do not include download icon or href in any table row... 
+                               //BC TEST - For IE - can we replace <a> with <span>???
+                              //$('td', row).eq(0).append("<a href='/Export/downloadFile/" + id + "' id='" + id + "' <span><img  src='/Content/Images/download-icon-25.png' ></span> </a>");
+                              $('td', row).eq(0).append("<span href='/Export/downloadFile/" + id + "' id='" + id + "' <span><img  src='/Content/Images/download-icon-25.png' ></span> </span>");
+                              $('td', row).eq(0).click(function (event) {
                  
-                 //BC TEST - For IE - can we replace <a> with <span>???
-                 //var hrefProp = $(this).children('a').attr('href');   //href from the <a> element...
-                 var hrefProp = $(this).children('span').attr('href');   //href from the <a> element...
-                 var imgSelector = 'img[id="' + id + '"]';
-                 $.fileDownload(hrefProp)
-                     .done(function () {
-                         $(imgSelector).addClass('hidden');
-                         $(imgSelector).parent().parent().addClass('selected');
-
-                     })
-                     .fail(function () {
-                         $(imgSelector).addClass('hidden');
-                         $(imgSelector).parent().parent().addClass('downloadFail');
-                     });
-
-                 return (false);
-             });
-*/
+                                  //BC - TEST - Prevent the default action - jquery-filedownload handles the 'GET' request...
+                                  event.preventDefault();
+                 
+                                  event.stopImmediatePropagation();  //Does this help with IE's open/save dialog?
+                 
+                                  //downloadtimeseries('csv', id); return false;/Content/Images/ajax-loader-green.gif
+                                  //$('#spinner' + id).removeClass('hidden')
+                                  $(this).append("<span><img class='spinner' src='/Content/Images/ajax-loader-green.gif' id='" + id  + "'></span>");
+                                  //$.fileDownload($(this).prop('href'), {
+                                  //    preparingMessageHtml: "We are preparing your report, please wait...",
+                                  //    failMessageHtml: "There was a problem generating your report, please try again."
+                                  //})
+                                  
+                                  //BC TEST - For IE - can we replace <a> with <span>???
+                                  //var hrefProp = $(this).children('a').attr('href');   //href from the <a> element...
+                                  var hrefProp = $(this).children('span').attr('href');   //href from the <a> element...
+                                  var imgSelector = 'img[id="' + id + '"]';
+                                  $.fileDownload(hrefProp)
+                                      .done(function () {
+                                          $(imgSelector).addClass('hidden');
+                                          $(imgSelector).parent().parent().addClass('selected');
+                 
+                                      })
+                                      .fail(function () {
+                                          $(imgSelector).addClass('hidden');
+                                          $(imgSelector).parent().parent().addClass('downloadFail');
+                                      });
+                 
+                                  return (false);
+                              });
+                 */
 
              //}
          },
         initComplete: function () {
 
-            setfooterFilters('#dtMarkers', [0, 1, 2, 6]);
+            setfooterFilters('#dtMarkers', [0, 1, 2, 4]);
 
-            setUpTooltips('dtMarkers');
+            //BC - 10-Jul-2015 - Temporarily disable tooltips...
+            //setUpTooltips('dtMarkers');
         
             // oTable.fnAdjustColumnSizing();
         }
@@ -2310,7 +2322,7 @@ function setUpDatatables(clusterid)
     $("div.toolbar").html('<span style="float: left; margin-left: 1em;" id="spanSelectAll"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAll" style="float:left;"/>&nbsp;Select Top ' + 
                           selectedTimeSeriesMax.toString() + '?</span>' +
                           '<input type="button" style="margin-left: 2em; float:left;" class="btn btn-warning" disabled id="btnClearSelections" value="Clear Selection(s)"/>' +
-                          '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelections" value="Zip Selection(s)"/>' +
+                          '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelections" value="Process Selection(s)"/>' +
                           '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;"></span>');
     //$("div.toolbar").css('border', '1px solid red');
   
@@ -2405,6 +2417,29 @@ function setUpDatatables(clusterid)
 
         }
 
+
+//Retrieve the Description Url from the Services DataTable for the input service code- Not found, return null
+//Assumption: The services DataTable is loaded immediately upon page load or refresh!!
+function getDescriptionUrl(serviceCode) {
+
+    var descriptionUrl = null;
+    if (('undefined' !== typeof serviceCode) && (null !== serviceCode)) {
+        
+        var table = $('#dtServices').DataTable();
+        var data = table.rows().data();
+
+        $.each(data, function (i, obj) {
+            if (serviceCode === obj.ServiceCode) {
+                descriptionUrl = obj.DescriptionUrl;
+                return false;
+            }
+        });
+    }
+
+    //Processing complete - return
+    return descriptionUrl;
+}
+
 //Create 'select'-based filters for the input tableId and columns array
 function setfooterFilters(tableId, columnsArray) {
 
@@ -2455,7 +2490,7 @@ function updateServicesList()
 function toggleSelected(event) {
     $(this).toggleClass('selected');
 
-    //Check state of 'Zip Selections' button...
+    //Check state of 'Process Selections' button...
     enableDisableButton(event.data.tableId, event.data.btnId);
     enableDisableButton(event.data.tableId, event.data.btnClearId);
 }
@@ -2555,7 +2590,7 @@ function selectAll(event) {
     }
     }
 
-    //Check state of 'Zip Selections' button...
+    //Check state of 'Process Selections' button...
     enableDisableButton(event.data.tableId, event.data.btnId);
     enableDisableButton(event.data.tableId, event.data.btnClearId);
 }
@@ -3005,9 +3040,10 @@ function setUpTimeseriesDatatable() {
             { "data": "ServCode", "sTitle": "Service Code", "visible": true },
             { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
             { "data": "ServURL", "visible": false },
-            { "data": "SiteCode", "visible": false },
-            { "data": "VariableCode", "visible": false },
-              { "data": "VariableName", "width": "50px", "sTitle": "Variable Name" },
+            { "data": "VariableName", "width": "50px", "sTitle": "Variable Name" },
+            //BCC - 10-Jul-2015 - Internal QA Issue #29 - Include VariableCode and SiteCode
+            { "data": "SiteCode", "sTitle": "Site Code", "visible": true },
+            { "data": "VariableCode", "sTitle": "Variable Code", "visible": true },
             { "data": "BeginDate", "sTitle": "Start Date" },
             { "data": "EndDate", "sTitle": "End Date" },
             { "data": "ValueCount" },
@@ -3024,10 +3060,24 @@ function setUpTimeseriesDatatable() {
             { "data": "IsRegular", "visible": true },
             //{ "data": "VariableUnits","visible": false },
             //{ "data": "Citation", "visible": false }            
-            { "data": "SeriesId" }
+            { "data": "SeriesId" },
+            //BCC - 10-Jul-2015 - Add links to Description URL and Service URL (WSDL)
+            { "data": null, "sTitle": "Service URL", "visible": true },
+            { "data": "ServURL", "sTitle": "Web Service Description URL", "visible": true }
            ],
         "scrollX": true,
         "createdRow": function (row, data, index) {
+
+            //Create a link to the Service URL
+            var org = $('td', row).eq(0).html();
+            var servCode = $('td', row).eq(1).html();
+
+            var descUrl = getDescriptionUrl(servCode);
+            $('td', row).eq(17).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
+
+            //Create a link to the Web Service Description URL...
+            var servUrl = $('td', row).eq(18).html();
+            $('td', row).eq(18).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
 
             //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
            if ($('#chkbxSelectAllTS').prop('checked')) {
@@ -3078,7 +3128,7 @@ function setUpTimeseriesDatatable() {
         },
         initComplete: function () {
 
-            setfooterFilters('#dtTimeseries', [0, 1, 2, 6]);
+            setfooterFilters('#dtTimeseries', [0, 1, 2, 4]);
         }
 
     });
@@ -3094,7 +3144,7 @@ function setUpTimeseriesDatatable() {
     $("div.toolbarTS").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS" style="float:left;"/>&nbsp;Select Top ' +
                             selectedTimeSeriesMax.toString() + '?</span>' +
                             '<input type="button" style="margin-left: 2em; float:left;" class="btn btn-warning" disabled id="btnClearSelectionsTS" value="Clear Selection(s)"/>' +
-                            '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelectionsTS" value="Zip Selection(s)"/>' +
+                            '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelectionsTS" value="Process Selection(s)"/>' +
                             '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;"></span>');
 
     // BC - Do not respond to data table load event...
@@ -3258,7 +3308,7 @@ function setUpTooltips(elementId) {
             'template': templateString 
         });
 
-        //'Zip Selections' button...
+        //'Process Selections' button...
         jqueryObject = $('#btnZipSelections');
 
         templateString = '<div class="tooltip" role="tooltip">' +

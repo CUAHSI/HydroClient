@@ -55,7 +55,7 @@ var n, o, d, i, s, a = [],
         <div class="tab-pane" id="dataview" style="margin-left: 1.0em; margin-right: 1.0em;">
             <div class="modal-header-full">
                 <h3 class="modal-title" id="myModalLabel">Timeseries in Current Map Area</h3>
-                <h5 style="margin-bottom: 1em;">To download one or more data files, please click the associated table row(s) and click the 'Zip Selections' button.</h5>
+                <h5 style="margin-bottom: 1em;">To download one or more data files, please click the associated table row(s) and click the 'Process Selections' button.</h5>
             </div>
             <div class="modal-body-full" id="dtTimeSeriesModal">
             <table id="dtTimeseries" class="display" cellspacing="0">
@@ -142,6 +142,9 @@ var n, o, d, i, s, a = [],
                             <!-- For click handler see webclient.js $("#Search").submit(function (e) -->
                                 <button type="submit" class="btn btn-success btn-block" style="margin: 0 auto;">Search Map</button><br />
                                 <button id="btnSetDefaults" type="button" class="btn btn-warning btn-block" style="margin: 0 auto;">Set Defaults</button>
+                                <div style ="text-align: center; margin-top: 1em; ">
+                                    <a href="http://www.github.com/cuahsi" target="_blank">Version 1.0</a>
+                                </div>
                             </div>
 
                         </form>
@@ -601,7 +604,7 @@ var n, o, d, i, s, a = [],
                 <!--button type="button" id="seriesModal-DM" style="float: right; margin-right: 2em; color: #428bca;"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</button -->
                 <a href="" id="seriesModal-DM" data-toggle="modal" data-target="#dmModal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</a>
                 <h3 class="modal-title" id="myModalLabel">List of Timeseries in area</h3>
-                <h5 style="margin-bottom: 1em;">To zip one or more data files, please click the associated table row(s) and then click the 'Zip Selections' button.</h5>
+                <h5 style="margin-bottom: 1em;">To zip one or more data files, please click the associated table row(s) and then click the 'Process Selections' button.</h5>
             </div>
             <div class="modal-body modal-body-full">
                 <table id="dtMarkers" class="display" cellspacing="0">
