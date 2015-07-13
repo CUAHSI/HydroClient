@@ -145,7 +145,7 @@ var n, o, d, i, s, a = [],
                                 @*<div style ="text-align: center; margin-top: 1em; ">
                                     <a href="http://www.github.com/cuahsi" target="_blank">Version 1.0</a>
                                 </div>*@
-                            </div>
+                                </div>
 
                         </form>
                     </div>
@@ -252,26 +252,26 @@ var n, o, d, i, s, a = [],
                 <h3 class="modal-title" id="myModalLabel">Contact</h3>
             </div>
             <div class="modal-body">
-               
-                    <div style="margin-left: 2.0em;">
-                        <address style="margin-top: 2.0em;">
-                            <h4>Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)</h4><br />
-                            Boston Office<br />
-                            196 Boston Ave, Suite 3000<br />
-                            Medford, MA 02155<br />
-                            Phone: (339) 221-5400<br />
-                            Fax: (781) 219-4029<br />
-                        </address>
 
-                        <address>
+                <div style="margin-left: 2.0em;">
+                    <address style="margin-top: 2.0em;">
+                            <h4>Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)</h4><br />
+                        Boston Office<br />
+                        196 Boston Ave, Suite 3000<br />
+                        Medford, MA 02155<br />
+                        Phone: (339) 221-5400<br />
+                        Fax: (781) 219-4029<br />
+                    </address>
+
+                    <address>
                             <strong>Support:</strong>   <a href="mailto:help@cuahsi.org">help@cuahsi.org</a><br /><br />
                             
                             <a href="https://github.com/CUAHSI/HISWebClientIssues/issues" class="h5" target="_blank">Report a bug here!</a>
                             
-                         </address>
+                    </address>
                        
-                    </div>
-</div>
+                </div>
+            </div>
             <div class="modal-footer">
                 <!--p>This is the modal footer!!</p-->
             </div>
@@ -285,7 +285,7 @@ var n, o, d, i, s, a = [],
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
-                <h3 class="modal-title" id="myModalLabel">About</h3>
+                <h3 class="modal-title" id="myModalLabel">About  <a href="http://www.github.com/cuahsi" target="_blank">(Version 1.0)</a></h3>
             </div>
             <div class="modal-body">
 
@@ -562,7 +562,7 @@ var n, o, d, i, s, a = [],
         <div class="modal-dialog modal-dialog-full" role="document">
             <div class="modal-content modal-content-full">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <button type="button" id="btnSaveServiceSelectionX" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     <h3 class="modal-title" id="myModalLabel">Click to select Data Services</h3>
                     @*BCC - 02-Jul-2015 - Internal QA Issue #23 - Move 'Exclude Gridded data services...' checkbox to right *@
                     <div class="form-group" style="position: relative;">
@@ -588,9 +588,8 @@ var n, o, d, i, s, a = [],
                     </table>
                 </div>
                 <div class="modal-footer">
-                    @*<button type="button" id="cancelServiceSelection" class="btn btn-default alert-info" data-dismiss="modal">Cancel</button>*@
                     @*BCC - 30-Jun-2015 - QA Issue #44 - Popup 'Click to select Data Services': 'Save' button is missed *@
-                    <button type="button" id="saveServiceSelection" class="btn btn-default btn-primary" data-dismiss="modal">Save</button>
+                    <button type="button" id="saveServiceSelection" class="btn btn-default btn-primary" data-dismiss="modal">Close</button>
                 </div>
                 <!-- /.modal-content -->
             </div>

@@ -735,18 +735,15 @@ namespace HISWebClient.Controllers
                 foreach (DataValue value in data.values)
                 {
                     List<string> values = new List<string>();
-                    values.Add(value.UTCTimeStamp.ToString("yyyy-MM-dd HH:mm:ss"));
-                    values.Add(value.LocalTimeStamp.ToString("yyyy-MM-dd HH:mm:ss"));
-                    values.Add(value.UTCOffset.ToString());
-                    values.Add(value.Value.ToString());
-                    values.Add(value.ValueAccuracy.ToString());                    
-                    values.Add(value.CensorCode);
+                    values.Add(value.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss"));
+                    values.Add(value.Value.ToString());                   
+                    values.Add(value.OffsetType);
                     values.Add(value.OffsetValue.ToString());
                     values.Add(value.OffsetDescription);
                     values.Add(value.OffsetUnit);
                     values.Add(value.Qualifier);
-
-                   
+                    values.Add(value.CensorCode);
+                    values.Add(value.UTCOffset.ToString());
                     //values.Add(value.);
                     csvwrtr.WriteRecord(values);
                 }
