@@ -142,9 +142,6 @@ var n, o, d, i, s, a = [],
                             <!-- For click handler see webclient.js $("#Search").submit(function (e) -->
                                 <button type="submit" class="btn btn-success btn-block" style="margin: 0 auto;">Search Map</button><br />
                                 <button id="btnSetDefaults" type="button" class="btn btn-warning btn-block" style="margin: 0 auto;">Set Defaults</button>
-                                <div style ="text-align: center; margin-top: 1em; ">
-                                    <a href="http://www.github.com/cuahsi" target="_blank">Version 1.0</a>
-                                </div>
                             </div>
 
                         </form>
@@ -281,7 +278,7 @@ var n, o, d, i, s, a = [],
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
-                <h3 class="modal-title" id="myModalLabel">About</h3>
+                <h3 class="modal-title" id="myModalLabel">About  <a href="http://www.github.com/cuahsi" target="_blank">(Version 1.0)</a></h3>
             </div>
             <div class="modal-body">
 
@@ -558,7 +555,7 @@ var n, o, d, i, s, a = [],
         <div class="modal-dialog modal-dialog-full" role="document">
             <div class="modal-content modal-content-full">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <button type="button" id="btnSaveServiceSelectionX" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     <h3 class="modal-title" id="myModalLabel">Click to select Data Services</h3>
                     @*BCC - 02-Jul-2015 - Internal QA Issue #23 - Move 'Exclude Gridded data services...' checkbox to right *@
                     <div class="form-group" style="position: relative;">
@@ -584,9 +581,8 @@ var n, o, d, i, s, a = [],
                     </table>
                 </div>
                 <div class="modal-footer">
-                    @*<button type="button" id="cancelServiceSelection" class="btn btn-default alert-info" data-dismiss="modal">Cancel</button>*@
                     @*BCC - 30-Jun-2015 - QA Issue #44 - Popup 'Click to select Data Services': 'Save' button is missed *@
-                    <button type="button" id="saveServiceSelection" class="btn btn-default btn-primary" data-dismiss="modal">Save</button>
+                    <button type="button" id="saveServiceSelection" class="btn btn-default btn-primary" data-dismiss="modal">Close</button>
                 </div>
                 <!-- /.modal-content -->
             </div>

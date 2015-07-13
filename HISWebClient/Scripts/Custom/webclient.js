@@ -471,6 +471,52 @@ function initialize() {
 
     //Click handler for 'Common' keywords checkboxes
     $('input[name="keywords"]').on('click', clickCommonKeyword);
+
+    //Shown and hidden handlers for Select Data Services...
+    $('#SelectServicesModal').on('shown.bs.modal', shownSelectDataServices);
+    $('#SelectServicesModal').on('hidden.bs.modal', hiddenSelectDataServices);
+
+}
+
+//Shown handler for Select Data Services...
+function shownSelectDataServices() {
+    $('#launcher').hide();
+}
+
+//Hidden handler for Select Data Services...
+//NOTE: Since the 'olServices' list maintains a count of the selected data services, 
+//      the mySavedServices array maintains the ids of those data services selected by
+//      the user.
+//
+//      Since the 'Select Data Services' dialog is modal, we can save processing time by 
+//      updating the mySaveServices array whenever the user closes the dialog:
+//       - clicks the 'close' button
+//       - clicks the 'x' in the upper right corner 
+//       - presses the ESC key
+//
+function hiddenSelectDataServices() {
+    $('#launcher').show();
+
+    //Capture any changes in user selections...
+    //Rebuild the saved services array...
+    mySavedServices.length = 0;
+
+    var rows = $("#dtServices").dataTable().fnGetNodes();
+    var length = rows.length;
+
+    for (var i = 0; i < length; ++i) {
+        var row = $(rows[i]);
+
+        if (row.hasClass('selected')) {
+            mySavedServices.push(row.find('td:eq(5)').html());
+        }
+    }
+
+    //Update the services list from the newely rebuilt saved services array...
+    updateServicesList();
+
+    //Retain the state of the 'Select all non-gridded...' checkbox
+    bObservedValuesOnly = $('#checkOnlyObservedValues').prop('checked');
 }
 
 //Return all search parameters to initial state
@@ -1031,7 +1077,7 @@ function clickSelectDataServices(event) {
         }
         else {
             $(rows[i]).removeClass(className);         //Previously selected service Ids DO NOT contain current id - DO NOT select the row
-    }
+        }
     }
 
     enableDisableButton('#dtServices', '#btnClearSelectionsDS');
@@ -2101,36 +2147,6 @@ function setupServices()
         }
 
         enableDisableButton('#dtServices', '#btnClearSelectionsDS');
-    });
-
-    $('#saveServiceSelection').click(function () {
-       // alert(myServicesDatatable[0].rows('.selected').data().length + ' row(s) selected');
-       
-        //Rebuild the saved services array...
-        mySavedServices.length = 0;
-
-        var rows = $("#dtServices").dataTable().fnGetNodes();
-        var length = rows.length;
-
-        for (var i = 0; i < length; ++i) {
-            var row = $(rows[i]);
-
-            if(row.hasClass('selected')) {
-                mySavedServices.push(row.find('td:eq(5)').html());
-            }
-        }
-
-        //Update the services list from the newely rebuilt saved services array...
-        updateServicesList();
-
-        //Retain the state of the 'Select all non-gridded...' checkbox
-        bObservedValuesOnly = $('#checkOnlyObservedValues').prop('checked');
-
-    });
-
-    $('#cancelServiceSelection').click(function () {
-        mySelectedServices.length = 0;
-
     });
 
     //BC - Test - add a custom toolbar to the table...
