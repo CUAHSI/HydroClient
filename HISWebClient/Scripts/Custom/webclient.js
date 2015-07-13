@@ -2726,7 +2726,7 @@ function zipSelections(event) {
 
     $(txtClass).text( txts[0] + taskId.toString() + txts[1]);
 
-    //Display the 'Zip processing started... message
+    //Display the 'Zip processing started... messag e
     displayAndFadeLabel(txtClass);
 
     //Create the list of selected time series ids...
@@ -2734,11 +2734,25 @@ function zipSelections(event) {
     var table = $(event.data.tableId).DataTable();
     var selectedRows = table.rows('.selected').data();
 
-    if ($(event.data.chkbxId).prop("checked")) {
-        //User has clicked the 'Select All' check box - ALL rows selected...
+    if ($(event.data.chkbxId).prop("checked") && (selectedTimeSeriesMax > selectedRows.length)) {
+        //User has clicked the 'Select Top ...' check box but not all selected rows have been rendered
         //NOTE: If the DataTable instance has the 'deferRender' option set - not all rows may have been rendered at this point.
         //        Thus one cannot rely on the selectedRows above, since in this case only rendered rows appear in the selectedRows...
-        selectedRows = table.rows().data();
+
+        //Scan all table rows for the 'Select Top ...' rows...
+        var positions = table.rows()[0];
+        var rows = table.rows().data();
+        var length = rows.length;
+        selectedRows = [];
+
+        for (var i = 0; i < length; ++i) {
+            var position = positions.indexOf(i);
+
+            if (position < selectedTimeSeriesMax) {
+                //Current row position within 'Select Top ...' - append row to selected rows...
+                selectedRows.push(rows[i]);
+            }
+        }
     }
 
     var selectedCount = selectedRows.length;
