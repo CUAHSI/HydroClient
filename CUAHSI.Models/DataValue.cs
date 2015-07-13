@@ -15,6 +15,12 @@ namespace CUAHSI.Models
         public DateTime TimeStamp { get; set; }
 
         [DataMember]
+        public DateTime UTCTimeStamp { get; set; }
+
+        [DataMember]
+        public DateTime LocalTimeStamp { get; set; }
+
+        [DataMember]
         public double UTCOffset { get; set; }
 
         [DataMember]
@@ -25,6 +31,12 @@ namespace CUAHSI.Models
 
         [DataMember]
         public double OffsetValue { get; set; }
+
+        [DataMember]
+        public string OffsetDescription { get; set; }
+
+        [DataMember]
+        public string OffsetUnit { get; set; }
 
         [DataMember]
         public double ValueAccuracy { get; set; }
@@ -67,8 +79,9 @@ namespace CUAHSI.Models
         /// <param name="v"></param>
         public DataValue(ServerSideHydroDesktop.ObjectModel.DataValue v)
         {
-            TimeStamp = v.DateTimeUTC;
+            UTCTimeStamp = v.DateTimeUTC;
             UTCOffset = v.UTCOffset;
+            LocalTimeStamp = v.LocalDateTime;
             Value = v.Value;
             ValueAccuracy = v.ValueAccuracy;
             if (v.Qualifier != null)
@@ -77,7 +90,8 @@ namespace CUAHSI.Models
             }
             if (v.OffsetType != null)
             {
-                OffsetType = v.OffsetType.Description;
+                OffsetDescription = v.OffsetType.Description;
+                OffsetUnit = v.OffsetType.Unit.ToString();
             }
             CensorCode = v.CensorCode;
             OffsetValue = v.OffsetValue;
