@@ -669,6 +669,7 @@ namespace HISWebClient.Controllers
                 "IsRegular",
                 "TimeSupport",
                 "TimeUnits",
+                "Speciation",
                 "SiteName",
                 "SiteCode",
                 "Latitude",
@@ -694,6 +695,7 @@ namespace HISWebClient.Controllers
                 data.myVariable.IsRegular.ToString(),
                 data.myVariable.TimeSupport.ToString(),
                 data.myVariable.TimeUnit.ToString(),
+                data.myVariable.Speciation.ToString(),
                 data.myMetadata.SiteName,
                 data.myMetadata.SiteCode,
                 data.myMetadata.Latitude.ToString(),
@@ -716,21 +718,23 @@ namespace HISWebClient.Controllers
                 //DataValues
 
                 //csvwrtr.ValueSeparator = Char.Parse(",");
-                csvwrtr.WriteRecord(new List<string>() { "UTCTimeStamp"
-                        ,"Value","OffsetType","OffsetValue", "ValueAccuracy",
-                        "Qualifier","CensorCode", "UTCOffset" });
+                csvwrtr.WriteRecord(new List<string>() { "Value","UTCTimeStamp"
+                        ,"LocalTimeStamp","UTCOffset","OffsetType","OffsetValue", "ValueAccuracy",
+                        "Qualifier","CensorCode"  });
 
                 foreach (DataValue value in data.values)
                 {
                     List<string> values = new List<string>();
+                    values.Add(value.Value.ToString()); 
                     values.Add(value.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss"));
-                    values.Add(value.Value.ToString());                   
+                    values.Add(value.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss"));
+                    values.Add(value.UTCOffset.ToString());               
                     values.Add(value.OffsetType);
                     values.Add(value.OffsetValue.ToString());
                     values.Add(value.ValueAccuracy.ToString());
                     values.Add(value.Qualifier);
                     values.Add(value.CensorCode);
-                    values.Add(value.UTCOffset.ToString());
+                    
                     //values.Add(value.);
                     csvwrtr.WriteRecord(values);
                 }

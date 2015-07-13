@@ -13,6 +13,11 @@ namespace CUAHSI.Models
     {
         [DataMember]
         public DateTime TimeStamp { get; set; }
+        [DataMember]
+        public DateTime TimeStampUTC { get; set; }
+        [DataMember]
+        public DateTime TimeStampLocal { get; set; }
+
 
         [DataMember]
         public double UTCOffset { get; set; }
@@ -34,6 +39,9 @@ namespace CUAHSI.Models
         /// </summary>
         [DataMember]
         public string Qualifier { get; set; }
+
+        [DataMember]
+        public string Speciation { get; set; }
 
         [DataMember]
         public string CensorCode { get; set; }
@@ -67,7 +75,9 @@ namespace CUAHSI.Models
         /// <param name="v"></param>
         public DataValue(ServerSideHydroDesktop.ObjectModel.DataValue v)
         {
-            TimeStamp = v.DateTimeUTC;
+            TimeStampUTC = v.DateTimeUTC;
+            TimeStampLocal = v.LocalDateTime;
+            Speciation = "TBD";
             UTCOffset = v.UTCOffset;
             Value = v.Value;
             ValueAccuracy = v.ValueAccuracy;
