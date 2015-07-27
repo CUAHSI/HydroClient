@@ -2791,13 +2791,18 @@ function zipSelections(event) {
         //        Thus one cannot rely on the selectedRows above, since in this case only rendered rows appear in the selectedRows...
 
         //Scan all table rows for the 'Select Top ...' rows...
-        var positions = table.rows()[0];
-        var rows = table.rows().data();
+        //var positions = table.rows()[0];
+        //var rows = table.rows().data();
+
+        //var positions = table.rows({'order': 'current', 'search': 'applied'})[0];   //Retrieve rows per current sort/search order...
+        var rows = table.rows({'order' : 'current', 'search': 'applied'}).data();   //Retrieve rows per current sort/search order...
+
         var length = rows.length;
         selectedRows = [];
 
         for (var i = 0; i < length; ++i) {
-            var position = positions.indexOf(i);
+            //var position = positions.indexOf(i);
+            var position = i;
 
             if (position < selectedTimeSeriesMax) {
                 //Current row position within 'Select Top ...' - append row to selected rows...
