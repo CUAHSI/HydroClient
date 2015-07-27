@@ -1,155 +1,155 @@
 ﻿
 
  html, body, .container, .tab-content, .tab-pane {
-            height: 100%;
-        }
+			height: 100%;
+		}
  body {
-    /*padding-top: 0px;*/
-    /*padding-bottom: 0px;*/
-    padding:0px;
+	/*padding-top: 0px;*/
+	/*padding-bottom: 0px;*/
+	padding:0px;
 }
 
 .navbar
 {
-    background-color:lightgray;
-    height:50px;
+	background-color:lightgray;
+	height:50px;
 }
 .collapsing {
-        overflow: hidden!important;
-    }
+		overflow: hidden!important;
+	}
 /* Override the default bootstrap behavior where horizontal description lists 
    will truncate terms that are too long to fit in the left column 
 */
 .dl-horizontal dt {
-    white-space: normal;
+	white-space: normal;
 }
 .navbar-custom {
-    left:0px;
-    top:10px;
-    color:lightgray;
-    background-color: lightgray;
-    border:inset;
-    border-width:1px;
-    padding:2px;
+	left:0px;
+	top:10px;
+	color:lightgray;
+	background-color: lightgray;
+	border:inset;
+	border-width:1px;
+	padding:2px;
 
 
 }
 logo
 {
-     border:0px; 
-     vertical-align:top;
-     left:0px;
+	 border:0px; 
+	 vertical-align:top;
+	 left:0px;
 }
 .nav li a
 {
-    padding: 2px;
+	padding: 2px;
 }
 .expander{
-    top:50px;
-    padding:0px;
-    /*height:9px;*/
-    background-color: lightgray;
-    border:5px
+	top:50px;
+	padding:0px;
+	/*height:9px;*/
+	background-color: lightgray;
+	border:5px
 }
 
 .expander2{
-    padding:5px;
-    background-color: lightgray;
-    border:1px
+	padding:5px;
+	background-color: lightgray;
+	border:1px
 }
 
 /* Source: http://stackoverflow.com/questions/21697659/bootstrap-3-vertical-line-in-button-group */
 .btn-separator:after {
-    content: ' ';
-    display: block;
-    float: left;
-    background: #ADADAD;
-    margin: 10px 10px;
-    height: 34px;
-    width: 10px;
+	content: ' ';
+	display: block;
+	float: left;
+	background: #ADADAD;
+	margin: 10px 10px;
+	height: 34px;
+	width: 10px;
 }
 
 /*selector{
-    border:inset;
-    border-width:thin;
+	border:inset;
+	border-width:thin;
 }*/
 
 #map-canvas {
-    top:0px;
-    width: 100%;
-    height: 100%;
-    min-height: 100%;
-        left:0px;
-    /*position:absolute;*/
-    padding:0px;
-    margin:0px;
-    
-    
+	top:0px;
+	width: 100%;
+	height: 100%;
+	min-height: 100%;
+		left:0px;
+	/*position:absolute;*/
+	padding:0px;
+	margin:0px;
+	
+	
 }
 #myTab{
-     position:absolute;
-     top:0px;
-     z-index:1030;
-     right: 0px;
+	 position:absolute;
+	 top:0px;
+	 z-index:1030;
+	 right: 0px;
 
 }
 #search{
-    padding-top:50px;
+	padding-top:50px;
 }
 .full-screen {
-    /*width: 80%;*/
-    /*height: 100%;*/
-    margin: 2%;
-    /*top: 2%;
-    left: 2%;
-    right: 2%;
-    bottom:2%;*/    
-    padding:20px;
-    background-color:white;
-    z-index:1000000; 
+	/*width: 80%;*/
+	/*height: 100%;*/
+	margin: 2%;
+	/*top: 2%;
+	left: 2%;
+	right: 2%;
+	bottom:2%;*/    
+	padding:20px;
+	background-color:white;
+	z-index:1000000; 
 }
 .modal-dialog-full
 {
-    width:100%;
+	width:100%;
    
 }
 .modal-content-full
 {
-    width:100%;
+	width:100%;
 
 }
 .modal-body-full
 {
-    width:100%;
+	width:100%;
    
 }
 .modal-header-full
 {
-    width:100%;
+	width:100%;
 }
 .modal-footer-full
 {
-    width:100%;
+	width:100%;
 }
 table
 {
-    float: left;
+	float: left;
 
-    overflow:hidden;
-    /*word-wrap:initial;*/
-    white-space:nowrap;
-    width:100%;
-    /*background-color:red;*/
+	overflow:hidden;
+	/*word-wrap:initial;*/
+	white-space:nowrap;
+	width:100%;
+	/*background-color:red;*/
 }
 
 
 /* Assure proper alignment of control elements in a dataTable which includes a custom toolbar*/
 .toolbar, .toolbarTS{
-    float: left;
+	float: left;
 }
 
 #dataview{
-    padding-top:75px;
+	padding-top:75px;
 }
 
 div.GblueLabel16, div.GblueLabel20, div.GblueLabel22,div.GblueLabel24,div.GblueLabel26,div.GblueLabel28,div.GblueLabel30,div.GblueLabel32,div.GblueLabel36,div.GblueLabel40,div.GblueLabel42,div.GblueLabel44,div.GblueLabel48,div.GblueLabel56,div.GblueLabel64 
@@ -172,37 +172,37 @@ div.GblueLabel64 {  padding-top: 22px;  width: 64px;  font-size: 13px;}
 
 
 #menu {
-    /* BC - Test - Increase width specification... */
+	/* BC - Test - Increase width specification... */
    width: 225px;
    /*height:225px;*/
-    /*position: absolute;*//*this will position the div according to its parent div "map"*/
-    top: 0px;
-    right: 0px; /*place the div wherever you want with top and left px, em or % values*/
-    float:right;
-    z-index: 1002;
-    padding:15px;
+	/*position: absolute;*//*this will position the div according to its parent div "map"*/
+	top: 0px;
+	right: 0px; /*place the div wherever you want with top and left px, em or % values*/
+	float:right;
+	z-index: 1002;
+	padding:15px;
  /*Use this for your trasparency*/
-    /*background-color: white;*/
-    /*background-image: none;*/
-    /*opacity: .8;*/ /*for real browsers (Chrome, Firefox, Safari..)*/
-    /*filter:alpha(opacity=60);*/ /* for IE */
-    }
+	/*background-color: white;*/
+	/*background-image: none;*/
+	/*opacity: .8;*/ /*for real browsers (Chrome, Firefox, Safari..)*/
+	/*filter:alpha(opacity=60);*/ /* for IE */
+	}
 
 #pageloaddiv {
-    position: fixed;
-    left: 0px;
-    top: 0px;
-    width: 100%;
-    height: 100%;
-    z-index: 1000000000000000;
-    background: url('images/ajax-loader-blue.gif') 50% 50% no-repeat 
+	position: fixed;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+	z-index: 1000000000000000;
+	background: url('images/ajax-loader-blue.gif') 50% 50% no-repeat 
 }
 td.details-control {
-    background: url('../Content/Images/cart_add.png') no-repeat center center;
-    cursor: pointer;
+	background: url('../Content/Images/cart_add.png') no-repeat center center;
+	cursor: pointer;
 }
 tr.details td.details-control {
-    background: url('../Content/Images/cart_remove.png') no-repeat center center;
+	background: url('../Content/Images/cart_remove.png') no-repeat center center;
 }
 
 
@@ -227,7 +227,7 @@ span.fancytree-childcounter {
   font-size: 9px;
 }
 /*.z-index_1100{
-    z-index:1100;
+	z-index:1100;
 }*/
 
 .datepicker{z-index:1151 !important;}
@@ -242,14 +242,14 @@ tr.selected {background: #009900;}
 
 /*Google maps searchbar*/
 .searchbarcontrols {
-        margin-top: 60px;
-        border: 1px solid transparent;
-        border-radius: 2px 0 0 2px;
-        box-sizing: border-box;
-        -moz-box-sizing: border-box;
-        height: 32px;
-        outline: none;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+		margin-top: 60px;
+		border: 1px solid transparent;
+		border-radius: 2px 0 0 2px;
+		box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		height: 32px;
+		outline: none;
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 #pac-input {
@@ -284,12 +284,12 @@ font-weight: 300;
 }
 
 /** {
-    box-sizing: content-box;
+	box-sizing: content-box;
 }*/
 .side-panel{
 	background-color: #E6E6E6;
 	padding-top: 0px;
-    padding-left: 0px;
+	padding-left: 0px;
 }
 
 .side-panel-left{
@@ -304,37 +304,37 @@ font-weight: 300;
 
 
 /* CSS for rotating glyphicons...
-    Source: http://chadkuehn.com/animated-font-spinners/ 
+	Source: http://chadkuehn.com/animated-font-spinners/ 
 */
 /*
 .glyphicon-spin {
-    -webkit-animation: spin 1000ms infinite linear;
-    animation: spin 1000ms infinite linear;
+	-webkit-animation: spin 1000ms infinite linear;
+	animation: spin 1000ms infinite linear;
 }
 @-webkit-keyframes spin {
-    0% {
-        -webkit-transform: rotate(0deg);
-        transform: rotate(0deg);
-    }
-    100% {
-        -webkit-transform: rotate(359deg);
-        transform: rotate(359deg);
-    }
+	0% {
+		-webkit-transform: rotate(0deg);
+		transform: rotate(0deg);
+	}
+	100% {
+		-webkit-transform: rotate(359deg);
+		transform: rotate(359deg);
+	}
 }
 @keyframes spin {
-    0% {
-        -webkit-transform: rotate(0deg);
-        transform: rotate(0deg);
-    }
-    100% {
-        -webkit-transform: rotate(359deg);
-        transform: rotate(359deg);
-    }
+	0% {
+		-webkit-transform: rotate(0deg);
+		transform: rotate(0deg);
+	}
+	100% {
+		-webkit-transform: rotate(359deg);
+		transform: rotate(359deg);
+	}
 }
 */
 
 /* CSS for rotating glyphicons...
-    Source: http://stackoverflow.com/questions/19364726/issue-making-bootstrap3-icon-spin - answer 28
+	Source: http://stackoverflow.com/questions/19364726/issue-making-bootstrap3-icon-spin - answer 28
 */
 
 .spin {
@@ -342,40 +342,40 @@ font-weight: 300;
   -moz-animation: spin 1.5s infinite linear;
   -o-animation: spin 1.5s infinite linear;
   animation: spin 1.5s infinite linear;
-     -webkit-transform-origin: 50% 58%;
-         transform-origin:50% 58%;
-         -ms-transform-origin:50% 58%; /* IE 9 */
+	 -webkit-transform-origin: 50% 58%;
+		 transform-origin:50% 58%;
+		 -ms-transform-origin:50% 58%; /* IE 9 */
 }
 
 @-moz-keyframes spin {
   from {
-    -moz-transform: rotate(0deg);
+	-moz-transform: rotate(0deg);
   }
   to {
-    -moz-transform: rotate(360deg);
+	-moz-transform: rotate(360deg);
   }
 }
 
 @-webkit-keyframes spin {
   from {
-    -webkit-transform: rotate(0deg);
+	-webkit-transform: rotate(0deg);
   }
   to {
-    -webkit-transform: rotate(360deg);
+	-webkit-transform: rotate(360deg);
   }
 }
 
 @keyframes spin {
   from {
-    transform: rotate(0deg);
+	transform: rotate(0deg);
   }
   to {
-    transform: rotate(360deg);
+	transform: rotate(360deg);
   }
 }
 
 /* Styling for a table with a vertical scroll bar in the tbody (table with class: vscroll)
-    Source: http://www.bootply.com/qdLCAlG9fm
+	Source: http://www.bootply.com/qdLCAlG9fm
 */
 
 .table-fixed thead {
@@ -405,7 +405,7 @@ font-weight: 300;
 
 /* Styling for Bootstrap tooltips... */
 #chkbxSelectAll + .tooltip > .tooltip-inner, #chkbxSelectAllTS + .tooltip > .tooltip-inner  {
-    background-color: red;
+	background-color: red;
 }
 /*Streetview close button*/
 .button {
@@ -418,8 +418,8 @@ font-weight: 300;
 }
 
 /* Set default cursor on read only inputs...
-    Source: http://stackoverflow.com/questions/17319228/use-readonly-attribute-in-input-without-changing-the-cursor
+	Source: http://stackoverflow.com/questions/17319228/use-readonly-attribute-in-input-without-changing-the-cursor
 */
 input[readonly].default-cursor {
-    cursor: pointer;
+	cursor: pointer;
 }

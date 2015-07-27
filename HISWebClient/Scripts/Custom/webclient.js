@@ -33,6 +33,10 @@ var ArrayOfNonObservedServices = ["84","187","189","226","262","267","274"]
 
 var taskCount = 0;
 
+//var filteredDataTables = { 'dtMarkers': null,
+//                           'dtTimeseries': null
+//                         };
+
 $(document).ready(function () {
 
     $("#pageloaddiv").hide();
@@ -236,6 +240,12 @@ function initialize() {
     //Allocate a TimeSeriesRequestStatus instance...
     timeSeriesRequestStatus = (new TimeSeriesRequestStatus()).getEnum();
 
+    var steInt = timeSeriesRequestStatus.StopTaskError;
+
+    var steObj = timeSeriesRequestStatus.properties[steInt];
+
+    var desc  = steObj.description;
+
     //Download All button click handler..
     $('#btnDownloadAll').on('click', function (event) {
         //For each zip blob download button element...
@@ -365,20 +375,11 @@ function initialize() {
         //BCC - 10-Jul-2015 
         // Since keyword selections on 'Common' and 'Full' tabs are kept in sync at all times, 
         //  retrieve selected keys from 'Full' tab...
-
-        //var selectedKeys = $("input[name='keywords']:checked").map(function () {
-        //    return $(this).val();
-        //}).get();
-
-        //var list = $('#olConcepts');
-
         var selectedKeys = [];
+        var tree = $("#tree").fancytree("getTree");
 
-        $("#tree").fancytree("getTree").visit(function (node) {
-
-            if (node.isSelected()) {
-                selectedKeys.push(node.title);
-            }
+        selectedKeys = $.map(tree.getSelectedNodes(true), function (node) { //true switch returns all top level nodes
+            return node.title;
         });
 
         if (!validateQueryParameters(area, selectedKeys)) return;
@@ -405,6 +406,11 @@ function initialize() {
 
         //reset search parameters...
         resetSearchParameters();
+
+        //reset the current DataTable APIs...
+        //for (var key in filteredDataTables) {
+        //    filteredDataTables[key] = null;
+        //}
 
     });
 
@@ -475,7 +481,6 @@ function initialize() {
     //Shown and hidden handlers for Select Data Services...
     $('#SelectServicesModal').on('shown.bs.modal', shownSelectDataServices);
     $('#SelectServicesModal').on('hidden.bs.modal', hiddenSelectDataServices);
-
 }
 
 //Shown handler for Select Data Services...
@@ -899,19 +904,44 @@ function clickSelectKeywords(event) {
         node.setSelected(false);
     });
 
-    //Load fancytree nodes, if indicated    
-    //NOTE: While this implementation works OK, it does rely on the called data URL to detemine the 
-    //      type of keyword data recieved: Physical, Chemical or Biological.  
-    //      If re-factoring is required later, please refer to the following article for a better
-    //      designed approach:  Roel van Lisdonk - How to pass extra / additional parameters to the deferred.then() function in jQuery, $q (AngularJS) or Q. 
-    //      http://www.roelvanlisdonk.nl/?p=3952 - 
+    //Assume keywords data loaded at page initialization - populate tabs, show the dialog...
+    populateKeywordTabs();
+    $('#SelectVariableModal').modal('show');
+
+}
+
+//Load fancytree nodes, if indicated.  Conditionally display modal 'loading keywords' dialog until fancytree is completely loaded 
+//NOTE: While this implementation works OK, it does rely on the called data URL to detemine the 
+//      type of keyword data recieved: Physical, Chemical or Biological.  
+//      If re-factoring is required later, please refer to the following article for a better
+//      designed approach:  Roel van Lisdonk - How to pass extra / additional parameters to the deferred.then() function in jQuery, $q (AngularJS) or Q. 
+//      http://www.roelvanlisdonk.nl/?p=3952 - 
+function loadKeywordsIntoTree( pShowUI, pbtnKeyword ) {
+
+    //Validate/initialize input parameters
+    var showUI = false;     //Default
+    var btnKeyword = null;
+    
+    if (('undefined' !== typeof pShowUI) && ('boolean' === typeof pShowUI)) {
+        showUI = pShowUI;
+    }
+
+    if (('undefined' !== typeof pbtnKeyword) && (null !== pbtnKeyword)) {
+        btnKeyword = '#' + pbtnKeyword;
+    }
+
     var tree = $("#tree").fancytree("getTree");
     var rootNode = tree.rootNode;
     if (('undefined' !== typeof rootNode) && (null !== rootNode)) {
-        
+
         var children = rootNode.children;
         if (('undefined' !== typeof children) && (null !== children)) {
-             
+
+            //Disable the keyword button...
+            if (null !== btnKeyword) {
+                $(btnKeyword).prop('disabled', true);
+            }
+
             //For each child node...
             var bShowModal = true;  //Assume keyword loading dialog will be shown...
 
@@ -919,28 +949,30 @@ function clickSelectKeywords(event) {
             var callsToGo = 0;
 
             for (var i = 0; i < length; ++i) {
-                
-                if (! children[i].isLoaded()) {
+
+                if (!children[i].isLoaded()) {
                     ++callsToGo;
                     if (bShowModal) {
                         bShowModal = false;
-                        $('#keywordModal').modal('show');   //Show the keyword loading dialog
+                        if (showUI) {
+                            $('#keywordModal').modal('show');   //Show the keyword loading dialog
+                        }
                     }
 
                     children[i].load().done(function (data, textStatus, jqXHR) {
-                            //alert('Child node loaded!!');
+                        //alert('Child node loaded!!');
 
                         if (('undefined' !== typeof data.testData) && (null !== data.testData)) {
-                            console.log('testData received: ' + data.testData);
-                        }
+                            console.log('testData received: ' +data.testData);
+                    }
 
                         //Determine the keyword category - Physical, Chemical or Biological from the url...
                         var url = this.url;
                         var urlComponents = url.split('/');
-                        var keywordCategory = urlComponents[urlComponents.length - 1];
+                        var keywordCategory = urlComponents[urlComponents.length -1];
 
-                        var glyphiconSpan = $('#glyphiconSpan' + keywordCategory);
-                        var jqueryText = $('#text' + keywordCategory);
+                        var glyphiconSpan = $('#glyphiconSpan' +keywordCategory);
+                        var jqueryText = $('#text' +keywordCategory);
 
                         glyphiconSpan.removeClass('glyphicon-refresh spin');
                         glyphiconSpan.addClass('glyphicon-thumbs-up');
@@ -949,59 +981,47 @@ function clickSelectKeywords(event) {
                         jqueryText.html(text + ' Completed!!');
 
                         if (0 >= --callsToGo) {
-                            setTimeout( function() {
+                            setTimeout(function () {
                                 //All load calls complete - close the loading dialog...
-                                $( '#keywordModal' ).modal( 'hide' );
+                                $('#keywordModal').modal('hide');
 
                                 //Populate keyword tabs
                                 populateKeywordTabs();
 
                                 //Open keywords dialog...
-                                $( '#SelectVariableModal' ).modal( 'show' );
-                            }, 1000 );
+                                if (showUI) {
+                                    $('#SelectVariableModal').modal('show');
+                                }
+
+                                //Disable the keyword button...
+                                if (null !== btnKeyword) {
+                                    $(btnKeyword).prop('disabled', false);
+                                }
+                            }, 1000);
                         }
                     }).fail(function (data, textStatus, jqXHR) {
                         //For now - just display an alert...
                         bootbox.alert('Keyword retrieval error - please try again...');
-                    } );
+                    });
                 }
             }
 
             if (bShowModal) {
                 //Keywords data previously loaded - populate tabs, show the dialog...
                 populateKeywordTabs();
-                $('#SelectVariableModal').modal('show');
+
+                if (showUI) {
+                    $('#SelectVariableModal').modal('show');
+                }
+
+                //Enable the keyword button...
+                if (null !== btnKeyword) {
+                    $(btnKeyword).prop('disabled', false);
+                }
+
             }
         }
     }
-
-
-
-    ////Re-populate tab per current concepts type...
-    //if ('Common' === conceptsType) {
-    //    //'Most Common' tab
-
-    //    //For each checkbox...
-    //    $("input[name='keywords']").each(function (index, element) {
-    //        var checkbox = $(this);
-    //        if (-1 !== listArray.indexOf(checkbox.attr('value'))) {
-    //            //Checkbox value found in concepts list - check the checkbox
-    //            checkbox.prop('checked', true);
-    //        }
-    //    });
-    //}
-    //else {
-    //    //'Full List' tab... 
-
-    //    //For each tree node...
-    //    $("#tree").fancytree("getTree").visit(function (node) {
-    //        if (-1 !== listArray.indexOf(node.title)) {
-    //            //Node title found in concepts list - select the node
-    //            node.setSelected(true);
-    //        }
-    //    });
-    //}
-
 }
 
 //Populate the 'Most Common' and 'Full List' Keyword tabs...
@@ -1537,38 +1557,16 @@ function getFormData()
     //alert(myTimeSeriesClusterDatatable.rows('.selected').data().length + ' row(s) selected');
     //only MuddyRiver
     //services.push(181);
-    var selectedKeys = $("input[name='keywords']:checked").map(function () {
-        return $(this).val();
-    }).get().join("##");
 
+    //BCC - 13-Jul-2015 - Since 'Common' and 'Full' keyword tab contents are kept in sync at all times, 
+    //       take the selected keys from the 'Full' tab only...
+    var tree = $("#tree").fancytree("getTree");
+    var selKeys = $.map(tree.getSelectedNodes(true), function (node) { //true switch returns all top level nodes
+        return node.title;
+    }).join("##");
 
-    if (selectedKeys.length != 0) {
-        keywords.push(selectedKeys)
-    }
-    else
-        {
-        var tree = $("#tree").fancytree("getTree");
-        var allChildrenSelected = false;
-        var selKeys = $.map(tree.getSelectedNodes(true), function (node) { //true switch returnes all top level nodes
-
-            return node.title;
-
-
-        }).join("##");
-        //var selKeys = $.map(selNodes, function (node) {
-        //    return  node.title ;
-        //});
-        
-
-        //var selRootNodes  = $.map(tree.getSelectedNodes(true));
-        //var selRootKeys = $.map(selRootNodes, function(node){
-        //    return node.key;
-        //});
-        keywords.push(selKeys)
+    keywords.push(selKeys)
                 
-    }
- 
-
     var xMin = Math.min(ne.lng(), sw.lng())
     var xMax = Math.max(ne.lng(), sw.lng())
     var yMin = Math.min(ne.lat(), sw.lat())
@@ -1627,8 +1625,12 @@ function updateMap(isNewRequest) {
         deleteClusteredMarkersOverlays()
    // }
    //get Markers
-    var actionurl = '/home/updateMarkers';
-    
+   var actionurl = '/home/updateMarkers';
+
+    //reset the current DataTable APIs...
+   //for (var key in filteredDataTables) {
+   //    filteredDataTables[key] = null;
+   //}
 
     $.ajax({
         url: actionurl,
@@ -1999,7 +2001,7 @@ function adjustColumns(event) {
     var tableId = event.data.tableId;
     var containerId = event.data.containerId;
 
-    var table = $(('#' +tableId)).DataTable();
+    var table = $(('#' + tableId)).DataTable();
 
     $(('#' + containerId)).css('display', 'block');
     table.columns.adjust().draw();
@@ -2250,20 +2252,28 @@ function setUpDatatables(clusterid)
 
                  //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
                  if ($('#chkbxSelectAll').prop('checked')) {
-
+                     //BC - Test - OK to call check box hander here?
+                     $('#chkbxSelectAll').triggerHandler('click');
+/*
                      //Find the position of the new row per the current sort/search order...
-                 var table = $('#dtMarkers').DataTable();
-                 var position = table.rows()[0].indexOf(index);
+                     var tableId = 'dtMarkers';
+                     if (null === filteredDataTables[tableId]) {
+                         filteredDataTables[tableId] = $('#' + tableId).DataTable(); 
+                     }
 
-                 if (position < selectedTimeSeriesMax) {
-                 var jqueryObject = $(row);
-                     var className = 'selected';
+                     var table = filteredDataTables[tableId];
+                     var position = table.rows({ 'order': 'current', 'search': 'applied' })[0].indexOf(index);
 
-                     if (!jqueryObject.hasClass(className)) {
-                         jqueryObject.addClass(className);
-                    }
-                 }                 
-             }
+                     if (position < selectedTimeSeriesMax) {
+                     var jqueryObject = $(row);
+                         var className = 'selected';
+
+                         if (!jqueryObject.hasClass(className)) {
+                             jqueryObject.addClass(className);
+                        }
+                     }            
+*/                     
+                 }
 
                  //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
 
@@ -2313,17 +2323,34 @@ function setUpDatatables(clusterid)
          },
         initComplete: function () {
 
-            setfooterFilters('#dtMarkers', [0, 1, 2, 4]);
+            setfooterFilters('dtMarkers', [0, 1, 2, 4], 'chkbxSelectAll');
 
             //BC - 10-Jul-2015 - Temporarily disable tooltips...
             //setUpTooltips('dtMarkers');
         
-            // oTable.fnAdjustColumnSizing();
+            oTable.fnAdjustColumnSizing();
         }
         
          
         //"retrieve": true
     });
+
+
+    //Suppress DataTable display of server errors as alerts...
+    $.fn.dataTable.ext.errMode = 'none',
+
+    //Server-error handler for dtMarkers...
+    $('#dtMarkers').on('error.dt', function (event, settings, techNote, message) {
+
+        //Close current dialog - open 'Server Error' dialog
+        $('#SeriesModal').modal('hide');
+
+        $('#serverErrorModal').modal('show');
+
+        //Log messsage received from server...
+        console.log('dtMarkers reports error: ' + message);
+    });
+
 
     //workaround reorder to align headers
 
@@ -2360,6 +2387,16 @@ function setUpDatatables(clusterid)
     //Avoid multiple registrations of the same handler...
     $('#btnClearSelections').off('click', clearSelections);
     $('#btnClearSelections').on('click', { 'tableId': '#dtMarkers', 'chkbxId': '#chkbxSelectAll', 'btnId': '#btnZipSelections', 'btnClearId': '#btnClearSelections' }, clearSelections);
+
+    //Add DataTables event handlers...
+    //Search event...
+    $('#dtMarkers').off('search.dt', dtSearchOrOrder);
+    $('#dtMarkers').on('search.dt', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, dtSearchOrOrder);
+
+    //Order event...
+    $('#dtMarkers').off('order.dt', dtSearchOrOrder);
+    $('#dtMarkers').on('order.dt', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, dtSearchOrOrder);
+
 
     //BC - TEST - Retrieve the colvis button control - assign a click handler for scrollx control...
     //var colvis = new $.fn.DataTable.ColVis(oTable);
@@ -2457,9 +2494,9 @@ function getDescriptionUrl(serviceCode) {
 }
 
 //Create 'select'-based filters for the input tableId and columns array
-function setfooterFilters(tableId, columnsArray) {
+function setfooterFilters(tableId, columnsArray, chkbxId) {
 
-    var api = $(tableId).DataTable();
+    var api = $('#' + tableId).DataTable();
 
     api.columns().indexes().flatten().each(function (i) {
         if (-1 !== columnsArray.indexOf(i)) {
@@ -2471,7 +2508,16 @@ function setfooterFilters(tableId, columnsArray) {
                 .on('change', function () {
                     var val = $.fn.dataTable.util.escapeRegex($(this).val());
 
-                    column.search(val ? '^' + val + '$' : '', true, false).draw();
+                    var dt = column.search(val ? '^' + val + '$' : '', true, false);
+                    dt.draw();
+
+                    //Retain the DataTables API instance returned by search(...)
+                    //filteredDataTables[tableId] = dt;
+
+                    //If 'Select Top' checkbox is checked, trigger the associated handler(s)
+                    if ($('#' + chkbxId).prop('checked')) {
+                        $('#' + chkbxId).triggerHandler('click');
+                    }
                 });
 
             column.data().unique().sort().each(function (d, j) {
@@ -2480,7 +2526,7 @@ function setfooterFilters(tableId, columnsArray) {
         }
     });
 
-    $(tableId).dataTable().fnAdjustColumnSizing();
+    $('#' + tableId).dataTable().fnAdjustColumnSizing();
 }
 
 function updateServicesList()
@@ -2573,12 +2619,11 @@ function addRowStylesDM(newrow) {
 
 function selectAll(event) {
 
-    //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
-    //Source: http://datatables.net/reference/api/rows().nodes()
+    //Clear ALL table selections, regardless of current sort/search order
     var table = $(event.data.tableId).DataTable();
-    var rows = table.rows({'order': 'current', 'search': 'applied'});    //Retrieve rows per current sort/search order...
-    var nodesRendered = rows.nodes();                                    //Retrieve all the rendered nodes for these rows
-                                                                         //NOTE: Rendered nodes retrieved in the same order as the rows...
+    var rows = table.rows();                    //Retrieve ALL rows
+    var nodesRendered = rows.nodes();           //Retrieve all the rendered nodes for these rows
+                                                //NOTE: Rendered nodes retrieved in the same order as the rows...
     var jqueryObjects = nodesRendered.to$();    //Convert to jQuery Objects!!
     var className = 'selected';
 
@@ -2587,6 +2632,11 @@ function selectAll(event) {
 
     //Apply 'selected' class to the 'top' <selectedTimeSeriesMax> rendered nodes, if indicated 
     if ($(event.data.chkbxId).prop("checked")) {
+        //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
+        //Source: http://datatables.net/reference/api/rows().nodes()
+        rows = table.rows({ 'order': 'current', 'search': 'applied' });    //Retrieve rows per current sort/search order...
+        nodesRendered = rows.nodes();                                    //Retrieve all the rendered nodes for these rows
+
         var length = nodesRendered.length;
 
         //For each rendered node...
@@ -2603,7 +2653,7 @@ function selectAll(event) {
                     jqueryObject.addClass(className);   //Apply class...
                 }
             }
-    }
+        }
     }
 
     //Check state of 'Process Selections' button...
@@ -2611,13 +2661,14 @@ function selectAll(event) {
     enableDisableButton(event.data.tableId, event.data.btnClearId);
 }
 
-//Clear all table selections...
+//Clear --ALL-- table selections, regardless of current sort/search order...
 function clearSelections(event) {
 
     //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
     //Source: http://datatables.net/reference/api/rows().nodes()
     var table = $(event.data.tableId).DataTable();
-    var rows = table.rows({ 'order': 'current', 'search': 'applied' });     //Retrieve rows per current sort/search order...
+//    var rows = table.rows({ 'order': 'current', 'search': 'applied' });     //Retrieve rows per current sort/search order...
+    var rows = table.rows();     //Retrieve ALL rows
     var nodesRendered = rows.nodes();                                       //Retrieve all the rendered nodes for these rows
                                                                             //NOTE: Rendered nodes retrieved in the same order as the rows...
     var jqueryObjects = nodesRendered.to$();    //Convert to jQuery Objects!!
@@ -2806,6 +2857,7 @@ function zipSelections(event) {
         async: true,
         data: timeSeriesRequestString,
         contentType: 'application/json',
+        context: timeSeriesRequestString,
         success: function (data, textStatus, jqXHR) {
             //Retrieve response data
             var response = jQuery.parseJSON(data);
@@ -2847,6 +2899,7 @@ function zipSelections(event) {
                         url: actionUrl + '/' + response.RequestId,
                         type: 'GET',
                         contentType: 'application/json',
+                        context: response.RequestId,
                         success: function (data, textStatus, jqXHR) {
 
                         var statusResponse = jQuery.parseJSON(data);
@@ -2868,12 +2921,31 @@ function zipSelections(event) {
                         tableRow.addClass('warning');
                         },
                         error: function (xmlhttprequest, textStatus, message) {
+                            //alert('Failed to request server to stop task ' + message);
 
-                            var n = 6;
-                        n++;
+                            //Update row with Stop Task Error status
+                            var requestId = this.valueOf();   //From context: parameter on ajax call - convert string 'object' to string 'primitive'...
+                            var errorDescription = (timeSeriesRequestStatus.properties[timeSeriesRequestStatus.StopTaskError]).description;
 
-                            alert('Failed to request server to stop task ' +message);
-                    }
+                            var tableRow = $("#tblDownloadManager tr td").filter(function () {
+                                return $(this).text() === requestId;
+                            }).parent("tr");
+
+                            tableRow.find('#statusMessageText').html(errorDescription);
+                            tableRow.find('#blobUriText').html('');
+                            tableRow.find('td:eq(5)').html(timeSeriesRequestStatus.StopTaskError);
+
+                            //Change the glyphicon and stop the animation
+                            var glyphiconSpan = tableRow.find('#glyphiconSpan');
+
+                            glyphiconSpan.removeClass('glyphicon-refresh spin');
+                            glyphiconSpan.addClass('glyphicon-thumbs-down');
+
+
+                            //Color table row as 'warning'
+                            tableRow.removeClass('info');
+                            tableRow.addClass('warning');
+                        }
                     });
             });
             
@@ -2908,6 +2980,7 @@ function zipSelections(event) {
                     url: actionUrl + '/' + response.RequestId,
                     type: 'GET',
                     contentType: 'application/json',
+                    context: response.RequestId,
                     cache: false,   //So IE does not cache when calling the same URL - source: http://stackoverflow.com/questions/7846707/ie9-jquery-ajax-call-first-time-doing-well-second-time-not
                     success: function (data, textStatus, jqXHR) {
 
@@ -2918,6 +2991,16 @@ function zipSelections(event) {
                         var tableRow = $("#tblDownloadManager tr td").filter(function () {
                             return $(this).text() === response.RequestId;
                         }).parent("tr");
+
+                        //Check current status...
+                        var statusCurrent = parseInt(tableRow.find('td:eq(5)').html());
+                        if ((statusCurrent === timeSeriesRequestStatus.RequestTimeSeriesError) ||
+                            (statusCurrent === timeSeriesRequestStatus.CheckTaskError) ||
+                            (statusCurrent === timeSeriesRequestStatus.StopTaskError)) {
+                            //Error status - stop interval - return
+                            clearInterval(intervalId);
+                            return;
+                        }
 
                         //Update table row...
                         //tableRow.find('td:eq(1)').html(statusResponse.Status);
@@ -2934,7 +3017,8 @@ function zipSelections(event) {
                         var requestStatus = parseInt(tableRow.find('td:eq(5)').html());
 
                         if (timeSeriesRequestStatus.Completed === requestStatus ||
-                            timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus) {
+                            timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus ||
+                            timeSeriesRequestStatus.ProcessingError === requestStatus) {
                             //If task completed - re-assign 'Stop Task' button to 'Download'
                             if (timeSeriesRequestStatus.Completed === requestStatus) {
                                 //Success - retrieve the base blob URI... 
@@ -2986,13 +3070,15 @@ function zipSelections(event) {
                                 }
                             }
                             else {
-                                //Task canceled - color row as 'danger'
-                                tableRow.addClass('danger');
-                                
-                                //Fade row and remove from table...
-                                tableRow.fadeTo(1500, 0.5, function() {
-                                    $(this).remove();
-                                });
+                                if (timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus) {
+                                    //Task canceled - color row as 'danger'
+                                    tableRow.addClass('danger');
+
+                                    //Fade row and remove from table...
+                                    tableRow.fadeTo(1500, 0.5, function () {
+                                        $(this).remove();
+                                    });
+                                }
                             }
                             
                             //Clear the interval
@@ -3002,10 +3088,15 @@ function zipSelections(event) {
                     },
                     error: function (xmlhttprequest, textStatus, message) {
 
-                        var n = 6;
-                        n++;
+                        //For now - take no action...
+                        //ASSUMPTION: Next request will succeed
+                        //var n = 6;
+                        //n++;
 
-                        alert('Failed to retrieve task status ' + message);
+                        //alert('Failed to retrieve task status ' + message);
+
+                        //TO DO - can call clearInterval here to stop requesting status 
+                        //          for a task that has errored...
                     }
                 });
 
@@ -3013,10 +3104,19 @@ function zipSelections(event) {
 
         },
         error: function (xmlhttprequest, textstatus, message) {
-            var n = 6;
+            //alert('Failed request time series: ' + message);
 
-            n++;
-            alert('Failed request time series: ' + message);
+            //TO DO - Replace this code with logic to update row in Download Manager 
+            //          table with new Enum value - RequestTimeSeries failure...
+            //Server error: Close modal dialog, if indicated - open 'Server Error' dialog
+            if ($('#SeriesModal').is(":visible")) {
+                $('#SeriesModal').modal('hide');
+            }
+
+            $('#serverErrorModal').modal('show');
+
+            //Log messsage received from server...
+            console.log('RequestTimeSeries reports error: ' + message);
         }
     });
 }
@@ -3110,21 +3210,32 @@ function setUpTimeseriesDatatable() {
             $('td', row).eq(18).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
 
             //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
-           if ($('#chkbxSelectAllTS').prop('checked')) {
-
-               //Find the position of the new row per the current sort/search order...
-               var table = $('#dtTimeseries').DataTable();
-               var position = table.rows()[0].indexOf(index);
-
-               if (position < selectedTimeSeriesMax) {
-                     var jqueryObject = $(row);
-                     var className = 'selected';
-
-                     if (!jqueryObject.hasClass(className)) {
-                         jqueryObject.addClass(className);
-                    }
+            if ($('#chkbxSelectAllTS').prop('checked')) {
+                //BC - Test - OK to call check box hander here?
+                $('#chkbxSelectAllTS').triggerHandler('click');
+/*
+                //Find the position of the new row per the current sort/search order...
+                var tableId = 'dtTimeseries';
+                if (null === filteredDataTables[tableId]) {
+                    //console.log('No entry in filteredDataTables!!!');
+                    filteredDataTables[tableId] = $('#' + tableId).DataTable();
                 }
-           }
+
+                var table = filteredDataTables[tableId];
+                var position = table.rows({ 'order': 'current', 'search': 'applied' })[0].indexOf(index);
+
+                //console.log('Index: ' + index + ' Position: ' + position);
+
+                if (position < selectedTimeSeriesMax) {
+                      var jqueryObject = $(row);
+                      var className = 'selected';
+
+                      if (!jqueryObject.hasClass(className)) {
+                          jqueryObject.addClass(className);
+                     }
+                 }
+*/
+            }
 
             //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
 
@@ -3156,9 +3267,11 @@ function setUpTimeseriesDatatable() {
             });
 */
         },
-        initComplete: function () {
+        "initComplete": function () {
 
-            setfooterFilters('#dtTimeseries', [0, 1, 2, 4]);
+            setfooterFilters('dtTimeseries', [0, 1, 2, 4], 'chkbxSelectAllTS');
+
+            oTable.fnAdjustColumnSizing();
         }
 
     });
@@ -3196,6 +3309,29 @@ function setUpTimeseriesDatatable() {
     $('#btnClearSelectionsTS').off('click', clearSelections);
     $('#btnClearSelectionsTS').on('click', { 'tableId': '#dtTimeseries', 'chkbxId': '#chkbxSelectAllTS', 'btnId': '#btnZipSelectionsTS', 'btnClearId': '#btnClearSelectionsTS' }, clearSelections);
 
+    //Add DataTables event handlers...
+    //Search event...
+    $('#dtTimeseries').off('search.dt', dtSearchOrOrder);
+    $('#dtTimeseries').on('search.dt', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS' }, dtSearchOrOrder);
+
+    //Order event...
+    $('#dtTimeseries').off('order.dt', dtSearchOrOrder);
+    $('#dtTimeseries').on('order.dt', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS' }, dtSearchOrOrder);
+}
+
+//DataTables search event handler...
+function dtSearchOrOrder(event, settings) {
+    //console.log( 'dtSearch called!!!')
+
+    //var tableId = event.data.tableId;
+    //if (null === filteredDataTables[tableId]) {
+    //    filteredDataTables[tableId] = $('#' + tableId).DataTable();
+    //}
+
+
+    if ( $('#' + event.data.chkbxId).prop('checked')) {
+        $('#' + event.data.chkbxId).triggerHandler('click');
+    }
 }
 
 function downloadtimeseries(format, id)

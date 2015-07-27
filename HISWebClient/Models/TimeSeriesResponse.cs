@@ -37,8 +37,17 @@ namespace HISWebClient.Models
         ProcessingError = 8,
 
         [Description("Unknown Task!!")]
-        UnknownTask = 9
-    }
+        UnknownTask = 9,
+
+        [Description("Request Time Series Error")]
+        RequestTimeSeriesError = 10,
+
+        [Description("Check Task Error")]
+        CheckTaskError = 11,
+
+        [Description("Stop Task Error")]
+        StopTaskError = 12    
+   }
 
 
     public class TimeSeriesResponse

@@ -10,7 +10,7 @@ using System.Web.Routing;
 
 using System.IO;
 
-//using System.Diagnostics;
+using System.Diagnostics;
 
 using log4net;
 using log4net.Config;
@@ -33,7 +33,17 @@ namespace HISWebClient
             //BC TEST - configure log4net here..
             //Debugger.Launch();
             //var fileinfo = new System.IO.FileInfo("HISWebClient.log4net");
-            //var l = log4net.Config.XmlConfigurator.Configure(fileinfo);       
+            //var l = log4net.Config.XmlConfigurator.Configure(fileinfo);  
+     
+            //'Wake Up' log4net...
+            //XmlConfigurator.Configure();
+            //var fileinfo = new System.IO.FileInfo("HISWebClient.log4net");
+            //var l = log4net.Config.XmlConfigurator.Configure(fileinfo);  
+
+            //BC - Test - write a trace message...
+            Trace.TraceInformation("{0} {1} Application started...", DateTime.UtcNow, "Application_Start");
+            Trace.Flush();
+
         }
     }
 }

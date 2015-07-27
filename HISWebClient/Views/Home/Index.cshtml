@@ -36,19 +36,25 @@ var n, o, d, i, s, a = [],
         <div id="pageloaddiv"></div>
         <div id="tabSelector" class=""></div>
 
-        <ul class="nav nav-tabs" id="myTab">
-            <li class="active navbar-custom"><a href="#map" id="mapTab" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> Map</a></li>
-            @*   <li class="navbar-custom disabled"><a href="#graph" id="graphTab" data-toggle="tab"><span class="glyphicon glyphicon-home"></span> Graph</a></li>*@
-            <li class="navbar-custom data"><a href="#dataview" id="tableTab" data-toggle="tab"><span class="glyphicon glyphicon-list"></span> Data</a></li>
-            <li class="btn-separator"></li>
-            <!-- li class="glyphicon glyphicon-option-vertical"></li -->
-            <li class="navbar-custom"><a href="" id="downloadmanagerTab" data-toggle="modal" data-target="#dmModal"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</a></li>
-            <li class="btn-separator"></li>
-            <li class="navbar-custom"><a href="" id="contactTab" data-toggle="modal" data-target="#contactModal"><span class="glyphicon glyphicon-earphone"></span> Contact</a></li>
-            <li class="btn-separator"></li>
-            <li class="navbar-custom" style="margin-right: 1em;"><a href="" id="aboutTab" data-toggle="modal" data-target="#aboutModal"><span class="glyphicon glyphicon-info-sign"></span> About</a></li>
-        </ul>
+        <div class="nav navbar navbar-inverse navbar-fixed-top" style="min-width: 70em;">
+            <img class="img-responsive pull-left" src="~/Content/Images/beta.png" />
+            <img class="img-responsive pull-left" src="~/Content/Images/cuahsi_logo_small.png" />
+
+            <ul class="nav nav-tabs pull-right" @*id="myTab"*@ @*style="display: inline-block; position: relative; float:right;"*@>
+                <li class="active navbar-custom"><a href="#map" id="mapTab" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> Map</a></li>
+                @*   <li class="navbar-custom disabled"><a href="#graph" id="graphTab" data-toggle="tab"><span class="glyphicon glyphicon-home"></span> Graph</a></li>*@
+                <li class="navbar-custom data"><a href="#dataview" id="tableTab" data-toggle="tab"><span class="glyphicon glyphicon-list"></span> Data</a></li>
+                <li class="btn-separator"></li>
+                <li class="navbar-custom"><a href="" id="downloadmanagerTab" data-toggle="modal" data-target="#dmModal"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</a></li>
+                <li class="btn-separator"></li>
+                <li class="navbar-custom"><a href="" id="contactTab" data-toggle="modal" data-target="#contactModal"><span class="glyphicon glyphicon-earphone"></span> Contact</a></li>
+                <li class="btn-separator"></li>
+                <li class="navbar-custom" style="margin-right: 1em;"><a href="" id="aboutTab" data-toggle="modal" data-target="#aboutModal"><span class="glyphicon glyphicon-info-sign"></span> About</a></li>
+            </ul>
+
+        </div>
     </div>
+
     <div class="tab-content">
         <!--BCC - 29-Jun-2015 - QA Issue #24 - Data tab (GUI): no margins from left and right (need to increase)
                                 Added 1.0em left and right margins to 'data' tab -->
@@ -58,7 +64,11 @@ var n, o, d, i, s, a = [],
                 <h5 style="margin-bottom: 1em;">To download one or more data files, please click the associated table row(s) and click the 'Process Selections' button.</h5>
             </div>
             <div class="modal-body-full" id="dtTimeSeriesModal">
-            <table id="dtTimeseries" class="display" cellspacing="0">
+            @* BCC- 23-Jul-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set max-width: none on the table element!!
+               NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
+               Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
+            *@
+            <table id="dtTimeseries" class="display" cellspacing="0" style="max-width: none;">
                 <thead>
                     <tr>
                         @Html.Partial("_DatatableTimeseriesColumns")
@@ -111,7 +121,7 @@ var n, o, d, i, s, a = [],
                                 <legend style="margin-bottom: 0.25em;">
                                         @*<button class="btn btn-primary btn-block" id="btnSelectKeywords" style="width: 90%; margin: 0 auto;" data-toggle="modal" data-target="#SelectVariableModal">Select Keyword(s)...</button>*@
                                     @*<button class="btn btn-primary btn-block" id="btnSelectKeywords" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectVariableModal">Select Keyword(s)...</button>*@
-                                    <button class="btn btn-primary btn-block" type="button" id="btnSelectKeywords" style="margin: 0 auto;">Select Keyword(s)...</button>
+                                    <button class="btn btn-primary btn-block" type="button" id="btnSelectKeywords" disabled style="margin: 0 auto;">Select Keyword(s)...</button>
                                 </legend>
                                     <div style="overflow-y: scroll; max-height: 10em;">
                                     <ol id="olConcepts" style="list-style: circle;">
@@ -329,20 +339,31 @@ var n, o, d, i, s, a = [],
                         as to the usefulness of HydroClient for his or her application. HydroClient, CUAHSI HIS, and documentation are supported by National Science Foundation Grant Number EAR-1248152. 
                         Any opinions, findings, and conclusions or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the National Science Foundation.
                     </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <!--p>This is the modal footer!!</p-->
+            </div>
+        </div>
+    </div>
+</div>
 
 
-                    @*<address style="margin-top: 2.0em;">
-                        Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)<br />
-                        Boston Office<br />
-                        196 Boston Ave, Suite 3000<br />
-                        Medford, MA 02155<br />
-                        Phone: (339) 221-5400<br />
-                        Fax: (781) 219-4029<br />
-                    </address>
+<!-- Modal dialog for Server Error... -->
+<div class="modal fade" id="serverErrorModal" tabindex="-1" role="dialog" aria-labelledby="serverErrorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
+                <h3 class="modal-title" id="myModalLabel">Server Error</h3>
+            </div>
+            <div class="modal-body">
 
-                    <address>
-                        <strong>Support:</strong>   <a href="mailto:help@cuahsi.org">help@cuahsi.org</a><br />
-                    </address>*@
+                <div style="margin-left: 2.0em;">
+                    <p>
+                        An error has occured on the server - please re-submit your search criteria...
+                    </p>
+ 
                 </div>
             </div>
             <div class="modal-footer">
@@ -610,7 +631,11 @@ var n, o, d, i, s, a = [],
                 <h5 style="margin-bottom: 1em;">To zip one or more data files, please click the associated table row(s) and then click the 'Process Selections' button.</h5>
             </div>
             <div class="modal-body modal-body-full">
-                <table id="dtMarkers" class="display" cellspacing="0">
+            @* BCC- 23-Jul-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set 'max-width: none' on the table element!!
+               NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
+               Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
+           *@
+                <table id="dtMarkers" class="display" cellspacing="0" style="max-width: none;">
                     <thead>
                         <tr>                           
                             @Html.Partial("_DatatableTimeseriesColumns")

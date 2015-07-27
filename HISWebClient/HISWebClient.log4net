@@ -1,6 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<log4net debug="true">
-  <appender name="QueryLogFileAppender"
+
+<configuration>
+  <configSections>
+    <section name="log4net" type="log4net.Config.Log4NetConfigurationSectionHandler, log4net"/>
+  </configSections>
+  <log4net debug="true">
+
+  <!-- 16-Jul-2015 - BCC - Comment out -->
+  <!-- appender name="QueryLogFileAppender"
             type="log4net.Appender.RollingFileAppender">
     <file value="..\..\log-data\HISWebClient\query-log.txt" />
     <appendToFile value="true" />
@@ -12,10 +19,12 @@
     <layout type="log4net.Layout.PatternLayout">
       <conversionPattern value="%date %message%newline" />
     </layout>
-  </appender>
+  </appender -->
 
-  <appender name="EventLogAppender" type="log4net.Appender.EventLogAppender" >
-    <!-- only ERROR or FATAL to event log -->
+
+  <!-- 16-Jul-2015 - BCC - Comment out -->
+  <!-- only ERROR or FATAL to event log -->
+  <!-- appender name="EventLogAppender" type="log4net.Appender.EventLogAppender" >
     <filter type="log4net.Filter.LevelRangeFilter">
       <levelMin value="ERROR" />
       <levelMax value="FATAL" />
@@ -23,16 +32,17 @@
     <layout type="log4net.Layout.PatternLayout">
       <conversionPattern value="%date [%thread] %-5level %logger [%property{NDC}] - %message%newline" />
     </layout>
-  </appender>
-  
-  <appender name="PerfEventLogAppender" type="log4net.Appender.EventLogAppender" >
-  
+  </appender -->
+
+  <!-- 16-Jul-2015 - BCC - Comment out -->
+  <!-- appender name="PerfEventLogAppender" type="log4net.Appender.EventLogAppender" >
     <layout type="log4net.Layout.PatternLayout">
       <conversionPattern value="%date [%thread] %-5level %logger - %message%newline" />
     </layout>
-  </appender>
+  </appender -->
 
-    <appender name="RollingLogFileAppender" type="log4net.Appender.RollingFileAppender">
+  <!-- 16-Jul-2015 - BCC - Comment out -->
+  <!-- appender name="RollingLogFileAppender" type="log4net.Appender.RollingFileAppender">
     <file value="..\..\log-data\HISWebClient\root-logger.txt" />
     <appendToFile value="false" />
     <maxSizeRollBackups value="100" />
@@ -43,10 +53,10 @@
     <layout type="log4net.Layout.PatternLayout">
       <conversionPattern value="%date [%thread] %-5level %logger [%ndc] - %message%newline" />
     </layout>
-  </appender>
+  </appender -->
 
-  <appender name="SDSCQueryLog" type="log4net.Appender.RemotingAppender" >
-    <!--  <sink value="tcp://localhost:8085/LoggingSink" />-->
+  <!-- 16-Jul-2015 - BCC - Comment out -->
+  <!-- appender name="SDSCQueryLog" type="log4net.Appender.RemotingAppender" >
     <sink value="tcp://river.sdsc.edu:8085/LoggingSink" />
     <lossy value="true" />
     <bufferSize value="200" />
@@ -54,49 +64,63 @@
     <evaluator type="log4net.Core.LevelEvaluator">
       <threshold value="INFO"/>
     </evaluator>
-  </appender>
-  <appender name="LogFileAppender" type="log4net.Appender.FileAppender" >
+  </appender -->
+
+  <!-- 16-Jul-2015 - BCC - Comment out -->
+  <!-- appender name="LogFileAppender" type="log4net.Appender.FileAppender" >
     <file value="..\..\log-data\HISWebClient\webapp-log.txt" />
     <appendToFile value="false" />
     <layout type="log4net.Layout.PatternLayout">
       <conversionPattern value="%date [%thread] %-5level %logger [%ndc] - %message%newline" />
     </layout>
-  </appender>
-  <appender name="HttpTraceAppender" type="log4net.Appender.AspNetTraceAppender" >
+  </appender -->
+
+  <!-- 16-Jul-2015 - BCC - Comment out -->
+  <!-- appender name="HttpTraceAppender" type="log4net.Appender.AspNetTraceAppender" >
     <layout type="log4net.Layout.PatternLayout">
       <conversionPattern value="%date [%thread] %-5level %logger [%ndc] - %message%newline" />
     </layout>
-  </appender>
+  </appender -->
 
-  <!-- BCC - 23-Jun-2015 - Remove TraceAppender references - do not want to write log files to table storage!!-->
-  <!-- 
-  <appender name="TraceAppender" type="log4net.Appender.TraceAppender">
+  <!-- 16-Jul-2015 - BCC - Enable TraceAppender -->
+  <appender name="TraceAppender" type="HISWebClient.Util.AzureTraceAppender">
     <layout type="log4net.Layout.PatternLayout">
       <conversionPattern value="%date [%thread] %-5level %logger [%property{NDC}] - %message%newline" />
     </layout>
   </appender>
-  -->
 
   <!-- BCC - 23-Jun-2015 - Remove TraceAppender references - do not want to write log files to table storage!!-->
   <root>
-    <level value="DEBUG" />
-    <appender-ref ref="EventLogAppender"  />
-    <!--  <appender-ref ref="LogFileAppender" />-->
-    <appender-ref ref="HttpTraceAppender" /> 
-    <appender-ref ref="RollingLogFileAppender" />
-    <!-- 
+    <level value="INFO" />
+    <!-- 16-Jul-2015 - BCC - Comment out -->
+    <!-- <appender-ref ref="EventLogAppender"/>  -->
+    <!--  <appender-ref ref="LogFileAppender" /> -->
+    <!-- 16-Jul-2015 - BCC - Comment out -->
+    <!-- <appender-ref ref="HttpTraceAppender" /> -->
+
+    <!-- 16-Jul-2015 - BCC - Comment out -->
+    <!-- <appender-ref ref="RollingLogFileAppender" /> -->
+
+    <!-- 16-Jul-2015 - BCC - Enable TraceAppender -->
     <appender-ref ref="TraceAppender" />
-    -->
   </root>
  
   <logger name="QueryLog">
+    <!-- NOTE: The logger -->
+    
     <!-- this it the file that logs the query-->
-    <level value="DEBUG" />
+    <level value="INFO" />
+    <!-- 
     <appender-ref ref="QueryLogFileAppender" />
+    -->
+    <!-- appender-ref ref="TraceAppender" / -->
   </logger>
 
+  <!-- 
   <logger name="PerformanceLog">
     <level value="DEBUG" />
     <appender-ref ref="PerfEventLogAppender" />
   </logger>
+  -->
 </log4net>
+</configuration>

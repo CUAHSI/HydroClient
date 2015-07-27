@@ -30,423 +30,431 @@ using HISWebClient.Util;
 namespace HISWebClient.Controllers
 {
 
-    public class ExportController : Controller
-    {
-        //Reference AzureContext singleton...
-        //Source: http://stackoverflow.com/questions/24626749/azure-table-storage-best-practice-for-asp-net-mvc-webapi
+	public class ExportController : Controller
+	{
+		//Reference AzureContext singleton...
+		//Source: http://stackoverflow.com/questions/24626749/azure-table-storage-best-practice-for-asp-net-mvc-webapi
 
-        private AzureContext _ac;
+		private AzureContext _ac;
 
-        //Task status dictionary - keyed by request Id
-        private static IDictionary<string, TaskData> _dictTaskStatus = new Dictionary<string, TaskData>();
+		//Task status dictionary - keyed by request Id
+		private static IDictionary<string, TaskData> _dictTaskStatus = new Dictionary<string, TaskData>();
 
-        private static Object lockObject = new Object();
+		private static Object lockObject = new Object();
 
-        private static readonly ILog logger
-            = LogManager.GetLogger("QueryLog");
+		private static readonly ILog logger
+			= LogManager.GetLogger("QueryLog");
 
-        //Constructors - instantiate the AzureContext singleton for later reference...
-        public ExportController() : this(new AzureContext()) { }
+		//Constructors - instantiate the AzureContext singleton for later reference...
+		public ExportController() : this(new AzureContext()) { }
 
-        public ExportController( AzureContext ac)
-        {
-            _ac = ac;
-        }
+		public ExportController( AzureContext ac)
+		{
+			_ac = ac;
+		}
 
-        //Return task cancellation status
-        private bool IsTaskCancelled(string requestId, TimeSeriesRequestStatus tsrsIn, string statusMessage)
-        {
-            //Validate/initialize input parameters...
-            if (String.IsNullOrWhiteSpace(requestId) || String.IsNullOrWhiteSpace(statusMessage))
-            {
-                throw new ArgumentNullException("Empty input parameter(s)!!!");
-            }
+		//Return task cancellation status
+		private bool IsTaskCancelled(string requestId, TimeSeriesRequestStatus tsrsIn, string statusMessage)
+		{
+			//Validate/initialize input parameters...
+			if (String.IsNullOrWhiteSpace(requestId) || String.IsNullOrWhiteSpace(statusMessage))
+			{
+				throw new ArgumentNullException("Empty input parameter(s)!!!");
+			}
 
-            bool bCancelled = false;    //Assume task in NOT cancelled...
+			bool bCancelled = false;    //Assume task in NOT cancelled...
 
-            //Thread-safe access to dictionary
-            lock (lockObject)
-            {
-                if (_dictTaskStatus.ContainsKey(requestId))
-                {
-                    //Task entry found - check task cancellation request
-                    CancellationToken ct = _dictTaskStatus[requestId].CTS.Token;
-                    if (ct.IsCancellationRequested)
-                    {
-                        //Cancellation requested - set indicator, update task status
-                        bCancelled = true;
-                        _dictTaskStatus[requestId].RequestStatus = tsrsIn;
-                        _dictTaskStatus[requestId].Status = statusMessage;
-                    }
-                }
-            }
+			//Thread-safe access to dictionary
+			lock (lockObject)
+			{
+				if (_dictTaskStatus.ContainsKey(requestId))
+				{
+					//Task entry found - check task cancellation request
+					CancellationToken ct = _dictTaskStatus[requestId].CTS.Token;
+					if (ct.IsCancellationRequested)
+					{
+						//Cancellation requested - set indicator, update task status
+						bCancelled = true;
+						_dictTaskStatus[requestId].RequestStatus = tsrsIn;
+						_dictTaskStatus[requestId].Status = statusMessage;
+					}
+				}
+			}
 
-            //Processing complete - return indicator
-            return bCancelled;
-        }
+			//Processing complete - return indicator
+			return bCancelled;
+		}
 
-        //Update a task status
-        private void UpdateTaskStatus(string requestId, TimeSeriesRequestStatus tsrsIn, string statusMessage)
-        {
-            //Validate/initialize input parameters...
-            if (String.IsNullOrWhiteSpace(requestId) || String.IsNullOrWhiteSpace(statusMessage))
-            {
-                throw new ArgumentNullException("Empty input parameter(s)!!!");
-            }
+		//Update a task status
+		private void UpdateTaskStatus(string requestId, TimeSeriesRequestStatus tsrsIn, string statusMessage)
+		{
+			//Validate/initialize input parameters...
+			if (String.IsNullOrWhiteSpace(requestId) || String.IsNullOrWhiteSpace(statusMessage))
+			{
+				throw new ArgumentNullException("Empty input parameter(s)!!!");
+			}
 
-            //Thread-safe access to dictionary
-            lock (lockObject)
-            {
-                if (_dictTaskStatus.ContainsKey(requestId))
-                {
-                    //Task entry found - update task status
-                    _dictTaskStatus[requestId].RequestStatus = tsrsIn;
-                    _dictTaskStatus[requestId].Status = statusMessage;
-                }
-            }
-        }
+			//Thread-safe access to dictionary
+			lock (lockObject)
+			{
+				if (_dictTaskStatus.ContainsKey(requestId))
+				{
+					//Task entry found - update task status
+					_dictTaskStatus[requestId].RequestStatus = tsrsIn;
+					_dictTaskStatus[requestId].Status = statusMessage;
+				}
+			}
+		}
 
-        // GET: Export
-        public ActionResult Index()
-        {
-            return View();
-        }
+		// GET: Export
+		public ActionResult Index()
+		{
+			//BCC - Testing server timeout errors...
+			//Session.Timeout = 1;
+			return View();
+		}
 
-        private CloudStorageAccount cloudStorageAccount;
+		private CloudStorageAccount cloudStorageAccount;
 
-        [HttpGet, FileDownload]
-        public async Task<FileStreamResult> DownloadFile(int id)
-        {
-           
-            //var filePath = Server.MapPath(dir + filename);
-            
+		[HttpGet, FileDownload]
+		public async Task<FileStreamResult> DownloadFile(int id)
+		{
+		   
+			//var filePath = Server.MapPath(dir + filename);
+			
 
-            //cloudStorageAccount = CloudStorageAccount.Parse("DefaultEndpointsProtocol=https;AccountName=cuahsidataexport;AccountKey=yydsRROjUZa9+ShUCS0hIxZqU98vojWbBqAPI22SgGrXGjomphIWxG0cujYrSiyfNU86YeVIXICPAP8IIPuT4Q==");
+			//cloudStorageAccount = CloudStorageAccount.Parse("DefaultEndpointsProtocol=https;AccountName=cuahsidataexport;AccountKey=yydsRROjUZa9+ShUCS0hIxZqU98vojWbBqAPI22SgGrXGjomphIWxG0cujYrSiyfNU86YeVIXICPAP8IIPuT4Q==");
 
-            var seriesMetaData = getSeriesMetadata(id);
-            var filename = GenerateFileName(seriesMetaData);
-            var fileType = "text/csv";
+			var seriesMetaData = getSeriesMetadata(id);
+			var filename = GenerateFileName(seriesMetaData);
+			var fileType = "text/csv";
 
-            //logger.Info("DownloadFile Starts for: " + filename );
+			//logger.Info("DownloadFile Starts for: " + filename );
 
-            try
-            {
-                var result = await this.getStream(id);
-                //var memoryStream = new MemoryStream(result);
-
-
-                //logger.Info("DownloadFile returns for: " + filename);
-
-                //filestream.Write(result, 0, result.Count);
-                return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename };
-            }
-            catch( Exception ex )
-            {
-                logger.Error("DownloadFile Errors for: " + filename + " message: " + ex.Message );
-
-                string input = "An error occured downloading file: " + filename;
-
-                byte[] result = Encoding.ASCII.GetBytes(input);
-
-                return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = "ERROR " + filename };
-
-                 
-                
-            }
-            //return base.File(filePath, "text/csv", filename);
-        }
+			try
+			{
+				var result = await this.getStream(id);
+				//var memoryStream = new MemoryStream(result);
 
 
+				//logger.Info("DownloadFile returns for: " + filename);
 
-        private async Task<FileStreamResult> DownloadFile(int id, List<TimeSeriesViewModel> currentSeries)
-        {
-           
-            //var filePath = Server.MapPath(dir + filename);
-            
+				//filestream.Write(result, 0, result.Count);
+				return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename };
+			}
+			catch( Exception ex )
+			{
+				logger.Error("DownloadFile Errors for: " + filename + " message: " + ex.Message );
 
-            //cloudStorageAccount = CloudStorageAccount.Parse("DefaultEndpointsProtocol=https;AccountName=cuahsidataexport;AccountKey=yydsRROjUZa9+ShUCS0hIxZqU98vojWbBqAPI22SgGrXGjomphIWxG0cujYrSiyfNU86YeVIXICPAP8IIPuT4Q==");
+				string input = "An error occured downloading file: " + filename;
 
-            var seriesMetaData = getSeriesMetadata(id, currentSeries);
-            var filename = GenerateFileName(seriesMetaData);
-            var fileType = "text/csv";
+				byte[] result = Encoding.ASCII.GetBytes(input);
 
-            //logger.Info("DownloadFile Starts for: " + filename );
+				return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = "ERROR " + filename };
 
-            try
-            {
-                var result = await this.getStream(id, currentSeries);
-                //var memoryStream = new MemoryStream(result);
+				 
+				
+			}
+			//return base.File(filePath, "text/csv", filename);
+		}
 
 
-                //logger.Info("DownloadFile returns for: " + filename);
 
-                //filestream.Write(result, 0, result.Count);
-                return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename };
-            }
-            catch( Exception ex )
-            {
-                logger.Error("DownloadFile Errors for: " + filename + " message: " + ex.Message );
+		private async Task<FileStreamResult> DownloadFile(int id, List<TimeSeriesViewModel> currentSeries)
+		{
+		   
+			//var filePath = Server.MapPath(dir + filename);
+			
 
-                string input = "An error occured downloading file: " + filename;
+			//cloudStorageAccount = CloudStorageAccount.Parse("DefaultEndpointsProtocol=https;AccountName=cuahsidataexport;AccountKey=yydsRROjUZa9+ShUCS0hIxZqU98vojWbBqAPI22SgGrXGjomphIWxG0cujYrSiyfNU86YeVIXICPAP8IIPuT4Q==");
 
-                byte[] result = Encoding.ASCII.GetBytes(input);
+			var seriesMetaData = getSeriesMetadata(id, currentSeries);
+			var filename = GenerateFileName(seriesMetaData);
+			var fileType = "text/csv";
 
-                return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = "ERROR " + filename };
-            }
-            //return base.File(filePath, "text/csv", filename);
-        }
+			//logger.Info("DownloadFile Starts for: " + filename );
 
-        //Source - http://stackoverflow.com/questions/16469094/starting-and-forgetting-an-async-task-in-mvc-action
-        [HttpPost]
-        public async Task<JsonResult> RequestTimeSeries(TimeSeriesRequest tsrIn)
-        {
-            //#pragma warning disable 4014 // Fire and forget.
+			try
+			{
+				var result = await this.getStream(id, currentSeries);
+				//var memoryStream = new MemoryStream(result);
+
+
+				//logger.Info("DownloadFile returns for: " + filename);
+
+				//filestream.Write(result, 0, result.Count);
+				return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename };
+			}
+			catch( Exception ex )
+			{
+				logger.Error("DownloadFile Errors for: " + filename + " message: " + ex.Message );
+
+				string input = "An error occured downloading file: " + filename;
+
+				byte[] result = Encoding.ASCII.GetBytes(input);
+
+				return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = "ERROR " + filename };
+			}
+			//return base.File(filePath, "text/csv", filename);
+		}
+
+		//Source - http://stackoverflow.com/questions/16469094/starting-and-forgetting-an-async-task-in-mvc-action
+		[HttpPost]
+		public async Task<JsonResult> RequestTimeSeries(TimeSeriesRequest tsrIn)
+		{
+			//#pragma warning disable 4014 // Fire and forget.
 //            Task.Run(async () =>
 //            {
 //                await Task.Delay(60000);
 //            }).ConfigureAwait(false);
 
-            //Retrieve the input request Id
-            var requestId = tsrIn.RequestId;
-            var requestName = tsrIn.RequestName;
-            TimeSeriesRequestStatus requestStatus = TimeSeriesRequestStatus.Starting;
-            string status = requestStatus.GetEnumDescription();
-            string blobUri = "Not yet available...";
-            CancellationToken ct;
-            bool bNewTask = false;  //Assume time series retrieval task already exists... 
+			//Retrieve the input request Id
+			var requestId = tsrIn.RequestId;
+			var requestName = tsrIn.RequestName;
+			TimeSeriesRequestStatus requestStatus = TimeSeriesRequestStatus.Starting;
+			string status = requestStatus.GetEnumDescription();
+			string blobUri = "Not yet available...";
+			CancellationToken ct;
+			bool bNewTask = false;  //Assume time series retrieval task already exists... 
 
-            //Thread-safe access to dictionary
-            lock (lockObject) 
-            {
-                //Check/Create Time Series Retrival Task...
-                if (_dictTaskStatus.ContainsKey(requestId))
-                {
-                    //Task already exists - retrieve current status
-                    requestStatus = _dictTaskStatus[requestId].RequestStatus;
-                    status = _dictTaskStatus[requestId].Status;
-                    blobUri = _dictTaskStatus[requestId].BlobUri;
-                }
-                else
-                {
-                    //New task - allocate a task status instance - add to dictionary
-                    var taskData = new TaskData(requestStatus, status, new CancellationTokenSource(), blobUri);
+			//Thread-safe access to dictionary
+			lock (lockObject) 
+			{
+				//Check/Create Time Series Retrival Task...
+				if (_dictTaskStatus.ContainsKey(requestId))
+				{
+					//Task already exists - retrieve current status
+					requestStatus = _dictTaskStatus[requestId].RequestStatus;
+					status = _dictTaskStatus[requestId].Status;
+					blobUri = _dictTaskStatus[requestId].BlobUri;
+				}
+				else
+				{
+					//New task - allocate a task status instance - add to dictionary
+					var taskData = new TaskData(requestStatus, status, new CancellationTokenSource(), blobUri);
 
-                    _dictTaskStatus.Add(requestId, taskData);
-                    ct = taskData.CTS.Token;
-                    bNewTask = true;
-                }
-            }
+					_dictTaskStatus.Add(requestId, taskData);
+					ct = taskData.CTS.Token;
+					bNewTask = true;
+				}
+			}
 
-            //Start the async time series retrieval task, if indicated
-            if (bNewTask)
-            {
-                //Copy the currently requested time series for use in the task...
-                var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
-                var retrievedSeries = (List<TimeSeriesViewModel>)httpContext.Session["Series"];
+			//Start the async time series retrieval task, if indicated
+			if (bNewTask)
+			{
+				//Copy the currently requested time series for use in the task...
+				var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
+				var retrievedSeries = (List<TimeSeriesViewModel>)httpContext.Session["Series"];
 
-                //Get user data...
-                string userIpAddress = GetIPAddress();
-                DateTime requestTimeStamp = httpContext.Timestamp;
+				//Get user data...
+				string userIpAddress = ContextUtil.GetIPAddress(System.Web.HttpContext.Current);
+				DateTime requestTimeStamp = httpContext.Timestamp;
 
+				List<TimeSeriesViewModel> currentSeries = new List<TimeSeriesViewModel>();
+				foreach (TimeSeriesViewModel tsvm in retrievedSeries)
+				{
+					currentSeries.Add(new TimeSeriesViewModel(tsvm));
+					//Log each time series requested...     
+					//string logEntry = String.Format("User IP Address: {0} DateTime: {1} Timeseries: {2}", userIpAddress, requestTimeStamp.ToString(), tsvm.ToString());
 
-                List<TimeSeriesViewModel> currentSeries = new List<TimeSeriesViewModel>();
-                foreach (TimeSeriesViewModel tsvm in retrievedSeries)
-                {
-                    currentSeries.Add(new TimeSeriesViewModel(tsvm));
-                    //Log each time series requested...     
-                    string logEntry = String.Format("User IP Address: {0} DateTime: {1} Timeseries: {2}", userIpAddress, requestTimeStamp.ToString(), tsvm.ToString());
+					//logger.Info( logEntry );
+					//logger.Debug(logEntry);
+				}
 
-                    logger.Info( logEntry );
-                }
-
-                Task.Run( async () =>
-                {
+				Task.Run( async () =>
+				{
 /*
-                    //await Task.Delay(60000);
-                    for (var i = 0; i <= 100; i++)
-                    {
-                        //Thread-safe access to dictionary
-                        lock (lockObject)
-                        {
-                            if (ct.IsCancellationRequested)
-                            {
-                                _dictTaskStatus[requestId].Status = "Cancelled per client request!!";
-                                break;
-                            }
+					//await Task.Delay(60000);
+					for (var i = 0; i <= 100; i++)
+					{
+						//Thread-safe access to dictionary
+						lock (lockObject)
+						{
+							if (ct.IsCancellationRequested)
+							{
+								_dictTaskStatus[requestId].Status = "Cancelled per client request!!";
+								break;
+							}
 
-                            _dictTaskStatus[requestId].Status = "Processing iteration: " + i.ToString();
-                        }
+							_dictTaskStatus[requestId].Status = "Processing iteration: " + i.ToString();
+						}
 
-                        //Thread.Sleep(1000);
-                        await Task.Delay(1000);
-                    }
+						//Thread.Sleep(1000);
+						await Task.Delay(1000);
+					}
 */
 
-                    try
-                    {
-                        //Allocate a memory stream for later use...
-                        var memoryStream = new MemoryStream();  //ASSUMPTION: IDispose called during FileStreamResult de-allocation
-                        //string cancellationMessage = "Cancelled per client request!!";
-                        TimeSeriesRequestStatus cancellationEnum = TimeSeriesRequestStatus.CanceledPerClientRequest;
-                        string cancellationMessage = TimeSeriesRequestStatus.CanceledPerClientRequest.GetEnumDescription();
+					try
+					{
+						//Allocate a memory stream for later use...
+						var memoryStream = new MemoryStream();  //ASSUMPTION: IDispose called during FileStreamResult de-allocation
+						//string cancellationMessage = "Cancelled per client request!!";
+						TimeSeriesRequestStatus cancellationEnum = TimeSeriesRequestStatus.CanceledPerClientRequest;
+						string cancellationMessage = TimeSeriesRequestStatus.CanceledPerClientRequest.GetEnumDescription();
 
-                        //Allocate a zip archive for later use...
-                        using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, leaveOpen: true))
-                        {
-                            //For each time series id...
-                            int bufSize = 4096;
-                            int count = tsrIn.TimeSeriesIds.Count;
-                            for (int i = 0; i < count; ++i)
-                            {
-                                //Check for cancellation...
-                                if (IsTaskCancelled(requestId, cancellationEnum, cancellationMessage))
-                                {
-                                    break;
-                                }
+						//Allocate a zip archive for later use...
+						using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, leaveOpen: true))
+						{
+							//For each time series id...
+							int bufSize = 4096;
+							int count = tsrIn.TimeSeriesIds.Count;
+							for (int i = 0; i < count; ++i)
+							{
+								//Check for cancellation...
+								if (IsTaskCancelled(requestId, cancellationEnum, cancellationMessage))
+								{
+									break;
+								}
 
-                                UpdateTaskStatus(requestId, TimeSeriesRequestStatus.ProcessingTimeSeriesId,
-                                    TimeSeriesRequestStatus.ProcessingTimeSeriesId.GetEnumDescription() + 
-                                                                      tsrIn.TimeSeriesIds[i].ToString() + 
-                                                                      " (" + (i+1).ToString() + " of " + count.ToString() + ")");
+								UpdateTaskStatus(requestId, TimeSeriesRequestStatus.ProcessingTimeSeriesId,
+									TimeSeriesRequestStatus.ProcessingTimeSeriesId.GetEnumDescription() + 
+																	  tsrIn.TimeSeriesIds[i].ToString() + 
+																	  " (" + (i+1).ToString() + " of " + count.ToString() + ")");
 
-                                //Retrieve the time series data in csv format
-                                FileStreamResult filestreamresult = await DownloadFile(tsrIn.TimeSeriesIds[i], currentSeries);
+								//Retrieve the time series data in csv format
+								FileStreamResult filestreamresult = await DownloadFile(tsrIn.TimeSeriesIds[i], currentSeries);
 
-                                //Copy file contents to zip archive...
-                                //ASSUMPTION: FileStreamResult instance properly disposes of FileStream member!!
-                                var zipArchiveEntry = zipArchive.CreateEntry(filestreamresult.FileDownloadName);
-                                using (var zaeStream = zipArchiveEntry.Open())
-                                {
-                                    await filestreamresult.FileStream.CopyToAsync(zaeStream, bufSize);
-                                }
-                            }
-                        }
+								//Copy file contents to zip archive...
+								//ASSUMPTION: FileStreamResult instance properly disposes of FileStream member!!
+								var zipArchiveEntry = zipArchive.CreateEntry(filestreamresult.FileDownloadName);
+								using (var zaeStream = zipArchiveEntry.Open())
+								{
+									await filestreamresult.FileStream.CopyToAsync(zaeStream, bufSize);
+								}
+							}
+						}
 
-                        //Time series processing complete - check for cancellation
-                        if (!IsTaskCancelled(requestId, cancellationEnum, cancellationMessage))
-                        {
-                            UpdateTaskStatus(requestId, TimeSeriesRequestStatus.SavingZipArchive, TimeSeriesRequestStatus.SavingZipArchive.GetEnumDescription());
+						//Time series processing complete - check for cancellation
+						if (!IsTaskCancelled(requestId, cancellationEnum, cancellationMessage))
+						{
+							UpdateTaskStatus(requestId, TimeSeriesRequestStatus.SavingZipArchive, TimeSeriesRequestStatus.SavingZipArchive.GetEnumDescription());
 
-                            //Reposition to start of memory stream...
-                            memoryStream.Seek(0, SeekOrigin.Begin);
+							//Reposition to start of memory stream...
+							memoryStream.Seek(0, SeekOrigin.Begin);
 
-                            //Upload zip archive...
-                            blobUri = await _ac.UploadFromMemoryStreamAsync(memoryStream, requestName, ct);
+							//Upload zip archive...
+							blobUri = await _ac.UploadFromMemoryStreamAsync(memoryStream, requestName, ct);
 
-                            //Upload complete - check for cancellation...
-                            if (!IsTaskCancelled(requestId, cancellationEnum, cancellationMessage))
-                            {
-                                //Task complete - set status and blobUri...
-                                //Thread-safe access to dictionary
-                                lock (lockObject)
-                                {
-                                    _dictTaskStatus[requestId].RequestStatus = TimeSeriesRequestStatus.Completed;
-                                    _dictTaskStatus[requestId].Status = TimeSeriesRequestStatus.Completed.GetEnumDescription();
-                                    _dictTaskStatus[requestId].BlobUri = blobUri;
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        //Error - update request status
-                        UpdateTaskStatus(requestId, TimeSeriesRequestStatus.ProcessingError, TimeSeriesRequestStatus.ProcessingError.GetEnumDescription() + ex.Message);
-                    }
-                    finally
-                    {
-                        //Thread-safe access to dictionary
-                        lock (lockObject)
-                        {
-                            //Dispose of the cancellation token source
-                            CancellationTokenSource cts = _dictTaskStatus[requestId].CTS;
-                            cts.Dispose();
-                        }
-                    }
-                }).ConfigureAwait(false);
-            }
+							//Upload complete - check for cancellation...
+							if (!IsTaskCancelled(requestId, cancellationEnum, cancellationMessage))
+							{
+								//Task complete - set status and blobUri...
+								//Thread-safe access to dictionary
+								lock (lockObject)
+								{
+									_dictTaskStatus[requestId].RequestStatus = TimeSeriesRequestStatus.Completed;
+									_dictTaskStatus[requestId].Status = TimeSeriesRequestStatus.Completed.GetEnumDescription();
+									_dictTaskStatus[requestId].BlobUri = blobUri;
+								}
+							}
+						}
+					}
+					catch (Exception ex)
+					{
+						//Error - update request status
+						UpdateTaskStatus(requestId, TimeSeriesRequestStatus.ProcessingError, TimeSeriesRequestStatus.ProcessingError.GetEnumDescription() + ex.Message);
+					}
+					finally
+					{
+						//Thread-safe access to dictionary
+						lock (lockObject)
+						{
+							//Dispose of the cancellation token source
+							CancellationTokenSource cts = _dictTaskStatus[requestId].CTS;
+							cts.Dispose();
+						}
+					}
+				}).ConfigureAwait(false);
+			}
 
-            //Return a TimeSeriesResponse in JSON format...
-            var result = new TimeSeriesResponse(tsrIn.RequestId, requestStatus, status, blobUri);
+			//Return a TimeSeriesResponse in JSON format...
+			var result = new TimeSeriesResponse(tsrIn.RequestId, requestStatus, status, blobUri);
 
-            var javaScriptSerializer = new JavaScriptSerializer();
-            var json = javaScriptSerializer.Serialize(result);
+			var javaScriptSerializer = new JavaScriptSerializer();
+			var json = javaScriptSerializer.Serialize(result);
 
-            //Processing complete - return 
-            return Json(json, "application/json");
-        }
+			//Processing complete - return 
+			return Json(json, "application/json");
+		}
 
-        //BC - Test - Check status of a long running task
-        [HttpGet]
-        public JsonResult CheckTask(String Id)
-        {
-            TimeSeriesResponse tsr = new TimeSeriesResponse(Id, TimeSeriesRequestStatus.UnknownTask, TimeSeriesRequestStatus.UnknownTask.GetEnumDescription());
+		//BC - Test - Check status of a long running task
+		[HttpGet]
+		public JsonResult CheckTask(String Id)
+		{
+			TimeSeriesResponse tsr = new TimeSeriesResponse(Id, TimeSeriesRequestStatus.UnknownTask, TimeSeriesRequestStatus.UnknownTask.GetEnumDescription());
 
-            //Thread-safe access to dictionary
-            lock (lockObject)
-            {
-                if (_dictTaskStatus.Keys.Contains(Id))
-                {
-                    tsr.RequestStatus = _dictTaskStatus[Id].RequestStatus;
-                    tsr.Status = _dictTaskStatus[Id].Status;
-                    tsr.BlobUri = _dictTaskStatus[Id].BlobUri;
+			//Thread-safe access to dictionary
+			lock (lockObject)
+			{
+				if (_dictTaskStatus.Keys.Contains(Id))
+				{
+					tsr.RequestStatus = _dictTaskStatus[Id].RequestStatus;
+					tsr.Status = _dictTaskStatus[Id].Status;
+					tsr.BlobUri = _dictTaskStatus[Id].BlobUri;
 
-                    //If task is cancelled or completed, remove associated entry from dictionary
-                    if ( TimeSeriesRequestStatus.Completed == tsr.RequestStatus || 
-                         TimeSeriesRequestStatus.CanceledPerClientRequest == tsr.RequestStatus)
-                    {
-                        _dictTaskStatus.Remove(Id);
-                    }
-                }
-            }
+					//If task is cancelled or completed, remove associated entry from dictionary
+					if ( TimeSeriesRequestStatus.Completed == tsr.RequestStatus || 
+						 TimeSeriesRequestStatus.CanceledPerClientRequest == tsr.RequestStatus)
+					{
+						_dictTaskStatus.Remove(Id);
+					}
+				}
+			}
 
-            var javaScriptSerializer = new JavaScriptSerializer();
-            var json = javaScriptSerializer.Serialize(tsr);
+			var javaScriptSerializer = new JavaScriptSerializer();
+			var json = javaScriptSerializer.Serialize(tsr);
 
-            //Processing complete - return 
-            return Json(json, "application/json", JsonRequestBehavior.AllowGet);
-        }
+			//Processing complete - return 
+			return Json(json, "application/json", JsonRequestBehavior.AllowGet);
+		}
 
-        //BC - Test - End long running task
-        [HttpGet]
-        public JsonResult EndTask(String Id)
-        {
-            TimeSeriesResponse tsr = new TimeSeriesResponse(Id, TimeSeriesRequestStatus.UnknownTask, TimeSeriesRequestStatus.UnknownTask.GetEnumDescription());
+		//BC - Test - End long running task
+		[HttpGet]
+		public JsonResult EndTask(String Id)
+		{
+			TimeSeriesResponse tsr = new TimeSeriesResponse(Id, TimeSeriesRequestStatus.UnknownTask, TimeSeriesRequestStatus.UnknownTask.GetEnumDescription());
 
-            //Thread-safe access to dictionary
-            lock (lockObject)
-            {
-                if (_dictTaskStatus.Keys.Contains(Id))
-                {
-                    CancellationTokenSource cts = _dictTaskStatus[Id].CTS;
+			//Thread-safe access to dictionary
+			lock (lockObject)
+			{
+				if (_dictTaskStatus.Keys.Contains(Id))
+				{
+					CancellationTokenSource cts = _dictTaskStatus[Id].CTS;
 
-                    try
-                    {
-                        cts.Cancel();
+					try
+					{
+						cts.Cancel();
 
-                        tsr.RequestStatus = TimeSeriesRequestStatus.ClientSubmittedCancelRequest;
-                        tsr.Status = TimeSeriesRequestStatus.ClientSubmittedCancelRequest.GetEnumDescription();
-                    }
-                    catch (Exception ex)
-                    {
-                        //Error - update request status
-                        UpdateTaskStatus(Id, TimeSeriesRequestStatus.ProcessingError, TimeSeriesRequestStatus.ProcessingError.GetEnumDescription() + ex.Message);
-                    }
-                }
-            }
+						tsr.RequestStatus = TimeSeriesRequestStatus.ClientSubmittedCancelRequest;
+						tsr.Status = TimeSeriesRequestStatus.ClientSubmittedCancelRequest.GetEnumDescription();
+					}
+					catch (Exception ex)
+					{
+						//Error - update request status
+						UpdateTaskStatus(Id, TimeSeriesRequestStatus.ProcessingError, TimeSeriesRequestStatus.ProcessingError.GetEnumDescription() + ex.Message);
+					}
+				}
+			}
 
-            var javaScriptSerializer = new JavaScriptSerializer();
-            var json = javaScriptSerializer.Serialize(tsr);
+			var javaScriptSerializer = new JavaScriptSerializer();
+			var json = javaScriptSerializer.Serialize(tsr);
 
-            //Processing complete - return 
-            return Json(json, "application/json", JsonRequestBehavior.AllowGet);
-        }
+			//Force an error - divide by zero...
+			//int n = 5;
+			//int zero = 0;
+
+			//n = n / zero;
+		   
+			//Processing complete - return 
+			return Json(json, "application/json", JsonRequestBehavior.AllowGet);
+		}
 
 /*
-        [HttpPost]
-        public async Task<JsonResult> RequestTimeSeries(TimeSeriesRequest tsrIn)
-        {
+		[HttpPost]
+		public async Task<JsonResult> RequestTimeSeries(TimeSeriesRequest tsrIn)
+		{
 
-            //This returns immediately and does not block thread pool thread...
+			//This returns immediately and does not block thread pool thread...
 //            new Thread(() =>
 //            {
 //                for (var i = 0; i <= 1000; i++)
@@ -455,366 +463,356 @@ namespace HISWebClient.Controllers
 //                }
 //            }).Start();
 
-            //This does not return immediately and blocks thread pool thread...
-            //await Task.Delay(60000);
+			//This does not return immediately and blocks thread pool thread...
+			//await Task.Delay(60000);
 
-            int n = 5;
+			int n = 5;
 
-            ++n;
+			++n;
 
-            //Try again but do not capture/restore the context of the original thread 
-            //Task task = Task.Delay(60000);
+			//Try again but do not capture/restore the context of the original thread 
+			//Task task = Task.Delay(60000);
 
-            //await task;
+			//await task;
 
-            //Method returns here.  When the delay period ends, the method resumes after this point - as explained in ASP.NET documentation
-            //BUT - another map selection blocks until this method resumes and finishes...
-            //    - an attempt to navigate to another web page - like 'About' also blocks until this method resumes and ends...
-            await Task.Delay(60000).ConfigureAwait(false);
+			//Method returns here.  When the delay period ends, the method resumes after this point - as explained in ASP.NET documentation
+			//BUT - another map selection blocks until this method resumes and finishes...
+			//    - an attempt to navigate to another web page - like 'About' also blocks until this method resumes and ends...
+			await Task.Delay(60000).ConfigureAwait(false);
 
-            //await Sleeper();
+			//await Sleeper();
 
-            //This does not return immediately and blocks thread pool thread...
-            //await Task.Run(() => Thread.Sleep(60000));
+			//This does not return immediately and blocks thread pool thread...
+			//await Task.Run(() => Thread.Sleep(60000));
 
-            //Simulate the blob URI for now
-            string blobURI = "This is the blob URI";
+			//Simulate the blob URI for now
+			string blobURI = "This is the blob URI";
 
-            //Return a TimeSeriesResponse in JSON format...
-            string status = DateTime.Now.ToString();
-            var result = new TimeSeriesResponse(tsrIn.RequestId, status, blobURI);
+			//Return a TimeSeriesResponse in JSON format...
+			string status = DateTime.Now.ToString();
+			var result = new TimeSeriesResponse(tsrIn.RequestId, status, blobURI);
 
-            var javaScriptSerializer = new JavaScriptSerializer();
-            var json = javaScriptSerializer.Serialize(result);
+			var javaScriptSerializer = new JavaScriptSerializer();
+			var json = javaScriptSerializer.Serialize(result);
 
-            //Processing complete - return 
-            return Json(json, "application/json");
-        }
+			//Processing complete - return 
+			return Json(json, "application/json");
+		}
 
-        private Task Sleeper()
-        {
-            return  new Task(() =>  
-              new Thread(async () =>
-              {
-                for (var i = 0; i <= 1000; i++)
-                {
-                    //Thread.Sleep(100);
-                    await Task.Delay(1);
-                }
-              }).Start() );
-        }
+		private Task Sleeper()
+		{
+			return  new Task(() =>  
+			  new Thread(async () =>
+			  {
+				for (var i = 0; i <= 1000; i++)
+				{
+					//Thread.Sleep(100);
+					await Task.Delay(1);
+				}
+			  }).Start() );
+		}
 */
 /*
-        [HttpGet, FileDownload]
-        public async Task<FileStreamResult> DownloadTimeSeries(TimeSeriesRequest tsrIn)
-        {
-            Dictionary<string, byte[]> dictByteArrays = new Dictionary<string, byte[]>();
-            var fileType = "text/csv";
+		[HttpGet, FileDownload]
+		public async Task<FileStreamResult> DownloadTimeSeries(TimeSeriesRequest tsrIn)
+		{
+			Dictionary<string, byte[]> dictByteArrays = new Dictionary<string, byte[]>();
+			var fileType = "text/csv";
 
-            //Retrieve request name for later reference
-            string requestName = tsrIn.RequestName;
+			//Retrieve request name for later reference
+			string requestName = tsrIn.RequestName;
 
-            logger.Info("DownloadTimeSeries Starts for: " + requestName);
+			logger.Info("DownloadTimeSeries Starts for: " + requestName);
 
-            //For each time series id...
-            try
-            {
-                foreach (int tsId in tsrIn.TimeSeriesIds)
-                {
-                    var seriesMetaData = getSeriesMetadata(tsId);
-                    var filename = GenerateFileName(seriesMetaData);
+			//For each time series id...
+			try
+			{
+				foreach (int tsId in tsrIn.TimeSeriesIds)
+				{
+					var seriesMetaData = getSeriesMetadata(tsId);
+					var filename = GenerateFileName(seriesMetaData);
 
-                    var byteArray = await this.getStream(tsId);
+					var byteArray = await this.getStream(tsId);
 
-                    dictByteArrays.Add(filename, byteArray);
-                }
+					dictByteArrays.Add(filename, byteArray);
+				}
 
-                
+				
 
 
 
-                logger.Info("DownloadTimeSeries Returns for: " + requestName);
-            }
-            catch (Exception ex )
-            {
-                string input = "An error occured while processing request: " + requestName;
+				logger.Info("DownloadTimeSeries Returns for: " + requestName);
+			}
+			catch (Exception ex )
+			{
+				string input = "An error occured while processing request: " + requestName;
 
-                byte[] result = Encoding.ASCII.GetBytes(input);
+				byte[] result = Encoding.ASCII.GetBytes(input);
 
-                return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = "ERROR " + requestName };
-            }
-        }
+				return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = "ERROR " + requestName };
+			}
+		}
 
 */
-        public async Task<byte[]> getStream(int SeriesID, List<TimeSeriesViewModel> currentSeries = null)
-        {
-            DateTimeOffset requestTime = DateTimeOffset.UtcNow;
-            //for test
-            double lat = 0;
-            double lng = 0;
+		public async Task<byte[]> getStream(int SeriesID, List<TimeSeriesViewModel> currentSeries = null)
+		{
+			DateTimeOffset requestTime = DateTimeOffset.UtcNow;
+			//for test
+			double lat = 0;
+			double lng = 0;
 
-           
-                //get series from wateroneflow and return response
-                Tuple<Stream, SeriesData> data = await GetSeriesDataObjectAndStreamFromSeriesID(SeriesID, currentSeries);
+		   
+				//get series from wateroneflow and return response
+				Tuple<Stream, SeriesData> data = await GetSeriesDataObjectAndStreamFromSeriesID(SeriesID, currentSeries);
 
-                //var seriesMetaData = getSeriesMetadata(SeriesID);
+				//var seriesMetaData = getSeriesMetadata(SeriesID);
 
-                //Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>> data = await SeriesAndStreamOfSeriesID(seriesMetaData);
-                string nameGuid = Guid.NewGuid().ToString();
+				//Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>> data = await SeriesAndStreamOfSeriesID(seriesMetaData);
+				string nameGuid = Guid.NewGuid().ToString();
 
-                var s = await this.getCSVResultByteArray(data.Item2, nameGuid, requestTime);
+				var s = await this.getCSVResultByteArray(data.Item2, nameGuid, requestTime);
 
-                return s;
-        }
+				return s;
+		}
 
-        public async Task<Tuple<Stream, SeriesData>> GetSeriesDataObjectAndStreamFromSeriesID(int seriesId, List<TimeSeriesViewModel> currentSeries)
-        {
-            SeriesMetadata meta = getSeriesMetadata(seriesId, currentSeries);
-            // SeriesMetadata meta = await QueryHelpers.QueryHelpers.SeriesMetaDataOfSeriesID(SeriesID);
-            if (meta == null)
-            {
-                throw new NullReferenceException();
-            }
-            else
-            {
-                Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>> data = await this.SeriesAndStreamOfSeriesID(meta);
+		public async Task<Tuple<Stream, SeriesData>> GetSeriesDataObjectAndStreamFromSeriesID(int seriesId, List<TimeSeriesViewModel> currentSeries)
+		{
+			SeriesMetadata meta = getSeriesMetadata(seriesId, currentSeries);
+			// SeriesMetadata meta = await QueryHelpers.QueryHelpers.SeriesMetaDataOfSeriesID(SeriesID);
+			if (meta == null)
+			{
+				throw new NullReferenceException();
+			}
+			else
+			{
+				Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>> data = await this.SeriesAndStreamOfSeriesID(meta);
 
-                if (data == null || data.Item2.FirstOrDefault() == null)
-                {
-                    throw new KeyNotFoundException();
-                }
-                else
-                {
-                    var dataResult = data.Item2.FirstOrDefault();
-                    IList<DataValue> dataValues = dataResult.DataValueList.OrderBy(a => a.DateTimeUTC).Select(aa => new DataValue(aa)).ToList();
-                    return new Tuple<Stream, SeriesData>(data.Item1, new SeriesData(meta.SeriesID, meta, dataResult.Method.Description.ToString(), dataResult.QualityControlLevel.Definition, dataValues,
-                        dataResult.Variable, dataResult.Source));
-                    //return new Tuple<Stream, SeriesData>(data.Item1, new SeriesData(meta.SeriesID, meta, dataValues, (IList < ServerSideHydroDesktop.ObjectModel.Series >) dataResult));
-                
-                }
-            }
-        }
+				if (data == null || data.Item2.FirstOrDefault() == null)
+				{
+					throw new KeyNotFoundException();
+				}
+				else
+				{
+					var dataResult = data.Item2.FirstOrDefault();
+					IList<DataValue> dataValues = dataResult.DataValueList.OrderBy(a => a.DateTimeUTC).Select(aa => new DataValue(aa)).ToList();
+					return new Tuple<Stream, SeriesData>(data.Item1, new SeriesData(meta.SeriesID, meta, dataResult.Method.Description.ToString(), dataResult.QualityControlLevel.Definition, dataValues,
+						dataResult.Variable, dataResult.Source));
+					//return new Tuple<Stream, SeriesData>(data.Item1, new SeriesData(meta.SeriesID, meta, dataValues, (IList < ServerSideHydroDesktop.ObjectModel.Series >) dataResult));
+				
+				}
+			}
+		}
 
-        public async Task<Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>>> SeriesAndStreamOfSeriesID(SeriesMetadata meta)
-        {
-            var requestTimeout = 60000;
-            WaterOneFlowClient client = new WaterOneFlowClient(meta.ServURL);
-            return await client.GetValuesAndRawStreamAsync(
-                    meta.SiteCode,
-                    meta.VarCode,
-                    meta.StartDate,
-                    DateTime.UtcNow,
-                    Convert.ToInt32(requestTimeout));
-        }
-
-
-        public async Task<byte[]> getCSVResultByteArray(SeriesData data, string nameGuid, DateTimeOffset requestTime)
-        {
-            //SeriesDownload result = new SeriesDownload() { SeriesID = data.SeriesID };
-
-            //assumes series is not already in storage                        
-            using (MemoryStream ms = new MemoryStream())
-            {
-                //write data to memory stream as csv
-                await WriteDataToMemoryStreamAsCsv(data, ms);
-
-                if (ms.Length > 0)
-                {
-                    // persist memory stream as blob
-                    ms.Position = 0;
-                    var csa = CloudStorageAccount.Parse(CloudConfigurationManager.GetSetting("StorageConnectionString"));
-                    //CloudBlockBlob blob = await WriteMemoryStreamToBlobInGuidDirectory(data, ms, csa);
-
-                }           
+		public async Task<Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>>> SeriesAndStreamOfSeriesID(SeriesMetadata meta)
+		{
+			var requestTimeout = 60000;
+			WaterOneFlowClient client = new WaterOneFlowClient(meta.ServURL);
+			return await client.GetValuesAndRawStreamAsync(
+					meta.SiteCode,
+					meta.VarCode,
+					meta.StartDate,
+					DateTime.UtcNow,
+					Convert.ToInt32(requestTimeout));
+		}
 
 
-                return ms.ToArray();
-            }
-        }
+		public async Task<byte[]> getCSVResultByteArray(SeriesData data, string nameGuid, DateTimeOffset requestTime)
+		{
+			//SeriesDownload result = new SeriesDownload() { SeriesID = data.SeriesID };
 
-        private async Task<CloudBlockBlob> WriteMemoryStreamToBlobInGuidDirectory(SeriesData data, MemoryStream ms, CloudStorageAccount csa)
-        {
-            CloudBlobClient bClient = csa.CreateCloudBlobClient();
-            CloudBlobContainer container = bClient.GetContainerReference(DiscoveryStorageTableNames.SeriesDownloads);
-            string fileName = GenerateBlobName(data);
-            CloudBlockBlob blob = container.GetDirectoryReference(new Guid().ToString()).GetBlockBlobReference(fileName);
-            blob.Properties.ContentType = "text/csv; utf-8";
-            blob.Properties.ContentDisposition = string.Format("attachment; filename = {0}", fileName);
-            await blob.DeleteIfExistsAsync();
-            await blob.UploadFromStreamAsync(ms, AccessCondition.GenerateEmptyCondition(), new BlobRequestOptions()
-            {
-                RetryPolicy = new ExponentialRetry()
-            }, null);
-            return blob;
-        }
+			//assumes series is not already in storage                        
+			using (MemoryStream ms = new MemoryStream())
+			{
+				//write data to memory stream as csv
+				await WriteDataToMemoryStreamAsCsv(data, ms);
 
-        private async Task WriteDataToMemoryStreamAsCsv(SeriesData data, MemoryStream ms)
-        {
-            using (var csvwrtr = new CsvWriter(ms, Encoding.UTF8, true))
-            {
-                //write metadata
-                csvwrtr.ValueSeparator = Char.Parse(",");
-                csvwrtr.WriteRecord(new List<string>() {  
+				if (ms.Length > 0)
+				{
+					// persist memory stream as blob
+					ms.Position = 0;
+					var csa = CloudStorageAccount.Parse(CloudConfigurationManager.GetSetting("StorageConnectionString"));
+					//CloudBlockBlob blob = await WriteMemoryStreamToBlobInGuidDirectory(data, ms, csa);
 
-                "Organization",
-                "SourceDescription",
-                "SourceLink",
-                "VariableName",                              
-                "VarUnits",
-                "SampleMedium",
-                "MethodDescription",
-                "QualityControlLevel",
-                "DataType",
-                "ValueType",
-                "IsRegular",
-                "TimeSupport",
-                "TimeUnits",
-                "Speciation",
-                "SiteName",
-                "SiteCode",
-                "Latitude",
-                "Longitude",
-                "GeneralCategory",
-                "NoDataValue",
-                "Citation",
+				}           
 
 
-                });
-                csvwrtr.WriteRecord(new List<string>() {  
-                
-                data.mySource.Organization,
-                data.mySource.Description,
-                data.mySource.Link,
-                data.myMetadata.VariableName,
-                data.myVariable.VariableUnit.Name,
-                data.myMetadata.SampleMedium,	
-                data.MethodDescription,                            
-                data.QualityControlLevelDefinition,		
-                data.myVariable.DataType,
-                data.myVariable.ValueType,
-                data.myVariable.IsRegular.ToString(),
-                data.myVariable.TimeSupport.ToString(),
-                data.myVariable.TimeUnit.ToString(),
-                data.myVariable.Speciation.ToString(),
-                data.myMetadata.SiteName,
-                data.myMetadata.SiteCode,
-                data.myMetadata.Latitude.ToString(),
-                data.myMetadata.Longitude.ToString(),
-                data.myMetadata.GeneralCategory,
-                data.myVariable.NoDataValue.ToString(),                
-                data.mySource.Citation,
-                //"UTCOffset",                
-                //"ValueAccuracy",
-                //"CensorCode",
-                //"OffsetValue",	
-                //"OffsetDescription",	
-                //"OffsetUnits",	
-                //"QualifierCode",
+				return ms.ToArray();
+			}
+		}
 
-                });
+		private async Task<CloudBlockBlob> WriteMemoryStreamToBlobInGuidDirectory(SeriesData data, MemoryStream ms, CloudStorageAccount csa)
+		{
+			CloudBlobClient bClient = csa.CreateCloudBlobClient();
+			CloudBlobContainer container = bClient.GetContainerReference(DiscoveryStorageTableNames.SeriesDownloads);
+			string fileName = GenerateBlobName(data);
+			CloudBlockBlob blob = container.GetDirectoryReference(new Guid().ToString()).GetBlockBlobReference(fileName);
+			blob.Properties.ContentType = "text/csv; utf-8";
+			blob.Properties.ContentDisposition = string.Format("attachment; filename = {0}", fileName);
+			await blob.DeleteIfExistsAsync();
+			await blob.UploadFromStreamAsync(ms, AccessCondition.GenerateEmptyCondition(), new BlobRequestOptions()
+			{
+				RetryPolicy = new ExponentialRetry()
+			}, null);
+			return blob;
+		}
 
-                //LocalDateTime 
-                //DateTimeUTC
-                //DataValues
+		private async Task WriteDataToMemoryStreamAsCsv(SeriesData data, MemoryStream ms)
+		{
+			using (var csvwrtr = new CsvWriter(ms, Encoding.UTF8, true))
+			{
+				//write metadata
+				csvwrtr.ValueSeparator = Char.Parse(",");
+				csvwrtr.WriteRecord(new List<string>() {  
 
-                //csvwrtr.ValueSeparator = Char.Parse(",");
-                csvwrtr.WriteRecord(new List<string>() 
-                        { 
-                            "UTCTimeStamp", 
-                            "LocalTimestamp",
-                            "UTCOffset",
-                            "Value",
-                            "ValueAccuracy",                            
-                            "CensorCode", 
-                            "OffsetValue", 
-                            "OffsetDescription",
-                            "OffsetUnit",
-                            "Qualifier",
-                        });
-
-                foreach (DataValue value in data.values)
-                {
-                    List<string> values = new List<string>();
-                    values.Add(value.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss"));
-                    values.Add(value.Value.ToString());                   
-                    values.Add(value.OffsetType);
-                    values.Add(value.OffsetValue.ToString());
-                    values.Add(value.OffsetDescription);
-                    values.Add(value.OffsetUnit);
-                    values.Add(value.Qualifier);
-                    values.Add(value.CensorCode);
-                    values.Add(value.UTCOffset.ToString());
-                    //values.Add(value.);
-                    csvwrtr.WriteRecord(values);
-                }
-                await csvwrtr.FlushAsync();
-            }
-        }
-
-        private string GenerateBlobName(SeriesData data)
-        {
-            return string.Format("series-{0}-{1}.csv", data.myMetadata.SiteName.SanitizeForFilename(), data.myMetadata.VariableName.SanitizeForFilename());
-        }
-        private string GenerateFileName(SeriesMetadata meta)
-        {
-            return string.Format("{0}-{1}-{2}.csv", meta.ServCode.SanitizeForFilename(), meta.SiteName.SanitizeForFilename(), meta.VariableName.SanitizeForFilename());
-        }
-
-        public SeriesMetadata getSeriesMetadata(int SeriesId, List<TimeSeriesViewModel> currentSeries = null)
-        {
-            List<TimeSeriesViewModel> retrievedSeries = currentSeries;
-
-            if (null != System.Web.HttpContext.Current)
-            {
-                //Called with an Http context - retrieve list from current session data...
-            var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
-
-                retrievedSeries = (List<TimeSeriesViewModel>)httpContext.Session["Series"];
-            }
-
-            var d = retrievedSeries[SeriesId];
-
-            object[] metadata = new object[15];
-            metadata[0] = d.ServCode;
-            metadata[1] = d.ServURL;
-            metadata[2] = d.SiteCode;
-            metadata[3] = d.VariableCode;
-            metadata[4] = d.SiteName;
-            metadata[5] = d.VariableName;
-            metadata[6] = d.SampleMedium;
-            metadata[7] = d.GeneralCategory;            
-            metadata[8] = d.BeginDate;
-            metadata[9] = d.EndDate;
-            metadata[10] = d.ValueCount;
-            metadata[11] = d.Latitude;
-            metadata[12] = d.Longitude;
-            metadata[13] = 0;
-            metadata[14] = 0;
-            //metadata[13] = split[13];
+				"Organization",
+				"SourceDescription",
+				"SourceLink",
+				"VariableName",                              
+				"VarUnits",
+				"SampleMedium",
+				"MethodDescription",
+				"QualityControlLevel",
+				"DataType",
+				"ValueType",
+				"IsRegular",
+				"TimeSupport",
+				"TimeUnits",
+				"Speciation",
+				"SiteName",
+				"SiteCode",
+				"Latitude",
+				"Longitude",
+				"GeneralCategory",
+				"NoDataValue",
+				"Citation",
 
 
-            return new SeriesMetadata(metadata);
-        }
+				});
+				csvwrtr.WriteRecord(new List<string>() {  
+				
+				data.mySource.Organization,
+				data.mySource.Description,
+				data.mySource.Link,
+				data.myMetadata.VariableName,
+				data.myVariable.VariableUnit.Name,
+				data.myMetadata.SampleMedium,	
+				data.MethodDescription,                            
+				data.QualityControlLevelDefinition,		
+				data.myVariable.DataType,
+				data.myVariable.ValueType,
+				data.myVariable.IsRegular.ToString(),
+				data.myVariable.TimeSupport.ToString(),
+				data.myVariable.TimeUnit.ToString(),
+				data.myVariable.Speciation.ToString(),
+				data.myMetadata.SiteName,
+				data.myMetadata.SiteCode,
+				data.myMetadata.Latitude.ToString(),
+				data.myMetadata.Longitude.ToString(),
+				data.myMetadata.GeneralCategory,
+				data.myVariable.NoDataValue.ToString(),                
+				data.mySource.Citation,
+				//"UTCOffset",                
+				//"ValueAccuracy",
+				//"CensorCode",
+				//"OffsetValue",	
+				//"OffsetDescription",	
+				//"OffsetUnits",	
+				//"QualifierCode",
+
+				});
+
+				//LocalDateTime 
+				//DateTimeUTC
+				//DataValues
+
+				//csvwrtr.ValueSeparator = Char.Parse(",");
+				csvwrtr.WriteRecord(new List<string>() 
+						{ 
+							"UTCTimeStamp", 
+							"LocalTimestamp",
+							"UTCOffset",
+							"Value",
+							"ValueAccuracy",                            
+							"CensorCode", 
+							"OffsetValue", 
+							"OffsetDescription",
+							"OffsetUnit",
+							"Qualifier",
+						});
+
+				foreach (DataValue value in data.values)
+				{
+					List<string> values = new List<string>();
+					values.Add(value.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss"));
+					values.Add(value.Value.ToString());                   
+					values.Add(value.OffsetType);
+					values.Add(value.OffsetValue.ToString());
+					values.Add(value.OffsetDescription);
+					values.Add(value.OffsetUnit);
+					values.Add(value.Qualifier);
+					values.Add(value.CensorCode);
+					values.Add(value.UTCOffset.ToString());
+					//values.Add(value.);
+					csvwrtr.WriteRecord(values);
+				}
+				await csvwrtr.FlushAsync();
+			}
+		}
+
+		private string GenerateBlobName(SeriesData data)
+		{
+			return string.Format("series-{0}-{1}.csv", data.myMetadata.SiteName.SanitizeForFilename(), data.myMetadata.VariableName.SanitizeForFilename());
+		}
+		private string GenerateFileName(SeriesMetadata meta)
+		{
+			//NOTE: Microsoft Excel restricts file path + name + extension to 218 characters max.  Truncate file name if indicated...
+
+			string fileName = string.Format("{0}-{1}-{2}", meta.ServCode.SanitizeForFilename(), meta.SiteName.SanitizeForFilename(), meta.VariableName.SanitizeForFilename());
+			string extension = ".csv";
+
+			while (218 < (fileName.Length + extension.Length))
+			{
+				fileName = fileName.Substring(0, (fileName.Length - 1));
+			}
+
+			return string.Format("{0}{1}", fileName, extension);
+
+		}
+
+		public SeriesMetadata getSeriesMetadata(int SeriesId, List<TimeSeriesViewModel> currentSeries = null)
+		{
+			List<TimeSeriesViewModel> retrievedSeries = currentSeries;
+
+			if (null != System.Web.HttpContext.Current)
+			{
+				//Called with an Http context - retrieve list from current session data...
+			var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
+
+				retrievedSeries = (List<TimeSeriesViewModel>)httpContext.Session["Series"];
+			}
+
+			var d = retrievedSeries[SeriesId];
+
+			object[] metadata = new object[15];
+			metadata[0] = d.ServCode;
+			metadata[1] = d.ServURL;
+			metadata[2] = d.SiteCode;
+			metadata[3] = d.VariableCode;
+			metadata[4] = d.SiteName;
+			metadata[5] = d.VariableName;
+			metadata[6] = d.SampleMedium;
+			metadata[7] = d.GeneralCategory;            
+			metadata[8] = d.BeginDate;
+			metadata[9] = d.EndDate;
+			metadata[10] = d.ValueCount;
+			metadata[11] = d.Latitude;
+			metadata[12] = d.Longitude;
+			metadata[13] = 0;
+			metadata[14] = 0;
+			//metadata[13] = split[13];
 
 
-        //Utility methods...
-        protected string GetIPAddress()
-        {
-            System.Web.HttpContext context = System.Web.HttpContext.Current;
-            string ipAddress = context.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
-
-            if (!string.IsNullOrEmpty(ipAddress))
-            {
-                string[] addresses = ipAddress.Split(',');
-                if (addresses.Length != 0)
-                {
-                    return addresses[0];
-                }
-            }
-
-            return context.Request.ServerVariables["REMOTE_ADDR"];
-        }
-      
-
-    }
+			return new SeriesMetadata(metadata);
+		}
+	}
 }

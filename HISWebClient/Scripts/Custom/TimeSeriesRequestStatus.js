@@ -4,7 +4,7 @@
 
 //Implementation - Dynamic Prototype Pattern...
 
-// Usage:   var timeSeriesRequestStatus = new TimeSeriesRequestStatus();
+// Usage:   var timeSeriesRequestStatus = (new TimeSeriesRequestStatus()).getEnum();
 //          timeSeriesRequestStatus.Completed - 'enum' value - 5
 //          timeSeriesRequestStatus.properties[timeSeriesRequestStatus.Completed].description - 'enum' description - 'Completed!!'
 
@@ -19,8 +19,11 @@ function TimeSeriesRequestStatus() {
                         "ProcessingTimeSeriesId": [6, "Processing Time Series ID: "],
                         "SavingZipArchive": [7, "Saving Zip archive..."],
                         "ProcessingError": [8, "Processing error: "],
-                        "UnknownTask": [9, "Unknown Task!!"]
-                      };
+                        "UnknownTask": [9, "Unknown Task!!"],
+                        "RequestTimeSeriesError": [10,"Request Time Series Error"], //Not currently used
+                        "CheckTaskError": [11,"Check Task Error"],
+                        "StopTaskError": [12,"Stop Task Error"]
+                    };
 
     if ("function" !== typeof this.getEnum) {
         TimeSeriesRequestStatus.prototype.getEnum = function () {
