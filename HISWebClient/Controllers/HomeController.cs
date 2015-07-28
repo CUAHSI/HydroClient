@@ -278,7 +278,7 @@ namespace HISWebClient.Controllers
 						Response.StatusCode = (int)HttpStatusCode.RequestEntityTooLarge;
 						var maxAllowedTimeseriesReturn = Convert.ToInt32(ConfigurationManager.AppSettings["maxAllowedTimeseriesReturn"].ToString()); //maximum ammount of number of timeseries that are returned
  
-						return Json(new {Message="Search returned more than " + maxAllowedTimeseriesReturn + "timeseries and was canceled. Please limit search area and/or Keywords." });
+                        return Json(new {Message="Search returned more than " + maxAllowedTimeseriesReturn + " timeseries and was canceled. Please limit search area and/or Keywords." });
 						//throw new WebException("Timeout. Try to decrease Search Area, or Select another Keywords.", WebExceptionStatus.Timeout);
 					}
 					else{
