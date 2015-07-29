@@ -445,56 +445,14 @@
     <Content Include="Content\FancyTree\skin-xp\ui.fancytree.less" />
     <None Include="Properties\PublishProfiles\qa-hiswebclient - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\qa-hiswebclient - Web Deploy.pubxml" />
-    <Content Include="Scripts\Custom\DownloadHelper.min.js.map">
-      <DependentUpon>DownloadHelper.min.js</DependentUpon>
-    </Content>
-    <Content Include="Scripts\Custom\freezeEnum.min.js.map">
-      <DependentUpon>freezeEnum.min.js</DependentUpon>
-    </Content>
-    <Content Include="Scripts\Custom\jquery-filedownload.min.js.map">
-      <DependentUpon>jquery-filedownload.min.js</DependentUpon>
-    </Content>
-    <Content Include="Scripts\Custom\randomId.min.js.map">
-      <DependentUpon>randomId.min.js</DependentUpon>
-    </Content>
-    <Content Include="Scripts\Custom\test1.min.js.map">
-      <DependentUpon>test1.min.js</DependentUpon>
-    </Content>
-    <Content Include="Scripts\Custom\TimeSeriesRequestStatus.min.js.map">
-      <DependentUpon>TimeSeriesRequestStatus.min.js</DependentUpon>
-    </Content>
-    <Content Include="Scripts\Custom\webclient.min.js.map">
-      <DependentUpon>webclient.min.js</DependentUpon>
-    </Content>
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\Custom\DownloadHelper.js" />
-    <Content Include="Scripts\Custom\DownloadHelper.min.js">
-      <DependentUpon>DownloadHelper.js</DependentUpon>
-    </Content>
     <Content Include="Scripts\Custom\freezeEnum.js" />
-    <Content Include="Scripts\Custom\freezeEnum.min.js">
-      <DependentUpon>freezeEnum.js</DependentUpon>
-    </Content>
     <Content Include="Scripts\Custom\jquery-filedownload.js" />
-    <Content Include="Scripts\Custom\jquery-filedownload.min.js">
-      <DependentUpon>jquery-filedownload.js</DependentUpon>
-    </Content>
     <Content Include="Scripts\Custom\RandomId.js" />
-    <Content Include="Scripts\Custom\randomId.min.js">
-      <DependentUpon>RandomId.js</DependentUpon>
-    </Content>
     <Content Include="Scripts\Custom\test1.js" />
-    <Content Include="Scripts\Custom\test1.min.js">
-      <DependentUpon>test1.js</DependentUpon>
-    </Content>
     <Content Include="Scripts\Custom\TimeSeriesRequestStatus.js" />
-    <Content Include="Scripts\Custom\TimeSeriesRequestStatus.min.js">
-      <DependentUpon>TimeSeriesRequestStatus.js</DependentUpon>
-    </Content>
     <Content Include="Scripts\Custom\webclient.js" />
-    <Content Include="Scripts\Custom\webclient.min.js">
-      <DependentUpon>webclient.js</DependentUpon>
-    </Content>
     <Content Include="Scripts\Fancytree\jquery-ui.custom.js" />
     <Content Include="Scripts\Fancytree\jquery.fancytree.childcounter.js" />
     <Content Include="Scripts\Fancytree\jquery.fancytree.filter.js" />

@@ -119,9 +119,15 @@ var n, o, d, i, s, a = [],
                             <div class="form-group" style="box-sizing: border-box;">
                                 <fieldset>
                                 <legend style="margin-bottom: 0.25em;">
-                                        @*<button class="btn btn-primary btn-block" id="btnSelectKeywords" style="width: 90%; margin: 0 auto;" data-toggle="modal" data-target="#SelectVariableModal">Select Keyword(s)...</button>*@
+                                    @*<button class="btn btn-primary btn-block" id="btnSelectKeywords" style="width: 90%; margin: 0 auto;" data-toggle="modal" data-target="#SelectVariableModal">Select Keyword(s)...</button>*@
                                     @*<button class="btn btn-primary btn-block" id="btnSelectKeywords" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectVariableModal">Select Keyword(s)...</button>*@
-                                    <button class="btn btn-primary btn-block" type="button" id="btnSelectKeywords" disabled style="margin: 0 auto;">Select Keyword(s)...</button>
+                                    @*<button class="btn btn-primary btn-block" type="button" id="btnSelectKeywords" disabled style="margin: 0 auto;">Select Keyword(s)...</button>*@
+                                    <button class="btn btn-primary btn-block" type="button" id="btnSelectKeywords" disabled style="margin: 0 auto;">
+                                        <h4 class="text-center" style="display: inline; vertical-align: middle;">
+                                            <span id="glyphiconSpanSK" class="glyphicon glyphicon-refresh spin" style="color: #32cd32;"></span>
+                                        </h4>
+                                        Loading Keyword(s)...
+                                    </button>
                                 </legend>
                                     <div style="overflow-y: scroll; max-height: 10em;">
                                     <ol id="olConcepts" style="list-style: circle;">

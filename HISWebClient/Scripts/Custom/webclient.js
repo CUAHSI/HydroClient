@@ -33,16 +33,56 @@ var ArrayOfNonObservedServices = ["84","187","189","226","262","267","274"]
 
 var taskCount = 0;
 
-//var filteredDataTables = { 'dtMarkers': null,
-//                           'dtTimeseries': null
-//                         };
-
 $(document).ready(function () {
 
     $("#pageloaddiv").hide();
     initialize();
-   
-})
+
+    //Periodically check selected time series...
+    //BCC - 28-Jul-2015 - Temporarily disabled - More research required!!
+    //setInterval(function () {
+    //    //console.log('Checking selected time series...');
+
+    //    //For each target id...
+    //    var targetIds = {
+    //        'btnZipSelections': { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' },
+    //        'btnZipSelectionsTS': { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS' }
+    //    };
+    //    var firstPart = 'Process '
+    //    var secondPart = ['Selection(s)', 'Selection', ' Selections'];
+
+    //    for (var targetId in targetIds) {
+    //        if ($('#' + targetId).is(":visible")) {
+    //            //Target Id visible - get associated check box element 
+    //            var chkbxId = targetIds[targetId].chkbxId;
+    //            var tableId = targetIds[targetId].tableId;
+    //            var table = $('#' + tableId).DataTable();
+
+    //            //if ($('#' + chkbxId).prop('checked')) {
+    //            //    //'Select Top n' checkbox checked, update targetId text...
+    //            //    var rows = table.rows({ 'order': 'current', 'search': 'applied' }).data();   //Retrieve rows per current sort/search order...
+    //            //    var totalRows = rows.length;
+
+    //            //    $('#' + targetId).val(firstPart + (totalRows < selectedTimeSeriesMax ? totalRows : selectedTimeSeriesMax) + secondPart[2]);
+    //            //}
+    //            //else {
+    //            //Check for any manual selections...
+    //            var selectedRows = table.rows('.selected').data();
+    //            var length = selectedRows.length;
+
+    //            if (0 < length) {
+    //                //Selections found - update targetId text...
+    //                $('#' + targetId).val(firstPart + (1 < length ? length + secondPart[2] : secondPart[1]));
+    //            } else {
+    //                //Nothing selected - reset targetId text...                    
+    //                $('#' + targetId).val(firstPart + secondPart[0]);
+    //            }
+    //            //}
+    //        }
+    //    }
+    //}, 250);
+
+});
 
 function initialize() {
 
@@ -406,12 +446,6 @@ function initialize() {
 
         //reset search parameters...
         resetSearchParameters();
-
-        //reset the current DataTable APIs...
-        //for (var key in filteredDataTables) {
-        //    filteredDataTables[key] = null;
-        //}
-
     });
 
     //click event for tab
@@ -916,18 +950,28 @@ function clickSelectKeywords(event) {
 //      If re-factoring is required later, please refer to the following article for a better
 //      designed approach:  Roel van Lisdonk - How to pass extra / additional parameters to the deferred.then() function in jQuery, $q (AngularJS) or Q. 
 //      http://www.roelvanlisdonk.nl/?p=3952 - 
-function loadKeywordsIntoTree( pShowUI, pbtnKeyword ) {
+function loadKeywordsIntoTree( pShowUI, pbtnKeyword, pbtnText, pglyphiconSpan ) {
 
     //Validate/initialize input parameters
     var showUI = false;     //Default
     var btnKeyword = null;
+    var btnText = null;
+    var glyphiconSpan = null;
     
     if (('undefined' !== typeof pShowUI) && ('boolean' === typeof pShowUI)) {
         showUI = pShowUI;
     }
 
     if (('undefined' !== typeof pbtnKeyword) && (null !== pbtnKeyword)) {
-        btnKeyword = '#' + pbtnKeyword;
+        btnKeyword = '#' + pbtnKeyword; 
+    }
+
+    if (('undefined' !== typeof pbtnText) && (null !== pbtnText)) {
+        btnText = pbtnText;
+    }
+
+    if (('undefined' !== typeof pglyphiconSpan) && (null !== pglyphiconSpan)) {
+        glyphiconSpan = '#' + pglyphiconSpan;
     }
 
     var tree = $("#tree").fancytree("getTree");
@@ -993,10 +1037,21 @@ function loadKeywordsIntoTree( pShowUI, pbtnKeyword ) {
                                     $('#SelectVariableModal').modal('show');
                                 }
 
-                                //Disable the keyword button...
+                                //Enable the keyword button...
                                 if (null !== btnKeyword) {
                                     $(btnKeyword).prop('disabled', false);
                                 }
+
+                                //Hide the glyphiconSpan...
+                                if (null !== glyphiconSpan) {
+                                    $(glyphiconSpan).hide();
+                                }
+
+                                //Set the keyword button text...
+                                if ((null !== btnKeyword) && (null !== btnText)) {
+                                    $(btnKeyword).text(btnText);
+                                }
+
                             }, 1000);
                         }
                     }).fail(function (data, textStatus, jqXHR) {
@@ -1627,11 +1682,6 @@ function updateMap(isNewRequest) {
    //get Markers
    var actionurl = '/home/updateMarkers';
 
-    //reset the current DataTable APIs...
-   //for (var key in filteredDataTables) {
-   //    filteredDataTables[key] = null;
-   //}
-
     $.ajax({
         url: actionurl,
         type: 'POST',
@@ -2252,27 +2302,8 @@ function setUpDatatables(clusterid)
 
                  //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
                  if ($('#chkbxSelectAll').prop('checked')) {
-                     //BC - Test - OK to call check box hander here?
+                     //BC - Call check box hander here
                      $('#chkbxSelectAll').triggerHandler('click');
-/*
-                     //Find the position of the new row per the current sort/search order...
-                     var tableId = 'dtMarkers';
-                     if (null === filteredDataTables[tableId]) {
-                         filteredDataTables[tableId] = $('#' + tableId).DataTable(); 
-                     }
-
-                     var table = filteredDataTables[tableId];
-                     var position = table.rows({ 'order': 'current', 'search': 'applied' })[0].indexOf(index);
-
-                     if (position < selectedTimeSeriesMax) {
-                     var jqueryObject = $(row);
-                         var className = 'selected';
-
-                         if (!jqueryObject.hasClass(className)) {
-                             jqueryObject.addClass(className);
-                        }
-                     }            
-*/                     
                  }
 
                  //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
@@ -2510,9 +2541,6 @@ function setfooterFilters(tableId, columnsArray, chkbxId) {
 
                     var dt = column.search(val ? '^' + val + '$' : '', true, false);
                     dt.draw();
-
-                    //Retain the DataTables API instance returned by search(...)
-                    //filteredDataTables[tableId] = dt;
 
                     //If 'Select Top' checkbox is checked, trigger the associated handler(s)
                     if ($('#' + chkbxId).prop('checked')) {
@@ -3216,30 +3244,8 @@ function setUpTimeseriesDatatable() {
 
             //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
             if ($('#chkbxSelectAllTS').prop('checked')) {
-                //BC - Test - OK to call check box hander here?
+                //BC - Call check box hander here
                 $('#chkbxSelectAllTS').triggerHandler('click');
-/*
-                //Find the position of the new row per the current sort/search order...
-                var tableId = 'dtTimeseries';
-                if (null === filteredDataTables[tableId]) {
-                    //console.log('No entry in filteredDataTables!!!');
-                    filteredDataTables[tableId] = $('#' + tableId).DataTable();
-                }
-
-                var table = filteredDataTables[tableId];
-                var position = table.rows({ 'order': 'current', 'search': 'applied' })[0].indexOf(index);
-
-                //console.log('Index: ' + index + ' Position: ' + position);
-
-                if (position < selectedTimeSeriesMax) {
-                      var jqueryObject = $(row);
-                      var className = 'selected';
-
-                      if (!jqueryObject.hasClass(className)) {
-                          jqueryObject.addClass(className);
-                     }
-                 }
-*/
             }
 
             //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
@@ -3327,12 +3333,6 @@ function setUpTimeseriesDatatable() {
 //DataTables search event handler...
 function dtSearchOrOrder(event, settings) {
     //console.log( 'dtSearch called!!!')
-
-    //var tableId = event.data.tableId;
-    //if (null === filteredDataTables[tableId]) {
-    //    filteredDataTables[tableId] = $('#' + tableId).DataTable();
-    //}
-
 
     if ( $('#' + event.data.chkbxId).prop('checked')) {
         $('#' + event.data.chkbxId).triggerHandler('click');
