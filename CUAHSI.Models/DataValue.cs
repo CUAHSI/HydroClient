@@ -52,8 +52,8 @@ namespace CUAHSI.Models
         [DataMember]
         public string Qualifier { get; set; }
 
-        [DataMember]
-        public string Speciation { get; set; }
+        //[DataMember]
+        //public string Speciation { get; set; }
 
         [DataMember]
         public string CensorCode { get; set; }
@@ -62,7 +62,7 @@ namespace CUAHSI.Models
         /// Default constructor. Sets properties to architecture-specific constant minima values.
         /// </summary>
         public DataValue()
-        { 
+        {
             TimeStamp = DateTime.MinValue;
             Value = Double.MinValue;
             Qualifier = String.Empty;
@@ -87,7 +87,7 @@ namespace CUAHSI.Models
         /// <param name="v"></param>
         public DataValue(ServerSideHydroDesktop.ObjectModel.DataValue v)
         {
-            TimeStamp = v.DateTimeUTC;
+            UTCTimeStamp = v.DateTimeUTC;
             UTCOffset = v.UTCOffset;
             LocalTimeStamp = v.LocalDateTime;
             Value = v.Value;

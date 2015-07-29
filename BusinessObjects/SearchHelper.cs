@@ -179,8 +179,8 @@ namespace HISWebClient.DataLayer
 			// Fix http://hydrodesktop.codeplex.com/workitem/8468
 			// HIS Central sometimes doesn't contains actual end dates for datasets,
 			// so always set end date of series to user-specified endDate.
-			var seriesEndDate = endDate; //var seriesEndDate = series.EndDate > endDate ? endDate : series.EndDate;
-
+			//var seriesEndDate = endDate; //
+            var seriesEndDate = series.EndDate > endDate ? endDate : series.EndDate;
 			var serverDateRange = series.EndDate.Subtract(series.BeginDate);
 			var userDateRange = seriesEndDate.Subtract(seriesStartDate);
 
