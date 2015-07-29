@@ -25,6 +25,11 @@ var selectedTimeSeriesMax = 25;
 
 var conceptsType = '';
 
+var selectedRowCounts = {
+    'dtMarkers': {'targetId': 'btnZipSelections', 'count': 0},
+    'dtTimeseries': { 'targetId': 'btnZipSelectionsTS', 'count': 0 }
+};
+
 //BC - 19-Jun-2015 - Disable concept counting - possible later use...
 //var selectedConceptsMax = 4;
 
@@ -39,48 +44,27 @@ $(document).ready(function () {
     initialize();
 
     //Periodically check selected time series...
-    //BCC - 28-Jul-2015 - Temporarily disabled - More research required!!
-    //setInterval(function () {
-    //    //console.log('Checking selected time series...');
+    setInterval(function () {
+        //console.log('Checking selected time series...');
+        var firstPart = 'Process '
+        var secondPart = ['Selection(s)', 'Selection', ' Selections'];        //For each tableId in selected row counts...
 
-    //    //For each target id...
-    //    var targetIds = {
-    //        'btnZipSelections': { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' },
-    //        'btnZipSelectionsTS': { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS' }
-    //    };
-    //    var firstPart = 'Process '
-    //    var secondPart = ['Selection(s)', 'Selection', ' Selections'];
+        for (var tableId in selectedRowCounts) {
+            if ($('#' + tableId).is(":visible")) {
+                //table visible - evaluate count
+                var count = selectedRowCounts[tableId].count;
+                var targetId = selectedRowCounts[tableId].targetId;
 
-    //    for (var targetId in targetIds) {
-    //        if ($('#' + targetId).is(":visible")) {
-    //            //Target Id visible - get associated check box element 
-    //            var chkbxId = targetIds[targetId].chkbxId;
-    //            var tableId = targetIds[targetId].tableId;
-    //            var table = $('#' + tableId).DataTable();
-
-    //            //if ($('#' + chkbxId).prop('checked')) {
-    //            //    //'Select Top n' checkbox checked, update targetId text...
-    //            //    var rows = table.rows({ 'order': 'current', 'search': 'applied' }).data();   //Retrieve rows per current sort/search order...
-    //            //    var totalRows = rows.length;
-
-    //            //    $('#' + targetId).val(firstPart + (totalRows < selectedTimeSeriesMax ? totalRows : selectedTimeSeriesMax) + secondPart[2]);
-    //            //}
-    //            //else {
-    //            //Check for any manual selections...
-    //            var selectedRows = table.rows('.selected').data();
-    //            var length = selectedRows.length;
-
-    //            if (0 < length) {
-    //                //Selections found - update targetId text...
-    //                $('#' + targetId).val(firstPart + (1 < length ? length + secondPart[2] : secondPart[1]));
-    //            } else {
-    //                //Nothing selected - reset targetId text...                    
-    //                $('#' + targetId).val(firstPart + secondPart[0]);
-    //            }
-    //            //}
-    //        }
-    //    }
-    //}, 250);
+                if (0 < count) {
+                    //Selections found - update targetId text...
+                    $('#' + targetId).val(firstPart + (1 < count ? count + secondPart[2] : secondPart[1]));
+                } else {
+                    //Nothing selected - reset targetId text...                    
+                    $('#' + targetId).val(firstPart + secondPart[0]);
+                }
+            }
+        }
+    }, 250);
 
 });
 
@@ -238,8 +222,15 @@ function initialize() {
     //Button click handler for Select Date Range...
     $('#btnDateRange').on('click', function (event) {
         //Assign current start and end date values to their modal counterparts...
-        $('#startDateModal').val($('#startDate').val());
-        $('#endDateModal').val($('#endDate').val());
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+
+        $('#startDateModal').val(startDate);
+        $('#endDateModal').val(endDate);
+
+        //Assign current start and end date values to the associated datepicker instances
+        $('#startDateModal').datepicker('setDate', startDate);
+        $('#endDateModal').datepicker('setDate', endDate);
     });
 
     //Button click handler for Date Range Modal Save 
@@ -1155,7 +1146,7 @@ function clickSelectDataServices(event) {
         }
     }
 
-    enableDisableButton('#dtServices', '#btnClearSelectionsDS');
+    enableDisableButton('dtServices', 'btnClearSelectionsDS');
 }
 
 function getMapHeight()
@@ -2198,7 +2189,7 @@ function setupServices()
             });
         }
 
-        enableDisableButton('#dtServices', '#btnClearSelectionsDS');
+        enableDisableButton('dtServices', 'btnClearSelectionsDS');
     });
 
     //BC - Test - add a custom toolbar to the table...
@@ -2208,7 +2199,7 @@ function setupServices()
 
     //Avoid multiple registrations of the same handler...
     $('#btnClearSelectionsDS').off('click', clearServicesSelections);
-    $('#btnClearSelectionsDS').on('click', { 'tableId': '#dtServices', 'btnId': '#btnClearSelectionsDS' }, clearServicesSelections);
+    $('#btnClearSelectionsDS').on('click', { 'tableId': 'dtServices', 'btnId': 'btnClearSelectionsDS' }, clearServicesSelections);
 
     //return table;
 }
@@ -2389,7 +2380,7 @@ function setUpDatatables(clusterid)
     //Source: https://datatables.net/examples/api/select_row.html
     //Avoid multiple registrations of the same handler...
     $('#dtMarkers tbody').off('click', 'tr', toggleSelected);
-    $('#dtMarkers tbody').on('click', 'tr', {'tableId': '#dtMarkers', 'btnId': '#btnZipSelections', 'btnClearId': '#btnClearSelections'},toggleSelected);
+    $('#dtMarkers tbody').on('click', 'tr', {'tableId': 'dtMarkers', 'btnId': 'btnZipSelections', 'btnClearId': 'btnClearSelections'},toggleSelected);
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
@@ -2409,15 +2400,15 @@ function setUpDatatables(clusterid)
 
     //Avoid multiple registrations of the same handler...
     $('#chkbxSelectAll').off('click', selectAll);
-    $('#chkbxSelectAll').on('click', { 'tableId': '#dtMarkers', 'chkbxId': '#chkbxSelectAll', 'btnId': '#btnZipSelections', 'btnClearId': '#btnClearSelections'}, selectAll);
+    $('#chkbxSelectAll').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll', 'btnId': 'btnZipSelections', 'btnClearId': 'btnClearSelections'}, selectAll);
 
     //Avoid multiple registrations of the same handler...
     $('#btnZipSelections').off('click', zipSelections);
-    $('#btnZipSelections').on('click', { 'tableId': '#dtMarkers', 'chkbxId': '#chkbxSelectAll' }, zipSelections);
+    $('#btnZipSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, zipSelections);
 
     //Avoid multiple registrations of the same handler...
     $('#btnClearSelections').off('click', clearSelections);
-    $('#btnClearSelections').on('click', { 'tableId': '#dtMarkers', 'chkbxId': '#chkbxSelectAll', 'btnId': '#btnZipSelections', 'btnClearId': '#btnClearSelections' }, clearSelections);
+    $('#btnClearSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll', 'btnId': 'btnZipSelections', 'btnClearId': 'btnClearSelections' }, clearSelections);
 
     //Add DataTables event handlers...
     //Search event...
@@ -2578,7 +2569,14 @@ function updateServicesList()
 }
 
 function toggleSelected(event) {
-    $(this).toggleClass('selected');
+    var className = 'selected';
+
+    $(this).toggleClass(className);
+
+    //Update selected row count...
+    var count = selectedRowCounts[event.data.tableId].count;
+
+    selectedRowCounts[event.data.tableId].count = $(this).hasClass(className) ? count + 1 : count - 1;
 
     //Check state of 'Process Selections' button...
     enableDisableButton(event.data.tableId, event.data.btnId);
@@ -2648,7 +2646,7 @@ function addRowStylesDM(newrow) {
 function selectAll(event) {
 
     //Clear ALL table selections, regardless of current sort/search order
-    var table = $(event.data.tableId).DataTable();
+    var table = $('#' + event.data.tableId).DataTable();
     var rows = table.rows();                    //Retrieve ALL rows
     var nodesRendered = rows.nodes();           //Retrieve all the rendered nodes for these rows
                                                 //NOTE: Rendered nodes retrieved in the same order as the rows...
@@ -2659,13 +2657,17 @@ function selectAll(event) {
     jqueryObjects.removeClass(className);
 
     //Apply 'selected' class to the 'top' <selectedTimeSeriesMax> rendered nodes, if indicated 
-    if ($(event.data.chkbxId).prop("checked")) {
+    if ($('#' + event.data.chkbxId).prop("checked")) {
         //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
         //Source: http://datatables.net/reference/api/rows().nodes()
         rows = table.rows({ 'order': 'current', 'search': 'applied' });    //Retrieve rows per current sort/search order...
-        nodesRendered = rows.nodes();                                    //Retrieve all the rendered nodes for these rows
+        var totalRows = rows[0].length;
 
+        nodesRendered = rows.nodes();                                    //Retrieve all the rendered nodes for these rows
         var length = nodesRendered.length;
+
+        //Set the selected row count...
+        selectedRowCounts[event.data.tableId].count = totalRows < selectedTimeSeriesMax ? totalRows : selectedTimeSeriesMax;
 
         //For each rendered node...
         for (var i = 0; i < length; ++i) {
@@ -2683,6 +2685,10 @@ function selectAll(event) {
             }
         }
     }
+    else {
+        //Reset the selected row count...
+        selectedRowCounts[event.data.tableId].count = 0;
+    }
 
     //Check state of 'Process Selections' button...
     enableDisableButton(event.data.tableId, event.data.btnId);
@@ -2694,7 +2700,7 @@ function clearSelections(event) {
 
     //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
     //Source: http://datatables.net/reference/api/rows().nodes()
-    var table = $(event.data.tableId).DataTable();
+    var table = $('#' + event.data.tableId).DataTable();
 //    var rows = table.rows({ 'order': 'current', 'search': 'applied' });     //Retrieve rows per current sort/search order...
     var rows = table.rows();     //Retrieve ALL rows
     var nodesRendered = rows.nodes();                                       //Retrieve all the rendered nodes for these rows
@@ -2705,8 +2711,11 @@ function clearSelections(event) {
     //Remove selected class from all rendered rows...
     jqueryObjects.removeClass(className);
 
+    //Reset the selected row count...
+    selectedRowCounts[event.data.tableId].count = 0;
+
     //Uncheck the 'top ...' checkbox
-    $(event.data.chkbxId).prop("checked", false);
+    $('#' + event.data.chkbxId).prop("checked", false);
 
     //Check button states...
     enableDisableButton(event.data.tableId, event.data.btnId);
@@ -2717,7 +2726,7 @@ function clearSelections(event) {
 function clearServicesSelections(event) {
     //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
     //Source: http://datatables.net/reference/api/rows().nodes()
-    var table = $(event.data.tableId).DataTable();
+    var table = $('#' + event.data.tableId).DataTable();
     var rows = table.rows({ 'order': 'current', 'search': 'applied' });     //Retrieve rows per current sort/search order...
     var nodesRendered = rows.nodes();                                       //Retrieve all the rendered nodes for these rows
     //NOTE: Rendered nodes retrieved in the same order as the rows...
@@ -2740,15 +2749,15 @@ function clearServicesSelections(event) {
 //Set/reset 'disabled' attribute on referenced button per contents of referenced Data Table...
 function enableDisableButton(tableId, btnId) {
 
-    var table = $(tableId).DataTable();
+    var table = $('#' + tableId).DataTable();
     var selectedRows = table.rows('.selected').data();
     var selectedCount = selectedRows.length;
 
     if (0 < selectedCount) {
-        $(btnId).prop('disabled', false);
+        $('#' + btnId).prop('disabled', false);
     }
     else {
-        $(btnId).prop('disabled', true);
+        $('#' + btnId).prop('disabled', true);
     }
 }
 
@@ -2764,34 +2773,34 @@ function displayAndFadeLabel(labelClass) {
 }
 
 //Enable/disable 'Select All' checkbox per max. selectable row count check...
-function dataTableLoad(event, settings, json, xhr) {
+//function dataTableLoad(event, settings, json, xhr) {
 
-    if ((null !== json) && (null !== json.data)) {
-        //Successful AJAX query - check total rows received against max. selectable row count...
-        var length = json.data.length;
-        var propValue = (selectedTimeSeriesMax >= length) ? false : true;
+//    if ((null !== json) && (null !== json.data)) {
+//        //Successful AJAX query - check total rows received against max. selectable row count...
+//        var length = json.data.length;
+//        var propValue = (selectedTimeSeriesMax >= length) ? false : true;
 
-        //$(event.data.chkbxId).prop('disabled', propValue);
+//        //$(event.data.chkbxId).prop('disabled', propValue);
 
-        //Remove the tooltip and title attributes...
-        $(event.data.chkbxId).removeAttr('data-toggle data-placement title');
-        $(event.data.chkbxId).removeClass('disabled');
-        //$(event.data.chkbxId).prop('disabled', propValue);
+//        //Remove the tooltip and title attributes...
+//        $(event.data.chkbxId).removeAttr('data-toggle data-placement title');
+//        $(event.data.chkbxId).removeClass('disabled');
+//        //$(event.data.chkbxId).prop('disabled', propValue);
 
-        if (true === propValue) {
-            //Checkbox disabled - add disabled class 
-            $(event.data.chkbxId).addClass('disabled');
+//        if (true === propValue) {
+//            //Checkbox disabled - add disabled class 
+//            $(event.data.chkbxId).addClass('disabled');
 
-            //Add tooltip explaining why
-            $(event.data.chkbxId).attr('data-toggle', 'tooltip');
-            $(event.data.chkbxId).attr('data-placement', 'right');
-            $(event.data.chkbxId).attr('title', 'The total timeseries rows (' + length.toString() + ') exceed the selectable maximum (' + selectedTimeSeriesMax.toString() + ')');
+//            //Add tooltip explaining why
+//            $(event.data.chkbxId).attr('data-toggle', 'tooltip');
+//            $(event.data.chkbxId).attr('data-placement', 'right');
+//            $(event.data.chkbxId).attr('title', 'The total timeseries rows (' + length.toString() + ') exceed the selectable maximum (' + selectedTimeSeriesMax.toString() + ')');
 
-            //Enable Bootstrap tooltips...
-            $('[data-toggle="tooltip"]').tooltip();
-        }
-    }
-}
+//            //Enable Bootstrap tooltips...
+//            $('[data-toggle="tooltip"]').tooltip();
+//        }
+//    }
+//}
 
 function zipSelections(event) {
 
@@ -2810,10 +2819,10 @@ function zipSelections(event) {
 
     //Create the list of selected time series ids...
     //var table = $('#dtMarkers').DataTable();
-    var table = $(event.data.tableId).DataTable();
+    var table = $('#' + event.data.tableId).DataTable();
     var selectedRows = table.rows('.selected').data();
 
-    if ($(event.data.chkbxId).prop("checked") && (selectedTimeSeriesMax > selectedRows.length)) {
+    if ($('#' + event.data.chkbxId).prop("checked") && (selectedTimeSeriesMax > selectedRows.length)) {
         //User has clicked the 'Select Top ...' check box but not all selected rows have been rendered
         //NOTE: If the DataTable instance has the 'deferRender' option set - not all rows may have been rendered at this point.
         //        Thus one cannot rely on the selectedRows above, since in this case only rendered rows appear in the selectedRows...
@@ -3291,7 +3300,7 @@ function setUpTimeseriesDatatable() {
     //Source: https://datatables.net/examples/api/select_row.html
     //Avoid multiple registrations of the same handler...
     $('#dtTimeseries tbody').off('click', 'tr', toggleSelected);
-    $('#dtTimeseries tbody').on('click', 'tr', { 'tableId': '#dtTimeseries', 'btnId': '#btnZipSelectionsTS', 'btnClearId': '#btnClearSelectionsTS' }, toggleSelected);
+    $('#dtTimeseries tbody').on('click', 'tr', { 'tableId': 'dtTimeseries', 'btnId': 'btnZipSelectionsTS', 'btnClearId': 'btnClearSelectionsTS' }, toggleSelected);
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
@@ -3310,15 +3319,15 @@ function setUpTimeseriesDatatable() {
 
     //Avoid multiple registrations of the same handler...
     $('#chkbxSelectAllTS').off('click', selectAll);
-    $('#chkbxSelectAllTS').on('click', { 'tableId': '#dtTimeseries', 'chkbxId': '#chkbxSelectAllTS', 'btnId': '#btnZipSelectionsTS', 'btnClearId': '#btnClearSelectionsTS'}, selectAll);
+    $('#chkbxSelectAllTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS', 'btnId': 'btnZipSelectionsTS', 'btnClearId': 'btnClearSelectionsTS'}, selectAll);
 
     //Avoid multiple registrations of the same handler...
     $('#btnZipSelectionsTS').off('click', zipSelections);
-    $('#btnZipSelectionsTS').on('click', { 'tableId': '#dtTimeseries', 'chkbxId': '#chkbxSelectAllTS'}, zipSelections);
+    $('#btnZipSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS'}, zipSelections);
 
     //Avoid multiple registrations of the same handler...
     $('#btnClearSelectionsTS').off('click', clearSelections);
-    $('#btnClearSelectionsTS').on('click', { 'tableId': '#dtTimeseries', 'chkbxId': '#chkbxSelectAllTS', 'btnId': '#btnZipSelectionsTS', 'btnClearId': '#btnClearSelectionsTS' }, clearSelections);
+    $('#btnClearSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS', 'btnId': 'btnZipSelectionsTS', 'btnClearId': 'btnClearSelectionsTS' }, clearSelections);
 
     //Add DataTables event handlers...
     //Search event...
