@@ -2216,6 +2216,9 @@ function setUpDatatables(clusterid)
         $('#dtMarkers').DataTable().clear().destroy();
     }
     
+    //Reset the selected row count...
+    selectedRowCounts['dtMarkers'].count = 0;
+
 
     //var dataSet = getDetailsForMarker(clusterid)
     var actionUrl = "/home/getDetailsForMarker/" + clusterid
@@ -2570,13 +2573,21 @@ function updateServicesList()
 
 function toggleSelected(event) {
     var className = 'selected';
+    var nonClassName = 'notSelected';
 
     $(this).toggleClass(className);
 
     //Update selected row count...
     var count = selectedRowCounts[event.data.tableId].count;
 
-    selectedRowCounts[event.data.tableId].count = $(this).hasClass(className) ? count + 1 : count - 1;
+    //selectedRowCounts[event.data.tableId].count = $(this).hasClass(className) ? count + 1 : count - 1;
+    if ($(this).hasClass(className)) {
+        selectedRowCounts[event.data.tableId].count = count + 1;
+        $(this).removeClass(nonClassName);  //Remove manually unselected indicator...
+    } else {
+        selectedRowCounts[event.data.tableId].count = count - 1;
+        $(this).addClass(nonClassName);     //Mark row as manually unselected by user...
+    }
 
     //Check state of 'Process Selections' button...
     enableDisableButton(event.data.tableId, event.data.btnId);
@@ -2652,6 +2663,7 @@ function selectAll(event) {
                                                 //NOTE: Rendered nodes retrieved in the same order as the rows...
     var jqueryObjects = nodesRendered.to$();    //Convert to jQuery Objects!!
     var className = 'selected';
+    var nonClassName = 'notSelected';
 
     //Remove selected class from all rendered rows...
     jqueryObjects.removeClass(className);
@@ -2666,8 +2678,8 @@ function selectAll(event) {
         nodesRendered = rows.nodes();                                    //Retrieve all the rendered nodes for these rows
         var length = nodesRendered.length;
 
-        //Set the selected row count...
-        selectedRowCounts[event.data.tableId].count = totalRows < selectedTimeSeriesMax ? totalRows : selectedTimeSeriesMax;
+        //Initialize the selected row count...
+        var count = totalRows < selectedTimeSeriesMax ? totalRows : selectedTimeSeriesMax;
 
         //For each rendered node...
         for (var i = 0; i < length; ++i) {
@@ -2676,14 +2688,22 @@ function selectAll(event) {
             var position = rows[0].indexOf(nodesRendered[i]._DT_RowIndex)
             
             if (position < selectedTimeSeriesMax) {
-                //Row is within the 'top' <selectedTimeSeriesMax> - apply class...
+                //Row is within the 'top' <selectedTimeSeriesMax> - apply class, if indicated
                 var jqueryObject = $(nodesRendered[i]);
 
                 if (null !== jqueryObject) {
+                    //Check for a manually unselected row, skip if found...
+                    if (jqueryObject.hasClass(nonClassName)) {
+                        --count;    
+                        continue;
+                    }
+
                     jqueryObject.addClass(className);   //Apply class...
                 }
             }
         }
+
+        selectedRowCounts[event.data.tableId].count = count;
     }
     else {
         //Reset the selected row count...
@@ -2707,9 +2727,11 @@ function clearSelections(event) {
                                                                             //NOTE: Rendered nodes retrieved in the same order as the rows...
     var jqueryObjects = nodesRendered.to$();    //Convert to jQuery Objects!!
     var className = 'selected';
+    var nonClassName = 'notSelected';
 
     //Remove selected class from all rendered rows...
     jqueryObjects.removeClass(className);
+    jqueryObjects.removeClass(nonClassName);
 
     //Reset the selected row count...
     selectedRowCounts[event.data.tableId].count = 0;
@@ -2832,18 +2854,29 @@ function zipSelections(event) {
         //var rows = table.rows().data();
 
         //var positions = table.rows({'order': 'current', 'search': 'applied'})[0];   //Retrieve rows per current sort/search order...
-        var rows = table.rows({'order' : 'current', 'search': 'applied'}).data();   //Retrieve rows per current sort/search order...
+        //var rows = table.rows({'order' : 'current', 'search': 'applied'}).data();   //Retrieve rows per current sort/search order...
+        var rows = table.rows({ 'order': 'current', 'search': 'applied' });           //Retrieve rows per current sort/search order...
 
-        var length = rows.length;
+        var length = rows[0].length;    //Need length of rows array here!!
         selectedRows = [];
 
         for (var i = 0; i < length; ++i) {
             //var position = positions.indexOf(i);
-            var position = i;
+            //var position = i;
+            var position = rows[0].indexOf(i);
+
+            //If row is rendered, check if selected...
+            var node = table.row(i).node();
+            if (null !== node) {
+                var jqueryObj = $(node); 
+                if (jqueryObj.hasClass('notSelected')) {
+                    continue;   //Row rendered and NOT selected, continue to next row...
+                }
+            }
 
             if (position < selectedTimeSeriesMax) {
-                //Current row position within 'Select Top ...' - append row to selected rows...
-                selectedRows.push(rows[i]);
+                //Current row position within 'Select Top ...' - append row data to selected rows...
+                selectedRows.push(table.row(i).data());
             }
         }
     }
@@ -3194,6 +3227,9 @@ function setUpTimeseriesDatatable() {
     {
         $('#dtTimeseries').DataTable().clear().destroy();
     }
+
+    //Reset the selected row count...
+    selectedRowCounts['dtTimeseries'].count = 0;
 
     //Set page title...
 //    $('#dataview #myModalLabel').html('List of Timeseries near Selected Area');
