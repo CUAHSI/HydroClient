@@ -69,7 +69,7 @@ namespace CUAHSI.Models
             TimeStamp = DateTime.MinValue;
             Value = Double.MinValue;
             Qualifier = String.Empty;
-			QualifierDescription = String.Empty;
+			QualifierDescription = String.Empty;	//10-Aug-2015 - BCC - GitHub Issue #33 - Include Qualifier Description in downloaded time series data
             CensorCode = String.Empty;
             ValueAccuracy = 0;
             OffsetType = String.Empty;
@@ -99,6 +99,7 @@ namespace CUAHSI.Models
             if (v.Qualifier != null)
             {
                 Qualifier = v.Qualifier.Code;
+				//10-Aug-2015 - BCC - GitHub Issue #33 - Include Qualifier Description in downloaded time series data
 				QualifierDescription = v.Qualifier.Description;
             }
             if (v.OffsetType != null)

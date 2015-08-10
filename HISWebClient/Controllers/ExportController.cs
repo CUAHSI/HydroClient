@@ -726,6 +726,8 @@ namespace HISWebClient.Controllers
 				//DataValues
 
 				//csvwrtr.ValueSeparator = Char.Parse(",");
+
+				//10-Aug-2015 - BCC - GitHub Issue #33 - Include Qualifier Description in downloaded time series data
 				csvwrtr.WriteRecord(new List<string>() 
 						{ 
 							"UTCTimeStamp", 

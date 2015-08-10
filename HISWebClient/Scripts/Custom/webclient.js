@@ -2011,7 +2011,8 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 function addFilterPlaceholders(event) {
 
     var tableId = event.data.tableId;
-    var placeHolders = ['Organization', 'Service Code', 'Keyword', 'Variable Name'];
+    //BCC - 10-Aug-2015 - GitHub Issue #35 - Add filter by Site Name
+    var placeHolders = ['Organization', 'Service Code', 'Keyword', 'Variable Name', 'Site Name'];
 
     var selector = '#' + tableId + '_wrapper > div.dataTables_scroll > div.dataTables_scrollFoot > div > table > tfoot > tr > th > select';
 
@@ -2348,7 +2349,8 @@ function setUpDatatables(clusterid)
          },
         initComplete: function () {
 
-            setfooterFilters('dtMarkers', [0, 1, 2, 4], 'chkbxSelectAll');
+            //BCC - 10-Aug-2015 - GitHub Issue #35 - Add filter by Site Name 
+            setfooterFilters('dtMarkers', [0, 1, 2, 4, 10], 'chkbxSelectAll');
 
             //BC - 10-Jul-2015 - Temporarily disable tooltips...
             //setUpTooltips('dtMarkers');
@@ -3325,7 +3327,8 @@ function setUpTimeseriesDatatable() {
         },
         "initComplete": function () {
 
-            setfooterFilters('dtTimeseries', [0, 1, 2, 4], 'chkbxSelectAllTS');
+            //BCC - 10-Aug-2015 - GitHub Issue #35 - Add filter by Site Name
+            setfooterFilters('dtTimeseries', [0, 1, 2, 4, 10], 'chkbxSelectAllTS');
 
             oTable.fnAdjustColumnSizing();
         }
