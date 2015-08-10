@@ -52,7 +52,10 @@ namespace CUAHSI.Models
         [DataMember]
         public string Qualifier { get; set; }
 
-        //[DataMember]
+		[DataMember]
+		public string QualifierDescription { get; set; }
+
+		//[DataMember]
         //public string Speciation { get; set; }
 
         [DataMember]
@@ -66,6 +69,7 @@ namespace CUAHSI.Models
             TimeStamp = DateTime.MinValue;
             Value = Double.MinValue;
             Qualifier = String.Empty;
+			QualifierDescription = String.Empty;
             CensorCode = String.Empty;
             ValueAccuracy = 0;
             OffsetType = String.Empty;
@@ -95,6 +99,7 @@ namespace CUAHSI.Models
             if (v.Qualifier != null)
             {
                 Qualifier = v.Qualifier.Code;
+				QualifierDescription = v.Qualifier.Description;
             }
             if (v.OffsetType != null)
             {

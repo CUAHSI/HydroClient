@@ -738,6 +738,7 @@ namespace HISWebClient.Controllers
 							"OffsetDescription",
 							"OffsetUnit",
 							"Qualifier",
+							"QualifierDescription"
 						});
 
 				foreach (DataValue value in data.values)
@@ -753,7 +754,7 @@ namespace HISWebClient.Controllers
 					values.Add(value.OffsetDescription);
 					values.Add(value.OffsetUnit);
 					values.Add(value.Qualifier);
-                    
+					values.Add(value.QualifierDescription);
                     
 					//values.Add(value.);
 					csvwrtr.WriteRecord(values);
