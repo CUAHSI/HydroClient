@@ -2577,23 +2577,141 @@ function toggleSelected(event) {
     var className = 'selected';
     var nonClassName = 'notSelected';
 
+    var startRange = 'startRange';
+    var endRange = 'endRange';
+
+    //Check selected row count...
+    var count = selectedRowCounts[event.data.tableId].count;
+
+    if ((selectedTimeSeriesMax <= count) && (! $(this).hasClass(className))) {
+        //Maximum selections reached - current row not yet selected - warn and return early
+        bootbox.alert('<h4>A maximum of ' + selectedTimeSeriesMax + ' time series rows may be selected.</h4>');
+        return;
+    }
+
+    //Retrieve current table rows as jqueryObjects...
+    var jqueryRows = $('#' + event.data.tableId).DataTable().rows().nodes().to$();
+    var bStart = jqueryRows.hasClass(startRange);
+
+    if (event.shiftKey && (!$(this).hasClass(className)) && bStart) {
+        //User has pressed SHIFT+click - current row not yet selected - 'start range' assigned to another row - process range selection
+        $(this).addClass(endRange);
+        processRangeSelection(event.data.tableId, startRange, endRange, className, nonClassName);
+        return;
+    } 
+
     $(this).toggleClass(className);
 
     //Update selected row count...
-    var count = selectedRowCounts[event.data.tableId].count;
-
     //selectedRowCounts[event.data.tableId].count = $(this).hasClass(className) ? count + 1 : count - 1;
     if ($(this).hasClass(className)) {
         selectedRowCounts[event.data.tableId].count = count + 1;
         $(this).removeClass(nonClassName);  //Remove manually unselected indicator...
+
+        //Set current row as 'start of range'
+        jqueryRows.removeClass(startRange);
+        $(this).addClass(startRange);
+
     } else {
         selectedRowCounts[event.data.tableId].count = count - 1;
         $(this).addClass(nonClassName);     //Mark row as manually unselected by user...
+
+        //Remove 'range' classes, if any
+        $(this).removeClass(startRange);
+        $(this).removeClass(endRange);
     }
 
     //Check state of 'Process Selections' button...
     enableDisableButton(event.data.tableId, event.data.btnId);
     enableDisableButton(event.data.tableId, event.data.btnClearId);
+}
+
+//Process the range selection for the input table Id
+function processRangeSelection(tableId, startRangeClass, endRangeClass, selectClass, unSelectClass) {
+    //alert('processRangeSelection called...');
+    
+    //Validate/initialize input parameters...
+    if (( 'undefined' === typeof tableId) || (null === tableId) ||
+        ('undefined' === typeof startRangeClass) || (null === startRangeClass) ||
+        ('undefined' === typeof endRangeClass) || (null === endRangeClass) ||
+        ('undefined' === typeof selectClass) || (null === selectClass) ||
+        ('undefined' === typeof unSelectClass) || (null === unSelectClass)) {
+        return;
+    }
+
+    //Check for presence of 'startRange' and 'endRange' classes on table rows...
+    var table = $('#' + tableId).DataTable();
+    var rows = table.rows({ 'order': 'current', 'search': 'applied' });    //Retrieve rows per current sort/search order...
+    var jqueryRows = rows.nodes().to$();
+
+    var startRow = table.row('.' + startRangeClass);
+    var endRow = table.row('.' + endRangeClass);
+
+    if ((0 >= startRow.length) || (0 >= endRow.length)) {
+        //Class(es) not found - return
+        return;
+    }
+
+    //Determine start and end range positions
+    var startPos = rows[0].indexOf(startRow.index());
+    var endPos = rows[0].indexOf(endRow.index());
+
+    //Verify start and end range positions are on the current table 'page'...
+    var pageInfo = table.page.info();
+
+    if (((startPos < endPos) && (startPos < pageInfo.start || endPos > pageInfo.end)) ||
+        ((startPos > endPos) && (endPos < pageInfo.start || startPos > pageInfo.end))) {
+        //Start and/or end range positions NOT on current table 'page' - warn, remove start and end range classe, return
+        bootbox.alert("Multiple row selection limited to the current table 'page'.");
+
+        jqueryRows.removeClass(startRangeClass);
+        jqueryRows.removeClass(endRangeClass);
+
+        return;
+    }
+
+    //Check 'rows to select' count and current rows selected count against allowed maximum...
+    var toSelect = Math.abs(endPos - startPos);
+    var count = selectedRowCounts[tableId].count;
+
+    if (selectedTimeSeriesMax < (toSelect + count)) {
+        //Allowed maximum exceeded - warn, remove start and end range classes, return
+        bootbox.alert('Specified range and selected rows (' + (toSelect + count) + ') exceed the maximum allowed (' + selectedTimeSeriesMax + ')');
+
+        jqueryRows.removeClass(startRangeClass);
+        jqueryRows.removeClass(endRangeClass);
+
+        return;
+    }
+
+    //All rows in specified range selectable, update count
+    selectedRowCounts[tableId].count = toSelect + count;
+    
+    //Remove start and end range classes
+    jqueryRows.removeClass(startRangeClass);
+    jqueryRows.removeClass(endRangeClass);
+
+    //Apply 'select' class to range 
+    var lower = startPos;
+    var upper = endPos;
+
+    if (startPos > endPos) {
+        //Reverse range - adjust lower and upper values
+        lower = endPos;
+        upper = startPos
+    }
+
+    var length = jqueryRows.length;
+    for (var i = 0; i < length; ++i) {
+        var pos = rows[0].indexOf(jqueryRows[i]._DT_RowIndex);
+
+        if (pos >= lower && pos <= upper) {
+            var jqueryObject = $(jqueryRows[i]);
+
+            jqueryObject.removeClass(unSelectClass);
+            jqueryObject.addClass(selectClass);
+        }
+    }
 }
 
 function clovisButtonClick(event) {

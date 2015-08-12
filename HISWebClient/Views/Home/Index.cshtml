@@ -63,7 +63,7 @@ var n, o, d, i, s, a = [],
                 <h3 class="modal-title" id="myModalLabel">Timeseries in Current Map Area</h3>
                 <h5 style="margin-bottom: 1em;">To download one or more data files, please click the associated table row(s) and click the 'Process Selections' button.</h5>
             </div>
-            <div class="modal-body-full" id="dtTimeSeriesModal">
+            <div class="modal-body-full disable-selection" id="dtTimeSeriesModal">
             @* BCC- 23-Jul-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set max-width: none on the table element!!
                NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
                Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
@@ -641,7 +641,7 @@ var n, o, d, i, s, a = [],
                NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
                Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
            *@
-                <table id="dtMarkers" class="display" cellspacing="0" style="max-width: none;">
+                <table id="dtMarkers" class="display disable-selection" cellspacing="0" style="max-width: none;">
                     <thead>
                         <tr>                           
                             @Html.Partial("_DatatableTimeseriesColumns")
