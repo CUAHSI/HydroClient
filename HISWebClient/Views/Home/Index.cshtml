@@ -217,14 +217,9 @@ var n, o, d, i, s, a = [],
                 <h3 class="modal-title" id="myModalLabel">Download Manager</h3>
             </div>
             <div class="modal-body modal-body-full row">
-                <!-- BCC - Try a dynamically sized font here...
-                     Source: http://stackoverflow.com/questions/14537611/bootstrap-responsive-text-size
-                -->
-                @*<table id="tblDownloadManager" class="table table-hover table-fixed" style="font-size: 1.5vmin; margin: 0 auto;">*@
-                @*<table id="tblDownloadManager" class="table table-hover table-fixed" style="font-size: 2.0vmin;">*@
-                <table id="tblDownloadManager" class="table table-hover table-fixed" style="font-size: 2.0vmin;">
+
+                <table id="tblDownloadManagerHeaders" class="table">
                     <thead>
-                        @*<tr class="active">*@
                         <tr>
                             <th class="text-center" style="display: none; vertical-align: middle;">Request ID</th>
                             <th class="text-center" style="width: 15%; vertical-align: middle;">
@@ -236,21 +231,27 @@ var n, o, d, i, s, a = [],
                             <th class="text-center" style="width: 40%; vertical-align: middle;">
                                 <label class="btn" style="font-size: 1em; font-weight: bold; margin: 0 auto;">Time Series Archive</label>
                             </th>
-                            <th class="text-center" style="width: 13%; vertical-align: middle !important;">
+                            <th class="text-center" style="width: 20%; vertical-align: middle !important;">
                                 <input type="button" class="btn btn-primary text-center" id="btnDownloadAll" style="font-size: 1em; margin: 0 auto;" value="Download All Archives" />
                             </th>
-                            @*<th style="width: 2%">
-                                <label class="btn" style="font-size: 1em; font-weight: bold; margin: 0 auto;"></label>
-                           </th>*@
                         </tr>
                     </thead>
-                    <tbody></tbody>
-                    <tfoot>
-                        <tr>
-                                @*<td>Footer text goes here</td>*@
-                        </tr>
-                    </tfoot>
                 </table>
+                <div class="div-table-content">
+                    <!-- BCC - Try a dynamically sized font here...
+             Source: http://stackoverflow.com/questions/14537611/bootstrap-responsive-text-size
+        -->
+                    @*<table id="tblDownloadManager" class="table table-hover table-fixed" style="font-size: 1.5vmin; margin: 0 auto;">*@
+                    @*<table id="tblDownloadManager" class="table table-hover table-fixed" style="font-size: 2.0vmin;">*@
+                    <table id="tblDownloadManager" class="table table-hover" style="font-size: 2.0vmin;">
+                        <tbody></tbody>
+                        <tfoot>
+                            <tr>
+                                @*<td>Footer text goes here</td>*@
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
             <div class="modal-footer">
                 @*<p>This is the modal footer!!</p>*@

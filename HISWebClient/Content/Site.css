@@ -378,17 +378,13 @@ font-weight: 300;
 	Source: http://www.bootply.com/qdLCAlG9fm
 */
 
-.table-fixed thead {
-  /*width: 97%; */
+/*.table-fixed thead {
   width: 98%;
 }
 .table-fixed tbody {
-  /* height: 230px; */
   height: 30em;
-  /*overflow-y: auto;*/
   overflow-y: scroll;
   width: 100%;
-  /*border: 1px solid red;*/
 }
 .table-fixed thead, .table-fixed tbody, .table-fixed tr, .table-fixed td, .table-fixed th {
   display: block;
@@ -401,7 +397,20 @@ font-weight: 300;
 .table-fixed th {
   padding: 10px !important;
   margin: 0 !important;
+}*/
+
+/* 
+    Simplified approach to table with fixed header and vertical scroll bar...
+    Sources:  http://w3facility.org/question/twitter-bootstrap-scrollable-table-rows-and-fixed-header/ 
+              Answer from Raffian 29-Dec-2013
+              http://jsfiddle.net/SAFX/Mq52k/16/
+*/
+.div-table-content {
+  overflow-y: auto;
+  height: 30em;
+  width: 100%;  /* BCC - 13-Aug-2015 - Added width: 100% to make div visible!! */
 }
+
 
 /* Styling for Bootstrap tooltips... */
 #chkbxSelectAll + .tooltip > .tooltip-inner, #chkbxSelectAllTS + .tooltip > .tooltip-inner  {

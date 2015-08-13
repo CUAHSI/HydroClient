@@ -2771,7 +2771,8 @@ function addRowStylesDM(newrow) {
     //Cell: 4
     td = newrow.find('td:eq(4)');
     td.addClass('text-center');
-    td.css({ 'vertical-align': 'middle', 'height': '3em', 'width': '13%'});
+    //td.css({ 'vertical-align': 'middle', 'height': '3em', 'width': '13%'});
+    td.css({ 'vertical-align': 'middle', 'height': '3em', 'width': '20%' });
 }
 
 function selectAll(event) {
