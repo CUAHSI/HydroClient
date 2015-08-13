@@ -97,6 +97,41 @@ namespace HISWebClient.Util
             return (blobUri);
         }
 
+		//Purge all blobs older than the input time period (compared to the current date/time) 
+		public void PurgeBlobsOlderThan(TimeSpan ts)
+		{
+			if (null != ts) 
+			{
+				//For each item in the container...
+				DateTimeOffset dtoUtcNow = DateTimeOffset.Now;
+				foreach (IListBlobItem item in _cloudBlobContainer.ListBlobs(null, false))
+				{
+					if (item.GetType() == typeof(CloudBlockBlob))
+					{
+						CloudBlockBlob ccb = (CloudBlockBlob)item;
+
+						//Console.WriteLine("Block blob of length {0}: {1}", blob.Properties.Length, blob.Uri);
+						string name = ccb.Name;
+
+						DateTimeOffset? dto = ccb.Properties.LastModified;
+
+						Console.WriteLine(name);
+						Console.WriteLine(dto);
+
+						if (null != dto)
+						{
+							if ( ts <= (dtoUtcNow - dto))
+							{
+								//Current blob older than input time span - delete...
+								ccb.Delete();
+							}
+						}
+					}
+				}
+
+			}
+		}
+
         //Shared Access Blob Policy - allocate a new policy - access: readonly, duration: 24 hours from now
         public SharedAccessBlobPolicy sharedAccessBlobPolicy
         {
