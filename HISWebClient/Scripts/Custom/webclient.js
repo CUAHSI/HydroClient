@@ -215,7 +215,7 @@ function initialize() {
 
 
     //Assign future date checks...
-    $('#startDate, #endDate').on('blur', { 'groupId': 'grpStartDate', 'errorLabelId': 'lblStartDateError', 'inputIdStartDate': 'startDate', 'inputIdEndDate': 'endDate' }, compareFromDateAndToDate);
+    //$('#startDate, #endDate').on('blur', { 'groupId': 'grpStartDate', 'errorLabelId': 'lblStartDateError', 'inputIdStartDate': 'startDate', 'inputIdEndDate': 'endDate' }, compareFromDateAndToDate);
 
     $('#startDateModal, #endDateModal').on('blur', { 'groupId': 'grpStartDateModal', 'errorLabelId': 'lblStartDateErrorModal', 'inputIdStartDate': 'startDateModal', 'inputIdEndDate': 'endDateModal' }, compareFromDateAndToDate);
 
@@ -225,8 +225,13 @@ function initialize() {
         var startDate = $('#startDate').val();
         var endDate = $('#endDate').val();
 
+        //Assign start and end date values to inputs...
         $('#startDateModal').val(startDate);
         $('#endDateModal').val(endDate);
+
+        //Validate start and end date values...
+        $('#startDateModal').triggerHandler('blur');
+        $('#endDateModal').triggerHandler('blur');
 
         //Assign current start and end date values to the associated datepicker instances
         $('#startDateModal').datepicker('setDate', startDate);
@@ -637,7 +642,14 @@ function validateDateString(event) {
     var jqueryGrpObj = $(('#' + event.data.groupId));
     var jqueryLabelObj = $(('#' + event.data.errorLabelId));
 
-    if (! isNaN(Date.parse(dateString))) {
+    var date = Date.parse(dateString);
+    var dateArray = dateString.split('/');
+
+    var month = 'undefined' === typeof dateArray[0] ? '' : dateArray[0]; 
+    var date = 'undefined' === typeof dateArray[1] ? '' : dateArray[1];
+    var year = 'undefined' === typeof dateArray[2] ? '' : dateArray[2];
+
+    if ((! isNaN(date)) && (isValidDate(month, date, year))) {
         //Date string valid - remove error class, hide error message
         jqueryLabelObj.text('');
         jqueryLabelObj.hide();
@@ -645,7 +657,10 @@ function validateDateString(event) {
         jqueryObj.removeClass('has-error');
     }
     else {
-        //Date string invalid - set error class, show error message
+        //Date string invalid - stop propagation of the event to ensure error message displays...
+        event.stopImmediatePropagation();
+
+        //Set error class, show error message
         jqueryLabelObj.text('Please enter a valid date...');
         jqueryLabelObj.show();
         jqueryGrpObj.addClass('has-error');
@@ -654,12 +669,47 @@ function validateDateString(event) {
     }
 }
 
+
+//For reasons unknown, the JavaScript Date object 'handles' an invalid date, like 31-Sep-2015, 
+// by 'promoting' it to the next valid date - in this case, 01-Oct-2015.  
+//
+//This function relies on this 'promotion' phenomenon to validate the input date...
+function isValidDate(monthString, dateString, yearString) {
+
+    //Validate/initialize input parameters...
+    if ('undefined' === typeof monthString || null === monthString ||
+        'undefined' === typeof dateString || null === dateString ||
+        'undefined' === typeof yearString || null === yearString ) {
+        return false;
+    }
+
+    //Create a new date from the input date
+    var month = parseInt(monthString);
+    var date = parseInt(dateString);
+    var year = parseInt(yearString); 
+
+    var testDate = new Date(year, month - 1, date); //Month parameter is zero-based!!
+
+    //If both dates match then the input date is valid, otherwise the input date is invalid...
+    if ((! isNaN(testDate)) && year === testDate.getFullYear() && (month - 1) === testDate.getMonth() && date === testDate.getDate()) {
+        return true;
+    }
+
+    return false;
+}
+
 //Validate the 'from' date string is earlier than or equal to the 'to' date
+//ASSUMPTION: Separate validation calls for 'from' and 'to' dates occur before any calls to this function!!
 function compareFromDateAndToDate(event) {
 
     //Retrieve 'from' and 'to' date strings...
     var jqueryStartDate = $(('#' + event.data.inputIdStartDate));
     var jqueryEndDate = $(('#' + event.data.inputIdEndDate));
+
+    //Check for an existing error...
+    if (jqueryStartDate.hasClass('has-error') || jqueryEndDate.hasClass('has-error')) {
+        return false;
+    }
 
     var dateStringStart = jqueryStartDate.val();
     var dateStringEnd = jqueryEndDate.val();
@@ -2232,56 +2282,57 @@ function setUpDatatables(clusterid)
         //"jQueryUI": false,    //BCC - 29-Jun-2015 - property defaults to false - no need to set here
         "deferRender": true,
         "dom": 'C<"clear">l<"toolbar">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-         //colVis: {
-         //    //restore: "Restore",
-         //    //showAll: "Show all",
-         //    //showNone: "Show none",
-         //    activate: "mouseover",
-         //    exclude: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
-         //    groups: [
-         //       //{
-         //       //    title: "Main",
-         //       //    columns: [ 0, 1,4, 5,6,7,9]
-         //       //},
-         //       {
-         //           title: "Show All Columns",
-         //           columns: [ 2, 3, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
-         //       }
-         //    ]
-         //},
-         "columns": [
-            { "data": "Organization", "width": "50px", "visible": true },
-            { "data": "ServCode", "sTitle": "Service Code", "visible": true },
-            { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
-            { "data": "ServURL", "visible": false },
-            { "data": "VariableName", "width": "50px", "sTitle": "Variable Name" },
-            //BCC - 10-Jul-2015 - Internal QA Issue #29 - Include VariableCode and SiteCode
-            { "data": "SiteCode", "sTitle": "Site Code", "visible": true },
-            { "data": "VariableCode", "sTitle": "Variable Code", "visible": true },
-            { "data": "BeginDate", "sTitle": "Start Date" },
-            { "data": "EndDate","sTitle": "End Date" },
-            { "data": "ValueCount" },
-            { "data": "SiteName", "sTitle": "Site Name" },
-            //{ "data": "Latitude", "visible": true },
-            //{ "data": "Longitude", "visible": true },
-            { "data": "DataType", "visible": true },
-            { "data": "ValueType", "visible": true },
-            { "data": "SampleMedium", "visible": true },
-            { "data": "TimeUnit", "visible": true },
-            //{ "data": "GeneralCategory", "visible": false },
-            { "data": "TimeSupport", "visible": true },
+        //colVis: {
+        //    //restore: "Restore",
+        //    //showAll: "Show all",
+        //    //showNone: "Show none",
+        //    activate: "mouseover",
+        //    exclude: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
+        //    groups: [
+        //       //{
+        //       //    title: "Main",
+        //       //    columns: [ 0, 1,4, 5,6,7,9]
+        //       //},
+        //       {
+        //           title: "Show All Columns",
+        //           columns: [ 2, 3, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
+        //       }
+        //    ]
+        //},
+        "columns": [
+           { "data": "Organization", "width": "50px", "visible": true },
+           { "data": "ServCode", "sTitle": "Service Code", "visible": true },
+           { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
+           { "data": "ServURL", "visible": false },
+           { "data": "VariableName", "width": "50px", "sTitle": "Variable Name" },
+           //BCC - 10-Jul-2015 - Internal QA Issue #29 - Include VariableCode and SiteCode
+           { "data": "SiteCode", "sTitle": "Site Code", "visible": true },
+           { "data": "VariableCode", "sTitle": "Variable Code", "visible": true },
+           { "data": "BeginDate", "sTitle": "Start Date" },
+           { "data": "EndDate","sTitle": "End Date" },
+           { "data": "ValueCount" },
+           { "data": "SiteName", "sTitle": "Site Name" },
+           //{ "data": "Latitude", "visible": true },
+           //{ "data": "Longitude", "visible": true },
+           { "data": "DataType", "visible": true },
+           { "data": "ValueType", "visible": true },
+           { "data": "SampleMedium", "visible": true },
+           { "data": "TimeUnit", "visible": true },
+           //{ "data": "GeneralCategory", "visible": false },
+           { "data": "TimeSupport", "visible": true },
            
-            { "data": "IsRegular", "visible": true },
-            //{ "data": "VariableUnits","visible": false },
-            //{ "data": "Citation", "visible": false }            
-            { "data": "SeriesId" },
-            //BCC - 10-Jul-2015 - Add links to Description URL and Service URL (WSDL)
-            { "data": null, "sTitle": "Service URL", "visible": true },
-            { "data": "ServURL", "sTitle": "Web Service Description URL", "visible": true }
-         ],
+           { "data": "IsRegular", "visible": true },
+           //{ "data": "VariableUnits","visible": false },
+           //{ "data": "Citation", "visible": false }            
+           { "data": "SeriesId" },
+           //BCC - 10-Jul-2015 - Add links to Description URL and Service URL (WSDL)
+           { "data": null, "sTitle": "Service URL", "visible": true },
+           { "data": "ServURL", "sTitle": "Web Service Description URL", "visible": true }
+        ],
 
-         "scrollX": true,
-         
+        "scrollX": true,
+        "scrollY": "30em",
+        "scrollCollapse": true,
          "createdRow": function (row, data, index) {
 
                  //Create a link to the Service URL
@@ -2988,15 +3039,20 @@ function zipSelections(event) {
 
             //If row is rendered, check if selected...
             var node = table.row(i).node();
+            var bSelected = false;
+
             if (null !== node) {
                 var jqueryObj = $(node); 
                 if (jqueryObj.hasClass('notSelected')) {
                     continue;   //Row rendered and NOT selected, continue to next row...
                 }
+                else if (jqueryObj.hasClass('selected')) {
+                    bSelected = true;   //NOTE: User can manually select rows outside the 'Select Top ...'
+                }
             }
 
-            if (position < selectedTimeSeriesMax) {
-                //Current row position within 'Select Top ...' - append row data to selected rows...
+            if ((position < selectedTimeSeriesMax) || bSelected) {
+                //Current row position within 'Select Top ...' --OR-- user has manually selected the row - append row data to selected rows...
                 selectedRows.push(table.row(i).data());
             }
         }
@@ -3395,6 +3451,8 @@ function setUpTimeseriesDatatable() {
             { "data": "ServURL", "sTitle": "Web Service Description URL", "visible": true }
            ],
         "scrollX": true,
+        "scrollY": "30em",
+        "scrollCollapse": true,
         "createdRow": function (row, data, index) {
 
             //Create a link to the Service URL

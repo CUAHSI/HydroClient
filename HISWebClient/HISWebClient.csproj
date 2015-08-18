@@ -307,8 +307,8 @@
     <Compile Include="Util\AzureContext.cs" />
     <Compile Include="Util\AzureTraceAppender.cs" />
     <Compile Include="Util\ContextUtil.cs" />
-    <Compile Include="Util\DiagnosticMonTraceListener.cs" />
-    <Compile Include="Util\EnumExtensionMethods.cs" />
+    <Compile Include="Views\DiagnosticMonTraceListener.cs" />
+    <Compile Include="Scripts\EnumExtensionMethods.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Areas\HelpPage\HelpPage.css" />
@@ -316,6 +316,7 @@
     <Content Include="Content\bootstrap-modal-bs3patch.css" />
     <Content Include="Content\bootstrap-modal.css" />
     <Content Include="Content\dataTables.colVis.css" />
+    <Content Include="Content\datatablescdn\jquery.dataTables.min.css" />
     <Content Include="Content\Images\ajax-loader-green.gif">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -354,6 +355,11 @@
     <Content Include="Content\Images\Markers\Services\blue-20.png" />
     <Content Include="Content\Images\pageloader.gif" />
     <Content Include="Content\Images\cuahsi_logo_small.png" />
+    <Content Include="Content\Images\sort_asc.png" />
+    <Content Include="Content\Images\sort_asc_disabled.png" />
+    <Content Include="Content\Images\sort_both.png" />
+    <Content Include="Content\Images\sort_desc.png" />
+    <Content Include="Content\Images\sort_desc_disabled.png" />
     <Content Include="fonts\glyphicons-halflings-regular.woff" />
     <Content Include="modal_ajax_test.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -467,6 +473,7 @@
     <Content Include="Scripts\Fancytree\sample.js" />
     <Content Include="Scripts\Google\keydragzoom.js" />
     <Content Include="Scripts\Google\keydragzoom_packed.js" />
+    <Content Include="Scripts\Google\mapsapi.js" />
     <Content Include="Scripts\Google\markerwithlabel.js" />
     <Content Include="Scripts\Google\markerwithlabel_packed.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />

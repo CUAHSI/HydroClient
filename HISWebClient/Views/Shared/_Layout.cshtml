@@ -5,8 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewBag.Title - CUAHSI HIS HydroClient</title>
     @Styles.Render("~/Content/css")
+    @Styles.Render("~/Content/datatablescdn")
     @Scripts.Render("~/bundles/modernizr")
     @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/fancytree")
+    @*For the release build - if the googleapis bundle does not work - enable the following script tag and disable the Render call for the googleapis bundle... *@
+    @*<script type='text/javascript' src="http://maps.googleapis.com/maps/api/js?v=3.20&signed_in=true&libraries=places,geometry"></script>*@
+    @Scripts.Render("~/bundles/googleapis")
+    @Scripts.Render("~/bundles/Google")
     @Scripts.Render("~/bundles/custom")
     @RenderSection("styles", required: false)
     <script type="text/javascript">
