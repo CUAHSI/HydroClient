@@ -13,12 +13,11 @@ namespace HISWebClient
 
 			bundles.UseCdn = true;   //enable CDN support
 
-			//add link to Google APIs CDN
-			var googleapisCdnPath = "http://maps.googleapis.com/maps/api/js?v=3.20&signed_in=true&libraries=places,geometry";
-
-			bundles.Add(new ScriptBundle("~/bundles/googleapis",
-						googleapisCdnPath).Include(
-						"~/Scripts/Google/mapsapi.js"));
+			//NO bundle for the Google Map API!!
+			//NOTE: 20-Aug-2015 - Use of the local mapsapi.js file can result in a 403 error!!
+			//					  Apparently this usage violates Google's policy that the maps API must be downloaded from their servers.  
+			// More information: https://developers.google.com/maps/documentation/javascript/error-messages?hl=en
+			// Error:			 NotLoadingAPIFromGoogleMapError
 
             bundles.Add(new ScriptBundle("~/bundles/jquery").Include(
                         "~/Scripts/jquery-{version}.js",

@@ -3614,9 +3614,7 @@ function serviceFailed(xmlhttprequest, textstatus, message)
     //else 
     //{
 
-    if (typeof (xmlhttprequest.responseText) != 'undefined')
-    {
-        
+    if ('undefined' !== typeof xmlhttprequest.responseText) {
         var msg = JSON.parse(xmlhttprequest.responseText)
         bootbox.alert(msg.Message);
     }

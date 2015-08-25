@@ -9,9 +9,8 @@
     @Scripts.Render("~/bundles/modernizr")
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/fancytree")
-    @*For the release build - if the googleapis bundle does not work - enable the following script tag and disable the Render call for the googleapis bundle... *@
-    @*<script type='text/javascript' src="http://maps.googleapis.com/maps/api/js?v=3.20&signed_in=true&libraries=places,geometry"></script>*@
-    @Scripts.Render("~/bundles/googleapis")
+    @*NOTE: The Google Maps API MUST be downloaded directly from Goolge's Servers!!! See commends in BundleConfig.cs *@
+    <script type='text/javascript' src="http://maps.googleapis.com/maps/api/js?v=3.20&signed_in=true&libraries=places,geometry"></script>
     @Scripts.Render("~/bundles/Google")
     @Scripts.Render("~/bundles/custom")
     @RenderSection("styles", required: false)

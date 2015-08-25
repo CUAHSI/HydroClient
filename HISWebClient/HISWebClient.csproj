@@ -473,7 +473,6 @@
     <Content Include="Scripts\Fancytree\sample.js" />
     <Content Include="Scripts\Google\keydragzoom.js" />
     <Content Include="Scripts\Google\keydragzoom_packed.js" />
-    <Content Include="Scripts\Google\mapsapi.js" />
     <Content Include="Scripts\Google\markerwithlabel.js" />
     <Content Include="Scripts\Google\markerwithlabel_packed.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
