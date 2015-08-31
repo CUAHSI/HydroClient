@@ -20,7 +20,7 @@ using HISWebClient.Models;
 using System.Xml;
 using System.Text.RegularExpressions;
 
-using log4net;
+using log4net.Core;
 using HISWebClient.Util;
 
 namespace HISWebClient.Controllers
@@ -29,8 +29,9 @@ namespace HISWebClient.Controllers
 	{
 		private readonly CUAHSI.DataExport.IExportEngine wdcStore;
 
-		private static readonly ILog logger
-			= LogManager.GetLogger("QueryLog");
+		private DbLogContext dblogcontext = new DbLogContext("DBLog", "AdoNetAppenderLog", "local-DBLog", "deploy-DBLog");
+
+		private DbErrorContext dberrorcontext = new DbErrorContext("DBError", "AdoNetAppenderError", "local-DBLog", "deploy-DBLog");
 
 		public ActionResult Index()
 		{
@@ -187,73 +188,83 @@ namespace HISWebClient.Controllers
 					}
 					Session["webServiceList"] = allWebservices;
 
-					//Get user data...
-					var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
-					string userIpAddress = ContextUtil.GetIPAddress(System.Web.HttpContext.Current);
-					DateTime requestTimeStamp = httpContext.Timestamp;
+					//Clear parameters...
+					dblogcontext.clearParameters();
+					dberrorcontext.clearParameters();
 
-					Random random = new Random(DateTime.Now.GetHashCode());
-					int nRandom = random.Next();
-
-					StringBuilder sb = new StringBuilder();
-					sb.AppendLine();
-					sb.AppendFormat("[[{0}]] User IP Address: {1} DateTime: {2} updateMarkers(...) calling getSeriesData(...) with arguments... ", nRandom, userIpAddress, requestTimeStamp.ToString());
-					sb.AppendLine();
-					sb.AppendFormat(" [[{0}]] Box: {1}, ", nRandom, box.ToString());
-					sb.AppendLine();
-
-					sb.AppendFormat(" [[{0}]] Keywords: {1} ", nRandom, (0 >= keywords.Length) ? "All," : "");
-					sb.AppendLine();
-
-					int count = 0;
-					foreach (string keyword in keywords)
+					//Add call parameters...
+					dblogcontext.addParameter("box", box);
+					dberrorcontext.addParameter("box", box);
+					if (1 == keywords.Length && "" == keywords[0])
 					{
-						sb.AppendFormat(" [[{0}]] \t{1}) {2}, ", nRandom, ++count, keyword);
-						sb.AppendLine();
+						dblogcontext.addParameter("keywords", "All");
+						dberrorcontext.addParameter("keywords", "All");
 					}
-					
-					sb.AppendFormat(" [[{0}]] tileWidth: {1}, ", nRandom, tileWidth.ToString());
-					sb.AppendLine();
-					sb.AppendFormat(" [[{0}]] tileHeight: {1}, ", nRandom, tileHeight.ToString());
-					sb.AppendLine();
-					sb.AppendFormat(" [[{0}]] StartDate: {1}, ", nRandom, searchSettings.DateSettings.StartDate.ToLongDateString());
-					sb.AppendLine();
-					sb.AppendFormat(" [[{0}]] EndDate: {1}, ", nRandom, searchSettings.DateSettings.EndDate.ToLongDateString());
-					sb.AppendLine();
-					sb.AppendFormat(" [[{0}]] ActiveWebServices: {1} ", nRandom, (0 >= activeWebservices.Count) ? "All," : "");
-					sb.AppendLine();
+					else
+					{
+						StringBuilder sb1 = new StringBuilder();
+						foreach (string keyword in keywords)
+						{
+							sb1.AppendFormat("{0}, ", keyword);
+						}
 
-					count = 0;
-					activeWebservices.ForEach(wsn => sb.AppendLine(String.Format("[[{0}]] \t{1}) {2}", nRandom, ++count, wsn.Title)));
-					sb.AppendLine();
+						dblogcontext.addParameter("keywords", sb1.ToString());
+						dberrorcontext.addParameter("keywords", sb1.ToString());
+					}
 
-					logger.Info(sb.ToString());
+					dblogcontext.addParameter("tileWidth", tileWidth);
+					dberrorcontext.addParameter("tileWidth", tileWidth);
+
+					dblogcontext.addParameter("tileHeight", tileHeight);
+					dberrorcontext.addParameter("tileHeight", tileHeight);
+
+					dblogcontext.addParameter("startDate", searchSettings.DateSettings.StartDate);
+					dberrorcontext.addParameter("startDate", searchSettings.DateSettings.StartDate);
+
+					dblogcontext.addParameter("endDate", searchSettings.DateSettings.EndDate);
+					dberrorcontext.addParameter("endDate", searchSettings.DateSettings.EndDate);
+
+					if (0 >= activeWebservices.Count)
+					{
+						dblogcontext.addParameter("activeWebServices", "All");
+						dberrorcontext.addParameter("activeWebServices", "All");
+					}
+					else
+					{
+						StringBuilder sb1 = new StringBuilder();
+						activeWebservices.ForEach(wsn => sb1.AppendFormat("{0},", wsn.Title));
+
+						dblogcontext.addParameter("activeWebServices", sb1.ToString());
+						dberrorcontext.addParameter("activeWebServices", sb1.ToString());
+					}
+
+					DateTime startDtUtc = DateTime.UtcNow;
 
 					var series = dataWorker.getSeriesData(box, keywords.ToArray(), tileWidth, tileHeight,
 																	 searchSettings.DateSettings.StartDate,
 																	  searchSettings.DateSettings.EndDate,
 																	  activeWebservices);
+					DateTime endDtUtc = DateTime.UtcNow;
+
+					//Clear returns
+					dblogcontext.clearReturns();
+
+					//Add returned series count...
+					dblogcontext.addReturn("seriesCount", series.Count);
+
+					//Create log entry...
+					dblogcontext.createLogEntry(System.Web.HttpContext.Current, startDtUtc, endDtUtc, "updateMarkers(...)", "calls dataWorker.getSeriesData(...)", Level.Info);
+
 					var list = new List<TimeSeriesViewModel>();
 
-					sb.Clear();
-					count = 0;
 					if (series.Count> 0)
 					{
-						sb.AppendLine();
-						sb.AppendFormat("[[{0}]] getSeriesData(...) returns... ", nRandom);
-
 						for (int i = 0; i < series.Count; i++)
 						{
 							var tvm = new TimeSeriesViewModel();
 							tvm = mapDataCartToTimeseries(series[i], i);
 							list.Add(tvm);
-
-							sb.AppendLine();
-							sb.AppendFormat("[[{0}]] \t{1}) {2}", nRandom, ++count, tvm.ToString());
 						}
-
-						logger.Info(sb.ToString());
-
 					}
 					var markerClustererHelper = new MarkerClustererHelper();
 
@@ -285,14 +296,17 @@ namespace HISWebClient.Controllers
 						Response.StatusDescription = message;
 						Response.TrySkipIisCustomErrors = true;	//Tell IIS to use your error text not the 'standard' error text!!
 
+						dberrorcontext.createLogEntry(System.Web.HttpContext.Current, DateTime.UtcNow, "updateMarkers(...)", ex, message);
+
 						return Json(new { Message = message }, "application/json");
-						//throw new WebException("Timeout. Try to decrease Search Area, or Select another Keywords.", WebExceptionStatus.Timeout);
 					}
 					else{
 						 string message = "The execution of the search took too long. Please limit search area and/or Keywords.";
 						 Response.StatusCode = (int)HttpStatusCode.RequestTimeout;
 						 Response.StatusDescription = message;
 						 Response.TrySkipIisCustomErrors = true;	//Tell IIS to use your error text not the 'standard' error text!!
+
+						 dberrorcontext.createLogEntry(System.Web.HttpContext.Current, DateTime.UtcNow, "updateMarkers(...)", ex, message);
 
 						 return Json(new { Message = message }, "application/json");
 					}

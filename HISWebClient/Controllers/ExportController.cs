@@ -23,7 +23,7 @@ using System.IO.Compression;
 using System.Threading;
 using System.Web.Script.Serialization;
 
-using log4net;
+using log4net.Core;
 
 using HISWebClient.Util;
 
@@ -42,8 +42,9 @@ namespace HISWebClient.Controllers
 
 		private static Object lockObject = new Object();
 
-		private static readonly ILog logger
-			= LogManager.GetLogger("QueryLog");
+		private DbLogContext dblogcontext = new DbLogContext("DBLog", "AdoNetAppenderLog", "local-DBLog", "deploy-DBLog");
+
+		private DbErrorContext dberrorcontext = new DbErrorContext("DBError", "AdoNetAppenderError", "local-DBLog", "deploy-DBLog");
 
 		//Constructors - instantiate the AzureContext singleton for later reference...
 		public ExportController() : this(new AzureContext()) { }
@@ -59,7 +60,15 @@ namespace HISWebClient.Controllers
 			//Validate/initialize input parameters...
 			if (String.IsNullOrWhiteSpace(requestId) || String.IsNullOrWhiteSpace(statusMessage))
 			{
-				throw new ArgumentNullException("Empty input parameter(s)!!!");
+				ArgumentNullException ane = new ArgumentNullException("Empty input parameter(s)!!!");
+
+				dberrorcontext.clearParameters();
+				dberrorcontext.createLogEntry(System.Web.HttpContext.Current,
+											  DateTime.UtcNow, "IsTaskCancelled(string requestId, TimeSeriesRequestStatus tsrsIn, string statusMessage)",
+											  ane,
+											  ane.Message);
+
+				throw ane;
 			}
 
 			bool bCancelled = false;    //Assume task in NOT cancelled...
@@ -91,7 +100,15 @@ namespace HISWebClient.Controllers
 			//Validate/initialize input parameters...
 			if (String.IsNullOrWhiteSpace(requestId) || String.IsNullOrWhiteSpace(statusMessage))
 			{
-				throw new ArgumentNullException("Empty input parameter(s)!!!");
+				ArgumentNullException ane = new ArgumentNullException("Empty input parameter(s)!!!");
+
+				dberrorcontext.clearParameters();
+				dberrorcontext.createLogEntry(System.Web.HttpContext.Current,
+											  DateTime.UtcNow, "UpdateTaskStatus(string requestId, TimeSeriesRequestStatus tsrsIn, string statusMessage)",
+											  ane,
+											  ane.Message);
+
+				throw ane;
 			}
 
 			//Thread-safe access to dictionary
@@ -129,22 +146,21 @@ namespace HISWebClient.Controllers
 			var filename = GenerateFileName(seriesMetaData);
 			var fileType = "text/csv";
 
-			//logger.Info("DownloadFile Starts for: " + filename );
-
 			try
 			{
 				var result = await this.getStream(id);
 				//var memoryStream = new MemoryStream(result);
-
-
-				//logger.Info("DownloadFile returns for: " + filename);
 
 				//filestream.Write(result, 0, result.Count);
 				return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename };
 			}
 			catch( Exception ex )
 			{
-				logger.Error("DownloadFile Errors for: " + filename + " message: " + ex.Message );
+				dberrorcontext.clearParameters();
+				dberrorcontext.createLogEntry(System.Web.HttpContext.Current, 
+											  DateTime.UtcNow, "DownloadFile(int id)", 
+											  ex, 
+											  "DownloadFile Errors for: " + filename + " message: " + ex.Message);
 
 				string input = "An error occured downloading file: " + filename;
 
@@ -172,22 +188,21 @@ namespace HISWebClient.Controllers
 			var filename = GenerateFileName(seriesMetaData);
 			var fileType = "text/csv";
 
-			//logger.Info("DownloadFile Starts for: " + filename );
-
 			try
 			{
 				var result = await this.getStream(id, currentSeries);
 				//var memoryStream = new MemoryStream(result);
-
-
-				//logger.Info("DownloadFile returns for: " + filename);
 
 				//filestream.Write(result, 0, result.Count);
 				return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename };
 			}
 			catch( Exception ex )
 			{
-				logger.Error("DownloadFile Errors for: " + filename + " message: " + ex.Message );
+				dberrorcontext.clearParameters();
+				dberrorcontext.createLogEntry(System.Web.HttpContext.Current,
+											  DateTime.UtcNow, "DownloadFile(int id, List<TimeSeriesViewModel> currentSeries)",
+											  ex,
+											  "DownloadFile Errors for: " + filename + " message: " + ex.Message);
 
 				string input = "An error occured downloading file: " + filename;
 
@@ -247,21 +262,64 @@ namespace HISWebClient.Controllers
 				var retrievedSeries = (List<TimeSeriesViewModel>)httpContext.Session["Series"];
 
 				//Get user data...
-				string userIpAddress = ContextUtil.GetIPAddress(System.Web.HttpContext.Current);
+				//string userIpAddress = ContextUtil.GetIPAddress(System.Web.HttpContext.Current);
 				DateTime requestTimeStamp = httpContext.Timestamp;
 
 				List<TimeSeriesViewModel> currentSeries = new List<TimeSeriesViewModel>();
+				int current = 0;
+				int total = tsrIn.TimeSeriesIds.Count;
+
 				foreach (TimeSeriesViewModel tsvm in retrievedSeries)
 				{
+					
 					currentSeries.Add(new TimeSeriesViewModel(tsvm));
+		
 					//Log each time series requested...     
 					//string logEntry = String.Format("User IP Address: {0} DateTime: {1} Timeseries: {2}", userIpAddress, requestTimeStamp.ToString(), tsvm.ToString());
 
 					//logger.Info( logEntry );
 					//logger.Debug(logEntry);
+
+					foreach( int id in tsrIn.TimeSeriesIds)
+					{
+						if ( tsvm.SeriesId == id )
+						{
+							//Requested time series found - log identifiers...
+							dblogcontext.clearParameters();
+							dblogcontext.clearReturns();
+
+							dblogcontext.addParameter("requestId", tsrIn.RequestId);
+							dblogcontext.addParameter("requestName", tsrIn.RequestName);
+
+							dblogcontext.addReturn("organization", tsvm.Organization);
+							dblogcontext.addReturn("conceptKeyword", tsvm.ConceptKeyword);
+							dblogcontext.addReturn("beginDate", tsvm.BeginDate);
+							dblogcontext.addReturn("endDate", tsvm.EndDate);
+							dblogcontext.addReturn("serviceCode", tsvm.ServCode);
+							dblogcontext.addReturn("siteCode", tsvm.SiteCode);
+							dblogcontext.addReturn("valueType", tsvm.ValueType);
+							dblogcontext.addReturn("valueCount", tsvm.ValueCount);
+
+							DateTime dtNow = DateTime.UtcNow;
+							string message = String.Format("Requested time series: {0} of {1}", ++current, total);
+							dblogcontext.createLogEntry(System.Web.HttpContext.Current, dtNow, dtNow, "RequestTimeSeries(...)", message, Level.Info);
+						}
+					}
 				}
 
-				Task.Run( async () =>
+				//Retrieve values for use in async task...
+				string sessionId = String.Empty;
+				string userIpAddress = string.Empty;
+				string domainName = string.Empty;
+
+				dblogcontext.getIds(System.Web.HttpContext.Current, ref sessionId, ref userIpAddress, ref domainName);
+
+				var dblogcontextRef = dblogcontext;
+				var sessionIdRef = sessionId;
+				var userIpAddressRef = userIpAddress;
+				var domainNameRef = domainName;
+
+				Task.Run(async () =>
 				{
 /*
 					//await Task.Delay(60000);
@@ -286,6 +344,8 @@ namespace HISWebClient.Controllers
 
 					try
 					{
+						DateTime startDtUtc = DateTime.UtcNow;
+
 						//Allocate a memory stream for later use...
 						var memoryStream = new MemoryStream();  //ASSUMPTION: IDispose called during FileStreamResult de-allocation
 						//string cancellationMessage = "Cancelled per client request!!";
@@ -345,6 +405,13 @@ namespace HISWebClient.Controllers
 									_dictTaskStatus[requestId].RequestStatus = TimeSeriesRequestStatus.Completed;
 									_dictTaskStatus[requestId].Status = TimeSeriesRequestStatus.Completed.GetEnumDescription();
 									_dictTaskStatus[requestId].BlobUri = blobUri;
+
+									dblogcontextRef.clearParameters();
+									dblogcontextRef.clearReturns();
+
+									dblogcontextRef.addParameter("requestId", tsrIn.RequestId);
+									dblogcontextRef.addParameter("requestName", tsrIn.RequestName);
+									dblogcontextRef.createLogEntry(sessionIdRef, userIpAddressRef, domainNameRef, startDtUtc, DateTime.UtcNow, "RequestTimeSeries(...)", "zip archive creation complete.", Level.Info);
 								}
 							}
 						}
@@ -449,111 +516,6 @@ namespace HISWebClient.Controllers
 			return Json(json, "application/json", JsonRequestBehavior.AllowGet);
 		}
 
-/*
-		[HttpPost]
-		public async Task<JsonResult> RequestTimeSeries(TimeSeriesRequest tsrIn)
-		{
-
-			//This returns immediately and does not block thread pool thread...
-//            new Thread(() =>
-//            {
-//                for (var i = 0; i <= 1000; i++)
-//                {
-//                    Thread.Sleep(100);     
-//                }
-//            }).Start();
-
-			//This does not return immediately and blocks thread pool thread...
-			//await Task.Delay(60000);
-
-			int n = 5;
-
-			++n;
-
-			//Try again but do not capture/restore the context of the original thread 
-			//Task task = Task.Delay(60000);
-
-			//await task;
-
-			//Method returns here.  When the delay period ends, the method resumes after this point - as explained in ASP.NET documentation
-			//BUT - another map selection blocks until this method resumes and finishes...
-			//    - an attempt to navigate to another web page - like 'About' also blocks until this method resumes and ends...
-			await Task.Delay(60000).ConfigureAwait(false);
-
-			//await Sleeper();
-
-			//This does not return immediately and blocks thread pool thread...
-			//await Task.Run(() => Thread.Sleep(60000));
-
-			//Simulate the blob URI for now
-			string blobURI = "This is the blob URI";
-
-			//Return a TimeSeriesResponse in JSON format...
-			string status = DateTime.Now.ToString();
-			var result = new TimeSeriesResponse(tsrIn.RequestId, status, blobURI);
-
-			var javaScriptSerializer = new JavaScriptSerializer();
-			var json = javaScriptSerializer.Serialize(result);
-
-			//Processing complete - return 
-			return Json(json, "application/json");
-		}
-
-		private Task Sleeper()
-		{
-			return  new Task(() =>  
-			  new Thread(async () =>
-			  {
-				for (var i = 0; i <= 1000; i++)
-				{
-					//Thread.Sleep(100);
-					await Task.Delay(1);
-				}
-			  }).Start() );
-		}
-*/
-/*
-		[HttpGet, FileDownload]
-		public async Task<FileStreamResult> DownloadTimeSeries(TimeSeriesRequest tsrIn)
-		{
-			Dictionary<string, byte[]> dictByteArrays = new Dictionary<string, byte[]>();
-			var fileType = "text/csv";
-
-			//Retrieve request name for later reference
-			string requestName = tsrIn.RequestName;
-
-			logger.Info("DownloadTimeSeries Starts for: " + requestName);
-
-			//For each time series id...
-			try
-			{
-				foreach (int tsId in tsrIn.TimeSeriesIds)
-				{
-					var seriesMetaData = getSeriesMetadata(tsId);
-					var filename = GenerateFileName(seriesMetaData);
-
-					var byteArray = await this.getStream(tsId);
-
-					dictByteArrays.Add(filename, byteArray);
-				}
-
-				
-
-
-
-				logger.Info("DownloadTimeSeries Returns for: " + requestName);
-			}
-			catch (Exception ex )
-			{
-				string input = "An error occured while processing request: " + requestName;
-
-				byte[] result = Encoding.ASCII.GetBytes(input);
-
-				return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = "ERROR " + requestName };
-			}
-		}
-
-*/
 		public async Task<byte[]> getStream(int SeriesID, List<TimeSeriesViewModel> currentSeries = null)
 		{
 			DateTimeOffset requestTime = DateTimeOffset.UtcNow;
@@ -581,7 +543,15 @@ namespace HISWebClient.Controllers
 			// SeriesMetadata meta = await QueryHelpers.QueryHelpers.SeriesMetaDataOfSeriesID(SeriesID);
 			if (meta == null)
 			{
-				throw new NullReferenceException();
+				NullReferenceException nre = new NullReferenceException();
+
+				dberrorcontext.clearParameters();
+				dberrorcontext.createLogEntry(System.Web.HttpContext.Current,
+											  DateTime.UtcNow, "GetSeriesDataObjectAndStreamFromSeriesID(int seriesId, List<TimeSeriesViewModel> currentSeries)",
+											  nre,
+											  "meta == null");
+
+				throw nre;
 			}
 			else
 			{
@@ -589,7 +559,16 @@ namespace HISWebClient.Controllers
 
 				if (data == null || data.Item2.FirstOrDefault() == null)
 				{
-					throw new KeyNotFoundException();
+					KeyNotFoundException knfe = new KeyNotFoundException();
+
+					dberrorcontext.clearParameters();
+					dberrorcontext.createLogEntry(System.Web.HttpContext.Current,
+												  DateTime.UtcNow, "GetSeriesDataObjectAndStreamFromSeriesID(int seriesId, List<TimeSeriesViewModel> currentSeries)",
+												  knfe,
+												  "data == null");
+
+
+					throw knfe;
 				}
 				else
 				{
@@ -792,7 +771,7 @@ namespace HISWebClient.Controllers
 			if (null != System.Web.HttpContext.Current)
 			{
 				//Called with an Http context - retrieve list from current session data...
-			var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
+				var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
 
 				retrievedSeries = (List<TimeSeriesViewModel>)httpContext.Session["Series"];
 			}
