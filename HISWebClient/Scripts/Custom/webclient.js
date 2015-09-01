@@ -752,10 +752,10 @@ function validateQueryParameters(area, selectedKeys) {
 
     area *= 1;  //Convert to numeric value...
 
-    var max = 1000000;
-    if (area > max) {
+    var allMax = 1000000;
+    if (area > allMax) {
         
-        bootbox.alert("<h4>The selected area (" + area.toLocaleString() + " sq km) is too large to search. <br> Please limit search area to less than " + max.toLocaleString() + " sq km and/or reduce search keywords.</h4>");
+        bootbox.alert("<h4>The selected area (" +area.toLocaleString() + " sq km) is too large to search. <br> Please limit search area to less than " +allMax.toLocaleString() + " sq km and/or reduce search keywords.</h4>");
         return false;
     }
 
@@ -765,12 +765,13 @@ function validateQueryParameters(area, selectedKeys) {
         return false;
     }
     if (area > max && selectedKeys.length == 1) {
-        bootbox.confirm("<h4>Searching the selected area (" + area.toLocaleString() + " sq km) can take a long time. Do you want to continue?</h4>", function (bContinue) {
+        //bootbox.confirm("<h4>Searching the selected area (" + area.toLocaleString() + " sq km) can take a long time. Do you want to continue?</h4>", function (bContinue) {
 
-                if (bContinue) {
-                    updateMap(true);
-                }
-            });
+                //if (bContinue) {
+                    
+                //}
+            //});
+        updateMap(true);
     }
     else {
             if (area > max && selectedKeys.length > 1) {
@@ -778,12 +779,13 @@ function validateQueryParameters(area, selectedKeys) {
                 return false;
         }
             if (area < max && selectedKeys.length > 1) {
-                bootbox.confirm("<h4>For the selected area (" + area.toLocaleString() + " sq km), you selected several keywords. This search can take a long time and might timeout. Do you want to continue?</h4>", function (bContinue) {
+                //bootbox.confirm("<h4>For the selected area (" + area.toLocaleString() + " sq km), you selected several keywords. This search can take a long time and might timeout. Do you want to continue?</h4>", function (bContinue) {
 
-                    if (bContinue) {
-                        updateMap(true);
-                    }
-            });
+                    //if (bContinue) {
+                        
+                    //}
+                //});
+            updateMap(true);
         }
         else
         {
@@ -2062,7 +2064,7 @@ function addFilterPlaceholders(event) {
 
     var tableId = event.data.tableId;
     //BCC - 10-Aug-2015 - GitHub Issue #35 - Add filter by Site Name
-    var placeHolders = ['Organization', 'Service Code', 'Keyword', 'Variable Name', 'Site Name'];
+    var placeHolders = ['Organization', 'Service Name', 'Keyword', 'Variable Name', 'Site Name'];
 
     var selector = '#' + tableId + '_wrapper > div.dataTables_scroll > div.dataTables_scrollFoot > div > table > tfoot > tr > th > select';
 
@@ -2301,7 +2303,7 @@ function setUpDatatables(clusterid)
         //},
         "columns": [
            { "data": "Organization", "width": "50px", "visible": true },
-           { "data": "ServCode", "sTitle": "Service Code", "visible": true },
+           { "data": "ServCode", "sTitle": "Service Name", "visible": true },
            { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
            { "data": "ServURL", "visible": false },
            { "data": "VariableName", "width": "50px", "sTitle": "Variable Name" },
@@ -3422,7 +3424,7 @@ function setUpTimeseriesDatatable() {
         "deferRender": true,
         "columns": [
             { "data": "Organization", "width": "50px", "visible": true },
-            { "data": "ServCode", "sTitle": "Service Code", "visible": true },
+            { "data": "ServCode", "sTitle": "Service Name", "visible": true },
             { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
             { "data": "ServURL", "visible": false },
             { "data": "VariableName", "width": "50px", "sTitle": "Variable Name" },
