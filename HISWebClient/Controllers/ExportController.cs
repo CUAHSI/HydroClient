@@ -590,7 +590,8 @@ namespace HISWebClient.Controllers
 					meta.SiteCode,
 					meta.VarCode,
 					meta.StartDate,
-					DateTime.UtcNow,
+                    meta.EndDate,
+					//DateTime.UtcNow,
 					Convert.ToInt32(requestTimeout));
 		}
 
