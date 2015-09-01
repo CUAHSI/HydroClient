@@ -15,6 +15,8 @@ using Microsoft.WindowsAzure.Storage.Auth;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Shared.Protocol;
 
+using CUAHSI.Common;
+
 namespace HISWebClient.Util
 {
     //Wrapper class for singleton Azure context...
@@ -71,8 +73,10 @@ namespace HISWebClient.Util
             }
             else
             {
-                requestName += "-" + strFileDateAndExtension;
-            }
+                //requestName += "-" + strFileDateAndExtension;
+				requestName = requestName.SanitizeAndUrlEscapeForFilename() + "-" + strFileDateAndExtension;
+
+			}
 
             if( null == ct)
             {
