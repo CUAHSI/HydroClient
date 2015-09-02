@@ -159,8 +159,8 @@ namespace HISWebClient.Controllers
 				//{
 				//    keywords[k] = keywords[k].Replace("_", ",");
 				//}
-				var tileWidth = 5;
-				var tileHeight = 5;
+				var tileWidth = 10;
+				var tileHeight = 10;
 				List<int> webServiceIds = null;
 				try
 				{
