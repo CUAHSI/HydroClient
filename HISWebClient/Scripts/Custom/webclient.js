@@ -3023,24 +3023,17 @@ function zipSelections(event) {
         //NOTE: If the DataTable instance has the 'deferRender' option set - not all rows may have been rendered at this point.
         //        Thus one cannot rely on the selectedRows above, since in this case only rendered rows appear in the selectedRows...
 
-        //Scan all table rows for the 'Select Top ...' rows...
-        //var positions = table.rows()[0];
-        //var rows = table.rows().data();
-
-        //var positions = table.rows({'order': 'current', 'search': 'applied'})[0];   //Retrieve rows per current sort/search order...
-        //var rows = table.rows({'order' : 'current', 'search': 'applied'}).data();   //Retrieve rows per current sort/search order...
         var rows = table.rows({ 'order': 'current', 'search': 'applied' });           //Retrieve rows per current sort/search order...
 
         var length = rows[0].length;    //Need length of rows array here!!
         selectedRows = [];
 
         for (var i = 0; i < length; ++i) {
-            //var position = positions.indexOf(i);
-            //var position = i;
-            var position = rows[0].indexOf(i);
+            //BCC - 01-Sep-2015 - Reference the row's position per the current sort/search!!
+            var position = rows[0][i];
 
             //If row is rendered, check if selected...
-            var node = table.row(i).node();
+            var node = table.row(position).node();
             var bSelected = false;
 
             if (null !== node) {
@@ -3053,9 +3046,9 @@ function zipSelections(event) {
                 }
             }
 
-            if ((position < selectedTimeSeriesMax) || bSelected) {
+            if ((i < selectedTimeSeriesMax) || bSelected) {
                 //Current row position within 'Select Top ...' --OR-- user has manually selected the row - append row data to selected rows...
-                selectedRows.push(table.row(i).data());
+                selectedRows.push(table.row(position).data());
             }
         }
     }
