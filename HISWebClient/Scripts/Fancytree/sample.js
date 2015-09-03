@@ -4,6 +4,7 @@
     /* Load tree from Ajax JSON
      */
     $("#tree").fancytree({
+        debugLevel: 0,  //BC - 26-Jun-2015 - Turn off console logging...
         checkbox: true,
         selectMode: 3,
         extensions: ["childcounter", "filter"],
@@ -17,15 +18,13 @@
             mode: "hide",
             autoApply: true
         },
-
-        activate: function (event, data) {
-            var title = data.node.title;
-            //FT.debug("activate: event=", event, ", data=", data);
-            if (!$.isEmptyObject(title)) {
-                //alert("custom node data: " + JSON.stringify(title));
-            }
-        }
-        ,
+        //activate: function (event, data) {
+        //    var title = data.node.title;
+        //    //FT.debug("activate: event=", event, ", data=", data);
+        //    if (!$.isEmptyObject(title)) {
+        //        //alert("custom node data: " + JSON.stringify(title));
+        //    }
+        //},
         lazyLoad: function (event, data) {
              //we can't return values from an event handler, so we
              //pass the result as `data`attribute.
@@ -35,7 +34,52 @@
                
                 dataType: "json"
             });
+        },
+        //click: keywordClickHandler,
+        //activate: keywordActivateHandler,
+        select: keywordSelectHandler,
+        //BCC - 20-Jul-2015 - Add intialization event handler...
+        init: function (event, data) {            
+            //Load keywords into fancytree...
+            loadKeywordsIntoTree(false, 'btnSelectKeywords', 'Select Keyword(s)...', 'glyphiconSpanSK');
         }
+        //BC - 19-Jun-2015 - Disable concept counting - possible later use...
+        //BC - Add select handler...
+        //select: function (event, data) {
+        //    var tree = $("#tree").fancytree("getTree");
+
+        //    //Check for selected 'second-level' nodes (direct children of the 'top-level' nodes)
+        //    var selectedNodes = tree.getSelectedNodes(true);
+        //    var length = selectedNodes.length;
+        //    var toplevelCount = 0;
+
+        //    for (var i = 0; i < length; ++i) {
+        //        var parent = selectedNodes[i].parent;
+
+        //        ((null !== parent) && (parent.isTopLevel())) ? ++toplevelCount : toplevelCount;
+        //    }
+
+        //    if (selectedConceptsMax <= toplevelCount) {
+        //        //Maximum 'top-level' nodes selected - make all unselected 'top-level' nodes 'unselectable' ...
+        //        tree.visit(function (node) {                    
+        //            if (node.isTopLevel() && (!node.isSelected())) {
+        //                node.unselectable = true;
+        //                //node.hideCheckbox = true;
+        //                node.render();
+        //            }
+        //        });
+        //    }
+        //    else {
+        //        //Maximum 'top-level' nodes NOT selected - make all unselected 'top-level' nodes 'selectable'...
+        //        tree.visit(function (node) {
+        //            if (node.isTopLevel() && (!node.isSelected())) {
+        //                node.unselectable = false;
+        //                //node.hideCheckbox = false;
+        //                node.render();
+        //            }
+        //        });
+        //    }
+        //}
     });
     
 
@@ -95,7 +139,10 @@
         $("input[name=search]").keyup();
     });
 
+    //Turn off fancy tree console logging
+    //Source: https://github.com/mar10/fancytree/issues/29
 
+    $.ui.fancytree.debugLevel = 0; // 0:quiet, 1:info, 2:debug
 });
 
     

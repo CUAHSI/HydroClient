@@ -3,10 +3,43 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
+using System.Text;
+
 namespace HISWebClient.Models
 {
     public class TimeSeriesViewModel
     {
+        //Initializing constructor
+        public TimeSeriesViewModel() { }
+
+        //Copy constructor...
+        public TimeSeriesViewModel(TimeSeriesViewModel tsvm)
+        {
+            SeriesId = tsvm.SeriesId;
+            ServCode = tsvm.ServCode;
+            ServURL = tsvm.ServURL;
+            SiteCode = tsvm.SiteCode;
+            VariableCode = tsvm.VariableCode;
+            VariableName = tsvm.VariableName;
+            BeginDate = tsvm.BeginDate;
+            EndDate = tsvm.EndDate;
+            ValueCount = tsvm.ValueCount;
+            SiteName = tsvm.SiteName;
+            Latitude = tsvm.Latitude;
+            Longitude = tsvm.Longitude;
+            DataType = tsvm.DataType;
+            ValueType = tsvm.ValueType;
+            SampleMedium = tsvm.SampleMedium;
+            TimeUnit = tsvm.TimeUnit;
+            //GeneralCategory = tsvm.GeneralCategory;
+            TimeSupport = tsvm.TimeSupport;
+            ConceptKeyword = tsvm.ConceptKeyword;
+            IsRegular = tsvm.IsRegular;
+            //VariableUnits = tsvm.VariableUnits;
+            //Citation = tsvm.Citation;
+            Organization = tsvm.Organization;
+        }
+
         public int SeriesId { get; set; }
         /// <summary>
         /// code of the web service
@@ -90,5 +123,62 @@ namespace HISWebClient.Models
         public string VariableUnits { get; set; }
 
         public string Citation { get; set; }
+        //Organization to be retrived rom service metadata
+        public string Organization { get; set; }
+
+        //Override ToString method for logging...
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendFormat("SeriesId: {0} ~" +
+                            "ServCode: {1} ~" +
+                            "ServURL: {2} ~" +
+                            "SiteCode: {3} ~" +
+                            "VariableCode: {4} ~" +
+                            "VariableName: {5} ~" +
+                            "BeginDate: {6} ~" +
+                            "EndDate: {7} ~" +
+                            "ValueCount: {8} ~" +
+                            "SiteName: {9} ~" +
+                            "Latitude: {10} ~" +
+                            "Longitude: {11} ~" +
+                            "DataType: {12} ~" +
+                            "ValueType: {13} ~" +
+                            "SampleMedium: {14} ~" +
+                            "TimeUnit: {15} ~" +
+                            "GeneralCategory: {16} ~" +
+                            "TimeSupport: {17} ~" +
+                            "ConceptKeyword: {18} ~" +
+                            "IsRegular: {19} ~" +
+                            "VariableUnits: {20} ~" +
+                            "Citation: {21} ~" +
+                            "Organization: {22}", 
+                            SeriesId,
+                            ServCode,
+                            ServURL,
+                            SiteCode,
+                            VariableCode,
+                            VariableName,
+                            BeginDate,
+                            EndDate,
+                            ValueCount,
+                            SiteName,
+                            Latitude,
+                            Longitude,
+                            DataType,
+                            ValueType,
+                            SampleMedium,
+                            TimeUnit,
+                            GeneralCategory,
+                            TimeSupport,
+                            ConceptKeyword,
+                            IsRegular,
+                            VariableUnits,
+                            Citation,
+                            Organization );
+
+            return (sb.ToString());
+        }
     }
 }

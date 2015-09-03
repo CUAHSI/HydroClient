@@ -13,6 +13,20 @@ namespace CUAHSI.Models
     {
         [DataMember]
         public DateTime TimeStamp { get; set; }
+        [DataMember]
+        public DateTime TimeStampUTC { get; set; }
+        [DataMember]
+        public DateTime TimeStampLocal { get; set; }
+
+
+        [DataMember]
+        public DateTime UTCTimeStamp { get; set; }
+
+        [DataMember]
+        public DateTime LocalTimeStamp { get; set; }
+
+        [DataMember]
+        public double UTCOffset { get; set; }
 
         [DataMember]
         public Double Value { get; set; }
@@ -24,6 +38,12 @@ namespace CUAHSI.Models
         public double OffsetValue { get; set; }
 
         [DataMember]
+        public string OffsetDescription { get; set; }
+
+        [DataMember]
+        public string OffsetUnit { get; set; }
+
+        [DataMember]
         public double ValueAccuracy { get; set; }
 
         /// <summary>
@@ -32,6 +52,12 @@ namespace CUAHSI.Models
         [DataMember]
         public string Qualifier { get; set; }
 
+		[DataMember]
+		public string QualifierDescription { get; set; }
+
+		//[DataMember]
+        //public string Speciation { get; set; }
+
         [DataMember]
         public string CensorCode { get; set; }
 
@@ -39,10 +65,11 @@ namespace CUAHSI.Models
         /// Default constructor. Sets properties to architecture-specific constant minima values.
         /// </summary>
         public DataValue()
-        { 
+        {
             TimeStamp = DateTime.MinValue;
             Value = Double.MinValue;
             Qualifier = String.Empty;
+			QualifierDescription = String.Empty;	//10-Aug-2015 - BCC - GitHub Issue #33 - Include Qualifier Description in downloaded time series data
             CensorCode = String.Empty;
             ValueAccuracy = 0;
             OffsetType = String.Empty;
@@ -64,18 +91,23 @@ namespace CUAHSI.Models
         /// <param name="v"></param>
         public DataValue(ServerSideHydroDesktop.ObjectModel.DataValue v)
         {
-            TimeStamp = v.DateTimeUTC;
+            UTCTimeStamp = v.DateTimeUTC;
+            UTCOffset = v.UTCOffset;
+            LocalTimeStamp = v.LocalDateTime;
             Value = v.Value;
             ValueAccuracy = v.ValueAccuracy;
             if (v.Qualifier != null)
             {
                 Qualifier = v.Qualifier.Code;
+				//10-Aug-2015 - BCC - GitHub Issue #33 - Include Qualifier Description in downloaded time series data
+				QualifierDescription = v.Qualifier.Description;
             }
             if (v.OffsetType != null)
             {
-                OffsetType = v.OffsetType.Description;
+                OffsetDescription = v.OffsetType.Description;
+                OffsetUnit = v.OffsetType.Unit.ToString();
             }
-            
+            CensorCode = v.CensorCode;
             OffsetValue = v.OffsetValue;
         }
     }

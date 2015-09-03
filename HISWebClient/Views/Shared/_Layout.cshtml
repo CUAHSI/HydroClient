@@ -5,8 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewBag.Title - CUAHSI HIS HydroClient</title>
     @Styles.Render("~/Content/css")
+    @Styles.Render("~/Content/datatablescdn")
     @Scripts.Render("~/bundles/modernizr")
     @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/fancytree")
+    @*NOTE: The Google Maps API MUST be downloaded directly from Goolge's Servers!!! See commends in BundleConfig.cs *@
+    <script type='text/javascript' src="http://maps.googleapis.com/maps/api/js?v=3.20&signed_in=true&libraries=places,geometry"></script>
+    @Scripts.Render("~/bundles/Google")
     @Scripts.Render("~/bundles/custom")
     @RenderSection("styles", required: false)
     <script type="text/javascript">
@@ -20,40 +25,37 @@
 
         appInsights.trackPageView();
     </script>
-</head>
-<body>               
 
-    <div class="navbar navbar-inverse navbar-fixed-top"><img src="~/Content/Images/beta.png" class="navbar-left" style="border:0px; vertical-align:top" />
-        <div class="container">
-            <div class="navbar-header">
-              
-                <span>
-                    
-                    <img src="~/Content/Images/cuahsi_logo_small.png" class="navbar-left" style="border:0px; vertical-align:top" />
-                @*<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>*@
-                    
-                @Html.ActionLink("HIS HydroClient-BETA V. 0.2", "Index", "Home", new { area = "" }, new { @class = "navbar-left navbar-brand" })</span>
-            </div>
-            <div class="navbar-collapse collapse ">
-                <ul class="nav navbar-nav navbar-right ">
-                    <li>@Html.ActionLink("Home", "Index", "Home")</li>
-                    <li>@Html.ActionLink("About", "About", "Home")</li>
-                    <li>@Html.ActionLink("Contact", "Contact", "Home")</li>
-                </ul>
-               @* @Html.Partial("_LoginPartial")*@
-            </div>
-        </div>
-    </div>
-    <div class="_container body-content">
-        @RenderBody()
-        @*<footer class="">
+    <script>
+    (function (i, s, o, g, r, a, m) {
+        i['GoogleAnalyticsObject'] = r; i[r] = i[r] || function () {
+            (i[r].q = i[r].q || []).push(arguments)
+        }, i[r].l = 1 * new Date(); a = s.createElement(o),
+        m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m)
+    })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+    ga('create', 'UA-32778374-7', 'auto');
+    ga('send', 'pageview');
+
+    </script>
+
+</head>
+<body>    
+    
+    @* BCC - 23-Jul-2015 - Move navbar and images to index.cshtml
+        <div class="navbar navbar-inverse navbar-fixed-top">
+
+        <img class="img-responsive" style="display: inline-block;" src="~/Content/Images/beta.png" />
+        <img class="img-responsive" style="display: inline-block;" src="~/Content/Images/cuahsi_logo_small.png" />
+
+
+    </div>*@
+    @* <div class="_container body-content">*@
+    @RenderBody()
+    @*<footer class="">
             <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
         </footer>*@
-    </div>
+    @* </div>*@
 
 
     @Scripts.Render("~/bundles/bootstrap")
