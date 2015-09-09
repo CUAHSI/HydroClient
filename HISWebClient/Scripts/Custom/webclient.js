@@ -2064,7 +2064,8 @@ function addFilterPlaceholders(event) {
 
     var tableId = event.data.tableId;
     //BCC - 10-Aug-2015 - GitHub Issue #35 - Add filter by Site Name
-    var placeHolders = ['Organization', 'Service Name', 'Keyword', 'Variable Name', 'Site Name'];
+    //BCC - 09-Sep-2015 - GitHub Issue #23 - Replace Network Name with Data Service Title
+    var placeHolders = ['Organization', 'Service Title', 'Keyword', 'Variable Name', 'Site Name'];
 
     var selector = '#' + tableId + '_wrapper > div.dataTables_scroll > div.dataTables_scrollFoot > div > table > tfoot > tr > th > select';
 
@@ -2303,7 +2304,8 @@ function setUpDatatables(clusterid)
         //},
         "columns": [
            { "data": "Organization", "width": "50px", "visible": true },
-           { "data": "ServCode", "sTitle": "Service Name", "visible": true },
+            //BCC - 09-Sep-2015 - GitHub Issue #23 - Replace Network Name with Data Service Title
+           {"data": "ServTitle", "sTitle": "Service Title", "visible": true },
            { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
            { "data": "ServURL", "visible": false },
            { "data": "VariableName", "width": "50px", "sTitle": "Variable Name" },
@@ -3417,7 +3419,8 @@ function setUpTimeseriesDatatable() {
         "deferRender": true,
         "columns": [
             { "data": "Organization", "width": "50px", "visible": true },
-            { "data": "ServCode", "sTitle": "Service Name", "visible": true },
+            //BCC - 09-Sep-2015 - GitHub Issue #23 - Replace Network Name with Data Service Title
+            { "data": "ServTitle", "sTitle": "Service Title", "visible": true },
             { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
             { "data": "ServURL", "visible": false },
             { "data": "VariableName", "width": "50px", "sTitle": "Variable Name" },
