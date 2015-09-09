@@ -1,17 +1,17 @@
 ﻿<!-- Start of cuahsi Zendesk Widget script -->
 <script>/*<![CDATA[*/window.zEmbed || function (e, t) {
-var n, o, d, i, s, a = [],
-    r = document.createElement("iframe"); window.zEmbed = function ()
-    { a.push(arguments) }, window.zE = window.zE || window.zEmbed, r.src = "javascript:false",
-    r.title = "", r.role = "presentation", (r.frameElement || r).style.cssText = "display: none",
-    d = document.getElementsByTagName("script"), d = d[d.length - 1], d.parentNode.insertBefore(r, d),
-    i = r.contentWindow, s = i.document; try { o = s } catch (c) {
-        n = document.domain,
-            r.src = 'javascript:var d=document.open();d.domain="' + n + '";void(0);', o = s
-    } o.open()._l = function () {
-        var o = this.createElement("script"); n && (this.domain = n),
-            o.id = "js-iframe-async", o.src = e, this.t = +new Date, this.zendeskHost = t, this.zEQueue = a, this.body.appendChild(o)
-    }, o.write('<body onload="document._l();">'), o.close()
+    var n, o, d, i, s, a = [],
+        r = document.createElement("iframe"); window.zEmbed = function ()
+        { a.push(arguments) }, window.zE = window.zE || window.zEmbed, r.src = "javascript:false",
+        r.title = "", r.role = "presentation", (r.frameElement || r).style.cssText = "display: none",
+        d = document.getElementsByTagName("script"), d = d[d.length - 1], d.parentNode.insertBefore(r, d),
+        i = r.contentWindow, s = i.document; try { o = s } catch (c) {
+            n = document.domain,
+                r.src = 'javascript:var d=document.open();d.domain="' + n + '";void(0);', o = s
+        } o.open()._l = function () {
+            var o = this.createElement("script"); n && (this.domain = n),
+                o.id = "js-iframe-async", o.src = e, this.t = +new Date, this.zendeskHost = t, this.zEQueue = a, this.body.appendChild(o)
+        }, o.write('<body onload="document._l();">'), o.close()
 }("//assets.zendesk.com/embeddable_framework/main.js", "cuahsi.zendesk.com");/*]]>*/</script>
 <!-- End of cuahsi Zendesk Widget script -->
 
@@ -48,24 +48,24 @@ var n, o, d, i, s, a = [],
                 <h5 style="margin-bottom: 1em;">To download one or more data files, please click the associated table row(s) and click the 'Process Selections' button.</h5>
             </div>
             <div class="modal-body-full disable-selection" id="dtTimeSeriesModal">
-            @* BCC- 23-Jul-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set max-width: none on the table element!!
-               NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
-               Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
-            *@
-            <table id="dtTimeseries" class="display" cellspacing="0" style="max-width: none;">
-                <thead>
-                    <tr>
-                        @Html.Partial("_DatatableTimeseriesColumns")
-                    </tr>
-                </thead>
+                @* BCC- 23-Jul-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set max-width: none on the table element!!
+                    NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
+                    Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
+                *@
+                <table id="dtTimeseries" class="display" cellspacing="0" style="max-width: none;">
+                    <thead>
+                        <tr>
+                            @Html.Partial("_DatatableTimeseriesColumns")
+                        </tr>
+                    </thead>
 
-                <tfoot>
-                    <tr>
-                        @Html.Partial("_DatatableTimeseriesColumns")
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
+                    <tfoot>
+                        <tr>
+                            @Html.Partial("_DatatableTimeseriesColumns")
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         </div>
         <div class="tab-pane active" id="map">
             <!-- Right panel -->
@@ -77,11 +77,11 @@ var n, o, d, i, s, a = [],
                         <form id="Search" class="searchForm form-horizontal" >
                             <!-- Button trigger modal -->
                             <div class="form-group">
-                            <fieldset>
-                                <legend style="margin-bottom: 0.5em;">
+                                <fieldset>
+                                    <legend style="margin-bottom: 0.5em;">
                                         @*<button class="btn btn-primary btn-block" id="btnDateRange" style="width: 90%; margin: 0 auto;" data-toggle="modal" data-target="#SelectDateModal">Select Date Range...</button>*@
-                                    <button class="btn btn-primary btn-block" id="btnDateRange" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectDateModal">Select Date Range...</button>
-                                </legend>
+                                        <button class="btn btn-primary btn-block" id="btnDateRange" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectDateModal">Select Date Range...</button>
+                                    </legend>
                                     <div class="non-modal-inputs">
                                         <div id="grpStartDate" class="form-group" style="margin-bottom: 0em;">
                                             <label class="control-label col-sm-2 col-sm-offset-1" for="startDate" id="lblStartDate">From: </label>
@@ -96,56 +96,56 @@ var n, o, d, i, s, a = [],
                                                 <input id="endDate" class="form-control default-cursor" type="text" style="margin-left: 0.5em;" readonly="readonly" />
                                                 <label id="lblEndDateError" class="help-block" style="display:none;  margin-left: 0.5em;"></label>
                                             </div>
-                                </div>
+                                        </div>
                                     </div>
-                            </fieldset>
+                                </fieldset>
                             </div>
                             <div class="form-group" style="box-sizing: border-box;">
                                 <fieldset>
-                                <legend style="margin-bottom: 0.25em;">
-                                    @*<button class="btn btn-primary btn-block" id="btnSelectKeywords" style="width: 90%; margin: 0 auto;" data-toggle="modal" data-target="#SelectVariableModal">Select Keyword(s)...</button>*@
-                                    @*<button class="btn btn-primary btn-block" id="btnSelectKeywords" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectVariableModal">Select Keyword(s)...</button>*@
-                                    @*<button class="btn btn-primary btn-block" type="button" id="btnSelectKeywords" disabled style="margin: 0 auto;">Select Keyword(s)...</button>*@
-                                    <button class="btn btn-primary btn-block" type="button" id="btnSelectKeywords" disabled style="margin: 0 auto;">
-                                        <h4 class="text-center" style="display: inline; vertical-align: middle;">
-                                            <span id="glyphiconSpanSK" class="glyphicon glyphicon-refresh spin" style="color: #32cd32;"></span>
-                                        </h4>
-                                        Loading Keyword(s)...
-                                    </button>
-                                </legend>
+                                    <legend style="margin-bottom: 0.25em;">
+                                        @*<button class="btn btn-primary btn-block" id="btnSelectKeywords" style="width: 90%; margin: 0 auto;" data-toggle="modal" data-target="#SelectVariableModal">Select Keyword(s)...</button>*@
+                                        @*<button class="btn btn-primary btn-block" id="btnSelectKeywords" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectVariableModal">Select Keyword(s)...</button>*@
+                                        @*<button class="btn btn-primary btn-block" type="button" id="btnSelectKeywords" disabled style="margin: 0 auto;">Select Keyword(s)...</button>*@
+                                        <button class="btn btn-primary btn-block" type="button" id="btnSelectKeywords" disabled style="margin: 0 auto;">
+                                            <h4 class="text-center" style="display: inline; vertical-align: middle;">
+                                                <span id="glyphiconSpanSK" class="glyphicon glyphicon-refresh spin" style="color: #32cd32;"></span>
+                                            </h4>
+                                            Loading Keyword(s)...
+                                        </button>
+                                    </legend>
                                     <div style="overflow-y: scroll; max-height: 10em;">
-                                    <ol id="olConcepts" style="list-style: circle;">
-                                        <li>All</li>
-                                    </ol>
-                                </div>
-                            </fieldset>
+                                        <ol id="olConcepts" style="list-style: circle;">
+                                            <li>All</li>
+                                        </ol>
+                                    </div>
+                                </fieldset>
                             </div>
                             <div class="form-group" style="box-sizing: border-box;">
                                 <fieldset>
-                                <legend style="margin-bottom: 0.25em;">
+                                    <legend style="margin-bottom: 0.25em;">
                                         @*<button class="btn btn-primary btn-block" style="width: 90%; margin: 0 auto;" data-toggle="modal" data-target="#SelectServicesModal">Select Data Service(s)...</button>*@
-                                    <button class="btn btn-primary btn-block" id="btnSelectDataServices" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectServicesModal">Select Data Service(s)...</button>
-                                </legend>
-                                @*<div style="overflow-y: scroll; max-height: 10em;">*@
-                                <div style="max-height: 10em;">
-                                    <ol id="olServices" style="list-style: circle;">
-                                        <li>All</li>
-                                    </ol>
-                                </div>
-                            </fieldset>
+                                        <button class="btn btn-primary btn-block" id="btnSelectDataServices" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectServicesModal">Select Data Service(s)...</button>
+                                    </legend>
+                                    @*<div style="overflow-y: scroll; max-height: 10em;">*@
+                                    <div style="max-height: 10em;">
+                                        <ol id="olServices" style="list-style: circle;">
+                                            <li>All</li>
+                                        </ol>
+                                    </div>
+                                </fieldset>
                             </div>
                             <div id="SelectedDateRange">
 
                             </div>
                             <div class="form-group" style="box-sizing: border-box;">
 
-                            <!-- For click handler see webclient.js $("#Search").submit(function (e) -->
+                                <!-- For click handler see webclient.js $("#Search").submit(function (e) -->
                                 <button type="submit" class="btn btn-success btn-block" style="margin: 0 auto;">Search Map</button><br />
                                 <button id="btnSetDefaults" type="button" class="btn btn-warning btn-block" style="margin: 0 auto;">Reset</button>
                                 @*<div style ="text-align: center; margin-top: 1em; ">
-                                    <a href="http://www.github.com/cuahsi" target="_blank">Version 1.0</a>
-                                </div>*@
-                                </div>
+                                        <a href="http://www.github.com/cuahsi" target="_blank">Version 1.0</a>
+                                    </div>*@
+                            </div>
 
                         </form>
                     </div>
@@ -223,8 +223,8 @@ var n, o, d, i, s, a = [],
                 </table>
                 <div class="div-table-content">
                     <!-- BCC - Try a dynamically sized font here...
-             Source: http://stackoverflow.com/questions/14537611/bootstrap-responsive-text-size
-        -->
+                         Source: http://stackoverflow.com/questions/14537611/bootstrap-responsive-text-size
+                    -->
                     @*<table id="tblDownloadManager" class="table table-hover table-fixed" style="font-size: 1.5vmin; margin: 0 auto;">*@
                     @*<table id="tblDownloadManager" class="table table-hover table-fixed" style="font-size: 2.0vmin;">*@
                     <table id="tblDownloadManager" class="table table-hover" style="font-size: 2.0vmin;">
@@ -246,7 +246,7 @@ var n, o, d, i, s, a = [],
 
 <!-- Modal dialog for Contact -->
 <div class="modal fade" id="contactModal" tabindex="-1" role="dialog" aria-labelledby="contactModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog" style="width: 50em;">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
@@ -256,8 +256,9 @@ var n, o, d, i, s, a = [],
 
                 <div style="margin-left: 2.0em;">
                     <address style="margin-top: 2.0em;">
-                            <h4>Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)</h4><br />
-                        Boston Office<br />
+                        <strong>Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)</strong>
+                        <br />
+                        <br />
                         196 Boston Ave, Suite 3000<br />
                         Medford, MA 02155<br />
                         Phone: (339) 221-5400<br />
@@ -265,18 +266,17 @@ var n, o, d, i, s, a = [],
                     </address>
 
                     <address>
-                            <strong>Support:</strong>   <a href="mailto:help@cuahsi.org">help@cuahsi.org</a><br /><br />
-                            
-                        @*    <a href="https://github.com/CUAHSI/HISWebClientIssues/issues" class="h5" target="_blank">Report a bug here!</a>*@
-                        <a href="https://cuahsi.zendesk.com/hc/en-us/sections/201050037-HydroClient-data-cuahsi-org-" target="_blank">Need additional help<span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
-</address>
-                       
+                        <strong>Support:</strong>   <a href="mailto:help@cuahsi.org">help@cuahsi.org</a><br /><br />
+
+                        <a href="https://cuahsi.zendesk.com/hc/en-us/sections/201050037-HydroClient-data-cuahsi-org-" target="_blank">Need additional help<span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></a>
+                    </address>
+
                 </div>
             </div>
             <div class="modal-footer">
                 <!--p>This is the modal footer!!</p-->
             </div>
-       </div>
+        </div>
     </div>
 </div>
 
@@ -296,38 +296,38 @@ var n, o, d, i, s, a = [],
                     <h4>Distribution</h4>
 
                     <p>
-                        HydroClient and all associated source code and documentation are available at the following URL: <a href="http://www.github.com/cuahsi">http://www.github.com/cuahsi</a>.  
-                        HydroClient source code and documentation are provided free of charge under the Berkeley Software Distribution (BSD) license. 
+                        HydroClient and all associated source code and documentation are available at the following URL: <a href="http://www.github.com/cuahsi">http://www.github.com/cuahsi</a>.
+                        HydroClient source code and documentation are provided free of charge under the Berkeley Software Distribution (BSD) license.
                         Please see the following license information: Copyright (c) 2015, CUAHSI, All rights reserved.
                     </p>
                     <p>
-                        Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met: 
+                        Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
                     </p>
-                        <ol style="list-style: decimal;">
-                            <li>
-                                Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer. 
-                            </li>
-                            <li>
-                                Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.                       
-                            </li>
-                            <li>
-                                Neither the name of CUAHSI nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.   
-                            </li>
-                        </ol>
+                    <ol style="list-style: decimal;">
+                        <li>
+                            Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+                        </li>
+                        <li>
+                            Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+                        </li>
+                        <li>
+                            Neither the name of CUAHSI nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+                        </li>
+                    </ol>
                     <p>
-                        This software is provided by the copyright holders and contributors "as is" and any express or implied warranties, including, but not limited to, 
-                        the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors 
-                        be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute 
-                        goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict 
-                        liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage. 
+                        This software is provided by the copyright holders and contributors "as is" and any express or implied warranties, including, but not limited to,
+                        the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors
+                        be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute
+                        goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict
+                        liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.
                     </p>
 
                     <h4>
                         Disclaimer
                     </h4>
                     <p>
-                        Although much effort has been expended in the development and testing of the HydroClient, errors and inadequacies may still occur. Users must make the final evaluation 
-                        as to the usefulness of HydroClient for his or her application. HydroClient, CUAHSI HIS, and documentation are supported by National Science Foundation Grant Number EAR-1248152. 
+                        Although much effort has been expended in the development and testing of the HydroClient, errors and inadequacies may still occur. Users must make the final evaluation
+                        as to the usefulness of HydroClient for his or her application. HydroClient, CUAHSI HIS, and documentation are supported by National Science Foundation Grant Number EAR-1248152.
                         Any opinions, findings, and conclusions or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the National Science Foundation.
                     </p>
                 </div>
@@ -354,7 +354,7 @@ var n, o, d, i, s, a = [],
                     <p>
                         An error has occured on the server - please re-submit your search criteria...
                     </p>
- 
+
                 </div>
             </div>
             <div class="modal-footer">
@@ -429,9 +429,9 @@ var n, o, d, i, s, a = [],
                                 <div class="col-sm-6">
                                     <label id="lblEndDateErrorModal" class="help-block" style="display: none;"></label>
                                 </div>
+                            </div>
                         </div>
                     </div>
-                </div>
                 </form>
             </div>
             <div class="modal-footer"><button type="button" id="btnDateRangeModalSave" class="btn btn-default btn-primary" data-dismiss="modal">Save</button></div>
@@ -477,19 +477,19 @@ var n, o, d, i, s, a = [],
                                         </label>
                                         <label class="checkbox">
                                             <input type="checkbox" name="keywords" value="Groundwater Level" id="inlineCheckbox4" class="topCategories" />Groundwater Level
-                                            </label>
-                                            <label class="checkbox">
+                                        </label>
+                                        <label class="checkbox">
                                             <input type="checkbox" name="keywords" value="Nutrient" id="inlineCheckbox9" class="topCategories" />Nutrient
                                         </label>
                                         <label class="checkbox">
                                             <input type="checkbox" name="keywords" value="pH" id="inlineCheckbox11" class="topCategories" />pH
                                         </label>
                                         @*<label class="checkbox">
-                                                <input type="checkbox" name="keywords" value="dissolved solids, total" id="inlineCheckbox5" class="topCategories"/> Total Dissolved Solids
-                                        </label>
-                                        <label class="checkbox">
-                                                <input type="checkbox" name="keywords" value="Methane" id="inlineCheckbox6" class="topCategories"/> Methane
-                                            </label>*@
+                                                    <input type="checkbox" name="keywords" value="dissolved solids, total" id="inlineCheckbox5" class="topCategories"/> Total Dissolved Solids
+                                            </label>
+                                            <label class="checkbox">
+                                                    <input type="checkbox" name="keywords" value="Methane" id="inlineCheckbox6" class="topCategories"/> Methane
+                                                </label>*@
                                     </div>
                                     <div class="controls col-lg-5">
                                         <label class="checkbox">
@@ -509,8 +509,8 @@ var n, o, d, i, s, a = [],
                                             <input type="checkbox" name="keywords" value="Solids, total suspended" id="inlineCheckbox16" class="topCategories"/>Total Suspended Solids
                                         </label>
                                         @*<label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Water Level" id="inlineCheckbox3" class="topCategories" />Water Level
-                                        </label>*@
+                                                <input type="checkbox" name="keywords" value="Water Level" id="inlineCheckbox3" class="topCategories" />Water Level
+                                            </label>*@
                                         <label class="checkbox">
                                             <input type="checkbox" name="keywords" value="Temperature, water" id="inlineCheckbox8" class="topCategories" />Water Temperature
                                         </label>
@@ -572,42 +572,42 @@ var n, o, d, i, s, a = [],
 <!-- Modal -->
 <!--BCC - 26-Jun-2015 - Changes for QA Issue #23 - GUI: popup design do not unified -->
 <div class="modal fade" id="SelectServicesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-full" role="document">
-            <div class="modal-content modal-content-full">
-                <div class="modal-header">
-                    <button type="button" id="btnSaveServiceSelectionX" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h3 class="modal-title" id="myModalLabel">Click to select Data Services</h3>
-                    @*BCC - 02-Jul-2015 - Internal QA Issue #23 - Move 'Exclude Gridded data services...' checkbox to right *@
-                    <div class="form-group" style="position: relative;">
-                        <h6 style="display:inline-block; float: left;"> (No selection searches all)</h6>
-                        <label for="checkOnlyObservedValues" style="float: right;">
-                            <input type="checkbox" name="checkOnlyObservedValues" id="checkOnlyObservedValues" data-inline="true" /> Select all non-gridded data services.<a href="https://cuahsi.zendesk.com/hc/en-us/articles/209045187" target="_blank"><span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></a></label>
-                    </div>
+    <div class="modal-dialog modal-dialog-full" role="document">
+        <div class="modal-content modal-content-full">
+            <div class="modal-header">
+                <button type="button" id="btnSaveServiceSelectionX" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 class="modal-title" id="myModalLabel">Click to select Data Services</h3>
+                @*BCC - 02-Jul-2015 - Internal QA Issue #23 - Move 'Exclude Gridded data services...' checkbox to right *@
+                <div class="form-group" style="position: relative;">
+                    <h6 style="display:inline-block; float: left;"> (No selection searches all)</h6>
+                    <label for="checkOnlyObservedValues" style="float: right;">
+                        <input type="checkbox" name="checkOnlyObservedValues" id="checkOnlyObservedValues" data-inline="true" /> Select all non-gridded data services.<a href="https://cuahsi.zendesk.com/hc/en-us/articles/209045187" target="_blank"><span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></a></label>
                 </div>
-                <div class="modal-body modal-body-full">
-                    <table id="dtServices" class="display" cellspacing="0">
-                        <thead>
-                            <tr>
-                                @Html.Partial("_DatatableDataservicesColumns")
-                            </tr>
-                        </thead>
-
-                        <tfoot>
-                            <tr>
-                                @Html.Partial("_DatatableDataservicesColumns")
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-                <div class="modal-footer">
-                    @*BCC - 30-Jun-2015 - QA Issue #44 - Popup 'Click to select Data Services': 'Save' button is missed *@
-                    <button type="button" id="saveServiceSelection" class="btn btn-default btn-primary" data-dismiss="modal">Close</button>
-                </div>
-                <!-- /.modal-content -->
             </div>
-            <!-- /.modal-dialog -->
+            <div class="modal-body modal-body-full">
+                <table id="dtServices" class="display" cellspacing="0">
+                    <thead>
+                        <tr>
+                            @Html.Partial("_DatatableDataservicesColumns")
+                        </tr>
+                    </thead>
+
+                    <tfoot>
+                        <tr>
+                            @Html.Partial("_DatatableDataservicesColumns")
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="modal-footer">
+                @*BCC - 30-Jun-2015 - QA Issue #44 - Popup 'Click to select Data Services': 'Save' button is missed *@
+                <button type="button" id="saveServiceSelection" class="btn btn-default btn-primary" data-dismiss="modal">Close</button>
+            </div>
+            <!-- /.modal-content -->
         </div>
+        <!-- /.modal-dialog -->
     </div>
+</div>
 @*  BCC - 29-Jun-2015 - Remove 'fade' class from modal div to ensure firing of 'shown.bs.modal' event!!
     Source: http://stackoverflow.com/questions/18568278/bootstrap-3-0-0-modal-events-not-firing
     <div class="modal fade full-screen" id="SeriesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">*@
@@ -622,13 +622,13 @@ var n, o, d, i, s, a = [],
                 <h5 style="margin-bottom: 1em;">To zip one or more data files, please click the associated table row(s) and then click the 'Process Selections' button.</h5>
             </div>
             <div class="modal-body modal-body-full">
-            @* BCC- 23-Jul-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set 'max-width: none' on the table element!!
-               NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
-               Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
-           *@
+                @* BCC- 23-Jul-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set 'max-width: none' on the table element!!
+                    NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
+                    Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
+                *@
                 <table id="dtMarkers" class="display disable-selection" cellspacing="0" style="max-width: none;">
                     <thead>
-                        <tr>                           
+                        <tr>
                             @Html.Partial("_DatatableTimeseriesColumns")
                         </tr>
                     </thead>
