@@ -3665,6 +3665,35 @@ function GetPathForBounds(bounds)
     return path;
 }
 
+//Redirect to a help article per the input identifier
+function helpIconClicked(identifier) {
+
+    if ('undefined' === typeof identifier || null === identifier) {
+        return; //Invalid input parameter!!
+    }
+
+    var url = null;
+    switch (identifier) {
+        case 'TimeUnit':
+        case 'TimeSupport':
+            url = 'https://cuahsi.zendesk.com/hc/en-us/articles/209177787';
+            break;
+        case 'checkOnlyObservedValues':
+            url = 'https://cuahsi.zendesk.com/hc/en-us/articles/209045187';
+            break;
+        default:
+            //Take no action...
+            break;
+    }
+    if (null !== url) {
+        var newBrowserTab = window.open(url, "_blank", "", false);
+        if (null !== newBrowserTab) {
+            newBrowserTab.focus();
+        }
+    }
+
+}
+
 //Set up tooltips...
 function setUpTooltips(elementId) {
 
