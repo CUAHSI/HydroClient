@@ -276,7 +276,7 @@ function initialize() {
     //Allocate a TimeSeriesRequestStatus instance...
     timeSeriesRequestStatus = (new TimeSeriesRequestStatus()).getEnum();
 
-    var steInt = timeSeriesRequestStatus.StopTaskError;
+    var steInt = timeSeriesRequestStatus.EndTaskError;
 
     var steObj = timeSeriesRequestStatus.properties[steInt];
 
@@ -3114,7 +3114,7 @@ function zipSelections(event) {
             //alert("Response received: " + response.Status.toString());
 
             //Add new row to the download manager table
-            //BCC - 30-Jun-2015 - Revised formatting for QA issue #32 - Download Manager (GUI): table entries arу scattered all over the page
+            //BCC - 30-Jun-2015 - Revised formatting for QA issue #32 - Download Manager (GUI): table entries are scattered all over the page
             var cols = [];
             var div = '';
 
@@ -3141,7 +3141,6 @@ function zipSelections(event) {
                 $(event.target).hide();
                 //Send request to server to stop task...
                 event.preventDefault();
-                //var actionUrl = rootDir + 'home/ET';
                 var actionUrl = "/Export/EndTask";
 
                 $.ajax({
@@ -3153,14 +3152,11 @@ function zipSelections(event) {
 
                         var statusResponse = jQuery.parseJSON(data);
 
-                            //Update status in download manager table...
-                            //var tableRow = $("#tblServerTaskCart > td").filter(function () {
+                        //Update status in download manager table...
                         var tableRow = $("#tblDownloadManager tr td").filter(function () {
                             return $(this).text() === statusResponse.RequestId;
                         }).parent("tr");
 
-                        //tableRow.find('td:eq(2)').html(statusResponse.Status);
-                        //tableRow.find('td:eq(3)').html(statusResponse.BlobUri);
                         tableRow.find('#statusMessageText').html(statusResponse.Status);
                         tableRow.find('#blobUriText').html(statusResponse.BlobUri);
                         tableRow.find('td:eq(5)').html(statusResponse.RequestStatus);
@@ -3172,9 +3168,9 @@ function zipSelections(event) {
                         error: function (xmlhttprequest, textStatus, message) {
                             //alert('Failed to request server to stop task ' + message);
 
-                            //Update row with Stop Task Error status
+                            //Update row with End Task Error status
                             var requestId = this.valueOf();   //From context: parameter on ajax call - convert string 'object' to string 'primitive'...
-                            var errorDescription = (timeSeriesRequestStatus.properties[timeSeriesRequestStatus.StopTaskError]).description;
+                            var errorDescription = (timeSeriesRequestStatus.properties[timeSeriesRequestStatus.EndTaskError]).description;
 
                             var tableRow = $("#tblDownloadManager tr td").filter(function () {
                                 return $(this).text() === requestId;
@@ -3182,18 +3178,21 @@ function zipSelections(event) {
 
                             tableRow.find('#statusMessageText').html(errorDescription);
                             tableRow.find('#blobUriText').html('');
-                            tableRow.find('td:eq(5)').html(timeSeriesRequestStatus.StopTaskError);
+                            tableRow.find('td:eq(5)').html(timeSeriesRequestStatus.EndTaskError);
 
                             //Change the glyphicon and stop the animation
                             var glyphiconSpan = tableRow.find('#glyphiconSpan');
 
                             glyphiconSpan.removeClass('glyphicon-refresh spin');
                             glyphiconSpan.addClass('glyphicon-thumbs-down');
-
+                            glyphiconSpan.css('color', 'red');
 
                             //Color table row as 'warning'
                             tableRow.removeClass('info');
                             tableRow.addClass('warning');
+
+                            //Log messsage received from server...
+                            console.log('EndTask reports error: ' + xmlhttprequest.status + ' (' + message + ')');
                         }
                     });
             });
@@ -3243,31 +3242,29 @@ function zipSelections(event) {
 
                         //Check current status...
                         var statusCurrent = parseInt(tableRow.find('td:eq(5)').html());
-                        if ((statusCurrent === timeSeriesRequestStatus.RequestTimeSeriesError) ||
-                            (statusCurrent === timeSeriesRequestStatus.CheckTaskError) ||
-                            (statusCurrent === timeSeriesRequestStatus.StopTaskError)) {
-                            //Error status - stop interval - return
-                            clearInterval(intervalId);
-                            return;
-                        }
 
-                        //Update table row...
-                        //tableRow.find('td:eq(1)').html(statusResponse.Status);
-                        //tableRow.find('td:eq(1)').html(formatStatusMessage(statusResponse.Status));
+                        //Update table row, if indicated...
+                        if (statusCurrent !== timeSeriesRequestStatus.EndTaskError &&
+                            statusCurrent !== timeSeriesRequestStatus.UnknownTask &&
+                            statusCurrent != timeSeriesRequestStatus.RequestTimeSeriesError &&
+                            ( ! (statusCurrent === timeSeriesRequestStatus.ClientSubmittedCancelRequest && 
+                                 statusResponse.RequestStatus === timeSeriesRequestStatus.ProcessingTimeSeriesId))) {
                         tableRow.find('#statusMessageText').html(statusResponse.Status);
-                        //tableRow.find('td:eq(3)').html(statusResponse.BlobUri);
                         tableRow.find('#blobUriText').html(statusResponse.BlobUri);
                         tableRow.find('td:eq(5)').html(statusResponse.RequestStatus);
 
                         //Color row as 'info'
                         tableRow.addClass('info');
+                        }
 
-                        //Check for completed/cancelled task
+                        //Check for completed/cancelled task/unknown task/error
                         var requestStatus = parseInt(tableRow.find('td:eq(5)').html());
 
                         if (timeSeriesRequestStatus.Completed === requestStatus ||
                             timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus ||
-                            timeSeriesRequestStatus.ProcessingError === requestStatus) {
+                            timeSeriesRequestStatus.RequestTimeSeriesError === requestStatus ||
+                            timeSeriesRequestStatus.EndTaskError === requestStatus ||
+                            timeSeriesRequestStatus.UnknownTask === requestStatus) {
                             //If task completed - re-assign 'Stop Task' button to 'Download'
                             if (timeSeriesRequestStatus.Completed === requestStatus) {
                                 //Success - retrieve the base blob URI... 
@@ -3279,7 +3276,6 @@ function zipSelections(event) {
                                 var fileName = uriComponents[(uriComponents.length - 1)];
 
                                 //Set base blob URI into text in column 3
-                                //tableRow.find('td:eq(3)').attr('title', baseUri[0]);
                                 tableRow.find('#blobUriText').html(fileName);
 
                                 //Create a download button...
@@ -3288,8 +3284,6 @@ function zipSelections(event) {
                                 button = $("<button class='zipBlobDownload btn btn-success' style='font-size: 1.5vmin' data-blobUri='" + blobUri +  "'>Download Archive</button>");
 
                                 button.on('click', function (event) {
-                                    //var blobUri = tableRow.find('td:eq(3)').html();
-                                    //var blobUri = tableRow.find('#blobUriText').html();
                                     var blobUri = $(this).attr('data-blobUri');
                                     location.href = blobUri;
 
@@ -3319,14 +3313,39 @@ function zipSelections(event) {
                                 }
                             }
                             else {
-                                if (timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus) {
-                                    //Task canceled - color row as 'danger'
+                                if (timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus ||
+                                    timeSeriesRequestStatus.UnknownTask === requestStatus || 
+                                    timeSeriesRequestStatus.EndTaskError === requestStatus) {
+                                    //Task canceled OR unknown OR end task error - color row as 'danger'
                                     tableRow.addClass('danger');
 
                                     //Fade row and remove from table...
                                     tableRow.fadeTo(1500, 0.5, function () {
                                         $(this).remove();
                                     });
+                                }
+                                else {
+                                    if (timeSeriesRequestStatus.RequestTimeSeriesError === requestStatus) {
+                                        
+                                        //Request Time Series Processing Error - DO NOT remove the row!! 
+                                        
+                                        //Reset blob URI
+                                        tableRow.find('#blobUriText').html('');
+
+                                        //Hide the 'Stop Processing' button
+                                        tableRow.find('td:eq(4)').hide();
+
+                                        //Change the glyphicon and stop the animation
+                                        var glyphiconSpan = tableRow.find('#glyphiconSpan');
+
+                                        glyphiconSpan.removeClass('glyphicon-refresh spin');
+                                        glyphiconSpan.addClass('glyphicon-thumbs-down');
+                                        glyphiconSpan.css('color', 'red');
+
+                                        //Color table row as 'warning'
+                                        tableRow.removeClass('info');
+                                        tableRow.addClass('warning');
+                                    }
                                 }
                             }
                             
@@ -3339,13 +3358,9 @@ function zipSelections(event) {
 
                         //For now - take no action...
                         //ASSUMPTION: Next request will succeed
-                        //var n = 6;
-                        //n++;
 
-                        //alert('Failed to retrieve task status ' + message);
-
-                        //TO DO - can call clearInterval here to stop requesting status 
-                        //          for a task that has errored...
+                        //Log messsage received from server...
+                        console.log('CheckTask reports error: ' + xmlhttprequest.status + ' (' + message + ')');
                     }
                 });
 
@@ -3353,10 +3368,6 @@ function zipSelections(event) {
 
         },
         error: function (xmlhttprequest, textstatus, message) {
-            //alert('Failed request time series: ' + message);
-
-            //TO DO - Replace this code with logic to update row in Download Manager 
-            //          table with new Enum value - RequestTimeSeries failure...
             //Server error: Close modal dialog, if indicated - open 'Server Error' dialog
             if ($('#SeriesModal').is(":visible")) {
                 $('#SeriesModal').modal('hide');
@@ -3365,7 +3376,7 @@ function zipSelections(event) {
             $('#serverErrorModal').modal('show');
 
             //Log messsage received from server...
-            console.log('RequestTimeSeries reports error: ' + message);
+            console.log('RequestTimeSeries reports error: ' + xmlhttprequest.status + ' (' + message + ')');
         }
     });
 }

@@ -36,6 +36,26 @@ namespace HISWebClient.Util
 
 			getIds(httpcontextCurrent, ref sessionId, ref userIpAddress, ref domainName);
 
+			createLogEntry(sessionId, userIpAddress, domainName, occurrenceDtUtc, methodName, exception, exceptionMessage);
+
+			return;
+		}
+
+		//Write and entry to the log table (for use when an HttpContext is not available...)
+		public void createLogEntry(string sessionId, string userIpAddress, string domainName, DateTime occurrenceDtUtc, string methodName, Exception exception, string exceptionMessage)
+		{
+			//Validate/initialize input parameters...
+			if (String.IsNullOrWhiteSpace(sessionId) ||
+				 String.IsNullOrWhiteSpace(userIpAddress) ||
+				 String.IsNullOrWhiteSpace(domainName) ||
+				 null == occurrenceDtUtc ||
+				 String.IsNullOrWhiteSpace(methodName) ||
+				 null == exception ||
+				 String.IsNullOrWhiteSpace(exceptionMessage) )
+			{
+				return;		//Invalid parameter - return early...
+			}
+
 			//Write derived and input values to MDC...
 			MDC.Clear();
 
