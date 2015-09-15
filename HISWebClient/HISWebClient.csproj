@@ -310,6 +310,7 @@
     <Compile Include="Util\DbBaseContext.cs" />
     <Compile Include="Util\DbErrorContext.cs" />
     <Compile Include="Util\DbLogContext.cs" />
+    <Compile Include="Util\httpUtil.cs" />
     <Compile Include="Views\DiagnosticMonTraceListener.cs" />
     <Compile Include="Scripts\EnumExtensionMethods.cs" />
   </ItemGroup>
