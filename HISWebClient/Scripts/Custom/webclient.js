@@ -752,7 +752,7 @@ function validateQueryParameters(area, selectedKeys) {
 
     area *= 1;  //Convert to numeric value...
 
-    var allMax = 10000000;
+    var allMax = 1000000;
     if (area > allMax) {
         
         bootbox.alert("<h4>The selected area (" +area.toLocaleString() + " sq km) is too large to search. <br> Please limit search area to less than " +allMax.toLocaleString() + " sq km and/or reduce search keywords.</h4>");
