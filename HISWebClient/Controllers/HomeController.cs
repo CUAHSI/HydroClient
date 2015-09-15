@@ -472,12 +472,13 @@ namespace HISWebClient.Controllers
 
 			var dict = allWebservices.Distinct().ToDictionary(i => i.ServiceCode, i => i.Organization);
 
-			
+			var dict1 = allWebservices.Distinct().ToDictionary(i => i.ServiceCode, i => i.Title);
 
 			var obj = new TimeSeriesViewModel();           
 			
 			obj.SeriesId = id;
 			obj.ServCode = dc.ServCode;
+			obj.ServTitle = dict1.FirstOrDefault(x => x.Key == dc.ServCode).Value;
 			obj.ServURL = dc.ServURL;
 			obj.SiteCode = dc.SiteCode;
 			obj.VariableCode = dc.VariableCode;

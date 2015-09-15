@@ -22,7 +22,7 @@ function TimeSeriesRequestStatus() {
                         "UnknownTask": [9, "Unknown Task!!"],
                         "RequestTimeSeriesError": [10,"Request Time Series Error"], //Not currently used
                         "CheckTaskError": [11,"Check Task Error"],
-                        "StopTaskError": [12,"Stop Task Error"]
+                        "EndTaskError": [12,"End Task Error"]
                     };
 
     if ("function" !== typeof this.getEnum) {

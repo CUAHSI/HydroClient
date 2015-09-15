@@ -274,12 +274,6 @@ namespace HISWebClient.Controllers
 					
 					currentSeries.Add(new TimeSeriesViewModel(tsvm));
 		
-					//Log each time series requested...     
-					//string logEntry = String.Format("User IP Address: {0} DateTime: {1} Timeseries: {2}", userIpAddress, requestTimeStamp.ToString(), tsvm.ToString());
-
-					//logger.Info( logEntry );
-					//logger.Debug(logEntry);
-
 					foreach( int id in tsrIn.TimeSeriesIds)
 					{
 						if ( tsvm.SeriesId == id )
@@ -315,6 +309,7 @@ namespace HISWebClient.Controllers
 				dblogcontext.getIds(System.Web.HttpContext.Current, ref sessionId, ref userIpAddress, ref domainName);
 
 				var dblogcontextRef = dblogcontext;
+				var dberrorcontextRef = dberrorcontext;
 				var sessionIdRef = sessionId;
 				var userIpAddressRef = userIpAddress;
 				var domainNameRef = domainName;
@@ -384,6 +379,13 @@ namespace HISWebClient.Controllers
 							}
 						}
 
+#if NEVER_DEFINED
+						//Simulate a server error... divide by zero
+						int zero = 0;
+						int nonZero = 5;
+
+						int testResult = nonZero / zero;
+#endif
 						//Time series processing complete - check for cancellation
 						if (!IsTaskCancelled(requestId, cancellationEnum, cancellationMessage))
 						{
@@ -405,6 +407,7 @@ namespace HISWebClient.Controllers
 									_dictTaskStatus[requestId].RequestStatus = TimeSeriesRequestStatus.Completed;
 									_dictTaskStatus[requestId].Status = TimeSeriesRequestStatus.Completed.GetEnumDescription();
 									_dictTaskStatus[requestId].BlobUri = blobUri;
+								}
 
 									dblogcontextRef.clearParameters();
 									dblogcontextRef.clearReturns();
@@ -415,11 +418,20 @@ namespace HISWebClient.Controllers
 								}
 							}
 						}
-					}
 					catch (Exception ex)
 					{
-						//Error - update request status
-						UpdateTaskStatus(requestId, TimeSeriesRequestStatus.ProcessingError, TimeSeriesRequestStatus.ProcessingError.GetEnumDescription() + ex.Message);
+						//Error - log...
+						dberrorcontextRef.clearParameters();
+						dberrorcontextRef.createLogEntry(sessionIdRef, 
+														 userIpAddressRef, 
+														 domainNameRef,
+														 DateTime.UtcNow,
+														 "RequestTimeSeries(TimeSeriesRequest tsrIn)",
+														 ex,
+														"RequestTimeSeries error for Id: " + requestId + " message: " + ex.Message);
+						
+						//Update request status
+						UpdateTaskStatus(requestId, TimeSeriesRequestStatus.RequestTimeSeriesError, TimeSeriesRequestStatus.RequestTimeSeriesError.GetEnumDescription() + ": " + ex.Message);
 					}
 					finally
 					{
@@ -440,6 +452,12 @@ namespace HISWebClient.Controllers
 			var javaScriptSerializer = new JavaScriptSerializer();
 			var json = javaScriptSerializer.Serialize(result);
 
+#if NEVER_DEFINED
+			//Simulate a 500 error - Internal Server Error...
+			//NOTE: Need to assign a temporary here to avoid compiler error: CS0206 - A property or indexer may not be passed as an out or ref parameter.
+			HttpResponseBase httpResponseBase = Response;
+			httpUtil.setHttpResponseStatusCode(ref httpResponseBase, HttpStatusCode.InternalServerError);
+#endif				
 			//Processing complete - return 
 			return Json(json, "application/json");
 		}
@@ -461,7 +479,9 @@ namespace HISWebClient.Controllers
 
 					//If task is cancelled or completed, remove associated entry from dictionary
 					if ( TimeSeriesRequestStatus.Completed == tsr.RequestStatus || 
-						 TimeSeriesRequestStatus.CanceledPerClientRequest == tsr.RequestStatus)
+						 TimeSeriesRequestStatus.CanceledPerClientRequest == tsr.RequestStatus ||
+						TimeSeriesRequestStatus.EndTaskError == tsr.RequestStatus ||
+						TimeSeriesRequestStatus.RequestTimeSeriesError == tsr.RequestStatus )
 					{
 						_dictTaskStatus.Remove(Id);
 					}
@@ -492,13 +512,29 @@ namespace HISWebClient.Controllers
 					{
 						cts.Cancel();
 
+#if NEVER_DEFINED
+						//Simulate a server error... divide by zero
+						int zero = 0;
+						int nonZero = 5;
+
+						int testResult = nonZero / zero;
+#endif
 						tsr.RequestStatus = TimeSeriesRequestStatus.ClientSubmittedCancelRequest;
 						tsr.Status = TimeSeriesRequestStatus.ClientSubmittedCancelRequest.GetEnumDescription();
 					}
 					catch (Exception ex)
 					{
 						//Error - update request status
-						UpdateTaskStatus(Id, TimeSeriesRequestStatus.ProcessingError, TimeSeriesRequestStatus.ProcessingError.GetEnumDescription() + ex.Message);
+						dberrorcontext.clearParameters();
+						dberrorcontext.createLogEntry(System.Web.HttpContext.Current,
+													  DateTime.UtcNow, "EndTask(String Id)",
+													  ex,
+													  "EndTask error for Id: " + Id + " message: " + ex.Message);
+
+						tsr.RequestStatus = TimeSeriesRequestStatus.EndTaskError;
+						tsr.Status = TimeSeriesRequestStatus.EndTaskError.GetEnumDescription() + ": " + ex.Message;
+
+						UpdateTaskStatus(Id, tsr.RequestStatus, tsr.Status);
 					}
 				}
 			}
@@ -506,12 +542,12 @@ namespace HISWebClient.Controllers
 			var javaScriptSerializer = new JavaScriptSerializer();
 			var json = javaScriptSerializer.Serialize(tsr);
 
-			//Force an error - divide by zero...
-			//int n = 5;
-			//int zero = 0;
-
-			//n = n / zero;
-		   
+#if NEVER_DEFINED
+			//Simulate a 500 error - Internal Server Error...
+			//NOTE: Need to assign a temporary here to avoid compiler error: CS0206 - A property or indexer may not be passed as an out or ref parameter.
+			HttpResponseBase httpResponseBase = Response;
+			httpUtil.setHttpResponseStatusCode(ref httpResponseBase, HttpStatusCode.InternalServerError);
+#endif
 			//Processing complete - return 
 			return Json(json, "application/json", JsonRequestBehavior.AllowGet);
 		}

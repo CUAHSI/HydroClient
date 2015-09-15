@@ -17,6 +17,7 @@ namespace HISWebClient.Models
         {
             SeriesId = tsvm.SeriesId;
             ServCode = tsvm.ServCode;
+			ServTitle = tsvm.ServTitle;
             ServURL = tsvm.ServURL;
             SiteCode = tsvm.SiteCode;
             VariableCode = tsvm.VariableCode;
@@ -45,6 +46,10 @@ namespace HISWebClient.Models
         /// code of the web service
         /// </summary>
         public string ServCode { get; set; }
+        /// <summary>
+		/// title of the web service
+		/// </summary>
+		public string ServTitle { get; set; }
         /// <summary>
         /// URL of the web service (WSDL)
         /// </summary>
@@ -133,29 +138,31 @@ namespace HISWebClient.Models
 
             sb.AppendFormat("SeriesId: {0} ~" +
                             "ServCode: {1} ~" +
-                            "ServURL: {2} ~" +
-                            "SiteCode: {3} ~" +
-                            "VariableCode: {4} ~" +
-                            "VariableName: {5} ~" +
-                            "BeginDate: {6} ~" +
-                            "EndDate: {7} ~" +
-                            "ValueCount: {8} ~" +
-                            "SiteName: {9} ~" +
-                            "Latitude: {10} ~" +
-                            "Longitude: {11} ~" +
-                            "DataType: {12} ~" +
-                            "ValueType: {13} ~" +
-                            "SampleMedium: {14} ~" +
-                            "TimeUnit: {15} ~" +
-                            "GeneralCategory: {16} ~" +
-                            "TimeSupport: {17} ~" +
-                            "ConceptKeyword: {18} ~" +
-                            "IsRegular: {19} ~" +
-                            "VariableUnits: {20} ~" +
-                            "Citation: {21} ~" +
-                            "Organization: {22}", 
+							"ServTitle: {2} ~" +
+                            "ServURL: {3} ~" +
+                            "SiteCode: {4} ~" +
+                            "VariableCode: {5} ~" +
+                            "VariableName: {6} ~" +
+                            "BeginDate: {7} ~" +
+                            "EndDate: {8} ~" +
+                            "ValueCount: {9} ~" +
+                            "SiteName: {10} ~" +
+                            "Latitude: {11} ~" +
+                            "Longitude: {12} ~" +
+                            "DataType: {13} ~" +
+                            "ValueType: {14} ~" +
+                            "SampleMedium: {15} ~" +
+                            "TimeUnit: {16} ~" +
+                            "GeneralCategory: {17} ~" +
+                            "TimeSupport: {18} ~" +
+                            "ConceptKeyword: {19} ~" +
+                            "IsRegular: {20} ~" +
+                            "VariableUnits: {21} ~" +
+                            "Citation: {22} ~" +
+                            "Organization: {23}", 
                             SeriesId,
                             ServCode,
+							ServTitle,
                             ServURL,
                             SiteCode,
                             VariableCode,
