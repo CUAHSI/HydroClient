@@ -66,14 +66,19 @@ namespace HISWebClient.Util
                 throw new ArgumentNullException("ms", "Input memory stream must NOT be null!!");
             }
 
-            string strFileDateAndExtension = DateTime.Now.ToString("yyyy-MM-dd-hh-mm-ss-ffff") + ".zip";
+			//Format the file name...
+			DateTime now = DateTime.Now;
+			TimeSpan ts = new TimeSpan(0, now.Hour, now.Minute, now.Second, now.Millisecond);
+
+			//string strFileDateAndExtension = String.Format("{0}-{1:n0}.zip", now.ToString("yyyy-MM-dd"), ts.TotalMilliseconds);
+			string strFileDateAndExtension = String.Format("{0}-{1}.zip", now.ToString("yyyy-MM-dd"), ts.TotalMilliseconds);  
+				
             if (String.IsNullOrWhiteSpace(requestName))
             {
                 requestName = strFileDateAndExtension;
             }
             else
             {
-                //requestName += "-" + strFileDateAndExtension;
 				requestName = requestName.SanitizeAndUrlEscapeForFilename() + "-" + strFileDateAndExtension;
 
 			}

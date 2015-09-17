@@ -74,9 +74,6 @@ function initialize() {
     //var myCenter = new google.maps.LatLng(42.3, -71);//boston
     // var myCenter = new google.maps.LatLng(41.7, -111.9);//Salt Lake
 
-    //NOTE: Set the place name to match the initial latitude and longitude 
-    currentPlaceName = 'United States';
-
     //BC - disable infoWindow for now...
     //    infoWindow = new google.maps.InfoWindow();
 
@@ -433,6 +430,24 @@ function initialize() {
         areaRect.setMap(map);
         var areaLeft = google.maps.geometry.spherical.computeArea(areaRect.getPath());
 
+        //Determine the center point of the polygon...
+        //ASSUMPTION: The polygon is always a rectangle, otherwise a 'centroid' calculation is required...
+        //Source: http://stackoverflow.com/questions/5187806/trying-to-get-the-cente-lat-lon-of-a-polygon - Answer 0
+        //        http://jsfiddle.net/argiropoulostauros/cQLRr/
+        var bounds = new google.maps.LatLngBounds();
+        var pLength = path.length;
+
+        for (var i = 0; i < pLength; ++i) {
+            bounds.extend(path[i]);
+        }
+
+        var centerLatLng = bounds.getCenter();
+        var roundedLat = Math.round(centerLatLng.lat() * 1000) / 1000;      //Round to three decimal places...
+        var roundedLng = Math.round(centerLatLng.lng() * 1000) / 1000;     //Round to three decimal places...
+
+        //Set the current place name...
+        currentPlaceName = 'lat: ' + Math.abs(roundedLat) + '\u00b0' + (0 < roundedLat ? ' N' : ' S') + ', long: ' + Math.abs(roundedLng) + '\u00b0' + (0 < roundedLng ? ' E' : ' W');
+        console.log(currentPlaceName);
     });
 
     //BCC - 02-Jul-2015 - External QA Issue #48 
@@ -1484,11 +1499,6 @@ function addLocationSearch()
               (place.address_components[2] && place.address_components[2].short_name || '')
             ].join(' ');
         }
-
-        //Retain the current place name
-        currentPlaceName = place.formatted_address;
-        //infowindow.setContent('<div><strong>' + place.name + '</strong><br>' + address);
-        //infowindow.open(map, marker);
     });
 
     // Sets a listener on a radio button to change the filter type on Places
@@ -1788,14 +1798,10 @@ function getMarkerPositionName(marker) {
     //ASSUMPTION: This call returns before the user issues a time series request to the server...
     geocoder.geocode({ 'latLng': marker.getPosition() }, function (results, status) {
         if (status == google.maps.GeocoderStatus.OK) {
-            if (results[0]) { //NOTE: Using the most detailed place name available...
-                //Marker place name found - set variable
-                currentMarkerPlaceName = results[0].formatted_address;
-                $('#SeriesModal #myModalLabel').html('List of Timeseries near: ' + currentMarkerPlaceName );
-
-            } else {
-                //No marker place name found - reset variable
-                currentMarkerPlaceName = '';
+            //Success - retrieve the location name...
+            currentMarkerPlaceName = getMapLocationName(results);
+            if ('' !== currentMarkerPlaceName) {
+                $('#SeriesModal #myModalLabel').html('List of Timeseries near: ' + currentMarkerPlaceName);
             }
         } else {
             //Failure - reset variable
@@ -3075,16 +3081,16 @@ function zipSelections(event) {
     var requestName = 'SelectedArea';
 
     //Set request name from marker place name (more precise) --OR-- place name (less precise)...
-    var regexp = /\s*[, ]\s*/g;
+    var regexp = /\s*[,:.\u00b0 ]\s*/g; 
+
     if (('undefined' !== typeof currentMarkerPlaceName) && (null !== currentMarkerPlaceName) && ('' !== currentMarkerPlaceName)) {
-        requestName = currentMarkerPlaceName.replace(regexp, '-');  //Replace whitespace and commas with '_' 
+        requestName = currentMarkerPlaceName.replace(regexp, '_');  //Replace whitespace and commas with '_' 
     }
     else {
         if (('undefined' !== typeof currentPlaceName) && (null !== currentPlaceName) && ('' !== currentPlaceName)) {
-            requestName = currentPlaceName.replace(regexp, '-');  //Replace whitespace and commas with '_' 
+            requestName = currentPlaceName.replace(regexp, '_');  //Replace whitespace and commas with '_' 
         }
     }
-
 
     var timeSeriesRequest = {
         "RequestName": requestName,
@@ -3399,6 +3405,45 @@ function getNextTaskId() {
     return ((++taskCount).toString() + '@' + date.getHours().toString() + ':' + date.getMinutes().toString() + ':' + date.getSeconds().toString()); 
 }
 
+//Return the Google Maps location name per the preferred order of address types...
+function getMapLocationName(results) {
+    
+    var locationName = '';
+
+    if ('undefined' !== typeof results && null !== results && Array.isArray(results)) {
+        //Input parameters valid - set preferred order of address types...
+        var addressTypes = ['postal_code', 'locality', 'administrative_area_level_3', 'administrative_area_level_2', 'administrative_area_level_1', 'country'];
+
+        //Scan results array for address types...
+        var componentIndices = {};
+
+        var rLength = results.length;
+        for (var ri = 0; ri < rLength; ++ri) {
+            //Scan address types for current result...
+            var rTypes = results[ri].types;
+            var tLength = rTypes.length;
+            for (var ti = 0; ti < tLength; ++ti) {
+                var rType = rTypes[ti];
+                if (-1 !== addressTypes.indexOf(rType)) {
+                    componentIndices[rType] = ri;   //Address type found - record associated results index
+                }
+            }
+        }
+
+        //Scan found address types - set current place name...
+        var atLength = addressTypes.length;
+        for (var ati = 0; ati < atLength; ++ati) {
+            if ('undefined' !== typeof componentIndices[addressTypes[ati]]) {
+                locationName = results[componentIndices[addressTypes[ati]]].formatted_address;
+                console.log('location name is: ' + locationName);
+                break;
+            }
+        }
+    }
+
+    return locationName;
+}
+
 //Data table for data tab
 function setUpTimeseriesDatatable() {
     if (clusteredMarkersArray.length == 0)
@@ -3416,9 +3461,13 @@ function setUpTimeseriesDatatable() {
     //Reset the selected row count...
     selectedRowCounts['dtTimeseries'].count = 0;
 
-    //Set page title...
-//    $('#dataview #myModalLabel').html('List of Timeseries near Selected Area');
-    $('#dataview #myModalLabel').html('List of Timeseries near: ' + currentPlaceName);
+    //Initialize current place name, if indicated...
+    if ('undefined' === typeof currentPlaceName || null === currentPlaceName) {
+        currentPlaceName = 'Selected Area';
+    }
+
+    //ALWAYS set the screen title...
+    $('#dataview #myModalLabel').html('List of Timeseries in and around: ' + currentPlaceName);
         
     //var dataSet = getDetailsForMarker(clusterid)
     var actionUrl = "/home/getTimeseries"
