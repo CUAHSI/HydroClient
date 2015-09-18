@@ -3282,7 +3282,14 @@ function zipSelections(event) {
                                 var fileName = uriComponents[(uriComponents.length - 1)];
 
                                 //Set base blob URI into text in column 3
-                                tableRow.find('#blobUriText').html(fileName);
+                                //NOTE: Need to decode the string twice because:
+                                //       If the string contains an encoded character like %27 ('),
+                                //       the browser(?) separely encodes the (&) character as %25
+                                //       resulting in %25%27 in the string.  Two string decodes 
+                                //       are required to remove the two escape sequences...
+                                var decoded = decodeURIComponent(fileName);
+                                var decoded1 = decodeURIComponent(decoded);
+                                tableRow.find('#blobUriText').html(decoded1);
 
                                 //Create a download button...
                                 var button = tableRow.find('td:eq(4)');
