@@ -430,6 +430,8 @@ function initialize() {
         areaRect.setMap(map);
         var areaLeft = google.maps.geometry.spherical.computeArea(areaRect.getPath());
 
+        //NOTE: BCC - 21-Sep-2015 - Per review meeting, the following current place name logic is not used.
+        //                          However, the logic is retained for possible future use...
         //Determine the center point of the polygon...
         //ASSUMPTION: The polygon is always a rectangle, otherwise a 'centroid' calculation is required...
         //Source: http://stackoverflow.com/questions/5187806/trying-to-get-the-cente-lat-lon-of-a-polygon - Answer 0
@@ -447,7 +449,10 @@ function initialize() {
 
         //Set the current place name...
         currentPlaceName = 'lat: ' + Math.abs(roundedLat) + '\u00b0' + (0 < roundedLat ? ' N' : ' S') + ', long: ' + Math.abs(roundedLng) + '\u00b0' + (0 < roundedLng ? ' E' : ' W');
-        console.log(currentPlaceName);
+        //console.log(currentPlaceName);
+
+        //BCC - 21-Sep-2015 - RESET current place name
+        currentPlaceName = 'Selected Area';
     });
 
     //BCC - 02-Jul-2015 - External QA Issue #48 
@@ -3088,7 +3093,12 @@ function zipSelections(event) {
     }
     else {
         if (('undefined' !== typeof currentPlaceName) && (null !== currentPlaceName) && ('' !== currentPlaceName)) {
-            requestName = currentPlaceName.replace(regexp, '_');  //Replace whitespace and commas with '_' 
+            if ('Selected Area' === currentPlaceName) {
+                requestName = 'CUAHSI-WDC';
+            }
+            else {
+                requestName = currentPlaceName.replace(regexp, '_');  //Replace whitespace and commas with '_' 
+            }
         }
     }
 
@@ -3442,7 +3452,7 @@ function getMapLocationName(results) {
         for (var ati = 0; ati < atLength; ++ati) {
             if ('undefined' !== typeof componentIndices[addressTypes[ati]]) {
                 locationName = results[componentIndices[addressTypes[ati]]].formatted_address;
-                console.log('location name is: ' + locationName);
+                //console.log('location name is: ' + locationName);
                 break;
             }
         }
@@ -3474,7 +3484,7 @@ function setUpTimeseriesDatatable() {
     }
 
     //ALWAYS set the screen title...
-    $('#dataview #myModalLabel').html('List of Timeseries in and around: ' + currentPlaceName);
+    $('#dataview #myModalLabel').html('List of Timeseries in: ' + currentPlaceName);
         
     //var dataSet = getDetailsForMarker(clusterid)
     var actionUrl = "/home/getTimeseries"
