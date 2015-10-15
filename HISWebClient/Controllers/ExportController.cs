@@ -690,7 +690,8 @@ namespace HISWebClient.Controllers
 				"QualityControlLevel",
 				"DataType",
 				"ValueType",
-				"IsRegular",
+				//BCC - 15-Oct-29015 -  Suppress display of IsRegular
+				//"IsRegular",
 				"TimeSupport",
 				"TimeUnits",
 				"Speciation",
@@ -716,7 +717,8 @@ namespace HISWebClient.Controllers
 				data.QualityControlLevelDefinition,		
 				data.myVariable.DataType,
 				data.myVariable.ValueType,
-				data.myVariable.IsRegular.ToString(),
+				//BCC - 15-Oct-29015 -  Suppress display of IsRegular
+				//data.myVariable.IsRegular.ToString(),
 				data.myVariable.TimeSupport.ToString(),
 				data.myVariable.TimeUnit.ToString(),
 				data.myVariable.Speciation.ToString(),

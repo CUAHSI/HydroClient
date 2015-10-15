@@ -2336,7 +2336,8 @@ function setUpDatatables(clusterid)
            //{ "data": "GeneralCategory", "visible": false },
            { "data": "TimeSupport", "visible": true },
            
-           { "data": "IsRegular", "visible": true },
+    	   //BCC - 15-Oct-29015 -  Suppress display of IsRegular
+           //{ "data": "IsRegular", "visible": true },
            //{ "data": "VariableUnits","visible": false },
            //{ "data": "Citation", "visible": false }            
            { "data": "SeriesId" },
@@ -3517,7 +3518,8 @@ function setUpTimeseriesDatatable() {
             //{ "data": "GeneralCategory", "visible": false },
             { "data": "TimeSupport", "visible": true },
 
-            { "data": "IsRegular", "visible": true },
+			//BCC - 15-Oct-29015 -  Suppress display of IsRegular
+            //{ "data": "IsRegular", "visible": true },
             //{ "data": "VariableUnits","visible": false },
             //{ "data": "Citation", "visible": false }            
             { "data": "SeriesId" },
