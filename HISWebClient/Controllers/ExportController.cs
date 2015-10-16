@@ -32,7 +32,7 @@ namespace HISWebClient.Controllers
 
 	public class ExportController : Controller
 	{
-		//This is a test for the SmartGit Client 
+		//This is a another test for the SmartGit Client 
  		// Can I get this change checked in to the HydrodataTools branch in GitHub?
 
 		//Reference AzureContext singleton...
