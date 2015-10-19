@@ -594,7 +594,7 @@ function resetSearchParameters() {
 //Initialize the input id to the current date
 function initializeDate(date, inputId) {
 
-    $('#' + inputId).val(('0' + (date.getMonth() + 1).toString().slice(-2)) + '/' + ('0' + date.getDate()).toString().slice(-2) + '/' + (date.getFullYear()).toString());
+    $('#' + inputId).val(('0' + (date.getMonth() + 1)).toString().slice(-2) + '/' + ('0' + date.getDate()).toString().slice(-2) + '/' + (date.getFullYear()).toString());
 }
 
 //Initialize the keyword list per the input list type
