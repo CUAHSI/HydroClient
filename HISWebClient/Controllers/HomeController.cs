@@ -496,7 +496,8 @@ namespace HISWebClient.Controllers
 			//obj.GeneralCategory = dc.GeneralCategory;
 			obj.TimeSupport = dc.TimeSupport;
 			obj.ConceptKeyword = dc.ConceptKeyword;
-			obj.IsRegular = dc.IsRegular;
+			//BCC - 15-Oct-29015 -  Suppress display of IsRegular
+			//obj.IsRegular = dc.IsRegular;
 			//obj.VariableUnits = dc.VariableUnits;
 			//obj.Citation = dc.Citation;
 			obj.Organization = dict.FirstOrDefault(x => x.Key == dc.ServCode).Value;

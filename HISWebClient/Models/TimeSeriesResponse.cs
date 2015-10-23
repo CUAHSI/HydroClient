@@ -46,7 +46,10 @@ namespace HISWebClient.Models
         CheckTaskError = 11,
 
         [Description("End Task Error")]
-        EndTaskError = 12    
+        EndTaskError = 12,
+    
+		[Description("Not Started")]
+		NotStarted = 13
    }
 
 

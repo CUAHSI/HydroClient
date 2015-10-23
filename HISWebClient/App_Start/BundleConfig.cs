@@ -54,8 +54,9 @@ namespace HISWebClient
 					  //"~/Scripts/Custom/randomId.min.js",
 					  "~/Scripts/Custom/freezeEnum.js",
 					  //"~/Scripts/Custom/freezeEnum.min.js",
-					  "~/Scripts/Custom/TimeSeriesRequestStatus.js",
+					  "~/Scripts/Custom/TimeSeriesFormat.js",
 					  //"~/Scripts/Custom/TimeSeriesRequestStatus.min.js",
+					  "~/Scripts/Custom/TimeSeriesRequestStatus.js",
 					  "~/Scripts/Custom/jquery-filedownload.js"
                       ));
 

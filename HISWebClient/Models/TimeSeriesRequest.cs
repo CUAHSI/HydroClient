@@ -3,8 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
+using System.ComponentModel;
+
 namespace HISWebClient.Models
 {
+
+	public enum TimeSeriesFormat
+	{
+		[Description("CSV...")]
+		CSV = 1,
+
+		[Description("WaterOneFlow...")]
+		WaterOneFlow = 2
+	}
+
     public class TimeSeriesRequest
     {
         /// <summary>
@@ -12,13 +24,15 @@ namespace HISWebClient.Models
         /// </summary>
         public TimeSeriesRequest() { }
 
-        public TimeSeriesRequest(string requestNameIn, string requestIdIn, int[] timeSeriesIdsIn )
+        public TimeSeriesRequest(string requestNameIn, string requestIdIn, int[] timeSeriesIdsIn, TimeSeriesFormat timeSeriesFormatIn = TimeSeriesFormat.CSV )
         {
             RequestName = requestNameIn;
 
             RequestId = requestIdIn;
 
             TimeSeriesIds = new List<int>(timeSeriesIdsIn);
+
+			RequestFormat = timeSeriesFormatIn;
         }
  
         /// <summary>
@@ -36,5 +50,10 @@ namespace HISWebClient.Models
         /// TimeSeriesIds
         /// </summary>
         public List<int> TimeSeriesIds { get; set; }
+
+		/// <summary>
+		/// RequestFormat
+		/// </summary>
+		public TimeSeriesFormat RequestFormat { get; set; }
     }
 }

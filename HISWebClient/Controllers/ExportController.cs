@@ -20,6 +20,7 @@ using System.Web;
 using System.Web.Mvc;
 
 using System.IO.Compression;
+using System.Net.Http;
 using System.Threading;
 using System.Web.Script.Serialization;
 
@@ -30,11 +31,11 @@ using HISWebClient.Util;
 namespace HISWebClient.Controllers
 {
 
+	//This is a change in HydrodataTools
+	//Does the Git client display it?
+
 	public class ExportController : Controller
 	{
-		//This is a another test for the SmartGit Client 
- 		// Can I get this change checked in to the HydrodataTools branch in GitHub?
-
 		//Reference AzureContext singleton...
 		//Source: http://stackoverflow.com/questions/24626749/azure-table-storage-best-practice-for-asp-net-mvc-webapi
 
@@ -179,25 +180,42 @@ namespace HISWebClient.Controllers
 
 
 
-		private async Task<FileStreamResult> DownloadFile(int id, List<TimeSeriesViewModel> currentSeries)
+		private async Task<FileStreamResult> DownloadFile(int id, List<TimeSeriesViewModel> currentSeries, TimeSeriesFormat timeSeriesFormat = TimeSeriesFormat.CSV)
 		{
-		   
-			//var filePath = Server.MapPath(dir + filename);
-			
-
-			//cloudStorageAccount = CloudStorageAccount.Parse("DefaultEndpointsProtocol=https;AccountName=cuahsidataexport;AccountKey=yydsRROjUZa9+ShUCS0hIxZqU98vojWbBqAPI22SgGrXGjomphIWxG0cujYrSiyfNU86YeVIXICPAP8IIPuT4Q==");
 
 			var seriesMetaData = getSeriesMetadata(id, currentSeries);
-			var filename = GenerateFileName(seriesMetaData);
-			var fileType = "text/csv";
+			var filename = GenerateFileName(seriesMetaData, timeSeriesFormat);
+			var fileType = TimeSeriesFormat.CSV == timeSeriesFormat ? "text/csv" : "application/xml";
 
 			try
 			{
+				if (TimeSeriesFormat.CSV == timeSeriesFormat)
+				{
 				var result = await this.getStream(id, currentSeries);
-				//var memoryStream = new MemoryStream(result);
+					return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename };
+				}
+				else if (TimeSeriesFormat.WaterOneFlow == timeSeriesFormat)
+				{
+					var result = await this.getWOFStream(id, currentSeries);
 
-				//filestream.Write(result, 0, result.Count);
-				return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename };
+					//BCC - TEST - Commenting out seek calls to avoid exception: This stream does not support seek operations...
+					using (System.IO.FileStream outfile = new System.IO.FileStream(@"c:\CUAHSI\DownloadFile.xml", FileMode.Create))
+					{
+						result.Seek(0, SeekOrigin.Begin);
+						result.CopyTo(outfile);
+					}
+					
+					result.Seek(0, SeekOrigin.Begin);
+
+					FileStreamResult fsr = new FileStreamResult(result, fileType) { FileDownloadName = filename };
+
+					return fsr;
+				}
+				else
+				{
+					throw new ArgumentException(String.Format("Unknown TimeSeriesFormat value: {0}", timeSeriesFormat.ToString()));
+				}
+
 			}
 			catch( Exception ex )
 			{
@@ -220,11 +238,6 @@ namespace HISWebClient.Controllers
 		[HttpPost]
 		public async Task<JsonResult> RequestTimeSeries(TimeSeriesRequest tsrIn)
 		{
-			//#pragma warning disable 4014 // Fire and forget.
-//            Task.Run(async () =>
-//            {
-//                await Task.Delay(60000);
-//            }).ConfigureAwait(false);
 
 			//Retrieve the input request Id
 			var requestId = tsrIn.RequestId;
@@ -319,26 +332,6 @@ namespace HISWebClient.Controllers
 
 				Task.Run(async () =>
 				{
-/*
-					//await Task.Delay(60000);
-					for (var i = 0; i <= 100; i++)
-					{
-						//Thread-safe access to dictionary
-						lock (lockObject)
-						{
-							if (ct.IsCancellationRequested)
-							{
-								_dictTaskStatus[requestId].Status = "Cancelled per client request!!";
-								break;
-							}
-
-							_dictTaskStatus[requestId].Status = "Processing iteration: " + i.ToString();
-						}
-
-						//Thread.Sleep(1000);
-						await Task.Delay(1000);
-					}
-*/
 
 					try
 					{
@@ -370,7 +363,7 @@ namespace HISWebClient.Controllers
 																	  " (" + (i+1).ToString() + " of " + count.ToString() + ")");
 
 								//Retrieve the time series data in csv format
-								FileStreamResult filestreamresult = await DownloadFile(tsrIn.TimeSeriesIds[i], currentSeries);
+								FileStreamResult filestreamresult = await DownloadFile(tsrIn.TimeSeriesIds[i], currentSeries, tsrIn.RequestFormat);
 
 								//Copy file contents to zip archive...
 								//ASSUMPTION: FileStreamResult instance properly disposes of FileStream member!!
@@ -555,13 +548,39 @@ namespace HISWebClient.Controllers
 			return Json(json, "application/json", JsonRequestBehavior.AllowGet);
 		}
 
+
+		//Call the BYU API for a list of interfaced apps
+		[HttpGet]
+		public async Task<ActionResult> GetHydroshareAppsList()
+		{
+			HttpClient httpClient = new HttpClient();
+
+			httpClient.BaseAddress = new Uri("http://appsdev.hydroshare.org/");
+
+			HttpResponseMessage httpResponseMessage = await httpClient.GetAsync("apps/api/list_apps/");
+
+			string strJSON = String.Empty;
+			if (httpResponseMessage.IsSuccessStatusCode)
+			{
+				strJSON = httpResponseMessage.Content.ReadAsStringAsync().Result;
+			}
+			else
+			{
+				var javaScriptSerializer = new JavaScriptSerializer();
+				strJSON = javaScriptSerializer.Serialize("{'Apps': []}");
+			}
+
+
+			//Processing complete - return 
+			//return Json(json, "application/json", JsonRequestBehavior.AllowGet);
+
+			return new ContentResult { Content = strJSON, ContentType = "application/json" };
+		}
+
+
 		public async Task<byte[]> getStream(int SeriesID, List<TimeSeriesViewModel> currentSeries = null)
 		{
 			DateTimeOffset requestTime = DateTimeOffset.UtcNow;
-			//for test
-			double lat = 0;
-			double lng = 0;
-
 		   
 				//get series from wateroneflow and return response
 				Tuple<Stream, SeriesData> data = await GetSeriesDataObjectAndStreamFromSeriesID(SeriesID, currentSeries);
@@ -575,6 +594,20 @@ namespace HISWebClient.Controllers
 
 				return s;
 		}
+
+		//Similar to getStream(...) but returns the WaterOneFlow stream instead of the CSV byte array...
+		public async Task<Stream> getWOFStream(int SeriesID, List<TimeSeriesViewModel> currentSeries = null)
+		{
+			DateTimeOffset requestTime = DateTimeOffset.UtcNow;
+
+			//get series from wateroneflow and return response
+			Tuple<Stream, SeriesData> data = await GetSeriesDataObjectAndStreamFromSeriesID(SeriesID, currentSeries);
+
+			return (data.Item1);
+
+		}
+
+
 
 		public async Task<Tuple<Stream, SeriesData>> GetSeriesDataObjectAndStreamFromSeriesID(int seriesId, List<TimeSeriesViewModel> currentSeries)
 		{
@@ -788,16 +821,26 @@ namespace HISWebClient.Controllers
 		{
 			return string.Format("series-{0}-{1}.csv", data.myMetadata.SiteName.SanitizeForFilename(), data.myMetadata.VariableName.SanitizeForFilename());
 		}
-		private string GenerateFileName(SeriesMetadata meta)
+		private string GenerateFileName(SeriesMetadata meta, TimeSeriesFormat timeSeriesFormat = TimeSeriesFormat.CSV)
+		{
+
+			string fileName = string.Format("{0}-{1}-{2}", meta.ServCode.SanitizeForFilename(), meta.SiteName.SanitizeForFilename(), meta.VariableName.SanitizeForFilename());
+			string extension = String.Empty;
+
+			if (TimeSeriesFormat.WaterOneFlow == timeSeriesFormat)
+			{
+				extension = ".xml";
+			}
+			else if (TimeSeriesFormat.CSV == timeSeriesFormat)
 		{
 			//NOTE: Microsoft Excel restricts file path + name + extension to 218 characters max.  Truncate file name if indicated...
 
-			string fileName = string.Format("{0}-{1}-{2}", meta.ServCode.SanitizeForFilename(), meta.SiteName.SanitizeForFilename(), meta.VariableName.SanitizeForFilename());
-			string extension = ".csv";
+				extension = ".csv";
 
 			while (218 < (fileName.Length + extension.Length))
 			{
 				fileName = fileName.Substring(0, (fileName.Length - 1));
+				}				
 			}
 
 			return string.Format("{0}{1}", fileName, extension);

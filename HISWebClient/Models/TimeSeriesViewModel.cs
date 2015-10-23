@@ -35,7 +35,8 @@ namespace HISWebClient.Models
             //GeneralCategory = tsvm.GeneralCategory;
             TimeSupport = tsvm.TimeSupport;
             ConceptKeyword = tsvm.ConceptKeyword;
-            IsRegular = tsvm.IsRegular;
+			//BCC - 15-Oct-29015 -  Suppress display of IsRegular
+			//IsRegular = tsvm.IsRegular;
             //VariableUnits = tsvm.VariableUnits;
             //Citation = tsvm.Citation;
             Organization = tsvm.Organization;
@@ -123,7 +124,8 @@ namespace HISWebClient.Models
         /// </summary>
         public string ConceptKeyword { get; set; }
 
-        public bool IsRegular { get; set; }
+		//BCC - 15-Oct-29015 -  Suppress display of IsRegular
+		//public bool IsRegular { get; set; }
 
         public string VariableUnits { get; set; }
 
@@ -156,7 +158,8 @@ namespace HISWebClient.Models
                             "GeneralCategory: {17} ~" +
                             "TimeSupport: {18} ~" +
                             "ConceptKeyword: {19} ~" +
-                            "IsRegular: {20} ~" +
+							//BCC - 15-Oct-29015 -  Suppress display of IsRegular
+							//"IsRegular: {20} ~" +
                             "VariableUnits: {21} ~" +
                             "Citation: {22} ~" +
                             "Organization: {23}", 
@@ -180,7 +183,8 @@ namespace HISWebClient.Models
                             GeneralCategory,
                             TimeSupport,
                             ConceptKeyword,
-                            IsRegular,
+							//BCC - 15-Oct-29015 -  Suppress display of IsRegular
+							//IsRegular,
                             VariableUnits,
                             Citation,
                             Organization );

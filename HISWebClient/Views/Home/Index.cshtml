@@ -29,6 +29,8 @@
                 @*   <li class="navbar-custom disabled"><a href="#graph" id="graphTab" data-toggle="tab"><span class="glyphicon glyphicon-home"></span> Graph</a></li>*@
                 <li class="navbar-custom data"><a href="#dataview" id="tableTab" data-toggle="tab"><span class="glyphicon glyphicon-list"></span> Data</a></li>
                 <li class="btn-separator"></li>
+                <li class="navbar-custom"><a href="" id="datamanagerTab" data-toggle="modal" data-target="#datamgrModal"><span class="glyphicon glyphicon-record"></span> Data Manager</a></li>
+                <li class="btn-separator"></li>
                 <li class="navbar-custom"><a href="" id="downloadmanagerTab" data-toggle="modal" data-target="#dmModal"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</a></li>
                 <li class="btn-separator"></li>
                 <li class="navbar-custom"><a href="" id="contactTab" data-toggle="modal" data-target="#contactModal"><span class="glyphicon glyphicon-earphone"></span> Contact</a></li>
@@ -52,7 +54,7 @@
                     NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
                     Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
                 *@
-                <table id="dtTimeseries" class="display" cellspacing="0" style="max-width: none;">
+                <table id="dtTimeseries" class="display" cellspacing="0" style="max-width: none;" data-selectedtimeseriesmax="25">
                     <thead>
                         <tr>
                             @Html.Partial("_DatatableTimeseriesColumns")
@@ -191,6 +193,43 @@
 @*</div>*@
 
 <!-- Modal -->
+<!-- Modal dialog for Data Manager... -->
+<div class="modal fade" id="datamgrModal" tabindex="-1" role="dialog" aria-labelledby="datamgrModalLabel" aria-hidden="true" style="z-index: 2000000000000000;">
+    <div class="modal-dialog modal-dialog-full" role="document">
+        <div class="modal-content modal-content-full">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
+                <!--
+                <label style="float:right; margin-right: 2em"><input type="checkbox" id="chkbxAutoDownload" checked="checked" />&nbsp;Auto Download Archives?</label>
+                -->
+                <h3 class="modal-title" id="myModalLabel">Data Manager</h3>
+            </div>
+            <div class="modal-body modal-body-full row">
+                @* BCC- 24-Sep-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set 'max-width: none' on the table element!!
+                    NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
+                    Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
+                *@
+                <table id="tblDataManager" class="display disable-selection" cellspacing="0" style="max-width: none;">
+                    <thead>
+                        <tr>
+                            @Html.Partial("_DataManagerTimeseriesColumns")
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            @Html.Partial("_DataManagerTimeseriesColumns")
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="modal-footer">
+                @*<p>This is the modal footer!!</p>*@
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <!-- Modal dialog for Download Manager... -->
 <div class="modal fade" id="dmModal" tabindex="-1" role="dialog" aria-labelledby="dmModalLabel" aria-hidden="true" style="z-index: 2000000000000000;">
     <div class="modal-dialog modal-dialog-full" role="document">
@@ -618,15 +657,16 @@
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
                 <!--button type="button" id="seriesModal-DM" style="float: right; margin-right: 2em; color: #428bca;"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</button -->
                 <a href="" id="seriesModal-DM" data-toggle="modal" data-target="#dmModal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</a>
+                <a href="" id="seriesModal-DataMgr" data-toggle="modal" data-target="#datamgrModal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-record"></span> Data Manager</a>
                 <h3 class="modal-title" id="myModalLabel">List of Timeseries in area</h3>
-                <h5 style="margin-bottom: 1em;">To zip one or more data files, please click the associated table row(s) and then click the 'Process Selections' button.</h5>
+                <h5 style="margin-bottom: 1em;">DO TO - need to revised this text!!!   To zip one or more data files, please click the associated table row(s) and then click the 'Process Selections' button.</h5>
             </div>
             <div class="modal-body modal-body-full">
                 @* BCC- 23-Jul-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set 'max-width: none' on the table element!!
                     NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
                     Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
                 *@
-                <table id="dtMarkers" class="display disable-selection" cellspacing="0" style="max-width: none;">
+                <table id="dtMarkers" class="display disable-selection" cellspacing="0" style="max-width: none;" data-selectedtimeseriesmax="25">
                     <thead>
                         <tr>
                             @Html.Partial("_DatatableTimeseriesColumns")

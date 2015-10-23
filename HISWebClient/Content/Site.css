@@ -446,3 +446,21 @@ input[readonly].default-cursor {
   -webkit-user-select: none; /* Chrome, Safari, and Opera */
   -webkit-touch-callout: none; /* Disable Android and iOS callouts*/
 }
+
+
+/* Adjust z-index of modal background when multiple modal dialogs appear 'layered' atop one another
+
+    Source: http://www.bootply.com/86973#
+
+BCC - 14-Oct-2015 - Causes problems when displaying time series after zooming in on the map. More research required...
+
+.modal:nth-of-type(even) {
+    z-index: 1042 !important;
+}
+.modal-backdrop.in:nth-of-type(even) {
+    z-index: 1041 !important;
+}
+
+*/
+
+
