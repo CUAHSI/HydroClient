@@ -2320,7 +2320,7 @@ function setUpDatatables(clusterid)
            {"data": "ServTitle", "sTitle": "Service Title", "visible": true },
            { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
            { "data": "ServURL", "visible": false },
-           { "data": "VariableName", "width": "50px", "sTitle": "Variable Name" },
+           { "data": "VariableName", "width": "50px", "sTitle": "Variable Name", "visible": true },
            //BCC - 10-Jul-2015 - Internal QA Issue #29 - Include VariableCode and SiteCode
            { "data": "SiteCode", "sTitle": "Site Code", "visible": true },
            { "data": "VariableCode", "sTitle": "Variable Code", "visible": true },
@@ -2422,7 +2422,7 @@ function setUpDatatables(clusterid)
         initComplete: function () {
 
             //BCC - 10-Aug-2015 - GitHub Issue #35 - Add filter by Site Name 
-            setfooterFilters('dtMarkers', [0, 1, 2, 4, 10], 'chkbxSelectAll');
+            setfooterFilters('dtMarkers', [0, 2, 3, 5, 11], 'chkbxSelectAll');
 
             //BC - 10-Jul-2015 - Temporarily disable tooltips...
             //setUpTooltips('dtMarkers');
@@ -2495,7 +2495,6 @@ function setUpDatatables(clusterid)
     //Order event...
     $('#dtMarkers').off('order.dt', dtSearchOrOrder);
     $('#dtMarkers').on('order.dt', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, dtSearchOrOrder);
-
 
     //BC - TEST - Retrieve the colvis button control - assign a click handler for scrollx control...
     //var colvis = new $.fn.DataTable.ColVis(oTable);
@@ -3504,11 +3503,11 @@ function setUpTimeseriesDatatable() {
         "columns": [
             { "data": "Organization", "width": "50px", "visible": true },
             //BCC - 09-Sep-2015 - GitHub Issue #23 - Replace Network Name with Data Service Title
-            { "data": "ServCode", "sTitle": "Service Code", "visible": false },
+            { "data": "ServCode", "visible": false },
             { "data": "ServTitle", "sTitle": "Service Title", "visible": true },
             { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
             { "data": "ServURL", "visible": false },
-            { "data": "VariableName", "width": "50px", "sTitle": "Variable Name" },
+            { "data": "VariableName", "width": "50px", "sTitle": "Variable Name", "visible": true  },
             //BCC - 10-Jul-2015 - Internal QA Issue #29 - Include VariableCode and SiteCode
             { "data": "SiteCode", "sTitle": "Site Code", "visible": true },
             { "data": "VariableCode", "sTitle": "Variable Code", "visible": true },
@@ -3593,7 +3592,7 @@ function setUpTimeseriesDatatable() {
         "initComplete": function () {
 
             //BCC - 10-Aug-2015 - GitHub Issue #35 - Add filter by Site Name
-            setfooterFilters('dtTimeseries', [0, 1, 2, 4, 10], 'chkbxSelectAllTS');
+            setfooterFilters('dtTimeseries', [0, 2, 3, 5, 11], 'chkbxSelectAllTS');
 
             oTable.fnAdjustColumnSizing();
         }
