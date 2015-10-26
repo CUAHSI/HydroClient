@@ -581,7 +581,8 @@
                 <div class="form-group" style="position: relative;">
                     <h6 style="display:inline-block; float: left;"> (No selection searches all)</h6>
                     <label for="checkOnlyObservedValues" style="float: right;">
-                        <input type="checkbox" name="checkOnlyObservedValues" id="checkOnlyObservedValues" data-inline="true" /> Select all non-gridded data services.<a href="javascript:;" target="_blank" onclick="helpIconClicked('checkOnlyObservedValues');"><span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></a></label>
+                        @*NOTE: MUST include 'void 0' in HREF so IE works properly!!*@
+                        <input type="checkbox" name="checkOnlyObservedValues" id="checkOnlyObservedValues" data-inline="true" /> Select all non-gridded data services.<a href="javascript:helpIconClicked('checkOnlyObservedValues'); void 0" ><span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></a></label>
                 </div>
             </div>
             <div class="modal-body modal-body-full">

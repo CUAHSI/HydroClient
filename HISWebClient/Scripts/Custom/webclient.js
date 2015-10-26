@@ -2316,6 +2316,7 @@ function setUpDatatables(clusterid)
         "columns": [
            { "data": "Organization", "width": "50px", "visible": true },
             //BCC - 09-Sep-2015 - GitHub Issue #23 - Replace Network Name with Data Service Title
+           {"data": "ServCode", "visible": false },
            {"data": "ServTitle", "sTitle": "Service Title", "visible": true },
            { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
            { "data": "ServURL", "visible": false },
@@ -2353,14 +2354,18 @@ function setUpDatatables(clusterid)
 
                  //Create a link to the Service URL
                  var org = $('td', row).eq(0).html();
-                 var servCode = $('td', row).eq(1).html();
+                 //var servCode = $('td', row).eq(1).html();
+                 var servCode = data.ServCode;
 
                  var descUrl = getDescriptionUrl(servCode);
-                 $('td', row).eq(17).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
+                 //$('td', row).eq(17).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
+                 $('td', row).eq(16).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
 
                  //Create a link to the Web Service Description URL...
-                 var servUrl = $('td', row).eq(18).html();
-                 $('td', row).eq(18).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
+                 //var servUrl = $('td', row).eq(18).html();
+                 //$('td', row).eq(18).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
+                 var servUrl = $('td', row).eq(17).html();
+                 $('td', row).eq(17).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
 
                  //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
                  if ($('#chkbxSelectAll').prop('checked')) {
@@ -2575,8 +2580,9 @@ function getDescriptionUrl(serviceCode) {
         var table = $('#dtServices').DataTable();
         var data = table.rows().data();
 
+        serviceCode = serviceCode.trim();
         $.each(data, function (i, obj) {
-            if (serviceCode === obj.ServiceCode) {
+            if (serviceCode === obj.ServiceCode.trim()) {
                 descriptionUrl = obj.DescriptionUrl;
                 return false;
             }
@@ -3498,6 +3504,7 @@ function setUpTimeseriesDatatable() {
         "columns": [
             { "data": "Organization", "width": "50px", "visible": true },
             //BCC - 09-Sep-2015 - GitHub Issue #23 - Replace Network Name with Data Service Title
+            { "data": "ServCode", "sTitle": "Service Code", "visible": false },
             { "data": "ServTitle", "sTitle": "Service Title", "visible": true },
             { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
             { "data": "ServURL", "visible": false },
@@ -3534,14 +3541,18 @@ function setUpTimeseriesDatatable() {
 
             //Create a link to the Service URL
             var org = $('td', row).eq(0).html();
-            var servCode = $('td', row).eq(1).html();
+            //var servCode = $('td', row).eq(1).html();
+            var servCode = data.ServCode;
 
             var descUrl = getDescriptionUrl(servCode);
-            $('td', row).eq(17).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
+            //$('td', row).eq(17).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
+            $('td', row).eq(16).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
 
             //Create a link to the Web Service Description URL...
-            var servUrl = $('td', row).eq(18).html();
-            $('td', row).eq(18).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
+            //var servUrl = $('td', row).eq(18).html();
+            //$('td', row).eq(18).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
+            var servUrl = $('td', row).eq(17).html();
+            $('td', row).eq(17).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
 
             //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
             if ($('#chkbxSelectAllTS').prop('checked')) {
