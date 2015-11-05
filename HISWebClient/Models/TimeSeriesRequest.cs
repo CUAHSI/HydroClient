@@ -22,15 +22,22 @@ namespace HISWebClient.Models
         /// <summary>
         /// Constructors
         /// </summary>
-        public TimeSeriesRequest() { }
+        public TimeSeriesRequest() {
 
-        public TimeSeriesRequest(string requestNameIn, string requestIdIn, int[] timeSeriesIdsIn, TimeSeriesFormat timeSeriesFormatIn = TimeSeriesFormat.CSV )
+			TimeSeriesIds = new List<int>();
+
+			WaterOneFlowIds = new List<string>();
+		}
+
+        public TimeSeriesRequest(string requestNameIn, string requestIdIn, int[] timeSeriesIdsIn, string[] waterOneFlowIdsIn, TimeSeriesFormat timeSeriesFormatIn = TimeSeriesFormat.CSV )
         {
             RequestName = requestNameIn;
 
             RequestId = requestIdIn;
 
             TimeSeriesIds = new List<int>(timeSeriesIdsIn);
+
+			WaterOneFlowIds = new List<string>(waterOneFlowIdsIn);
 
 			RequestFormat = timeSeriesFormatIn;
         }
@@ -50,6 +57,11 @@ namespace HISWebClient.Models
         /// TimeSeriesIds
         /// </summary>
         public List<int> TimeSeriesIds { get; set; }
+
+		/// <summary>
+		/// WaterOneFlowIds
+		/// </summary>
+		public List<string> WaterOneFlowIds { get; set; }
 
 		/// <summary>
 		/// RequestFormat

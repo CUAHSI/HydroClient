@@ -463,4 +463,25 @@ BCC - 14-Oct-2015 - Causes problems when displaying time series after zooming in
 
 */
 
+/* Styling for tblDataManager - align 'Show x entries' and 'Search' inputs on right, align custom toolbar on left... */
+.toolbarDataMgr {
+    display: inline-block;
+    position: relative;
+    float: left;
+    max-width: 100%;    /* Override 1170px value from container class... */
+}
 
+#tblDataManagerGroup {
+    display: inline-block;
+    position: relative;
+    float: right;
+
+}
+
+#tblDataManager_filter {
+    float: none;
+}
+
+#tblDataManager_length {
+    float: none;
+}

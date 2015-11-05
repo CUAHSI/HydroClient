@@ -13,6 +13,10 @@ namespace ServerSideHydroDesktop
     /// </summary>
     public interface IWaterOneFlowParser
     {
+		IList<Site> ParseGetSites(Stream stream);
+
+		IList<SeriesMetadata> ParseGetSiteInfo(Stream stream);
+
         /// <summary>
         /// Parses a WaterML TimeSeriesResponse XML file
         /// </summary>

@@ -37,6 +37,8 @@ var downloadMonitor = { 'intervalId' : null,
                         'timeSeriesMonitored': {}
                       };
 
+var unknownTaskCounts = {};
+
 //list of services that only have 
 var ArrayOfNonObservedServices = ["84","187","189","226","262","267","274"]
 
@@ -125,6 +127,7 @@ function customCounter(tableName) {
     if ('tblDataManager' === tableName) {
         //Initialize counts...
         var countClear = 0;
+        var countRemove = 0;
         var countDelete = 0;
         var countRefresh = 0;
         var countSave = 0;
@@ -150,10 +153,11 @@ function customCounter(tableName) {
                 ++countClear;
                 ++countDownload;
 
-                //console.log('text: ' + $('#selHydrodataToolDataMgr :selected').text());
-                //console.log('val: ' + $('#selHydrodataToolDataMgr :selected').val());
+                if ( ! dataItem.Saved) {
+                    ++countRemove;
+                }
 
-                if ('None' !== $('#selHydrodataToolDataMgr :selected').val()) {
+                if ('true' !== $('#ddIntegratedDataTools').attr('data-noneselected')) {
                     ++countLaunch;
                 }
 
@@ -170,6 +174,7 @@ function customCounter(tableName) {
 
         //Update button text with counts...
         var buttons = [{ 'name': 'btnClearSelectionsDataMgr', 'count': countClear },
+                       { 'name': 'btnRemoveSelectionsDataMgr', 'count': countRemove },
                        { 'name': 'btnDeleteSelectionsDataMgr', 'count': countDelete },
                        { 'name': 'btnRefreshSelectionsDataMgr', 'count': countRefresh },
                        { 'name': 'btnSaveSelectionsDataMgr', 'count': countSave },
@@ -1587,8 +1592,7 @@ function AreaSizeControl(controlDiv, map) {
     //}
 }
 
-function addLocationSearch()
-{
+function addLocationSearch() {
     var input = /** @type {HTMLInputElement} */(
       document.getElementById('pac-input'));
 
@@ -1654,23 +1658,20 @@ function addLocationSearch()
     setupClickListener('changetype-geocode', ['geocode']);
 }
 
-function getMapAreaSize()
-{
+function getMapAreaSize() {
     var path = GetPathForBounds(map.getBounds())
     var area = GetAreaInSquareKilometers(path)
     return 'Area: ' + (area *= 1).toLocaleString() + ' sq km';
 }
 
-function resetMap()
-{
+function resetMap() {
     deleteClusteredMarkersOverlays();
     $('.data').addClass('disabled');
     //resetUserSelection()
     if (typeof areaRect != "undefined") areaRect.setMap(null);
 }
 
-function processMarkers(geoJson)
-{
+function processMarkers(geoJson) {
     //map.data.loadGeoJson('https://storage.googleapis.com/maps-devrel/google.json');
 
     var json = JSON.parse(geoJson);
@@ -1782,8 +1783,7 @@ function processMarkers(geoJson)
     }
 }
 
-function getFormData()
-{
+function getFormData() {
     var formdata = []//$("#Search").serializeArray()
 
     var bounds = map.getBounds();
@@ -2484,14 +2484,18 @@ function setUpDatatables(clusterid) {
 
                  //Create a link to the Service URL
                  var org = $('td', row).eq(0).html();
-                 var servCode = $('td', row).eq(1).html();
+                 //var servCode = $('td', row).eq(1).html();
+                 var servCode = data.ServCode;
 
                  var descUrl = getDescriptionUrl(servCode);
                  $('td', row).eq(17).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
 
                  //Create a link to the Web Service Description URL...
-                 var servUrl = $('td', row).eq(18).html();
-                 $('td', row).eq(18).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
+                 //var servUrl = $('td', row).eq(18).html();
+                 //$('td', row).eq(18).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
+                 //var servUrl = $('td', row).eq(16).html();
+                 var servUrl = data.ServURL;
+                 $('td', row).eq(16).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
 
                  //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
                  if ($('#chkbxSelectAll').prop('checked')) {
@@ -2608,8 +2612,10 @@ function setUpDatatables(clusterid) {
     $('#chkbxSelectAll').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll', 'btnIds': ['btnZipSelections', 'btnManageSelections'], 'btnClearId': 'btnClearSelections' }, selectAll);
 
     //Avoid multiple registrations of the same handler...
-    $('#btnZipSelections').off('click', zipSelections);
-    $('#btnZipSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, zipSelections);
+    //$('#btnZipSelections').off('click', zipSelections);
+    //$('#btnZipSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, zipSelections);
+    $('#btnZipSelections').off('click', zipSelections_2);
+    $('#btnZipSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, zipSelections_2);
 
     //Avoid multiple registrations of the same handler...
     $('#btnManageSelections').off('click', copySelectionsToDataManager);
@@ -2716,7 +2722,7 @@ function setupDataManagerTable() {
     selectedRowCounts[tableName].count = 0;
 
     //Set translates array...
-    var translates = [{ 'columnIndex': 0,
+    var translates = [{ 'columnIndex': 1,
                         'translates': [{ 'value': true,
                                          'translate': 'Saved'
                                        },
@@ -2728,14 +2734,53 @@ function setupDataManagerTable() {
 
     var oTable = $(tableId).dataTable({
         'deferRender': false,
-        'dom': 'C<"clear">l<"toolbarDataMgr">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+        //'dom': 'C<"clear">l<"toolbarDataMgr">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+        'dom': '<"toolbarDataMgr">C<"clear"><"#tblDataManagerGroup"lf>rtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
         'columns': [
-           { 'sTitle': 'Status',
-             'data': 'Saved',
+           { 'data': 'TimeSeriesRequestStatus', 'sTitle': 'Status', 'visible': true,
              'render': function (data, type, full, meta) { 
-                 //return '<span class="glyphicon ' + (data ? 'glyphicon_cloud': 'glyphicon-cloud-upload') + '"> ' + (data ? '<em>Saved</em>': '<em>Not Saved</em>') + '</span>'
+
+                 var html = ''
+                 var val = parseInt(data);
+                 switch (val) {
+                    case timeSeriesRequestStatus.NotStarted:
+                        html = '<span class="glyphicon glyphicon-refresh spin" style="color: #32cd32"></span><em> Not Started</em>';
+                        break;
+                    case timeSeriesRequestStatus.Starting:
+                        html = '<span class="glyphicon glyphicon-refresh spin" style="color: #32cd32"></span><em> Starting</em>';
+                        break;
+                    case timeSeriesRequestStatus.SavingZipArchive:
+                        html = '<span class="glyphicon glyphicon-refresh spin" style="color: #32cd32"></span><em> Saving archive</em>';
+                        break;
+                    case timeSeriesRequestStatus.ProcessingTimeSeriesId:
+                    case timeSeriesRequestStatus.Started:
+                        html = '<span class="glyphicon glyphicon-refresh spin" style="color: #32cd32"></span><em> Generating</em>';
+                        break;
+                    case timeSeriesRequestStatus.Completed:
+                        html = '<span class="glyphicon glyphicon-thumbs-up" style="color: #32cd32"></span><em> Completed</em>';
+                        break;
+                    case timeSeriesRequestStatus.CheckTaskError:
+                    case timeSeriesRequestStatus.EndTaskError:
+                    case timeSeriesRequestStatus.ProcessingError:
+                    case timeSeriesRequestStatus.RequestTimeSeriesError:
+                        html = '<span class="glyphicon glyphicon-thumbs-down"></span><em> Error</em>';
+                        break;
+                    case timeSeriesRequestStatus.UnknownTask:
+                        html = '<span class="glyphicon glyphicon-thumbs-down"></span><em> Unknown task</em>';
+                        break;
+                    default:
+                        console.log('data = ' + data.toString());
+                        html = '<span class="glyphicon glyphicon-question-sign"></span><em> Unknown Status</em>';
+                        break;
+                 }
+
+                 return html;
+             }
+           },
+           { 'sTitle': 'Saved?',
+             'data': 'Saved',  'visible': true,
+             'render': function (data, type, full, meta) { 
                  return '<span class="glyphicon ' + (data ? 'glyphicon_cloud' : 'glyphicon-cloud-upload') + '"></span> ' + (data ? '<em>Saved</em>' : '<em>Not Saved</em>');
-                 //return data ? '<em>Saved</em>' : '<em>Not Saved</em>';
              }
            },
            { 'data': 'Organization', 'width': '50px', 'visible': true },
@@ -2751,7 +2796,7 @@ function setupDataManagerTable() {
            { 'data': 'SeriesId', 'visible': true },
            { 'data': 'WofUri', 'sTitle': 'WaterOneFlow URI', 'visible': true },
            //BCC - Make these columns visible for testing...
-           { 'data': 'TimeSeriesRequestStatus', 'visible': true },
+           //{ 'data': 'TimeSeriesRequestStatus', 'visible': true },
            { 'data': 'TimeSeriesRequestId', 'visible': true}
         ],
 
@@ -2786,11 +2831,11 @@ function setupDataManagerTable() {
 
     //Add filter placeholders...
     $(tableId).off('draw.dt', addFilterPlaceholders);
-    $(tableId).on('draw.dt', { 'tableId': tableName, 'placeHolders': ['Status', 'Organization', 'Service Title', 'Keyword', 'Variable Name', 'Site Name'] }, addFilterPlaceholders);
+    $(tableId).on('draw.dt', { 'tableId': tableName, 'placeHolders': ['Saved?', 'Organization', 'Service Title', 'Keyword', 'Variable Name', 'Site Name'] }, addFilterPlaceholders);
 
     //Retrieve WaterOneFlow data for time series
-    $(tableId).off('draw.dt', retrieveWaterOneFlowForTimeSeries);
-    $(tableId).on('draw.dt', { 'tableId': tableName, 'modalDialogId': 'datamgrModal' }, retrieveWaterOneFlowForTimeSeries);
+    //$(tableId).off('draw.dt', retrieveWaterOneFlowForTimeSeries);
+    //$(tableId).on('draw.dt', { 'tableId': tableName, 'modalDialogId': 'datamgrModal' }, retrieveWaterOneFlowForTimeSeries);
 
     //Define the custom toolbar button names once...
     var buttonsArray = ['btnDeleteSelectionsDataMgr',
@@ -2804,7 +2849,7 @@ function setupDataManagerTable() {
     //Avoid multiple registrations of the same handler...
     var tblSelector = tableId + ' tbody';
     $(tblSelector).off('click', 'tr', toggleSelected);
-    $(tblSelector).on('click', 'tr', { 'tableId': tableName, 'btnIds': buttonsArray, 'btnClearId': 'btnClearSelectionsDataMgr'}, toggleSelected);
+    $(tblSelector).on('click', 'tr', { 'tableId': tableName, 'btnIds': buttonsArray, 'btnClearId': 'btnClearSelectionsDataMgr'}, toggleSelectedDataManager);
 
     //Add a custom toolbar to the table...
     $('div.toolbarDataMgr').addClass('container');
@@ -2814,33 +2859,50 @@ function setupDataManagerTable() {
                                   '<label style="font-size:1.25em;" class="label label-default" id="lblSelectionsDataMgr">Selection(s): </label>' +
                                   '<input type="checkbox" style="margin-left: 0.5em;" class="ColVis-Button" id="chkbxSelectAllDataMgr"/>&nbsp;<b>All?</b></span>' +
                                   '<input type="button" style="margin-left: 0.5em;" class="btn btn-warning" disabled id="btnClearSelectionsDataMgr" value="Clear"/>' +
+                                  '<input type="button" style="margin-left: 0.5em;" class="btn btn-danger" disabled id="btnRemoveSelectionsDataMgr" value="Remove"/>' +
+                                  '<input type="button" style="margin-left: 1em;" class="btn btn-separator" disabled ></input>' +
+                                  '<label style="font-size:1.25em; margin-left: 0.5em;" class="label label-default" id="lblCloudDataMgr">Cloud: </label>' +
                                   '<input type="button" style="margin-left: 0.5em;" class="btn btn-danger" disabled id="btnDeleteSelectionsDataMgr" value="Delete"/>' +
                                   '<input type="button" style="margin-left: 0.5em;" class="btn btn-primary" disabled id="btnRefreshSelectionsDataMgr" value="Refresh"/>' +
                                   '<input type="button" style="margin-left: 0.5em;" class="btn btn-primary" disabled id="btnSaveSelectionsDataMgr" value="Save"/>' +
                                   '<input type="button" style="margin-left: 1em;" class="btn btn-separator" disabled ></input>' +
+                                  '<label style="font-size:1.25em; margin-left: 0.5em;" class="label label-default" id="lblClientDataMgr">Client: </label>' +
                                   '<input type="button" style="margin-left: 0.5em;" class="ColVis-Button btn btn-primary" disabled id="btnDownloadSelectionsDataMgr" value="Download"/>' +
                                   '<input type="button" style="margin-left: 1em;" class="btn btn-separator" disabled ></input>' +
-                                  '<input type="button" style="margin-left: 0.5em;" class="ColVis-Button btn btn-primary" disabled id="btnLaunchHydrodataToolDataMgr" value="Launch"/>' +
                                   '<div style="display: inline-block; margin-left: 0.5em; vertical-align: top">' +
+                                  '<div>' +
 
-                                  //Source(s) for Bootstrap dropdown styling:
-                                  //    http://jsfiddle.net/KyleMit/5p341amh/
-                                  //    http://jsfiddle.net/74eu3y15/
-                                  '<div class="col-md-12">' +
+                                   //Source(s) for Bootstrap dropdown styling:
+                                   //    http://jsfiddle.net/KyleMit/5p341amh/
+                                   //    http://jsfiddle.net/74eu3y15/
                                   '<div class="dropdown" id="ddHydrodataToolDataMgr">' +
-
-                                  '<button class="btn btn-default" data-toggle="dropdown">' +
-                                        '<span id="ddHydroshareSelectOriginal" style="display:none;"><img src="/Content/Images/hydroshare-logo-sm.png"><b> Application </b></span>' +
-                                        '<span id="ddHydroshareSelect"><img src="/Content/Images/hydroshare-logo-sm.png"><b> Application </b></span>' +
-                                        '<span class="caret"></span>' +
-                                   '</button>' +
-                                        '<ul class="dropdown-menu col-md-12" id="ddHydroshareList">' + 
-                                        '</ul>' +
-                                  '</div>' +
+                                  '<button class="btn badge" data-toggle="dropdown" style="font-size: 1.25em;">' +
+                                  '<div id="ddIntegratedDataToolsOriginal" style="display: none;">' + 
+                                    '<span class="glyphicon glyphicon-wrench" style="font-weight: bold; max-width: 100%; font-size: 1.0em;"></span>' +
+                                    '<span> Integrated Data Tools </span>' +
+                                    '<span class="caret"></span>' +
                                   '</div>' +
 
+                                  '<div id="ddIntegratedDataTools" data-noneselected="true">' + 
+                                    '<span class="glyphicon glyphicon-wrench" style="font-weight: bold; max-width: 100%; font-size: 1.0em;"></span>' +
+                                    '<span> Integrated Data Tools </span>' +
+                                    '<span class="caret"></span>' +
+                                  '</div>' +
+
+                                  '</button>' +
+                                  '<ul id="ddHydroshareList" class="dropdown-menu" style="width: 20em;">' +
+                                    '<li class="dropdown-header">' +
+                                       '<span disabled class="glyphicon glyphicon-eye-open" style="max-width: 100%; font-size: 2em;"></span>' +
+                                       '<span disabled style="font-weight: bold; font-size: 1.5em; vertical-align: super;" >  Visualization</span>' +
+                                
+                                    '</li>' +
+                                   '</ul>' +
+                                   '</div>' +
+                                   '</div>' +
 
                                   '</div>' +
+                                  '<input type="button" style="margin-left: 0.5em;" class="ColVis-Button btn btn-primary" disabled id="btnLaunchHydrodataToolDataMgr" value="Launch"/>' +
+
                                   '</div>' + 
                                   '</div>' );
 
@@ -2858,16 +2920,20 @@ function setupDataManagerTable() {
     $('#btnClearSelectionsDataMgr').on('click', { 'tableId': tableName, 'chkbxId': 'chkbxSelectAllDataMgr', 'btnIds': buttonsArray, 'btnClearId': 'btnClearSelectionsDataMgr' }, clearSelections);
 
     //Avoid multiple registrations of the same handler...
-//    $('#selHydrodataToolDataMgr').off('change', byuAppSelectChange);
-//    $('#selHydrodataToolDataMgr').on('change', {'selectId': 'selHydrodataToolDataMgr', 'labelId': 'lblByuAppDescription', 'getApps': getByuAppsList}, byuAppSelectChange);
+    $('#btnRemoveSelectionsDataMgr').off('click', removeSelections);
+    $('#btnRemoveSelectionsDataMgr').on('click', { 'tableId': tableName, 'chkbxId': 'chkbxSelectAllDataMgr', 'btnIds': buttonsArray, 'btnClearId': 'btnClearSelectionsDataMgr' }, removeSelections);
+
+    //Avoid multiple registrations of the same handler...
+    $('#btnDownloadSelectionsDataMgr').off('click', downloadSelections);
+    $('#btnDownloadSelectionsDataMgr').on('click', { 'tableId': tableName }, downloadSelections);
 
     //Avoid multiple registrations of the same handler...
     $('#btnLaunchHydrodataToolDataMgr').off('click', launchByuHydroshareApp);
-    $('#btnLaunchHydrodataToolDataMgr').on('click', {'spanId': 'ddHydroshareSelect', 'tableId': tableName, 'getApps': getByuAppsList}, launchByuHydroshareApp);
+    $('#btnLaunchHydrodataToolDataMgr').on('click', {'divId': 'ddIntegratedDataTools', 'tableId': tableName, 'getApps': getByuAppsList}, launchByuHydroshareApp);
     
     //Avoid multiple registrations of the same handler...
     $('#ddHydrodataToolDataMgr').off('click', 'li a', ddHydrodataToolDataMgr);
-    $('#ddHydrodataToolDataMgr').on('click', 'li a', {'spanId': 'ddHydroshareSelect', 'spanIdOriginal': 'ddHydroshareSelectOriginal' /*, 'getApps': getByuAppsList */}, ddHydrodataToolDataMgr);
+    $('#ddHydrodataToolDataMgr').on('click', 'li a', {'divId': 'ddIntegratedDataTools', 'divIdOriginal': 'ddIntegratedDataToolsOriginal' /*, 'getApps': getByuAppsList */}, ddHydrodataToolDataMgr);
 
 
     //TO DO - Delete selections handler
@@ -2896,7 +2962,7 @@ function loadByuHydroshareApps() {
 
     //Initialize list contents and apps object
     var appsDropdown = $('#ddHydroshareList');
-    $('#ddHydroshareList li').remove();
+    //$('#ddHydroshareList li').remove();
 
     byuAppsList = {};
 
@@ -2917,15 +2983,21 @@ function loadByuHydroshareApps() {
             var listItems = '';
 
             for (var i = 0; i < length; ++i) {
+                //Source(s) for Bootstrap dropdown styling:
+                //    http://jsfiddle.net/KyleMit/5p341amh/
+                //    http://jsfiddle.net/74eu3y15/
                 //NOTE: Use of styles: max-width: 100%, height and width to scale app icons...
                 //Source: https://wpbeaches.com/make-images-scale-responsive-web-design/
-                listItems += '<li data-toggle="tooltip" data-placement="top" title="' + apps[i].description + '"><a tabindex="-1" href="#">' +
+                listItems += '<li data-toggle="tooltip" data-placement="top" title="' + apps[i].description + '"><a  style="font-weight: bold" tabindex="-1" href="#">' +
                              '<img src="' + apps[i].icon + '"' +
                              ' style="max-width: 100%;height: 2em; width: 2em;">' + 
-                              ' <b>' + apps[i].name + '</b>' +
+                              ' ' + apps[i].name +
                              '</a></li>';
             }
 
+            //Add a separator...
+             listItems += '<li role="separator" class="divider"></li>';
+             
             //Add a 'None' option...
             listItems += '<li><a  id="idNone" tabindex="-1" href="#">' +
                             //'<img src="' + apps[i].icon + '"' +
@@ -2948,32 +3020,6 @@ function loadByuHydroshareApps() {
     });
 }
 
-//BYU Apps select change handler...
-function byuAppSelectChange(event) {
-
-    var select = $('#' + event.data.selectId);
-    var label = $('#' + event.data.labelId);
-    var apps = event.data.getApps().apps;
-
-    //Reset label text...
-    label.text('');
-
-    //Retrieve the selected value...
-    var optionSelected = $("option:selected", this);
-    var valueSelected = this.value;
- 
-    if ( 'None' !== valueSelected) {
-        //New selection - update description...
-        var length = apps.length;
-
-        for (var i = 0; i < length; ++i) {
-            if (valueSelected === apps[i].name) {
-                label.text(apps[i].description);
-            }
-        }
-    }
-}
-
 //Update the span text and image with the selection from the Bootstrap 'dropdown'
 function ddHydrodataToolDataMgr(event) {
 
@@ -2984,23 +3030,28 @@ function ddHydrodataToolDataMgr(event) {
 
     if ( 'idNone' === id) {
         //'None' option selected - retrieve 'original' values...
-        appName = $('#' + event.data.spanIdOriginal).text();
-        img = $('#' + event.data.spanIdOriginal + ' img');
+        $('#' + event.data.divId).html($('#' + event.data.divIdOriginal).html());
+        $('#' + event.data.divId).attr('data-noneselected', "true");
+        $('#' + event.data.divId).show();
 
-        imgStyle = null;
+        return;
     }
     else {
         imgStyle = {'max-width': '100%', 'height': '2em', 'width': '2em'};    
     }
 
-    $('#' + event.data.spanId + ' b').text(appName);
-    $('#' + event.data.spanId + ' img').attr('src', img.attr('src'));
+    $('#' + event.data.divId + ' img').removeAttr( 'style');
+    $('#' + event.data.divId + ' img').removeAttr( 'class');
+    $('#' + event.data.divId + ' img').html('');
+
+    $('#' + event.data.divId).text(appName);
+    $('#' + event.data.divId).prepend( '<img src="' + img.attr('src') + '">' );
+    $('#' + event.data.divId).css('font-weight', 'bold');
+    $('#' + event.data.divId).attr('data-noneselected', "false");
+
 
     if (null !== imgStyle) {
-        $('#' + event.data.spanId + ' img').css(imgStyle);
-    }
-    else {
-        $('#' + event.data.spanId + ' img').removeAttr( 'style');
+        $('#' + event.data.divId + ' img').css(imgStyle);
     }
 }
 
@@ -3011,7 +3062,7 @@ function launchByuHydroshareApp(event) {
     var apps = event.data.getApps().apps;
 
     //Currently selected BYU app
-    var valueSelected = $('#' + event.data.spanId + ' b').text().trim();
+    var valueSelected = $('#' + event.data.divId).text().trim();
     var byuUrl= null;
 
     //New selection - find the associated app URL...
@@ -3071,6 +3122,7 @@ function retrieveWaterOneFlowForTimeSeries(event) {
     var modalDialogName = event.data.modalDialogId;
 
     //Scan table data for 'Not started' time series request(s)...
+    var reDraw = false;
     table.rows().every(function (rowIdx, tableLoop, rowLoop) {
 
         var rowData = this.data();
@@ -3080,18 +3132,24 @@ function retrieveWaterOneFlowForTimeSeries(event) {
 
             //Update table row with newly generated request Id and 'Starting' status...
             rowData.TimeSeriesRequestId = requestId;
-            rowData.timeSeriesRequestStatus = timeSeriesRequestStatus.Starting;
+            rowData.TimeSeriesRequestStatus = timeSeriesRequestStatus.Starting;
             this.invalidate();
+            reDraw = true;
 
             //Request time series from server...
             requestTimeSeries(tableName, { 'RequestName': 'CUAHSI-WDC',
                                               'RequestId': requestId,
                                               'TimeSeriesIds': [rowData.SeriesId],
+                                              'WaterOneFlowIds': [],
                                               'RequestFormat': timeSeriesFormat.WaterOneFlow
                                             }, modalDialogName);
         }
 
     });
+
+    if ( reDraw) {
+        table.draw();
+    }
 }
 
 //Call Export Controller RequestTimeSeries per the input values...
@@ -3124,8 +3182,9 @@ function requestTimeSeries(tableName, timeSeriesRequest, modalDialogName) {
         success: function (data, textStatus, jqXHR) {
             var response = jQuery.parseJSON(data);
 
-            console.log('WaterML blob uri: ' + response.BlobUri);
-            startRequestTimeSeriesMonitor(response);
+//          console.log('WaterML blob uri: ' + response.BlobUri);
+            //startRequestTimeSeriesMonitor(response);
+            startRequestTimeSeriesMonitor();    //Start monitoring all current requests, if indicated...
 
         },
         error: function (xmlhttprequest, textstatus, message) {
@@ -3156,15 +3215,22 @@ function updateTimeSeriesRequestStatus( tableName, requestId, timeSeriesRequestS
     var table = $(tableId).DataTable();
 
     //Scan table data for input requestId...
-    table.rows().every(function (rowIdx, tableLoop, rowLoop) {
+    var reDraw = false;
+    //table.rows().every(function (rowIdx, tableLoop, rowLoop) {    //parameters available in DataTables v1.10.8+
+    table.rows().every(function () {
 
         var rowData = this.data();
         if (requestId === rowData.TimeSeriesRequestId) {
             //Found - update row with input status
             rowData.TimeSeriesRequestStatus = timeSeriesRequestStatus;
             this.invalidate();
+            reDraw = true;
         }
     });
+
+    if ( reDraw) {
+        table.draw();
+    }
 }
 
 function updateTimeSeriesBlobUri( tableName, requestId, blobUri) {
@@ -3173,72 +3239,260 @@ function updateTimeSeriesBlobUri( tableName, requestId, blobUri) {
     var table = $(tableId).DataTable();
 
     //Scan table data for input requestId...
-    table.rows().every(function (rowIdx, tableLoop, rowLoop) {
+    var reDraw = false;
+    //table.rows().every(function (rowIdx, tableLoop, rowLoop) {      //parameters available in DataTables v1.10.8+
+    table.rows().every(function () {
 
         var rowData = this.data();
         if (requestId === rowData.TimeSeriesRequestId) {
             //Found - update row with input status
             rowData.WofUri = blobUri;
             this.invalidate();
+            reDraw = true;
         }
     });
+
+    if ( reDraw) {
+        table.draw();
+    }
 }
 
-function startRequestTimeSeriesMonitor(timeSeriesResponse) {
-
-    //Check for invalid call...
-    if (! (timeSeriesResponse.RequestId in downloadMonitor.timeSeriesMonitored)) {
-        return;     //No entry found - invalid call - return early...
-    }
+//Start monitoring all current time series requests, if indicated...
+function startRequestTimeSeriesMonitor() {
 
     if ( null === downloadMonitor.intervalId) {
         //Monitor function not running - start...
         downloadMonitor.intervalId = setInterval(function() {
-        
-            var actionUrl =  "/Export/CheckTask";
-            var timeSeriesMonitored = downloadMonitor.timeSeriesMonitored;
-            for (requestId in timeSeriesMonitored) {
-                
-                var monitorEntry = downloadMonitor[requestId];
 
-                $.ajax({
-                    url: actionUrl + '/' + requestId,
-                    type: 'GET',
-                    contentType: 'application/json',
-                    context: requestId,
-                    cache: false,   //So IE does not cache when calling the same URL - source: http://stackoverflow.com/questions/7846707/ie9-jquery-ajax-call-first-time-doing-well-second-time-not
-                    success: function (data, textStatus, jqXHR) {
-                        //For now just update the monitor and the table status...
-                        var statusResponse = jQuery.parseJSON(data);
+            //Create array of intervalIds
+            var Ids = [];
+            for (var requestId in downloadMonitor.timeSeriesMonitored) {
+                Ids.push(requestId);
+            }
+
+            if ( 0 >= Ids.length) {
+                return; //Return early - no requests to monitor...
+            }
+
+            var actionUrl =  "/Export/CheckTasks";
+            $.ajax({
+                url: actionUrl,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(Ids),
+                success: function (data, textStatus, jqXHR) {
+
+                    var timeSeriesResponses = JSON.parse(data);
+                    var length = timeSeriesResponses.length;
+
+                    for (var i = 0; i < length; ++i) {
+                        var timeSeriesResponse = timeSeriesResponses[i];
+                        var requestId = timeSeriesResponse.RequestId;
 
                         if ('undefined' !== typeof downloadMonitor.timeSeriesMonitored[requestId]) {
-                            downloadMonitor.timeSeriesMonitored[requestId].timeSeriesRequestStatus = statusResponse.RequestStatus;
-                            updateTimeSeriesRequestStatus( downloadMonitor.timeSeriesMonitored[requestId].tableName, requestId, statusResponse.RequestStatus);
+                            downloadMonitor.timeSeriesMonitored[requestId].timeSeriesRequestStatus = timeSeriesResponse.RequestStatus;
+                            var tableName = downloadMonitor.timeSeriesMonitored[requestId].tableName;
 
-                            //Write the blob URI to the console...
-                            console.log(statusResponse.RequestStatus);
-                            console.log(statusResponse.BlobUri);
+                            if ( 'tblDownloadManager' === tableName) {
+                                //Retrieve associated row from Download Manager table...
+                                //var tableRow = $("#tblServerTaskCart > td").filter(function () {
+                                var tableRow = $("#tblDownloadManager tr td").filter(function () {
+                                    return $(this).text() === requestId;
+                                }).parent("tr");
 
-                            if (timeSeriesRequestStatus.Completed === statusResponse.RequestStatus) {
-                                //Completed status - update table entry with received blob URI, remove monitoring entry...
-                                var wofaFileName = retrieveWaterOneFileArchiveFileName(statusResponse.BlobUri);
-                                updateTimeSeriesBlobUri( downloadMonitor.timeSeriesMonitored[requestId].tableName, requestId, wofaFileName);
-                                delete downloadMonitor.timeSeriesMonitored[statusResponse.RequestId]
-        }
+                                //Check current status...
+                                var statusCurrent = parseInt(tableRow.find('td:eq(5)').html());
+
+                                //Update table row, if indicated...
+                                if (statusCurrent !== timeSeriesRequestStatus.EndTaskError &&
+                                    statusCurrent !== timeSeriesRequestStatus.UnknownTask &&
+                                    statusCurrent != timeSeriesRequestStatus.RequestTimeSeriesError &&
+                                    ( ! (statusCurrent === timeSeriesRequestStatus.ClientSubmittedCancelRequest && 
+                                         timeSeriesResponse.RequestStatus === timeSeriesRequestStatus.ProcessingTimeSeriesId))) {
+                                tableRow.find('#statusMessageText').html(timeSeriesResponse.Status);
+                                tableRow.find('#blobUriText').html(timeSeriesResponse.BlobUri);
+                                tableRow.find('td:eq(5)').html(timeSeriesResponse.RequestStatus);
+
+                                //Color row as 'info'
+                                tableRow.addClass('info');
+                                }
+
+                                //Check for completed/cancelled task/unknown task/error
+                                var requestStatus = parseInt(tableRow.find('td:eq(5)').html());
+
+                                if (timeSeriesRequestStatus.Completed === requestStatus ||
+                                    timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus ||
+                                    timeSeriesRequestStatus.RequestTimeSeriesError === requestStatus ||
+                                    timeSeriesRequestStatus.EndTaskError === requestStatus ||
+                                    timeSeriesRequestStatus.UnknownTask === requestStatus) {
+                                    //If task completed - re-assign 'Stop Task' button to 'Download'
+                                    if (timeSeriesRequestStatus.Completed === requestStatus) {
+                                        //Success - retrieve the base blob URI... 
+                                        var baseUri = (timeSeriesResponse.BlobUri).split('.zip');
+                                        var blobUri = baseUri[0] += '.zip';
+
+                                        //Retrieve the full file name from the base blob URI...
+                                        var uriComponents = baseUri[0].split('/');
+                                        var fileName = uriComponents[(uriComponents.length - 1)];
+
+                                        //Set base blob URI into text in column 3
+                                        //NOTE: Need to decode the string twice because:
+                                        //       If the string contains an encoded character like %27 ('),
+                                        //       the browser(?) separely encodes the (&) character as %25
+                                        //       resulting in %25%27 in the string.  Two string decodes 
+                                        //       are required to remove the two escape sequences...
+                                        var decoded = decodeURIComponent(fileName);
+                                        var decoded1 = decodeURIComponent(decoded);
+                                        tableRow.find('#blobUriText').html(decoded1);
+
+                                        //Create a download button...
+                                        var button = tableRow.find('td:eq(4)');
+
+                                        button = $("<button class='zipBlobDownload btn btn-success' style='font-size: 1.5vmin' data-blobUri='" + blobUri +  "'>Download Archive</button>");
+
+                                        button.on('click', function (event) {
+                                            var blobUri = $(this).attr('data-blobUri');
+                                            location.href = blobUri;
+
+                                            //Fade row and remove from table...
+                                            tableRow.fadeTo(1500, 0.5, function() {
+                                                    $(this).remove();
+                                            });
+
+                                            event.stopPropagation();
+                                        });
+
+                                        tableRow.find('td:eq(4)').html(button);
+
+                                        //Change the glyphicon and stop the animation
+                                        var glyphiconSpan = tableRow.find('#glyphiconSpan');
+
+                                        glyphiconSpan.removeClass('glyphicon-refresh spin');
+                                        glyphiconSpan.addClass('glyphicon-thumbs-up');
+
+                                        tableRow.find('#statusMessageText').html(timeSeriesResponse.Status);
+
+                                        tableRow.addClass('success');   //Color row as 'successful'
+
+                                        if ($("#chkbxAutoDownload").prop("checked")) {
+                                                //Autodownload checkbox checked - click the newly created button...
+                                            button.click();
+                                        }
+                                    }
+                                    else {
+                                        if (timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus ||
+                                            timeSeriesRequestStatus.UnknownTask === requestStatus || 
+                                            timeSeriesRequestStatus.EndTaskError === requestStatus) {
+                                            //Task canceled OR unknown OR end task error - color row as 'danger'
+                                            tableRow.addClass('danger');
+
+                                            //Fade row and remove from table...
+                                            tableRow.fadeTo(1500, 0.5, function () {
+                                                $(this).remove();
+                                            });
+                                        }
+                                        else {
+                                            if (timeSeriesRequestStatus.RequestTimeSeriesError === requestStatus) {
+                                        
+                                                //Request Time Series Processing Error - DO NOT remove the row!! 
+                                        
+                                                //Reset blob URI
+                                                tableRow.find('#blobUriText').html('');
+
+                                                //Hide the 'Stop Processing' button
+                                                tableRow.find('td:eq(4)').hide();
+
+                                                //Change the glyphicon and stop the animation
+                                                var glyphiconSpan = tableRow.find('#glyphiconSpan');
+
+                                                glyphiconSpan.removeClass('glyphicon-refresh spin');
+                                                glyphiconSpan.addClass('glyphicon-thumbs-down');
+                                                glyphiconSpan.css('color', 'red');
+
+                                                //Color table row as 'warning'
+                                                tableRow.removeClass('info');
+                                                tableRow.addClass('warning');
+                                            }
+                                        }
+                                    }
+                            
+                                    //Clear the interval
+                                    //clearInterval(intervalId);
+                                    //return;
+                                    //remove monitoring entry...
+                                    delete downloadMonitor.timeSeriesMonitored[timeSeriesResponse.RequestId];
+                                }
+                            }
+                            else { 
+                                if ( 'tblDataManager' === tableName ) {
+
+                                    updateTimeSeriesRequestStatus( downloadMonitor.timeSeriesMonitored[requestId].tableName, requestId, timeSeriesResponse.RequestStatus);
+
+        //                            //Write the blob URI to the console...
+        //                              console.log(requestId);
+        //                            //console.log(statusResponse.RequestStatus);
+        //                            //console.log(statusResponse.BlobUri);
+
+                                    //If blob URI contains 'cuahsi-wdc' update the table...
+                                    if (-1 !== timeSeriesResponse.BlobUri.indexOf('cuahsi-wdc')) {
+                                    var wofaFileName1 = retrieveWaterOneFileArchiveFileName(timeSeriesResponse.BlobUri);
+                                    updateTimeSeriesBlobUri( downloadMonitor.timeSeriesMonitored[requestId].tableName, requestId, wofaFileName1);
+                                    }
+
+                                    if (timeSeriesRequestStatus.Completed === timeSeriesResponse.RequestStatus) {
+                                        //Completed status - update table entry with received blob URI, remove monitoring entry...
+                                        var wofaFileName = retrieveWaterOneFileArchiveFileName(timeSeriesResponse.BlobUri);
+                                        updateTimeSeriesBlobUri( downloadMonitor.timeSeriesMonitored[requestId].tableName, requestId, wofaFileName);
+                                        delete downloadMonitor.timeSeriesMonitored[timeSeriesResponse.RequestId];
+                                    }
+                                    else {
+                                        if ( timeSeriesRequestStatus.UnknownTask === timeSeriesResponse.RequestStatus) {
+                                            //BCC - TEST - 28-Oct-2015 - Comment out the delete here - early status calls for a new task might return unknown task
+                                            //delete downloadMonitor.timeSeriesMonitored[timeSeriesResponse.RequestId];
+
+                                            if ( 'undefined' === typeof unknownTaskCounts[requestId] ) {
+                                                unknownTaskCounts[requestId] = {'count': 0 };
+                                                //console.log('Initialize unknown task count for: ' + requestId);
+                                            }
+                                            else {
+                                                unknownTaskCounts[requestId].count += 1;
+                                                //console.log('Increment unknown task count for: ' + requestId);
+
+                                                if ( 20 <= unknownTaskCounts[requestId].count) {
+                                                    //unknown task count exceeded - delete monitor entry...
+                                                    delete downloadMonitor.timeSeriesMonitored[requestId];
+                                                    delete unknownTaskCounts[requestId];
+                                                }
+                                            }
+                                        }
+                                        else {
+                                            if (timeSeriesRequestStatus.CanceledPerClientRequest === timeSeriesResponse.RequestStatus || 
+                                                timeSeriesRequestStatus.EndTaskError === timeSeriesResponse.RequestStatus ||
+                                                timeSeriesRequestStatus.RequestTimeSeriesError === timeSeriesResponse.RequestStatus ||
+                                                timeSeriesRequestStatus.ProcessingError === timeSeriesResponse.RequestStatus) {
+                                                    //Request cancelled --OR-- server error - delete monitor entry...
+                                                    delete downloadMonitor.timeSeriesMonitored[timeSeriesResponse.RequestId];
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
-                    },
-                    error: function (xmlhttprequest, textStatus, message) {
+                    }
+                },
+                error: function (xmlhttprequest, textStatus, message) {
 
-                        //For now - take no action...
-                        //ASSUMPTION: Next request will succeed
+                    //For now - take no action...
+                    //ASSUMPTION: Next request will succeed
 
-                        //Log messsage received from server...
-                        console.log('CheckTask reports error: ' + xmlhttprequest.status + ' (' + message + ')');
-                    }                
-                });
-            }
+                    //Log messsage received from server...
+                    console.log(actionUrl + ' reports error: ' + xmlhttprequest.status + ' (' + message + ')');
+                }                
+            });
+
         }, 1000);
     }
+
 }
 
 //Retrieve the WaterOneFlow zip archive file name from a full Azure blob URI
@@ -3305,8 +3559,9 @@ function setfooterFilters(tableId, columnsArray, chkbxId, translates) {
             var column = api.column(i);
             var data = column.data();
             //var select = $('<select><option value=""></option></select>')
-            var select = $('<select><option value="">Remove filter...</option></select>')
-                .appendTo($(column.footer()).empty())
+            var select = $('<select><option value="">Remove filter...</option></select>');
+
+            select.appendTo($(column.footer()).empty())
                 .on('change', function () {
 
                     var val = $.fn.dataTable.util.escapeRegex($(this).val());
@@ -3380,6 +3635,21 @@ function updateServicesList()
         //All services selected...
         //list.append('Selected All of ' + myServicesDatatable.fnGetData().length + '');
         list.append('<li>All</li>');
+    }
+}
+
+function toggleSelectedDataManager(event) {
+
+    //Conditionally select the current row...
+    var rowData = $('#' + event.data.tableId).DataTable().row(this._DT_RowIndex).data();
+    var requestId = rowData.TimeSeriesRequestId;
+    var status = rowData.TimeSeriesRequestStatus;
+
+//    if ('undefined' === typeof downloadMonitor.timeSeriesMonitored[requestId] && 
+//         status === timeSeriesRequestStatus.Completed) {
+    if ('undefined' === typeof downloadMonitor.timeSeriesMonitored[requestId]) {
+        //Current row is not monitored - allow selection...
+        toggleSelected.call(this, event);   //Bind to the value of this!!!
     }
 }
 
@@ -3694,6 +3964,83 @@ function clearSelections(event) {
     enableDisableButton(event.data.tableId, event.data.btnClearId);
 }
 
+//Remove --ALL-- table selections, regardless of current sort/search order...
+function removeSelections(event) {
+
+    //Retrieve and remove all selected rows, re-draw the table...
+    //Source: https://datatables.net/reference/api/rows().remove()
+    var table = $('#' + event.data.tableId).DataTable();
+
+    var rows = table.rows( '.selected' ).remove().draw();
+
+    //Reset the selected row count...
+    selectedRowCounts[event.data.tableId].count = 0;
+
+    //Uncheck the 'top ...' checkbox
+    $('#' + event.data.chkbxId).prop("checked", false);
+
+    //Check button(s) states...
+    enableDisableButtons(event.data.tableId, event.data.btnIds);
+
+    enableDisableButton(event.data.tableId, event.data.btnClearId);
+
+}
+
+function downloadSelections(event) {
+
+    //console.log('downloadSelections(...) called!!');
+    //Retrieve selected rows...
+    var table = $('#' + event.data.tableId).DataTable();
+
+    var selectedRows = table.rows( '.selected' ).data();
+    var selectedCount = selectedRows.length;
+    var waterOneFlowIds = [];
+
+    //Retrieve water one flow ids...
+    for ( var i = 0; i < selectedCount; ++i) {
+        var row = selectedRows[i];
+        waterOneFlowIds.push(row.WofUri);
+    }
+    
+    //Create the request object...
+    var requestId = randomId.generateId();
+    var requestName = 'CUAHSI-WDC';
+
+    var timeSeriesRequest = {
+        "RequestName": requestName,
+        "RequestId": requestId,
+        "TimeSeriesIds": [],
+        'WaterOneFlowIds': waterOneFlowIds,
+        'RequestFormat': timeSeriesFormat.CSV
+    };
+
+    var timeSeriesRequestString = JSON.stringify(timeSeriesRequest);
+
+    var actionUrl = "/Export/RequestTimeSeries";
+
+    $.ajax({
+        url: actionUrl,
+        type: 'POST',
+        dataType: 'json',
+        cache: false,           //Per IE...
+        async: true,
+        data: timeSeriesRequestString,
+        contentType: 'application/json',
+        context: timeSeriesRequestString,
+        success: function (data, textStatus, jqXHR) {
+            //Retrieve response data
+            var response = jQuery.parseJSON(data);
+
+            alert("Response received: " + response.Status.toString());
+
+        },
+        error: function (xmlhttprequest, textstatus, message) {
+            //Log messsage received from server...
+            console.log('downloadSelections reports error: ' + xmlhttprequest.status + ' (' + message + ')');
+        }        
+    });
+}
+
 //Clear all table selections...
 function clearServicesSelections(event) {
     //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
@@ -3793,7 +4140,369 @@ function displayAndFadeLabel(labelClass) {
 //    }
 //}
 
-function zipSelections(event) {
+
+//function zipSelections(event) {
+
+//    //Get the next Task Id...
+//    var taskId = getNextTaskId();
+//    var txtClass = '.clsMessageArea';
+
+//    //Update the text...
+//    var txt = 'Task: @@taskId@@ started.  To check the download status, please open Download Manager';
+//    var txts = txt.split('@@taskId@@');
+
+//    $(txtClass).text( txts[0] + taskId.toString() + txts[1]);
+
+//    //Display the 'Zip processing started... message
+//    displayAndFadeLabel(txtClass);
+
+//    //Create the list of selected time series ids...
+//    //var table = $('#dtMarkers').DataTable();
+//    var table = $('#' + event.data.tableId).DataTable();
+//    var selectedRows = table.rows('.selected').data();
+//    var selectedTimeSeriesMax = parseInt($('#' + event.data.tableId).attr('data-selectedtimeseriesmax'));
+
+//    if ($('#' + event.data.chkbxId).prop("checked") && Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax > selectedRows.length)) {
+//        //User has clicked the 'Select Top ...' check box but not all selected rows have been rendered
+//        //NOTE: If the DataTable instance has the 'deferRender' option set - not all rows may have been rendered at this point.
+//        //        Thus one cannot rely on the selectedRows above, since in this case only rendered rows appear in the selectedRows...
+//        selectedRows = getSelectedRows(event.data.tableId);
+//    }
+
+//    var selectedCount = selectedRows.length;
+//    var timeSeriesIds = [];
+
+//    for (var i = 0; i < selectedCount; ++i) {
+//        var row = selectedRows[i];
+//        //var id = $('td', row).eq(0).html();
+//        var id = row.SeriesId;
+//        timeSeriesIds.push(id);
+//    }
+
+//    //Create the request object...
+//    var requestId = randomId.generateId();
+//    var requestName = 'SelectedArea';
+
+//    //Set request name from marker place name (more precise) --OR-- place name (less precise)...
+//    var regexp = /\s*[,:.\u00b0 ]\s*/g; 
+
+//    if (('undefined' !== typeof currentMarkerPlaceName) && (null !== currentMarkerPlaceName) && ('' !== currentMarkerPlaceName)) {
+//        requestName = currentMarkerPlaceName.replace(regexp, '_');  //Replace whitespace and commas with '_' 
+//    }
+//    else {
+//        if (('undefined' !== typeof currentPlaceName) && (null !== currentPlaceName) && ('' !== currentPlaceName)) {
+//            if ('Selected Area' === currentPlaceName) {
+//                requestName = 'CUAHSI-WDC';
+//            }
+//            else {
+//                requestName = currentPlaceName.replace(regexp, '_');  //Replace whitespace and commas with '_' 
+//            }
+//        }
+//    }
+
+//    var timeSeriesRequest = {
+//        "RequestName": requestName,
+//        "RequestId": requestId,
+//        "TimeSeriesIds": timeSeriesIds,
+//        'RequestFormat': timeSeriesFormat.CSV
+//    };
+
+//    var timeSeriesRequestString = JSON.stringify(timeSeriesRequest);
+
+//    var actionUrl = "/Export/RequestTimeSeries";
+
+//    $.ajax({
+//        url: actionUrl,
+//        type: 'POST',
+//        dataType: 'json',
+//        cache: false,           //Per IE...
+//        async: true,
+//        data: timeSeriesRequestString,
+//        contentType: 'application/json',
+//        context: timeSeriesRequestString,
+//        success: function (data, textStatus, jqXHR) {
+//            //Retrieve response data
+//            var response = jQuery.parseJSON(data);
+
+//            //alert("Response received: " + response.Status.toString());
+
+//            //Add new row to the download manager table
+//            //BCC - 30-Jun-2015 - Revised formatting for QA issue #32 - Download Manager (GUI): table entries are scattered all over the page
+//            var cols = [];
+//            var div = '';
+
+//            //Column 0
+//            cols.push(response.RequestId.toString());
+
+//            //Column 1
+//            div = $('<div class="btn" style="font-size: 1em; font-weight: bold; margin: 0 auto;">' + taskId + '</div>');
+//            cols.push(div);
+
+//            //Column 2
+//            div = $('<div class="btn" style="font-size: 1em; font-weight: bold; margin: 0 auto;">' + formatStatusMessage(response.Status) + '</div>');
+//            cols.push(div);
+
+//            //Column 3
+//            div = $('<div class="btn" id="blobUriText" style="font-size: 1em; font-weight: bold; margin: 0 auto; text-overflow: ellipsis;">' + response.BlobUri + '</div>');
+//            cols.push(div);
+
+//            //Column 4
+//            var button = $("<button class='stopTask btn btn-warning' style='font-size: 1.5vmin'>Stop Processing</button>");
+
+//            button.click(function (event) {
+//                //Hide the button...
+//                $(event.target).hide();
+//                //Send request to server to stop task...
+//                event.preventDefault();
+//                var actionUrl = "/Export/EndTask";
+
+//                $.ajax({
+//                        url: actionUrl + '/' + response.RequestId,
+//                        type: 'GET',
+//                        contentType: 'application/json',
+//                        context: response.RequestId,
+//                        success: function (data, textStatus, jqXHR) {
+
+//                        var statusResponse = jQuery.parseJSON(data);
+
+//                        //Update status in download manager table...
+//                        var tableRow = $("#tblDownloadManager tr td").filter(function () {
+//                            return $(this).text() === statusResponse.RequestId;
+//                        }).parent("tr");
+
+//                        tableRow.find('#statusMessageText').html(statusResponse.Status);
+//                        tableRow.find('#blobUriText').html(statusResponse.BlobUri);
+//                        tableRow.find('td:eq(5)').html(statusResponse.RequestStatus);
+
+//                        //Color table row as 'warning'
+//                        tableRow.removeClass('info');
+//                        tableRow.addClass('warning');
+//                        },
+//                        error: function (xmlhttprequest, textStatus, message) {
+//                            //alert('Failed to request server to stop task ' + message);
+
+//                            //Update row with End Task Error status
+//                            var requestId = this.valueOf();   //From context: parameter on ajax call - convert string 'object' to string 'primitive'...
+//                            var errorDescription = (timeSeriesRequestStatus.properties[timeSeriesRequestStatus.EndTaskError]).description;
+
+//                            var tableRow = $("#tblDownloadManager tr td").filter(function () {
+//                                return $(this).text() === requestId;
+//                            }).parent("tr");
+
+//                            tableRow.find('#statusMessageText').html(errorDescription);
+//                            tableRow.find('#blobUriText').html('');
+//                            tableRow.find('td:eq(5)').html(timeSeriesRequestStatus.EndTaskError);
+
+//                            //Change the glyphicon and stop the animation
+//                            var glyphiconSpan = tableRow.find('#glyphiconSpan');
+
+//                            glyphiconSpan.removeClass('glyphicon-refresh spin');
+//                            glyphiconSpan.addClass('glyphicon-thumbs-down');
+//                            glyphiconSpan.css('color', 'red');
+
+//                            //Color table row as 'warning'
+//                            tableRow.removeClass('info');
+//                            tableRow.addClass('warning');
+
+//                            //Log messsage received from server...
+//                            console.log('EndTask reports error: ' + xmlhttprequest.status + ' (' + message + ')');
+//                        }
+//                    });
+//            });
+            
+//            //Column 4 (cont'd) 
+//            cols.push(button);
+
+//            //Column 5
+//            cols.push(response.RequestStatus);
+
+//            //Add the new row and hide the RequestStatus column...
+//            var newrow = newRow($("#tblDownloadManager"), cols);
+//            newrow.find('td:eq(5)').hide();
+
+//            //Center the button in the td-3
+//            //var td3 = newrow.find('td:eq(3)');
+//            //td3.addClass('text-center');
+
+//            addRowStylesDM(newrow);
+
+
+//            //Color row as 'info'
+//            //newrow.addClass('info');
+
+//            //Add a new monitor for the newly created task...
+//            var intervalId = setInterval(function () {
+
+//                //Retrieve status from server
+//                //var actionUrl = rootDir + 'home/CT';
+//                var actionUrl = "/Export/CheckTask";
+
+//                $.ajax({
+//                    url: actionUrl + '/' + response.RequestId,
+//                    type: 'GET',
+//                    contentType: 'application/json',
+//                    context: response.RequestId,
+//                    cache: false,   //So IE does not cache when calling the same URL - source: http://stackoverflow.com/questions/7846707/ie9-jquery-ajax-call-first-time-doing-well-second-time-not
+//                    success: function (data, textStatus, jqXHR) {
+
+//                        var statusResponse = jQuery.parseJSON(data);
+
+//                        //Retrieve associated row from Download Manager table...
+//                        //var tableRow = $("#tblServerTaskCart > td").filter(function () {
+//                        var tableRow = $("#tblDownloadManager tr td").filter(function () {
+//                            return $(this).text() === response.RequestId;
+//                        }).parent("tr");
+
+//                        //Check current status...
+//                        var statusCurrent = parseInt(tableRow.find('td:eq(5)').html());
+
+//                        //Update table row, if indicated...
+//                        if (statusCurrent !== timeSeriesRequestStatus.EndTaskError &&
+//                            statusCurrent !== timeSeriesRequestStatus.UnknownTask &&
+//                            statusCurrent != timeSeriesRequestStatus.RequestTimeSeriesError &&
+//                            ( ! (statusCurrent === timeSeriesRequestStatus.ClientSubmittedCancelRequest && 
+//                                 statusResponse.RequestStatus === timeSeriesRequestStatus.ProcessingTimeSeriesId))) {
+//                        tableRow.find('#statusMessageText').html(statusResponse.Status);
+//                        tableRow.find('#blobUriText').html(statusResponse.BlobUri);
+//                        tableRow.find('td:eq(5)').html(statusResponse.RequestStatus);
+
+//                        //Color row as 'info'
+//                        tableRow.addClass('info');
+//                        }
+
+//                        //Check for completed/cancelled task/unknown task/error
+//                        var requestStatus = parseInt(tableRow.find('td:eq(5)').html());
+
+//                        if (timeSeriesRequestStatus.Completed === requestStatus ||
+//                            timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus ||
+//                            timeSeriesRequestStatus.RequestTimeSeriesError === requestStatus ||
+//                            timeSeriesRequestStatus.EndTaskError === requestStatus ||
+//                            timeSeriesRequestStatus.UnknownTask === requestStatus) {
+//                            //If task completed - re-assign 'Stop Task' button to 'Download'
+//                            if (timeSeriesRequestStatus.Completed === requestStatus) {
+//                                //Success - retrieve the base blob URI... 
+//                                var baseUri = (statusResponse.BlobUri).split('.zip');
+//                                var blobUri = baseUri[0] += '.zip';
+
+//                                //Retrieve the full file name from the base blob URI...
+//                                var uriComponents = baseUri[0].split('/');
+//                                var fileName = uriComponents[(uriComponents.length - 1)];
+
+//                                //Set base blob URI into text in column 3
+//                                //NOTE: Need to decode the string twice because:
+//                                //       If the string contains an encoded character like %27 ('),
+//                                //       the browser(?) separely encodes the (&) character as %25
+//                                //       resulting in %25%27 in the string.  Two string decodes 
+//                                //       are required to remove the two escape sequences...
+//                                var decoded = decodeURIComponent(fileName);
+//                                var decoded1 = decodeURIComponent(decoded);
+//                                tableRow.find('#blobUriText').html(decoded1);
+
+//                                //Create a download button...
+//                                var button = tableRow.find('td:eq(4)');
+
+//                                button = $("<button class='zipBlobDownload btn btn-success' style='font-size: 1.5vmin' data-blobUri='" + blobUri +  "'>Download Archive</button>");
+
+//                                button.on('click', function (event) {
+//                                    var blobUri = $(this).attr('data-blobUri');
+//                                    location.href = blobUri;
+
+//                                    //Fade row and remove from table...
+//                                    tableRow.fadeTo(1500, 0.5, function() {
+//                                            $(this).remove();
+//                                    });
+
+//                                    event.stopPropagation();
+//                                });
+
+//                                tableRow.find('td:eq(4)').html(button);
+
+//                                //Change the glyphicon and stop the animation
+//                                var glyphiconSpan = tableRow.find('#glyphiconSpan');
+
+//                                glyphiconSpan.removeClass('glyphicon-refresh spin');
+//                                glyphiconSpan.addClass('glyphicon-thumbs-up');
+
+//                                tableRow.find('#statusMessageText').html(statusResponse.Status);
+
+//                                tableRow.addClass('success');   //Color row as 'successful'
+
+//                                if ($("#chkbxAutoDownload").prop("checked")) {
+//                                        //Autodownload checkbox checked - click the newly created button...
+//                                    button.click();
+//                                }
+//                            }
+//                            else {
+//                                if (timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus ||
+//                                    timeSeriesRequestStatus.UnknownTask === requestStatus || 
+//                                    timeSeriesRequestStatus.EndTaskError === requestStatus) {
+//                                    //Task canceled OR unknown OR end task error - color row as 'danger'
+//                                    tableRow.addClass('danger');
+
+//                                    //Fade row and remove from table...
+//                                    tableRow.fadeTo(1500, 0.5, function () {
+//                                        $(this).remove();
+//                                    });
+//                                }
+//                                else {
+//                                    if (timeSeriesRequestStatus.RequestTimeSeriesError === requestStatus) {
+                                        
+//                                        //Request Time Series Processing Error - DO NOT remove the row!! 
+                                        
+//                                        //Reset blob URI
+//                                        tableRow.find('#blobUriText').html('');
+
+//                                        //Hide the 'Stop Processing' button
+//                                        tableRow.find('td:eq(4)').hide();
+
+//                                        //Change the glyphicon and stop the animation
+//                                        var glyphiconSpan = tableRow.find('#glyphiconSpan');
+
+//                                        glyphiconSpan.removeClass('glyphicon-refresh spin');
+//                                        glyphiconSpan.addClass('glyphicon-thumbs-down');
+//                                        glyphiconSpan.css('color', 'red');
+
+//                                        //Color table row as 'warning'
+//                                        tableRow.removeClass('info');
+//                                        tableRow.addClass('warning');
+//                                    }
+//                                }
+//                            }
+                            
+//                            //Clear the interval
+//                            clearInterval(intervalId);
+//                            return;
+//                        }
+//                    },
+//                    error: function (xmlhttprequest, textStatus, message) {
+
+//                        //For now - take no action...
+//                        //ASSUMPTION: Next request will succeed
+
+//                        //Log messsage received from server...
+//                        console.log('CheckTask reports error: ' + xmlhttprequest.status + ' (' + message + ')');
+//                    }
+//                });
+
+//            }, 1000);
+
+//        },
+//        error: function (xmlhttprequest, textstatus, message) {
+//            //Server error: Close modal dialog, if indicated - open 'Server Error' dialog
+//            if ($('#SeriesModal').is(":visible")) {
+//                $('#SeriesModal').modal('hide');
+//            }
+
+//            $('#serverErrorModal').modal('show');
+
+//            //Log messsage received from server...
+//            console.log('RequestTimeSeries reports error: ' + xmlhttprequest.status + ' (' + message + ')');
+//        }
+//    });
+//}
+
+//Zip selections click handler...
+function zipSelections_2(event) {
 
     //Get the next Task Id...
     var taskId = getNextTaskId();
@@ -3831,6 +4540,12 @@ function zipSelections(event) {
         timeSeriesIds.push(id);
     }
 
+    retrieveCSVTimeSeries(taskId, timeSeriesIds);
+}
+
+//Retrieve the time series per the input series ids...
+function retrieveCSVTimeSeries(taskId, timeSeriesIds) {
+
     //Create the request object...
     var requestId = randomId.generateId();
     var requestName = 'SelectedArea';
@@ -3855,13 +4570,16 @@ function zipSelections(event) {
     var timeSeriesRequest = {
         "RequestName": requestName,
         "RequestId": requestId,
-        "TimeSeriesIds": timeSeriesIds
+        "TimeSeriesIds": timeSeriesIds,
+        'WaterOneFlowIds': [],
+        'RequestFormat': timeSeriesFormat.CSV
     };
 
     var timeSeriesRequestString = JSON.stringify(timeSeriesRequest);
 
     var actionUrl = "/Export/RequestTimeSeries";
 
+    //POST to create the time series...
     $.ajax({
         url: actionUrl,
         type: 'POST',
@@ -3897,71 +4615,11 @@ function zipSelections(event) {
             div = $('<div class="btn" id="blobUriText" style="font-size: 1em; font-weight: bold; margin: 0 auto; text-overflow: ellipsis;">' + response.BlobUri + '</div>');
             cols.push(div);
 
-            //Column 4
+            //Button for Column 4
             var button = $("<button class='stopTask btn btn-warning' style='font-size: 1.5vmin'>Stop Processing</button>");
+            addEndTaskClickHandler(button, response);
 
-            button.click(function (event) {
-                //Hide the button...
-                $(event.target).hide();
-                //Send request to server to stop task...
-                event.preventDefault();
-                var actionUrl = "/Export/EndTask";
-
-                $.ajax({
-                        url: actionUrl + '/' + response.RequestId,
-                        type: 'GET',
-                        contentType: 'application/json',
-                        context: response.RequestId,
-                        success: function (data, textStatus, jqXHR) {
-
-                        var statusResponse = jQuery.parseJSON(data);
-
-                        //Update status in download manager table...
-                        var tableRow = $("#tblDownloadManager tr td").filter(function () {
-                            return $(this).text() === statusResponse.RequestId;
-                        }).parent("tr");
-
-                        tableRow.find('#statusMessageText').html(statusResponse.Status);
-                        tableRow.find('#blobUriText').html(statusResponse.BlobUri);
-                        tableRow.find('td:eq(5)').html(statusResponse.RequestStatus);
-
-                        //Color table row as 'warning'
-                        tableRow.removeClass('info');
-                        tableRow.addClass('warning');
-                        },
-                        error: function (xmlhttprequest, textStatus, message) {
-                            //alert('Failed to request server to stop task ' + message);
-
-                            //Update row with End Task Error status
-                            var requestId = this.valueOf();   //From context: parameter on ajax call - convert string 'object' to string 'primitive'...
-                            var errorDescription = (timeSeriesRequestStatus.properties[timeSeriesRequestStatus.EndTaskError]).description;
-
-                            var tableRow = $("#tblDownloadManager tr td").filter(function () {
-                                return $(this).text() === requestId;
-                            }).parent("tr");
-
-                            tableRow.find('#statusMessageText').html(errorDescription);
-                            tableRow.find('#blobUriText').html('');
-                            tableRow.find('td:eq(5)').html(timeSeriesRequestStatus.EndTaskError);
-
-                            //Change the glyphicon and stop the animation
-                            var glyphiconSpan = tableRow.find('#glyphiconSpan');
-
-                            glyphiconSpan.removeClass('glyphicon-refresh spin');
-                            glyphiconSpan.addClass('glyphicon-thumbs-down');
-                            glyphiconSpan.css('color', 'red');
-
-                            //Color table row as 'warning'
-                            tableRow.removeClass('info');
-                            tableRow.addClass('warning');
-
-                            //Log messsage received from server...
-                            console.log('EndTask reports error: ' + xmlhttprequest.status + ' (' + message + ')');
-                        }
-                    });
-            });
-            
-            //Column 4 (cont'd) 
+            //Column 4
             cols.push(button);
 
             //Column 5
@@ -3971,174 +4629,17 @@ function zipSelections(event) {
             var newrow = newRow($("#tblDownloadManager"), cols);
             newrow.find('td:eq(5)').hide();
 
-            //Center the button in the td-3
-            //var td3 = newrow.find('td:eq(3)');
-            //td3.addClass('text-center');
-
+            //Add row styles
             addRowStylesDM(newrow);
 
-
-            //Color row as 'info'
-            //newrow.addClass('info');
-
-            //Add a new monitor for the newly created task...
-            var intervalId = setInterval(function () {
-
-                //Retrieve status from server
-                //var actionUrl = rootDir + 'home/CT';
-                var actionUrl = "/Export/CheckTask";
-
-                $.ajax({
-                    url: actionUrl + '/' + response.RequestId,
-                    type: 'GET',
-                    contentType: 'application/json',
-                    context: response.RequestId,
-                    cache: false,   //So IE does not cache when calling the same URL - source: http://stackoverflow.com/questions/7846707/ie9-jquery-ajax-call-first-time-doing-well-second-time-not
-                    success: function (data, textStatus, jqXHR) {
-
-                        var statusResponse = jQuery.parseJSON(data);
-
-                        //Retrieve associated row from Download Manager table...
-                        //var tableRow = $("#tblServerTaskCart > td").filter(function () {
-                        var tableRow = $("#tblDownloadManager tr td").filter(function () {
-                            return $(this).text() === response.RequestId;
-                        }).parent("tr");
-
-                        //Check current status...
-                        var statusCurrent = parseInt(tableRow.find('td:eq(5)').html());
-
-                        //Update table row, if indicated...
-                        if (statusCurrent !== timeSeriesRequestStatus.EndTaskError &&
-                            statusCurrent !== timeSeriesRequestStatus.UnknownTask &&
-                            statusCurrent != timeSeriesRequestStatus.RequestTimeSeriesError &&
-                            ( ! (statusCurrent === timeSeriesRequestStatus.ClientSubmittedCancelRequest && 
-                                 statusResponse.RequestStatus === timeSeriesRequestStatus.ProcessingTimeSeriesId))) {
-                        tableRow.find('#statusMessageText').html(statusResponse.Status);
-                        tableRow.find('#blobUriText').html(statusResponse.BlobUri);
-                        tableRow.find('td:eq(5)').html(statusResponse.RequestStatus);
-
-                        //Color row as 'info'
-                        tableRow.addClass('info');
-                        }
-
-                        //Check for completed/cancelled task/unknown task/error
-                        var requestStatus = parseInt(tableRow.find('td:eq(5)').html());
-
-                        if (timeSeriesRequestStatus.Completed === requestStatus ||
-                            timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus ||
-                            timeSeriesRequestStatus.RequestTimeSeriesError === requestStatus ||
-                            timeSeriesRequestStatus.EndTaskError === requestStatus ||
-                            timeSeriesRequestStatus.UnknownTask === requestStatus) {
-                            //If task completed - re-assign 'Stop Task' button to 'Download'
-                            if (timeSeriesRequestStatus.Completed === requestStatus) {
-                                //Success - retrieve the base blob URI... 
-                                var baseUri = (statusResponse.BlobUri).split('.zip');
-                                var blobUri = baseUri[0] += '.zip';
-
-                                //Retrieve the full file name from the base blob URI...
-                                var uriComponents = baseUri[0].split('/');
-                                var fileName = uriComponents[(uriComponents.length - 1)];
-
-                                //Set base blob URI into text in column 3
-                                //NOTE: Need to decode the string twice because:
-                                //       If the string contains an encoded character like %27 ('),
-                                //       the browser(?) separely encodes the (&) character as %25
-                                //       resulting in %25%27 in the string.  Two string decodes 
-                                //       are required to remove the two escape sequences...
-                                var decoded = decodeURIComponent(fileName);
-                                var decoded1 = decodeURIComponent(decoded);
-                                tableRow.find('#blobUriText').html(decoded1);
-
-                                //Create a download button...
-                                var button = tableRow.find('td:eq(4)');
-
-                                button = $("<button class='zipBlobDownload btn btn-success' style='font-size: 1.5vmin' data-blobUri='" + blobUri +  "'>Download Archive</button>");
-
-                                button.on('click', function (event) {
-                                    var blobUri = $(this).attr('data-blobUri');
-                                    location.href = blobUri;
-
-                                    //Fade row and remove from table...
-                                    tableRow.fadeTo(1500, 0.5, function() {
-                                            $(this).remove();
-                                    });
-
-                                    event.stopPropagation();
-                                });
-
-                                tableRow.find('td:eq(4)').html(button);
-
-                                //Change the glyphicon and stop the animation
-                                var glyphiconSpan = tableRow.find('#glyphiconSpan');
-
-                                glyphiconSpan.removeClass('glyphicon-refresh spin');
-                                glyphiconSpan.addClass('glyphicon-thumbs-up');
-
-                                tableRow.find('#statusMessageText').html(statusResponse.Status);
-
-                                tableRow.addClass('success');   //Color row as 'successful'
-
-                                if ($("#chkbxAutoDownload").prop("checked")) {
-                                        //Autodownload checkbox checked - click the newly created button...
-                                    button.click();
-                                }
-                            }
-                            else {
-                                if (timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus ||
-                                    timeSeriesRequestStatus.UnknownTask === requestStatus || 
-                                    timeSeriesRequestStatus.EndTaskError === requestStatus) {
-                                    //Task canceled OR unknown OR end task error - color row as 'danger'
-                                    tableRow.addClass('danger');
-
-                                    //Fade row and remove from table...
-                                    tableRow.fadeTo(1500, 0.5, function () {
-                                        $(this).remove();
-                                    });
-                                }
-                                else {
-                                    if (timeSeriesRequestStatus.RequestTimeSeriesError === requestStatus) {
-                                        
-                                        //Request Time Series Processing Error - DO NOT remove the row!! 
-                                        
-                                        //Reset blob URI
-                                        tableRow.find('#blobUriText').html('');
-
-                                        //Hide the 'Stop Processing' button
-                                        tableRow.find('td:eq(4)').hide();
-
-                                        //Change the glyphicon and stop the animation
-                                        var glyphiconSpan = tableRow.find('#glyphiconSpan');
-
-                                        glyphiconSpan.removeClass('glyphicon-refresh spin');
-                                        glyphiconSpan.addClass('glyphicon-thumbs-down');
-                                        glyphiconSpan.css('color', 'red');
-
-                                        //Color table row as 'warning'
-                                        tableRow.removeClass('info');
-                                        tableRow.addClass('warning');
-                                    }
-                                }
-                            }
-                            
-                            //Clear the interval
-                            clearInterval(intervalId);
-                            return;
-                        }
-                    },
-                    error: function (xmlhttprequest, textStatus, message) {
-
-                        //For now - take no action...
-                        //ASSUMPTION: Next request will succeed
-
-                        //Log messsage received from server...
-                        console.log('CheckTask reports error: ' + xmlhttprequest.status + ' (' + message + ')');
-                    }
-                });
-
-            }, 1000);
-
-        },
-        error: function (xmlhttprequest, textstatus, message) {
+            //Set monitor entry
+            downloadMonitor.timeSeriesMonitored[timeSeriesRequest.RequestId] = { 'tableName': 'tblDownloadManager',
+                                                                                 'timeSeriesRequest': timeSeriesRequest,
+                                                                                 'timeSeriesRequestStatus': timeSeriesRequestStatus.Starting 
+                                                                               };
+           startRequestTimeSeriesMonitor();    //Start monitoring all current requests, if indicated...
+         },
+         error: function (xmlhttprequest, textstatus, message) {
             //Server error: Close modal dialog, if indicated - open 'Server Error' dialog
             if ($('#SeriesModal').is(":visible")) {
                 $('#SeriesModal').modal('hide');
@@ -4147,8 +4648,73 @@ function zipSelections(event) {
             $('#serverErrorModal').modal('show');
 
             //Log messsage received from server...
-            console.log('RequestTimeSeries reports error: ' + xmlhttprequest.status + ' (' + message + ')');
+            console.log('retrieveCSVTimeSeries reports error: ' + xmlhttprequest.status + ' (' + message + ')');
         }
+    });
+}
+
+//Add an 'end task' click handler to the input jquery button object
+function addEndTaskClickHandler(jqueryButton, response) {
+
+    jqueryButton.click(function(event) {
+        //Hide the button...
+        $(event.target).hide();
+        //Send request to server to stop task...
+        event.preventDefault();
+        var actionUrl = "/Export/EndTask";
+
+        $.ajax({
+                url: actionUrl + '/' + response.RequestId,
+                type: 'GET',
+                contentType: 'application/json',
+                context: response.RequestId,
+                success: function (data, textStatus, jqXHR) {
+
+                var statusResponse = jQuery.parseJSON(data);
+
+                //Update status in download manager table...
+                var tableRow = $("#tblDownloadManager tr td").filter(function () {
+                    return $(this).text() === statusResponse.RequestId;
+                }).parent("tr");
+
+                tableRow.find('#statusMessageText').html(statusResponse.Status);
+                tableRow.find('#blobUriText').html(statusResponse.BlobUri);
+                tableRow.find('td:eq(5)').html(statusResponse.RequestStatus);
+
+                //Color table row as 'warning'
+                tableRow.removeClass('info');
+                tableRow.addClass('warning');
+                },
+                error: function (xmlhttprequest, textStatus, message) {
+                    //alert('Failed to request server to stop task ' + message);
+
+                    //Update row with End Task Error status
+                    var requestId = this.valueOf();   //From context: parameter on ajax call - convert string 'object' to string 'primitive'...
+                    var errorDescription = (timeSeriesRequestStatus.properties[timeSeriesRequestStatus.EndTaskError]).description;
+
+                    var tableRow = $("#tblDownloadManager tr td").filter(function () {
+                        return $(this).text() === requestId;
+                    }).parent("tr");
+
+                    tableRow.find('#statusMessageText').html(errorDescription);
+                    tableRow.find('#blobUriText').html('');
+                    tableRow.find('td:eq(5)').html(timeSeriesRequestStatus.EndTaskError);
+
+                    //Change the glyphicon and stop the animation
+                    var glyphiconSpan = tableRow.find('#glyphiconSpan');
+
+                    glyphiconSpan.removeClass('glyphicon-refresh spin');
+                    glyphiconSpan.addClass('glyphicon-thumbs-down');
+                    glyphiconSpan.css('color', 'red');
+
+                    //Color table row as 'warning'
+                    tableRow.removeClass('info');
+                    tableRow.addClass('warning');
+
+                    //Log messsage received from server...
+                    console.log('EndTask reports error: ' + xmlhttprequest.status + ' (' + message + ')');
+                }
+            });    
     });
 }
 
@@ -4198,12 +4764,20 @@ function copySelectionsToDataManager(event) {
         datamgrRecord.TimeSeriesRequestId = null;
 
         //Add the newly created record...
-        datamgrTable.row.add(datamgrRecord).draw();
+        datamgrTable.row.add(datamgrRecord);
     }
 
-    //All data loaded  - set footer filters...
+    //All data loaded  - redraw the table...
+    //datamgrTable.draw();
+    var event1 = { 'data': 
+                        //{ 'tableId': tableName, 'modalDialogId': 'datamgrModal' }
+                        { 'tableId': 'tblDataManager', 'modalDialogId': 'datamgrModal' }
+                };
+    retrieveWaterOneFlowForTimeSeries(event1);
+
+    //Set footer filters...
     var translates = [{
-        'columnIndex': 0,
+        'columnIndex': 1,
         'translates': [{
                            'value': true,
                            'translate': 'Saved'
@@ -4214,7 +4788,7 @@ function copySelectionsToDataManager(event) {
                        }]
     }];
 
-    setfooterFilters(datamgrTableName, [0, 1, 2, 3, 4, 8], 'chkbxSelectAllDataMgr', translates);
+    setfooterFilters(datamgrTableName, [1, 2, 3, 4, 5, 9], 'chkbxSelectAllDataMgr', translates);
 }
 
 //Retrieve all the selected rows per the input table name...
@@ -4369,7 +4943,8 @@ function setUpTimeseriesDatatable() {
             //{ "data": "GeneralCategory", "visible": false },
             { "data": "TimeSupport", "visible": true },
 
-            { "data": "IsRegular", "visible": true },
+    	    //BCC - 15-Oct-29015 -  Suppress display of IsRegular
+            //{ "data": "IsRegular", "visible": true },
             //{ "data": "VariableUnits","visible": false },
             //{ "data": "Citation", "visible": false }            
             { "data": "SeriesId" },
@@ -4384,14 +4959,18 @@ function setUpTimeseriesDatatable() {
 
             //Create a link to the Service URL
             var org = $('td', row).eq(0).html();
-            var servCode = $('td', row).eq(1).html();
+            //var servCode = $('td', row).eq(1).html();
+            var servCode = data.ServCode;
 
             var descUrl = getDescriptionUrl(servCode);
             $('td', row).eq(17).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
 
             //Create a link to the Web Service Description URL...
-            var servUrl = $('td', row).eq(18).html();
-            $('td', row).eq(18).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
+            //var servUrl = $('td', row).eq(18).html();
+            //$('td', row).eq(18).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
+            //var servUrl = $('td', row).eq(16).html();
+            var servUrl = data.ServURL;
+            $('td', row).eq(16).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
 
             //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
             if ($('#chkbxSelectAllTS').prop('checked')) {
@@ -4432,7 +5011,8 @@ function setUpTimeseriesDatatable() {
         "initComplete": function () {
 
             //BCC - 10-Aug-2015 - GitHub Issue #35 - Add filter by Site Name
-            setfooterFilters('dtTimeseries', [0, 1, 2, 4, 10], 'chkbxSelectAllTS');
+            //BCC - 30-Oct-2015 - Problems with setfooterFilters here??
+            //setfooterFilters('dtTimeseries', [0, 1, 2, 4, 10], 'chkbxSelectAllTS');
 
             //oTable.fnAdjustColumnSizing();
             $('#dtTimeseries').dataTable().fnAdjustColumnSizing();
@@ -4467,12 +5047,18 @@ function setUpTimeseriesDatatable() {
     $('#chkbxSelectAllTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS', 'btnIds': ['btnZipSelectionsTS', 'btnManageSelectionsTS'], 'btnClearId': 'btnClearSelectionsTS'}, selectAll);
 
     //Avoid multiple registrations of the same handler...
-    $('#btnZipSelectionsTS').off('click', zipSelections);
-    $('#btnZipSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS'}, zipSelections);
+    //$('#btnZipSelectionsTS').off('click', zipSelections);
+    //$('#btnZipSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS'}, zipSelections);
+    $('#btnZipSelectionsTS').off('click', zipSelections_2);
+    $('#btnZipSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS'}, zipSelections_2);
 
     //Avoid multiple registrations of the same handler...
     $('#btnClearSelectionsTS').off('click', clearSelections);
     $('#btnClearSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS', 'btnIds': ['btnZipSelectionsTS', 'btnManageSelectionsTS'], 'btnClearId': 'btnClearSelectionsTS' }, clearSelections);
+
+    //Avoid multiple registrations of the same handler...
+    $('#btnManageSelectionsTS').off('click', copySelectionsToDataManager);
+    $('#btnManageSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS' }, copySelectionsToDataManager)
 
     //Add DataTables event handlers...
     //Search event...
