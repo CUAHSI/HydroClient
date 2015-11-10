@@ -85,8 +85,9 @@ namespace HISWebClient.Models
         public String Status { get; set; }
 
         /// <summary>
-        /// BlobUri
+        /// BlobUri - for blob files...
         /// </summary>
         public String BlobUri {get; set; }
-    }
+
+	}
 }

@@ -253,10 +253,6 @@ namespace HISWebClient.Controllers
 			CancellationToken ct;
 			bool bNewTask = false;  //Assume time series retrieval task already exists...
  
-			//NOTE: Logic assumes one of the following booleans is true and one is false, per the input parameters...
-			bool bUseWaterOneFlow = 0 < tsrIn.WaterOneFlowIds.Count;
-			bool bUseRequestIds = 0 < tsrIn.TimeSeriesIds.Count;
-
 			//Thread-safe access to dictionary
 			lock (lockObject) 
 			{
@@ -292,14 +288,7 @@ namespace HISWebClient.Controllers
 
 				List<TimeSeriesViewModel> currentSeries = new List<TimeSeriesViewModel>();
 				//int total = tsrIn.TimeSeriesIds.Count;
-				if (bUseWaterOneFlow)
-				{
-					LogWaterOneFlowIds(tsrIn.RequestId, tsrIn.RequestName, tsrIn.WaterOneFlowIds);
-				}
-				else if (bUseRequestIds)
-				{
-					LogRequestIds(tsrIn.RequestId, tsrIn.RequestName, retrievedSeries, currentSeries, tsrIn.TimeSeriesIds);
-				}
+				LogRequestIds(tsrIn.RequestId, tsrIn.RequestName, retrievedSeries, currentSeries, tsrIn.TimeSeriesIds);
 
 				//Retrieve values for use in async task...
 				string sessionId = String.Empty;
@@ -332,91 +321,8 @@ namespace HISWebClient.Controllers
 						{
 							int bufSize = 4096;
 							int i = 0;
-							if (bUseWaterOneFlow)
-							{
-								int count = tsrIn.WaterOneFlowIds.Count;
-								foreach (string waterOneFlowId in tsrIn.WaterOneFlowIds)
-								{
-									//Check for cancellation...
-									if (IsTaskCancelled(requestId, cancellationEnum, cancellationMessage))
-									{
-										break;
-									}
-
-									UpdateTaskStatus(requestId, TimeSeriesRequestStatus.ProcessingTimeSeriesId,
-										TimeSeriesRequestStatus.ProcessingTimeSeriesId.GetEnumDescription() +
-																		  waterOneFlowId +
-																		  " (" + (++i).ToString() + " of " + count.ToString() + ")");
-
-
-									//Retrieve WaterOneFlow file from azure blob storage as stream
-									MemoryStream ms = new MemoryStream();
-									bool bFound = await _ac.RetrieveBlobAsync(waterOneFlowId, ct, ms);
-
-									if ( ! IsTaskCancelled(requestId, cancellationEnum, cancellationMessage))
-									{
-										if (bFound)
-										{
-											//Retrieve the water one flow version...
-											MemoryStream msDecompress = null;
-
-											string version = GetWaterOneFlowVersion(ms, ref msDecompress);
-											if ( ! String.IsNullOrWhiteSpace(version))
-											{
-												IWaterOneFlowParser parser;
-												switch (version)
-												{
-													case "1.0":
-														parser = new WaterOneFlow10Parser();
-														break;
-													case "1.1":
-														parser = new WaterOneFlow11Parser();
-														break;
-													default:
-														//Take no action...
-														parser = null;
-														break;
-												}
-
-												if (null != parser)
-												{
-													//Parser found - parse water one flow contents...
-													msDecompress.Seek(0, SeekOrigin.Begin);
-													IList<ServerSideHydroDesktop.ObjectModel.Site> listSites = parser.ParseGetSites(msDecompress);
-
-													msDecompress.Seek(0, SeekOrigin.Begin);
-													IList<ServerSideHydroDesktop.ObjectModel.SeriesMetadata> listMeta = parser.ParseGetSiteInfo(msDecompress);
-
-													msDecompress.Seek(0, SeekOrigin.Begin);
-													IList<ServerSideHydroDesktop.ObjectModel.Series> listSeries = parser.ParseGetValues(msDecompress);
-
-													//			 parse file contents into stream
-													//			 add stream as a zip archive entry...
-													int n = 5;
-
-													++n;
-									
-												}
-												else
-												{
-													//TO DO - parser not found - make an error stream, add stream as a zip archive entry...
-
-												}
-											}
-											else
-											{
-												//TO DO - version not found - make an error stream, add stream as a zip archive entry...
-											}
-										}
-										else
-										{
-											//DO DO - //If not found, make an error stream, add stream as a zip archive entry...
-										}
-									}
-								}
-							}
-							else if (bUseRequestIds)
-							{
+							//if (bUseRequestIds)
+							//{
 								//For each time series id...
 								int count = tsrIn.TimeSeriesIds.Count;
 								foreach (int timeSeriesId in tsrIn.TimeSeriesIds)
@@ -443,7 +349,7 @@ namespace HISWebClient.Controllers
 										await filestreamresult.FileStream.CopyToAsync(zaeStream, bufSize);
 									}
 								}
-							}
+							//}
 						}
 
 #if NEVER_DEFINED
@@ -462,14 +368,13 @@ namespace HISWebClient.Controllers
 							memoryStream.Seek(0, SeekOrigin.Begin);
 
 							//Upload zip archive...
-							blobUri = await _ac.UploadFromMemoryStreamAsync(memoryStream, requestName, ct);
+							blobUri = await _ac.UploadFromMemoryStreamAsync(memoryStream, requestName, ct); ;
 
 							//Upload complete - check for cancellation...
 							if (!IsTaskCancelled(requestId, cancellationEnum, cancellationMessage))
 							{
 								//Task complete - set status and blobUri...
 								//Thread-safe access to dictionary
-								//BCC - TEST - 28-Oct-2015 - Since call is returning before the file is actually available, do not mark the status as completed here...
 								lock (lockObject)
 								{
 									_dictTaskStatus[requestId].RequestStatus = TimeSeriesRequestStatus.Completed;
@@ -477,21 +382,21 @@ namespace HISWebClient.Controllers
 									_dictTaskStatus[requestId].BlobUri = blobUri;
 								}
 
-									dblogcontextRef.clearParameters();
-									dblogcontextRef.clearReturns();
+								dblogcontextRef.clearParameters();
+								dblogcontextRef.clearReturns();
 
-									dblogcontextRef.addParameter("requestId", tsrIn.RequestId);
-									dblogcontextRef.addParameter("requestName", tsrIn.RequestName);
+								dblogcontextRef.addParameter("requestId", tsrIn.RequestId);
+								dblogcontextRef.addParameter("requestName", tsrIn.RequestName);
 
-									dblogcontext.addReturn("requestId", requestId);
-									dblogcontext.addReturn("requestStatus", requestStatus);
-									dblogcontext.addReturn("status", status);
-									dblogcontext.addReturn("blobUri", blobUri);
+								dblogcontext.addReturn("requestId", requestId);
+								dblogcontext.addReturn("requestStatus", requestStatus);
+								dblogcontext.addReturn("status", status);
+								dblogcontext.addReturn("blobUri", blobUri);
 
-									dblogcontextRef.createLogEntry(sessionIdRef, userIpAddressRef, domainNameRef, startDtUtc, DateTime.UtcNow, "RequestTimeSeries(...)", "zip archive creation complete.", Level.Info);
-								}
+								dblogcontextRef.createLogEntry(sessionIdRef, userIpAddressRef, domainNameRef, startDtUtc, DateTime.UtcNow, "RequestTimeSeries(...)", "zip archive creation complete.", Level.Info);
 							}
 						}
+					}
 					catch (Exception ex)
 					{
 						//Error - log...
@@ -536,6 +441,7 @@ namespace HISWebClient.Controllers
 			return Json(json, "application/json");
 		}
 
+
 		//Find the version of the input water one flow stream...
 		private string GetWaterOneFlowVersion( MemoryStream msWaterOneFlow, ref MemoryStream msWaterOneFlowDecompressed )
 		{
@@ -559,6 +465,10 @@ namespace HISWebClient.Controllers
 
 			zaeStream.CopyTo(msWaterOneFlowDecompressed);
 
+			zaeStream.Close();
+
+			zaeStream = entry.Open();
+
 			XElement root = XElement.Load(zaeStream);
 
 			IEnumerable<XNode> desc = root.DescendantNodes();
@@ -581,12 +491,6 @@ namespace HISWebClient.Controllers
 			}
 
 			return version;
-		}
-
-		//TO DO - Log the water one flow ids and related information
-		private void LogWaterOneFlowIds(string requestId, string requestName, List<string> waterOneFlowIds)
-		{
-
 		}
 
 		//Log the input request ids and related information
@@ -760,28 +664,45 @@ namespace HISWebClient.Controllers
 		[HttpGet]
 		public async Task<ActionResult> GetHydroshareAppsList()
 		{
-			HttpClient httpClient = new HttpClient();
-
-			httpClient.BaseAddress = new Uri("http://appsdev.hydroshare.org/");
-
-			HttpResponseMessage httpResponseMessage = await httpClient.GetAsync("apps/api/list_apps/");
-
-			string strJSON = String.Empty;
-			if (httpResponseMessage.IsSuccessStatusCode)
+			try
 			{
-				strJSON = httpResponseMessage.Content.ReadAsStringAsync().Result;
+				//Add call to avoid error: "The underlying connection was closed: Could not establish trust relationship for the SSL/TLS secure channel."
+				//Source: http://stackoverflow.com/questions/536352/webclient-https-issues
+				ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+
+				HttpClient httpClient = new HttpClient();
+
+				httpClient.BaseAddress = new Uri("http://appsdev.hydroshare.org/");
+				//httpClient.BaseAddress = new Uri("https://appsdev.hydroshare.org/");
+
+				HttpResponseMessage httpResponseMessage = await httpClient.GetAsync("apps/api/list_apps/");
+
+				string strJSON = String.Empty;
+				if (httpResponseMessage.IsSuccessStatusCode)
+				{
+					strJSON = httpResponseMessage.Content.ReadAsStringAsync().Result;
+				}
+				else
+				{
+					var javaScriptSerializer = new JavaScriptSerializer();
+					strJSON = javaScriptSerializer.Serialize("{'Apps': []}");
+				}
+
+
+				//Processing complete - return 
+				//return Json(json, "application/json", JsonRequestBehavior.AllowGet);
+
+				return new ContentResult { Content = strJSON, ContentType = "application/json" };
 			}
-			else
+			catch (Exception ex)
 			{
+				string strJSON = String.Empty;
+
 				var javaScriptSerializer = new JavaScriptSerializer();
 				strJSON = javaScriptSerializer.Serialize("{'Apps': []}");
+
+				return new ContentResult { Content = strJSON, ContentType = "application/json" };
 			}
-
-
-			//Processing complete - return 
-			//return Json(json, "application/json", JsonRequestBehavior.AllowGet);
-
-			return new ContentResult { Content = strJSON, ContentType = "application/json" };
 		}
 
 
@@ -1091,3 +1012,95 @@ namespace HISWebClient.Controllers
 		}
 	}
 }
+
+
+
+/*
+ 
+							if (bUseWaterOneFlow)
+							{
+								int count = tsrIn.WaterOneFlowIds.Count;
+								foreach (string waterOneFlowId in tsrIn.WaterOneFlowIds)
+								{
+									//Check for cancellation...
+									if (IsTaskCancelled(requestId, cancellationEnum, cancellationMessage))
+									{
+										break;
+									}
+
+									UpdateTaskStatus(requestId, TimeSeriesRequestStatus.ProcessingTimeSeriesId,
+										TimeSeriesRequestStatus.ProcessingTimeSeriesId.GetEnumDescription() +
+																		  waterOneFlowId +
+																		  " (" + (++i).ToString() + " of " + count.ToString() + ")");
+
+
+									//Retrieve WaterOneFlow file from azure blob storage as stream
+									MemoryStream ms = new MemoryStream();
+									bool bFound = await _ac.RetrieveBlobAsync(waterOneFlowId, ct, ms);
+
+									if ( ! IsTaskCancelled(requestId, cancellationEnum, cancellationMessage))
+									{
+										if (bFound)
+										{
+											//Retrieve the water one flow version...
+											MemoryStream msDecompress = new MemoryStream();
+
+											string version = GetWaterOneFlowVersion(ms, ref msDecompress);
+											if ( ! String.IsNullOrWhiteSpace(version))
+											{
+												IWaterOneFlowParser parser;
+												switch (version)
+												{
+													case "1.0":
+														parser = new WaterOneFlow10Parser();
+														break;
+													case "1.1":
+														parser = new WaterOneFlow11Parser();
+														break;
+													default:
+														//Take no action...
+														parser = null;
+														break;
+												}
+
+												if (null != parser)
+												{
+													//Parser found - parse water one flow contents...
+													msDecompress.Seek(0, SeekOrigin.Begin);
+													IList<ServerSideHydroDesktop.ObjectModel.Site> listSites = parser.ParseGetSites(msDecompress);
+
+													msDecompress.Seek(0, SeekOrigin.Begin);
+													IList<ServerSideHydroDesktop.ObjectModel.SeriesMetadata> listMeta = parser.ParseGetSiteInfo(msDecompress);
+
+													msDecompress.Seek(0, SeekOrigin.Begin);
+													IList<ServerSideHydroDesktop.ObjectModel.Series> listSeries = parser.ParseGetValues(msDecompress);
+
+													//			 parse file contents into stream
+													//			 add stream as a zip archive entry...
+													int n = 5;
+
+													++n;
+									
+												}
+												else
+												{
+													//TO DO - parser not found - make an error stream, add stream as a zip archive entry...
+
+												}
+											}
+											else
+											{
+												//TO DO - version not found - make an error stream, add stream as a zip archive entry...
+											}
+										}
+										else
+										{
+											//DO DO - //If not found, make an error stream, add stream as a zip archive entry...
+										}
+									}
+								}
+							}
+
+ */
+
+

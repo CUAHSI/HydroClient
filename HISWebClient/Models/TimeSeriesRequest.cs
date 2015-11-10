@@ -7,14 +7,14 @@ using System.ComponentModel;
 
 namespace HISWebClient.Models
 {
-
-	public enum TimeSeriesFormat
+	[Flags]
+	public enum TimeSeriesFormat	//OR-able...
 	{
 		[Description("CSV...")]
-		CSV = 1,
+		CSV = 0x0001,
 
 		[Description("WaterOneFlow...")]
-		WaterOneFlow = 2
+		WaterOneFlow = 0x0002
 	}
 
     public class TimeSeriesRequest
@@ -25,19 +25,15 @@ namespace HISWebClient.Models
         public TimeSeriesRequest() {
 
 			TimeSeriesIds = new List<int>();
-
-			WaterOneFlowIds = new List<string>();
 		}
 
-        public TimeSeriesRequest(string requestNameIn, string requestIdIn, int[] timeSeriesIdsIn, string[] waterOneFlowIdsIn, TimeSeriesFormat timeSeriesFormatIn = TimeSeriesFormat.CSV )
+        public TimeSeriesRequest(string requestNameIn, string requestIdIn, int[] timeSeriesIdsIn, TimeSeriesFormat timeSeriesFormatIn = TimeSeriesFormat.CSV )
         {
             RequestName = requestNameIn;
 
             RequestId = requestIdIn;
 
             TimeSeriesIds = new List<int>(timeSeriesIdsIn);
-
-			WaterOneFlowIds = new List<string>(waterOneFlowIdsIn);
 
 			RequestFormat = timeSeriesFormatIn;
         }
@@ -57,11 +53,6 @@ namespace HISWebClient.Models
         /// TimeSeriesIds
         /// </summary>
         public List<int> TimeSeriesIds { get; set; }
-
-		/// <summary>
-		/// WaterOneFlowIds
-		/// </summary>
-		public List<string> WaterOneFlowIds { get; set; }
 
 		/// <summary>
 		/// RequestFormat
