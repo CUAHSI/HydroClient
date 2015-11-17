@@ -448,6 +448,7 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Content\Test.zip" />
+    <Content Include="App_Data\Test.zip" />
     <None Include="Properties\PublishProfiles\bcc-hiswebclient - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\bcc-hiswebclient - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\dev-hiswebclient - FTP.pubxml" />
@@ -553,7 +554,6 @@
     <Content Include="Views\Home\_DataManagerTimeseriesColumns.cshtml" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="App_Data\" />
     <Folder Include="Content\yeti\" />
     <Folder Include="Files\" />
     <Folder Include="NewFolder1\" />
