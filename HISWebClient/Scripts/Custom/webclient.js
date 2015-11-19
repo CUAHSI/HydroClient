@@ -1877,7 +1877,7 @@ function updateMap(isNewRequest) {
     $("#pageloaddiv").show();
 
     //get the action-url of the form
-    var actionurl = '/home/updateMarkers';
+    //var actionurl = '/home/updateMarkers';
     
     if (clusteredMarkersArray.length == 0) {
 
@@ -1893,27 +1893,30 @@ function updateMap(isNewRequest) {
    //get Markers
    var actionurl = '/home/updateMarkers';
 
-    $.ajax({
-        url: actionurl,
-        type: 'POST',
-        dataType: 'json',
-        timeout: 60000,
-        //processData: false,
-        data: formData,
-        success: function (data) {
+   //BCC - 19-Nov-2015 - Alternate $.ajax call using the Promise interface available in jQuery 1.5+
+    var promise = $.ajax({
+                        url: actionurl,
+                        type: 'POST',
+                        dataType: 'json',
+                        timeout: 60000,
+                        //processData: false,
+                        data: formData
+                    });
+    
+    promise.done( function (data) {
             processMarkers(data)
             //setUpTimeseriesDatatable();
             //BCC - 26-Jun-2015 - Conditionally enable 'Data' button... 
             //QA Issue #13 - Data tab (usability): if search doesn't return any results, data tab should be disabled
             //$('.data').removeClass('disabled');
             $("#pageloaddiv").hide();
-        },
-        error: function (xmlhttprequest, textstatus, message) {
-            serviceFailed(xmlhttprequest, textstatus, message)
+        });
+        
+    promise.fail( function (jqXHR, textstatus, errorThrown) {
+            serviceFailed(jqXHR, textstatus, errorThrown)
             $("#pageloaddiv").hide();
-        }
-    });
-    
+        });
+
     //$("#timeOfLastRefresh").html("Last refresh: " + getTimeStamp());
 
 }
@@ -2870,9 +2873,9 @@ function setupDataManagerTable() {
 
                                     '<div class="dropdown" style="position: relative; display: inline-block; float: left; font-size: 1.00em;">' +
                                       '<button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">' +
-                                        '<span class="glyphicon glyphicon-flash" style="font-weight: bold; font-size: 1.00em;"></span>' +
-                                        '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Actions&nbsp;</span>' +
-                                        '<span class="caret" style="font-weight: bold; font-size: 1.00em; "></span>' +
+                                        '<span class="glyphicon glyphicon-list-alt" style="font-weight: bold; font-size: 1.00em;"></span>' +
+                                        '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Data&nbsp;</span>' +
+                                        '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
                                       '</button>' +
                                       '<ul class="dropdown-menu" aria-labelledby="dropdownMenu1">' +
                                         '<li><a href="#" id="anchorAllSelectionsDataMgr" style="font-weight: bold;" ><span class="text-muted">Select All</span></a></li>' +
@@ -2893,14 +2896,14 @@ function setupDataManagerTable() {
                                         '<button class="btn btn-primary" data-toggle="dropdown" style="font-size: 1.00em;">' +
                                               '<div id="ddIntegratedDataToolsOriginal" style="display: none;">' + 
                                                 '<span class="glyphicon glyphicon-wrench" style="font-weight: bold; max-width: 100%; font-size: 1.0em;"></span>' +
-                                                '<span>&nbsp;Integrated Data Tools&nbsp;</span>' +
-                                                '<span class="caret"></span>' +
+                                                '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Tools&nbsp;</span>' +
+                                                '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
                                               '</div>' +
 
                                               '<div id="ddIntegratedDataTools" data-noneselected="true">' + 
                                                 '<span class="glyphicon glyphicon-wrench" style="font-weight: bold; max-width: 100%; font-size: 1.0em;"></span>' +
-                                                '<span>&nbsp;Integrated Data Tools&nbsp;</span>' +
-                                                '<span class="caret"></span>' +
+                                                '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Tools&nbsp;</span>' +
+                                                '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
                                               '</div>' +
 
                                         '</button>' +
@@ -4720,29 +4723,24 @@ function fnGetSelected(oTableLocal) {
 
 function serviceFailed(xmlhttprequest, textstatus, message)
 {
-    //hideLoadingImage();
-    
-    //AddMainMap(zoomlevel, Latlng)
-    //if (retryAttempts <= 3) {
-    //    updateMap(true);
-    //    retryAttempts++;
-    //}
-    //else 
-    //{
 
-    if ('undefined' !== typeof xmlhttprequest.responseText) {
-        var msg = JSON.parse(xmlhttprequest.responseText)
-        bootbox.alert(msg.Message);
+    //BCC - 19-Nov-2015 - per jQuery docs (http://api.jquery.com/jQuery.ajax/#jqXHR) 
+    //                      parsed JSON is available in the jqXHR.responseJSON object. 
+    //                      NOTE: IIS/IIS Express create the responseJSON object ONLY when 
+    //                              TrySkipIisCustomErrors = true on the controller's response object!!  
+    //                              See HomeController.UpdateMarkers(...) for more information...
+    if ('undefined' !== typeof xmlhttprequest.responseJSON) {
+        var msg = xmlhttprequest.responseJSON.Message;
+        bootbox.alert(msg);
     }
     else {
         //BCC - 26-Jun-2015 - QA Issue #9 - Timeout error message: typo in word 'occurred'
         bootbox.alert("<H4>An error occurred: '" + message + "'. Please limit search area or Keywords. Please contact Support if the problem persists.</H4>");
-
     }
+
     //clean up
     $("#pageloaddiv").hide();
     resetMap();
-    //}
 
 };
 

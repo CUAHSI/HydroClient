@@ -295,6 +295,7 @@ namespace HISWebClient.Controllers
 						Response.StatusCode = (int)HttpStatusCode.RequestEntityTooLarge;
 						Response.StatusDescription = message;
 						Response.TrySkipIisCustomErrors = true;	//Tell IIS to use your error text not the 'standard' error text!!
+																//ALSO clues jQuery to add the parsed responseJSON object to the jqXHR object!!
 
 						dberrorcontext.createLogEntry(System.Web.HttpContext.Current, DateTime.UtcNow, "updateMarkers(...)", ex, message);
 
@@ -317,18 +318,33 @@ namespace HISWebClient.Controllers
 			}
 			else
 			{
-				//var s = (string)Session["test"];             
+				//var s = (string)Session["test"];
+             	//BCC - 19-Nov-2015 - GitHub Issues #67 - Application unresponsive after session timeout and zoom out...
 				var retrievedSeries = (List<TimeSeriesViewModel>)Session["Series"];
 
-				var markerClustererHelper = new MarkerClustererHelper();
-				//transform list int clusteredpins
-				var pins = transformSeriesDataCartIntoClusteredPin(retrievedSeries);
+				if (null != retrievedSeries)	//If a session timeout has occurred, the new session object will not contain the 'Series' element!!
+				{
+					var markerClustererHelper = new MarkerClustererHelper();
+					//transform list int clusteredpins
+					var pins = transformSeriesDataCartIntoClusteredPin(retrievedSeries);
 
-				var clusteredPins = markerClustererHelper.clusterPins(pins, CLUSTERWIDTH, CLUSTERHEIGHT, CLUSTERINCREMENT, zoomLevel, MAXCLUSTERCOUNT, MINCLUSTERDISTANCE);
-				Session["ClusteredPins"] = clusteredPins;
+					var clusteredPins = markerClustererHelper.clusterPins(pins, CLUSTERWIDTH, CLUSTERHEIGHT, CLUSTERINCREMENT, zoomLevel, MAXCLUSTERCOUNT, MINCLUSTERDISTANCE);
+					Session["ClusteredPins"] = clusteredPins;
 
-				var centerPoint = new LatLong(0, 0);
-				markerjSON = markerClustererHelper.createMarkersGEOJSON(clusteredPins, zoomLevel, centerPoint, "");
+					var centerPoint = new LatLong(0, 0);
+					markerjSON = markerClustererHelper.createMarkersGEOJSON(clusteredPins, zoomLevel, centerPoint, "");
+				}
+				else
+				{
+					//Likely session timeout - return a Request Timeout error (408)...
+					string message = "User session has expired!!";
+
+					Response.StatusCode = (int) HttpStatusCode.RequestTimeout;
+					Response.StatusDescription = message;
+					Response.TrySkipIisCustomErrors = true;	//Tell IIS to use your error text not the 'standard' error text!!
+
+					return Json(new { Message = message }, "application/json");
+				}
 
 			}
 			return Json(markerjSON);
