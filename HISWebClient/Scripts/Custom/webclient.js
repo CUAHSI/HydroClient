@@ -278,14 +278,12 @@ function initialize() {
             updateMap(false)
             //
         }
-        //$("#MapAreaControl").html(getMapAreaSize());
     });
     google.maps.event.addListener(map, 'dragend', function () {
         if ((clusteredMarkersArray.length > 0)) {
             updateMap(false)
 
         }
-        //$("#MapAreaControl").html(getMapAreaSize());
     });
 
     google.maps.event.addListener(map, 'zoom_changed', function () {
@@ -302,7 +300,14 @@ function initialize() {
         //if ((clusteredMarkersArray.length > 0)) {
         //updateMap(false)
 
-        $("#MapAreaControl").html(getMapAreaSize());
+        var area = getMapAreaSize();
+        var control = $("#MapAreaControl");
+
+        control.html( 'Area: ' + area.toLocaleString() + ' sq km' );
+        control.attr('data-areasizeinsqkm', area);
+
+        //Check current search parameters...
+        enableSearch();
 
         //}
     });
@@ -471,11 +476,18 @@ function initialize() {
         //updateKeywordList("Common");       
         updateKeywordList();
 
+        //Check current search parameters...
+        enableSearch();
+
     });
 
     $('#btnHierarchySelect').click(function () {
 
         updateKeywordList();
+
+        //Check current search parameters...
+        enableSearch();
+
         //if (0 < length) {
         //    //Certain concepts selected...
         //    for (var i = 0; i < length; ++i) {
@@ -556,21 +568,25 @@ function initialize() {
         e.preventDefault();
         e.stopImmediatePropagation();
         //var formData = getFormData();
-        var path = [];
-        path = GetPathForBounds(map.getBounds())
-        var area = GetAreaInSquareKilometers(path)
+//        var path = [];
+//        path = GetPathForBounds(map.getBounds())
+//        var area = GetAreaInSquareKilometers(path)
 
         //BCC - 10-Jul-2015 
         // Since keyword selections on 'Common' and 'Full' tabs are kept in sync at all times, 
         //  retrieve selected keys from 'Full' tab...
-        var selectedKeys = [];
-        var tree = $("#tree").fancytree("getTree");
+//        var selectedKeys = [];
+//        var tree = $("#tree").fancytree("getTree");
 
-        selectedKeys = $.map(tree.getSelectedNodes(true), function (node) { //true switch returns all top level nodes
-            return node.title;
-        });
+//        selectedKeys = $.map(tree.getSelectedNodes(true), function (node) { //true switch returns all top level nodes
+//            return node.title;
+//        });
 
-        if (!validateQueryParameters(area, selectedKeys)) return;
+        //BCC - 20-Nov-2015 - Query parameters should be valid at this point...
+//        if (!validateQueryParameters(area, selectedKeys)) return;
+
+        //Update the map per the new search parameters...
+        updateMap(true);
 
         // Construct the polygon.
         areaRect = new google.maps.Polygon({
@@ -617,6 +633,10 @@ function initialize() {
 
         //reset search parameters...
         resetSearchParameters();
+
+        //Check current search parameters...
+        enableSearch();
+
     });
 
     //click event for tab
@@ -690,6 +710,79 @@ function initialize() {
     //Initialize the Data Manager datatables instance...
     setupDataManagerTable();
 }
+
+//Check search conditions - enable/disable search button per findings...
+//                          return - true (search enabled), false otherwise
+function enableSearch() {
+
+    //Retrieve current search area value, convert to numeric
+    var area = $('#MapAreaControl').attr('data-areasizeinsqkm');
+    area *= 1;  
+    bSearchEnabled = true;  //Assume success...
+
+    //Retrieve currently selected keywords
+    // NOTE: Since keyword selections on 'Common' and 'Full' tabs are kept in sync at all times, 
+    //          retrieve selected keys from 'Full' tab...
+    var selectedKeys = [];
+    var tree = $("#tree").fancytree("getTree");
+
+    selectedKeys = $.map(tree.getSelectedNodes(true), function (node) { //true switch returns all top level nodes
+        return node.title;
+    });
+
+    //Check search conditions, set tooltip if indicated...
+    var tooltip = '';
+    var allMax = 1000000;
+
+    if (area > allMax) {
+        bSearchEnabled = false;
+        tooltip = "The selected area is too large to search. Please limit search area to less than " +allMax.toLocaleString() + " sq km and/or reduce search keywords.";
+    }
+    else {
+            var max = 250000;
+            if (area > max) {
+
+                if ( 0 >= selectedKeys.length ) {
+                    bSearchEnabled = false;
+                    tooltip = "The selected area is too large to search for ALL keywords. Please limit search area to less than " +max.toLocaleString() + " sq km and/or limit keywords.";                
+                }
+                else if (1 < selectedKeys.length ) {
+                    bSearchEnabled = false;
+                    tooltip = "For the selected area, you chose more than one keyword. Please reduce the area or choose only one keyword.";                                    
+                }
+
+            }
+    }
+
+
+    //Destroy current tooltip, if any...
+    var divTooltip = $('#searchBtnDiv');
+    var btnSearch = $('form#Search button[type="submit"]');
+    var className = 'disabled';
+
+    divTooltip.tooltip('destroy');
+    if (bSearchEnabled) {
+        //Search enabled - enable search button, 
+        btnSearch.removeClass(className);
+    }
+    else {
+        //Search disabled - disable search button
+        btnSearch.addClass(className);
+    
+        if (0 < tooltip.length) {
+            //Tooltip text exists - set tooltip
+            divTooltip.tooltip({
+                            'animation': true,
+                            'placement': 'auto',
+                            'trigger': 'hover',
+                            'title': tooltip });
+        }
+    }
+
+    //Proceesing complete - return result
+    return bSearchEnabled;
+}
+
 
 //Shown handler for Select Data Services...
 function shownSelectDataServices() {
@@ -925,54 +1018,55 @@ function compareFromDateAndToDate(event) {
 
 
 //BCC - 26-Jun-2015 - Various fixes related to QA Issue #15 - Warning messages: typos in warning message when selecting 2+ keywords and area is 25sq km+
-function validateQueryParameters(area, selectedKeys) {
-    //validate inputs
+//BCC - 20-Nov-2015 - Old code - re-factored - see enableSearch()
+//function validateQueryParameters(area, selectedKeys) {
+//    //validate inputs
 
-    area *= 1;  //Convert to numeric value...
+//    area *= 1;  //Convert to numeric value...
 
-    var allMax = 1000000;
-    if (area > allMax) {
+//    var allMax = 1000000;
+//    if (area > allMax) {
         
-        bootbox.alert("<h4>The selected area (" +area.toLocaleString() + " sq km) is too large to search. <br> Please limit search area to less than " +allMax.toLocaleString() + " sq km and/or reduce search keywords.</h4>");
-        return false;
-    }
+//        bootbox.alert("<h4>The selected area (" +area.toLocaleString() + " sq km) is too large to search. <br> Please limit search area to less than " +allMax.toLocaleString() + " sq km and/or reduce search keywords.</h4>");
+//        return false;
+//    }
 
-    max = 250000;
-    if (area > max && selectedKeys.length == 0) {
-        bootbox.alert("<h4>The selected area (" + area.toLocaleString() + " sq km) is too large to search for <strong>All</strong> keywords. <br> Please limit search area to less than " + max.toLocaleString() + " sq km and/or limit keywords.</h4>");
-        return false;
-    }
-    if (area > max && selectedKeys.length == 1) {
-        //bootbox.confirm("<h4>Searching the selected area (" + area.toLocaleString() + " sq km) can take a long time. Do you want to continue?</h4>", function (bContinue) {
+//    max = 250000;
+//    if (area > max && selectedKeys.length == 0) {
+//        bootbox.alert("<h4>The selected area (" + area.toLocaleString() + " sq km) is too large to search for <strong>All</strong> keywords. <br> Please limit search area to less than " + max.toLocaleString() + " sq km and/or limit keywords.</h4>");
+//        return false;
+//    }
+//    if (area > max && selectedKeys.length == 1) {
+//        //bootbox.confirm("<h4>Searching the selected area (" + area.toLocaleString() + " sq km) can take a long time. Do you want to continue?</h4>", function (bContinue) {
 
-                //if (bContinue) {
+//                //if (bContinue) {
                     
-                //}
-            //});
-        updateMap(true);
-    }
-    else {
-            if (area > max && selectedKeys.length > 1) {
-                bootbox.alert("<h4>For the selected area (" + area.toLocaleString() + " sq km), you selected more than one keyword. <br> Please reduce area or select only one keyword.</h4>");
-                return false;
-        }
-            if (area < max && selectedKeys.length > 1) {
-                //bootbox.confirm("<h4>For the selected area (" + area.toLocaleString() + " sq km), you selected several keywords. This search can take a long time and might timeout. Do you want to continue?</h4>", function (bContinue) {
+//                //}
+//            //});
+//        updateMap(true);
+//    }
+//    else {
+//            if (area > max && selectedKeys.length > 1) {
+//                bootbox.alert("<h4>For the selected area (" + area.toLocaleString() + " sq km), you selected more than one keyword. <br> Please reduce area or select only one keyword.</h4>");
+//                return false;
+//        }
+//            if (area < max && selectedKeys.length > 1) {
+//                //bootbox.confirm("<h4>For the selected area (" + area.toLocaleString() + " sq km), you selected several keywords. This search can take a long time and might timeout. Do you want to continue?</h4>", function (bContinue) {
 
-                    //if (bContinue) {
+//                    //if (bContinue) {
                         
-                    //}
-                //});
-            updateMap(true);
-        }
-        else
-        {
-            updateMap(true)
-            }     
-        }
+//                    //}
+//                //});
+//            updateMap(true);
+//        }
+//        else
+//        {
+//            updateMap(true)
+//            }     
+//        }
 
-    return true;
-}
+//    return true;
+//}
 
 //Fancy tree click handler...
 function keywordClickHandler(event, data) {
@@ -1580,6 +1674,7 @@ function AreaSizeControl(controlDiv, map) {
     var controlText = document.createElement('div');
     controlText.style.color = 'rgb(125, 125, 125)';
     controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+    controlText.style.fontWeight = 'bold';
     controlText.style.fontSize = '12px';
     controlText.style.lineHeight = '25px';
     controlText.style.paddingTop = '0px';
@@ -1681,7 +1776,8 @@ function addLocationSearch() {
 function getMapAreaSize() {
     var path = GetPathForBounds(map.getBounds())
     var area = GetAreaInSquareKilometers(path)
-    return 'Area: ' + (area *= 1).toLocaleString() + ' sq km';
+    //return 'Area: ' + (area *= 1).toLocaleString() + ' sq km';
+    return (area *= 1);
 }
 
 function resetMap() {
@@ -1872,7 +1968,7 @@ function updateMap(isNewRequest) {
   
     if (clusteredMarkersArray.length == 0 && isNewRequest == false) return;//only map navigation
     var formData = getFormData();
-    if (typeof formData == "undefined") return; //error in formdate retrieval
+    if (typeof formData == "undefined") return; //error in formdata retrieval
 
     $("#pageloaddiv").show();
 
