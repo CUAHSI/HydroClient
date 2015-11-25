@@ -137,7 +137,7 @@ namespace HISWebClient.DataLayer
 													  Func<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart, bool> seriesFilter)
 		{
 			var servicesToSearch = new List<Tuple<WebServiceNode[], Extent>>();
-			if (serviceIDs.Count > 0)
+			if (serviceIDs.Count >= 0)
 			{
 				foreach (var webService in serviceIDs)
 				{

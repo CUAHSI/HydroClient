@@ -24,6 +24,8 @@ namespace HISWebClient.Controllers
         public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager )
         {
             UserManager = userManager;
+            UserManager.UserValidator = new UserValidator<ApplicationUser>(UserManager) { AllowOnlyAlphanumericUserNames = false };
+    
             SignInManager = signInManager;
         }
 
@@ -31,7 +33,7 @@ namespace HISWebClient.Controllers
         {
             get
             {
-                return _userManager ?? HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
+                return _userManager ?? Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
             }
             private set
             {
@@ -278,7 +280,7 @@ namespace HISWebClient.Controllers
         // POST: /Account/ExternalLogin
         [HttpPost]
         [AllowAnonymous]
-        [ValidateAntiForgeryToken]
+        //[ValidateAntiForgeryToken]
         public ActionResult ExternalLogin(string provider, string returnUrl)
         {
             // Request a redirect to the external login provider
@@ -332,7 +334,15 @@ namespace HISWebClient.Controllers
             }
 
             // Sign in the user with this external login provider if the user already has a login
+            var externalIdentity = HttpContext.GetOwinContext().Authentication.GetExternalIdentityAsync(DefaultAuthenticationTypes.ExternalCookie);
+            var emailClaim = externalIdentity.Result.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+            var email = emailClaim.Value;
+          
+            
+            
             var result = await SignInManager.ExternalSignInAsync(loginInfo, isPersistent: false);
+            //get user
+          
             switch (result)
             {
                 case SignInStatus.Success:
@@ -343,10 +353,40 @@ namespace HISWebClient.Controllers
                     return RedirectToAction("SendCode", new { ReturnUrl = returnUrl, RememberMe = false });
                 case SignInStatus.Failure:
                 default:
-                    // If the user does not have an account, then prompt the user to create an account
-                    ViewBag.ReturnUrl = returnUrl;
-                    ViewBag.LoginProvider = loginInfo.Login.LoginProvider;
-                    return View("ExternalLoginConfirmation", new ExternalLoginConfirmationViewModel { Email = loginInfo.Email });
+                    // If the user does not have an account, then write a new entry into user database
+                    //ViewBag.ReturnUrl = returnUrl;
+                    //ViewBag.LoginProvider = loginInfo.Login.LoginProvider;
+                    //return View("ExternalLoginConfirmation", new ExternalLoginConfirmationViewModel { Email = loginInfo.Email });
+
+                var user = UserManager.FindByName(email);
+                if (user != null)
+                {
+                    await SignInManager.SignInAsync(user, false, false);
+                    return RedirectToLocal(returnUrl);
+                }
+                else
+                {
+
+
+                    var info = await AuthenticationManager.GetExternalLoginInfoAsync();
+                    if (info == null)
+                    {
+                        return View("ExternalLoginFailure");
+                    }
+                    var newUser = new ApplicationUser() { UserName = email };
+                    var rst = await UserManager.CreateAsync(newUser);
+                    if (rst.Succeeded)
+                    {
+                        var r = await UserManager.AddLoginAsync(newUser.Id, info.Login);
+                        if (r.Succeeded)
+                        {
+                            await SignInManager.SignInAsync(newUser, false, false);
+                            return RedirectToLocal(returnUrl);
+                        }
+                    }
+                    //AddErrors(result);
+                    return View("ExternalLoginFailure");
+                }
             }
         }
 

@@ -1,4 +1,6 @@
-﻿<!-- Start of cuahsi Zendesk Widget script -->
+﻿@model HISWebClient.Models.LoginViewModel
+
+<!-- Start of cuahsi Zendesk Widget script -->
 <script>/*<![CDATA[*/window.zEmbed || function (e, t) {
     var n, o, d, i, s, a = [],
         r = document.createElement("iframe"); window.zEmbed = function ()
@@ -36,8 +38,30 @@
                 <li class="navbar-custom"><a href="" id="contactTab" data-toggle="modal" data-target="#contactModal"><span class="glyphicon glyphicon-earphone"></span> Contact</a></li>
                 <li class="btn-separator"></li>
                 <li class="navbar-custom" style="margin-right: 1em;"><a href="" id="aboutTab" data-toggle="modal" data-target="#aboutModal"><span class="glyphicon glyphicon-info-sign"></span> About</a></li>
-            </ul>
+                <li class="navbar-custom" style="margin-right: 1em;">
+                   
+                    <form action="/Account/ExternalLogin?ReturnUrl=%2F" method="post">
+                       
+                            <button type="submit" class="btn btn-sm btn-primary active center" id="Google" name="provider" value="Google" title="Log in using your Google account">Google</button>
+                       
+                    </form>
 
+
+                 </li>
+                @if (User.IsInRole("Admin") || User.Identity.Name == "mseul@cuahsi.org")
+                {
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin<b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            <li>@Html.ActionLink("Roles", "Index", "Roles", new { area = "Admin" }, null)</li>
+                            @*<li>@Html.ActionLink("Add Connection", "Index", "ConnectionParameters", new { area = "Admin" }, null)</li>
+                            <li>@Html.ActionLink("Link Connections", "Index", "ConnectionParametersUsers", new { area = "Admin" }, null)</li>*@
+                            <li>@Html.ActionLink("Register as a new user", "Register", "Account", new { area = "" }, null)</li>
+                        </ul>
+                    </li>
+                }
+            </ul>
+           
         </div>
     </div>
 
@@ -147,6 +171,10 @@
                                 @*<div style ="text-align: center; margin-top: 1em; ">
                                         <a href="http://www.github.com/cuahsi" target="_blank">Version 1.0</a>
                                     </div>*@
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <div>Welcome:  + @User.Identity.Name</div>
+                            }
                             </div>
 
                         </form>
@@ -218,7 +246,7 @@
                     </thead>
                     <tfoot>
                         <tr>
-                            @Html.Partial("_DataManagerTimeseriesColumns")
+                           @Html.Partial("_DataManagerTimeseriesColumns")
                         </tr>
                     </tfoot>
                 </table>
