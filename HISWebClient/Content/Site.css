@@ -148,7 +148,7 @@ table
 	float: left;
 }
 
-#dataview{
+.padded-tab-pane{
 	padding-top:75px;
 }
 
@@ -470,6 +470,7 @@ BCC - 14-Oct-2015 - Causes problems when displaying time series after zooming in
     float: left;
     max-width: 100%;    /* Override 1170px value from container class... */
 }
+/* BCC - 13-Nov-2015 - Probably no longer needed
 
 #tblDataManagerGroup {
     display: inline-block;
@@ -485,3 +486,5 @@ BCC - 14-Oct-2015 - Causes problems when displaying time series after zooming in
 #tblDataManager_length {
     float: none;
 }
+*/
+

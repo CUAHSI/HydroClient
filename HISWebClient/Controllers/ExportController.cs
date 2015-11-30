@@ -774,8 +774,11 @@ namespace HISWebClient.Controllers
 				{
 					var dataResult = data.Item2.FirstOrDefault();
 					IList<DataValue> dataValues = dataResult.DataValueList.OrderBy(a => a.DateTimeUTC).Select(aa => new DataValue(aa)).ToList();
-					return new Tuple<Stream, SeriesData>(data.Item1, new SeriesData(meta.SeriesID, meta, dataResult.Method.Description.ToString(), dataResult.QualityControlLevel.Definition, dataValues,
-						dataResult.Variable, dataResult.Source));
+
+					SeriesData sd = new SeriesData(meta.SeriesID, meta, dataResult.Method.Description.ToString(), dataResult.QualityControlLevel.Definition, dataValues,
+						dataResult.Variable, dataResult.Source);
+
+					return new Tuple<Stream, SeriesData>(data.Item1, sd);
 					//return new Tuple<Stream, SeriesData>(data.Item1, new SeriesData(meta.SeriesID, meta, dataValues, (IList < ServerSideHydroDesktop.ObjectModel.Series >) dataResult));
 				
 				}
@@ -882,7 +885,11 @@ namespace HISWebClient.Controllers
 				data.myVariable.ValueType,
 				data.myVariable.IsRegular.ToString(),
 				data.myVariable.TimeSupport.ToString(),
-				data.myVariable.TimeUnit.ToString(),
+				//BCC - 18-Nov-2015 - GitHub issue #65 - Time Units is displaying abbreviation in download instead of full name
+				(! String.IsNullOrWhiteSpace(data.myVariable.TimeUnit.Name)) ? data.myVariable.TimeUnit.Name.ToString() :
+					(! String.IsNullOrWhiteSpace(data.myVariable.TimeUnit.Abbreviation)) ? data.myVariable.TimeUnit.Abbreviation.ToString() : 
+						ServerSideHydroDesktop.ObjectModel.Unit.UnknownTimeUnit.Name.ToString(),
+				data.myVariable.TimeUnit.Name.ToString(),
 				data.myVariable.Speciation.ToString(),
 				data.myMetadata.SiteName,
 				data.myMetadata.SiteCode,

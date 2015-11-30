@@ -256,9 +256,6 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
-    <Compile Include="Areas\Admin\AdminAreaRegistration.cs" />
-    <Compile Include="Areas\Admin\Controllers\RolesController.cs" />
-    <Compile Include="Areas\Admin\Models\RolesViewModel.cs" />
     <Compile Include="Areas\HelpPage\ApiDescriptionExtensions.cs" />
     <Compile Include="Areas\HelpPage\App_Start\HelpPageConfig.cs" />
     <Compile Include="Areas\HelpPage\Controllers\HelpController.cs" />
@@ -306,7 +303,6 @@
     <Compile Include="Models\TimeSeriesRequest.cs" />
     <Compile Include="Models\TimeSeriesResponse.cs" />
     <Compile Include="Models\TimeSeriesViewModel.cs" />
-    <Compile Include="Models\User.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="Util\AzureContext.cs" />
@@ -452,22 +448,7 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Content\Test.zip" />
-    <Content Include="Areas\Admin\Views\ConnectionParametersUsers\Create.cshtml" />
-    <Content Include="Areas\Admin\Views\ConnectionParametersUsers\Delete.cshtml" />
-    <Content Include="Areas\Admin\Views\ConnectionParametersUsers\Details.cshtml" />
-    <Content Include="Areas\Admin\Views\ConnectionParametersUsers\Edit.cshtml" />
-    <Content Include="Areas\Admin\Views\ConnectionParametersUsers\Index.cshtml" />
-    <Content Include="Areas\Admin\Views\ConnectionParameters\Create.cshtml" />
-    <Content Include="Areas\Admin\Views\ConnectionParameters\Delete.cshtml" />
-    <Content Include="Areas\Admin\Views\ConnectionParameters\Details.cshtml" />
-    <Content Include="Areas\Admin\Views\ConnectionParameters\Edit.cshtml" />
-    <Content Include="Areas\Admin\Views\ConnectionParameters\Index.cshtml" />
-    <Content Include="Areas\Admin\Views\Roles\Create.cshtml" />
-    <Content Include="Areas\Admin\Views\Roles\Edit.cshtml" />
-    <Content Include="Areas\Admin\Views\Roles\Index.cshtml" />
-    <Content Include="Areas\Admin\Views\Roles\ManageUserRoles.cshtml" />
-    <Content Include="Areas\Admin\Views\Shared\Error.cshtml" />
-    <Content Include="Areas\Admin\Views\web.config" />
+    <Content Include="App_Data\Test.zip" />
     <None Include="Properties\PublishProfiles\bcc-hiswebclient - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\bcc-hiswebclient - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\dev-hiswebclient - FTP.pubxml" />
@@ -573,8 +554,6 @@
     <Content Include="Views\Home\_DataManagerTimeseriesColumns.cshtml" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="App_Data\" />
-    <Folder Include="Areas\Admin\Views\test\" />
     <Folder Include="Content\yeti\" />
     <Folder Include="Files\" />
     <Folder Include="NewFolder1\" />
