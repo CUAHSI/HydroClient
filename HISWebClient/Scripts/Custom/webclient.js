@@ -25,8 +25,8 @@ var sidepanelVisible = false;
 var conceptsType = '';
 
 var selectedRowCounts = {
-    'dtMarkers': {'targetIds': ['btnZipSelections','btnManageSelections'], 'count': 0},
-    'dtTimeseries': { 'targetIds': ['btnZipSelectionsTS', 'btnManageSelectionsTS'], 'count': 0 },
+    'dtMarkers': {'targetIds': ['spanClearSelections', 'spanZipSelections','spanManageSelections'], 'count': 0},
+    'dtTimeseries': { 'targetIds': ['spanClearSelectionsTS', 'spanZipSelectionsTS', 'spanManageSelectionsTS'], 'count': 0 },
     'tblDataManager': { 'targetIds': ['lblSelectionsDataMgr'], 'count': 0, 'customCounter': customCounter }
 };
 
@@ -46,6 +46,12 @@ var taskCount = 0;
 
 var byuAppsList = {};
 
+var currentUser = { 'authenticated' : false,
+                    'dataManagerLoaded' : false,
+                    'login' : null,
+                    'userName' : null
+                  };
+
 
 //Number.isInteger 'polyfill' for use with browsers (like IE) which do not support the 'native' function
 //Sources: http://stackoverflow.com/questions/31720269/internet-explorer-11-object-doesnt-support-property-or-method-isinteger
@@ -60,7 +66,7 @@ $(document).ready(function () {
 
     $("#pageloaddiv").hide();
     initialize();
-    
+
     //Periodically check selected time series...
     setInterval(function () {
         //console.log('Checking selected time series...');
@@ -85,8 +91,9 @@ $(document).ready(function () {
                         method = control.val;
                     }
                     else {
-                        if (control.is('label')) {
+                        if (control.is('label') || control.is('span')) {
                             method = control.text;
+                            //method = control.html;
                         }
                     }
 
@@ -97,6 +104,10 @@ $(document).ready(function () {
                     //Retrieve control text... 
                     var value = method.call(control);
                     var values = value.split(' ');
+                    //if ('spanZipSelectionsTS' === targetId ) {
+                    //    console.log(value);
+                    //    console.log(values);
+                    //}
 
                     //Evaluate text - set insert indicator...
                     firstPart = values[0] + ' ';
@@ -146,6 +157,7 @@ function customCounter(tableName) {
         var countLaunch = 0;
         var countRemove = 0;
         var countSelectable = 0;
+        var countSave = 0;
 
         //Retrieve data for all table rows... 
         var table = $('#' + tableName).DataTable();
@@ -164,9 +176,10 @@ function customCounter(tableName) {
 
                 //Update counts...
                 ++countClear;
+                ++countRemove;
 
                 if ( ! dataItem.Saved) {
-                    ++countRemove;
+                    ++countSave;
                 }
 
                 if ('true' !== $('#ddIntegratedDataTools').attr('data-noneselected')) {
@@ -187,14 +200,15 @@ function customCounter(tableName) {
             var button = $('#' + buttons[i].name); 
             var value = button.val();
             var count = buttons[i].count;
-            var values = value.split(' ');
+            //var values = value.split(' ');
+            var values = value.split(':');
 
             if (0 >= count) {
                 button.val(values[0]);
                 button.prop('disabled', true);
             }
             else {
-                button.val(values[0] + ' (' + count.toString() + ')');
+                button.val(values[0] + ': (' + count.toString() + ')');
                 button.prop('disabled', null !== buttons[i].disableCheck ? buttons[i].disableCheck(buttons[i].name)  : false); 
             }
         }
@@ -202,7 +216,8 @@ function customCounter(tableName) {
         //Update dropdown items per counts...
         var anchors = [{'name': 'anchorAllSelectionsDataMgr', 'count': countSelectable},
                        { 'name': 'anchorClearSelectionsDataMgr', 'count': countClear},
-                       { 'name': 'anchorRemoveSelectionsDataMgr', 'count': countRemove}];
+                       { 'name': 'anchorRemoveSelectionsDataMgr', 'count': countRemove},
+                       { 'name': 'anchorSaveSelectionsDataMgr', 'count': countSave} ];
         var aLength = anchors.length;
 
         for (var ii = 0; ii < aLength; ++ii) {
@@ -568,7 +583,8 @@ function initialize() {
         e.preventDefault();
         e.stopImmediatePropagation();
         //var formData = getFormData();
-//        
+        var path = [];
+        path = GetPathForBounds(map.getBounds())
 //        var area = GetAreaInSquareKilometers(path)
 
         //BCC - 10-Jul-2015 
@@ -588,9 +604,6 @@ function initialize() {
         updateMap(true);
 
         // Construct the polygon.
-        var path = [];
-        path = GetPathForBounds(map.getBounds())
-
         areaRect = new google.maps.Polygon({
             paths: path,
             strokeColor: '#FF0000',
@@ -656,7 +669,7 @@ function initialize() {
             //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
             //Assign a handler to the DataTable 'draw.dt' event
             table.off('draw.dt', addFilterPlaceholders);
-            table.on('draw.dt', { 'tableId': 'dtTimeseries', 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Variable Name', 'Site Name'] }, addFilterPlaceholders);
+            table.on('draw.dt', { 'tableId': 'dtTimeseries', 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Data Type', 'Value Type', 'Sample Medium'] }, addFilterPlaceholders);
 
             //BCC - 09-Jul-2015 -  - QA Issue #25 - Data tab: table column titles stay in wrong order after sorting table
             //Remove/add column adjustment event handler...
@@ -760,16 +773,30 @@ function enableSearch() {
     //Destroy current tooltip, if any...
     var divTooltip = $('#searchBtnDiv');
     var btnSearch = $('form#Search button[type="submit"]');
+    var areaControl = $('#MapAreaControl');
     var className = 'disabled';
 
     divTooltip.tooltip('destroy');
+
+    areaControl.css('color', '');
+    areaControl.css('background-color', '');
     if (bSearchEnabled) {
         //Search enabled - enable search button, 
         btnSearch.removeClass(className);
+        //areaControl.css('border', '5px solid green');
+        areaControl.removeClass('text-danger');
+        areaControl.removeClass('alert-danger');
+        areaControl.addClass('text-success')
+        areaControl.addClass('alert-success');
     }
     else {
         //Search disabled - disable search button
         btnSearch.addClass(className);
+        //areaControl.css('border', '5px solid red');
+        areaControl.removeClass('text-success')
+        areaControl.removeClass('alert-success');
+        areaControl.addClass('text-danger');
+        areaControl.addClass('alert-danger');
     
         if (0 < tooltip.length) {
             //Tooltip text exists - set tooltip
@@ -2182,13 +2209,15 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
             //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
             //Assign a handler to the DataTable 'draw.dt' event
-            table.off('draw.dt', addFilterPlaceholders);
-            table.on('draw.dt', { 'tableId': 'dtMarkers', 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Variable Name', 'Site Name'] }, addFilterPlaceholders);
+//            table.off('draw.dt', addFilterPlaceholders);
+//            table.on('draw.dt', { 'tableId': 'dtMarkers', 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Data Type', 'Value Type', 'Sample Medium'] }, addFilterPlaceholders);
 
             //BCC - 29-Jun-2015 - QA Issue #25 - Data tab: table column titles stay in wrong order after sorting table
             //Remove/add column adjustment event handler...
-            $('#SeriesModal').off('shown.bs.modal', adjustColumns);
-            $('#SeriesModal').on('shown.bs.modal', {'tableId': 'dtMarkers', 'containerId': 'SeriesModal'}, adjustColumns);
+
+            //BC - TEST - 30-Nov-2015 - Are these calls necessary? NO...
+//            $('#SeriesModal').off('shown.bs.modal', adjustColumns);
+//            $('#SeriesModal').on('shown.bs.modal', {'tableId': 'dtMarkers', 'containerId': 'SeriesModal'}, adjustColumns);
 
             $('#SeriesModal').modal('show');
 
@@ -2313,13 +2342,15 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
             //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
             //Assign a handler to the DataTable 'draw.dt' event
-            table.off('draw.dt', addFilterPlaceholders);
-            table.on('draw.dt', { 'tableId': 'dtMarkers', 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Variable Name', 'Site Name'] }, addFilterPlaceholders);
+//            table.off('draw.dt', addFilterPlaceholders);
+//            table.on('draw.dt', { 'tableId': 'dtMarkers', 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Data Type', 'Value Type', 'Sample Medium'] }, addFilterPlaceholders);
                 
             //BCC - 29-Jun-2015 - QA Issue #25 - Data tab: table column titles stay in wrong order after sorting table
             //Remove/add column adjustment event handler...
-            $('#SeriesModal').off('shown.bs.modal', adjustColumns);
-            $('#SeriesModal').on('shown.bs.modal', { 'tableId': 'dtMarkers', 'containerId': 'SeriesModal' }, adjustColumns);
+
+            //BC - TEST - 30-Nov-2015 - Are these calls necessary?  NO...
+//            $('#SeriesModal').off('shown.bs.modal', adjustColumns);
+//            $('#SeriesModal').on('shown.bs.modal', { 'tableId': 'dtMarkers', 'containerId': 'SeriesModal' }, adjustColumns);
 
             $('#SeriesModal').modal('show');
 
@@ -2466,11 +2497,12 @@ function setupServices()
         "ajax": actionUrl,
         "order": [2, 'asc'],
         "dom": 'l<"toolbarDS">frtip', //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+        "autoWidth": false,
          "columns": [
 
-            { "data": "Organization" },
+            { "data": "Organization", "visible": true, "className": "tableColWrap20pct" },
             { "data": "ServiceCode", "visible": false },
-            { "data": "Title" },
+            { "data": "Title", "visible": true, "className": "tableColWrap20pct" },
             { "data": "DescriptionUrl", "visible": false },
             { "data": "ServiceUrl", "visible": false },
             { "data": "Checked", "visible": false },
@@ -2479,7 +2511,7 @@ function setupServices()
             { "data": "Variables", "visible": true },
             { "data": "Values", "visible": true },
            { "data": "ServiceBoundingBox", "visible": false },
-            { "data": "ServiceID" }
+            { "data": "ServiceID", "visible": true }
          ],
          //"rowCallback": function( row, data ) {
          //    if ( $.inArray(data.DT_RowId, mySelectedServices) !== -1 ) {
@@ -2584,37 +2616,28 @@ function setUpDatatables(clusterid) {
         //       }
         //    ]
         //},
+        "autoWidth": true,
         "columns": [
-           { "data": "Organization", "width": "50px", "visible": true },
+           { "data": "Organization", "visible": true, "className": "tableColWrap10pct"},
             //BCC - 09-Sep-2015 - GitHub Issue #23 - Replace Network Name with Data Service Title
-           {"data": "ServTitle", "sTitle": "Service Title", "visible": true },
-           { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
-           { "data": "ServURL", "visible": false },
-           { "data": "VariableName", "width": "50px", "sTitle": "Variable Name" },
-           //BCC - 10-Jul-2015 - Internal QA Issue #29 - Include VariableCode and SiteCode
-           { "data": "SiteCode", "sTitle": "Site Code", "visible": true },
-           { "data": "VariableCode", "sTitle": "Variable Code", "visible": true },
-           { "data": "BeginDate", "sTitle": "Start Date" },
-           { "data": "EndDate","sTitle": "End Date" },
-           { "data": "ValueCount" },
-           { "data": "SiteName", "sTitle": "Site Name" },
-           //{ "data": "Latitude", "visible": true },
-           //{ "data": "Longitude", "visible": true },
-           { "data": "DataType", "visible": true },
-           { "data": "ValueType", "visible": true },
-           { "data": "SampleMedium", "visible": true },
-           { "data": "TimeUnit", "visible": true },
-           //{ "data": "GeneralCategory", "visible": false },
-           { "data": "TimeSupport", "visible": true },
-           
-    	   //BCC - 15-Oct-29015 -  Suppress display of IsRegular
-           //{ "data": "IsRegular", "visible": true },
-           //{ "data": "VariableUnits","visible": false },
-           //{ "data": "Citation", "visible": false }            
-           { "data": "SeriesId" },
-           //BCC - 10-Jul-2015 - Add links to Description URL and Service URL (WSDL)
-           { "data": null, "sTitle": "Service URL", "visible": true },
-           { "data": "ServURL", "sTitle": "Web Service Description URL", "visible": true }
+           {"data": "ServTitle", "sTitle": "Service Title", "visible": true, "className": "tableColWrap10pct"},
+           { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true, "className": "tableColWrap10pct"},
+           { "data": "DataType", "visible": true, "className": "tableCol5pct"},
+           { "data": "ValueType", "visible": true, "className": "tableCol5pct"},
+           { "data": "SampleMedium", "visible": true, "className": "tableCol5pct"},
+           { "data": "BeginDate", "sTitle": "Start Date", "visible": true, "className": "tableCol5pct"},
+           { "data": "EndDate","sTitle": "End Date", "visible": true, "className": "tableCol5pct"},
+           { "data": "ValueCount", "visible": true, "className": "tableCol5pct"},
+           { "data": "SiteName", "sTitle": "Site Name", "visible": true, "className": "tableColWrap10pct"},
+           { "data": "VariableName", "width": "50px", "sTitle": "Variable Name", "visible": true, "className": "tableColWrap10pct"},
+           { "data": "TimeSupport", "visible": true, "className": "tableCol5pct"},
+           { "data": "TimeUnit", "visible": true, "className": "tableCol5pct"},
+           { "data": null, "sTitle": "Service URL", "visible": true, "className": "tableColWrap10pct"},
+
+           { "data": "SiteCode", "sTitle": "Site Code", "visible": false },
+           { "data": "VariableCode", "sTitle": "Variable Code", "visible": false },           
+           { "data": "SeriesId", "visible": false },
+           { "data": "ServURL", "sTitle": "Web Service Description URL", "visible": false }
         ],
 
         "scrollX": true,
@@ -2628,14 +2651,34 @@ function setUpDatatables(clusterid) {
                  var servCode = data.ServCode;
 
                  var descUrl = getDescriptionUrl(servCode);
-                 $('td', row).eq(17).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
+                 $('td', row).eq(13).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
+
+                 //BCC - Test - 24-Nov-2015 - For <td> sizing - insert a <div class="tableColWrap10em"></div> into the 'Organization' <td>
+                //$('td', row).eq(0).html('<div class="tableColWrap10em" >' + org + '</div>');
 
                  //Create a link to the Web Service Description URL...
                  //var servUrl = $('td', row).eq(18).html();
                  //$('td', row).eq(18).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
                  //var servUrl = $('td', row).eq(16).html();
-                 var servUrl = data.ServURL;
-                 $('td', row).eq(16).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
+                 //var servUrl = data.ServURL;
+                 //$('td', row).eq(13).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
+
+                //For valid date strings - remove hours, minutes, seconds from date columns...
+                var dateCols = [6, /*Start Date*/
+                                7  /*End Date*/];
+                var diLength = dateCols.length;
+
+                for (var di = 0; di < diLength; ++di) {
+
+                    var text = $('td', row).eq(dateCols[di]).html();
+                    if ( ! isNaN(Date.parse(text))) {
+                        var date = new Date(text);
+
+                        $('td', row).eq(dateCols[di]).html(date.getFullYear().toString() + '-' + 
+                                                            ('0' + (date.getMonth() + 1)).toString().slice(-2) + '-' + 
+                                                            ('0' + date.getDate()).toString().slice(-2) );
+                    }
+                }
 
                  //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
                  if ($('#chkbxSelectAll').prop('checked')) {
@@ -2692,13 +2735,15 @@ function setUpDatatables(clusterid) {
         "initComplete": function () {
 
             //BCC - 10-Aug-2015 - GitHub Issue #35 - Add filter by Site Name 
-            setfooterFilters('dtMarkers', [0, 1, 2, 4, 10], 'chkbxSelectAll');
+            //setfooterFilters('dtMarkers', [0, 1, 2, 3, 4, 5], 'chkbxSelectAll');
 
             //BC - 10-Jul-2015 - Temporarily disable tooltips...
             //setUpTooltips('dtMarkers');
+            setupToolTips();
         
             //oTable.fnAdjustColumnSizing();
             $('#dtMarkers').dataTable().fnAdjustColumnSizing();
+
         }
         
          
@@ -2722,6 +2767,15 @@ function setUpDatatables(clusterid) {
     });
 
 
+    //Set footer filters...
+   $('#dtMarkers').off('draw.dt', setfooterFiltersEvent);
+   $('#dtMarkers').on('draw.dt', { 'tableId': 'dtMarkers', 'columnsArray': [0, 1, 2, 3, 4, 5], 'chkbxId': 'chkbxSelectAll', 'translates': null }, setfooterFiltersEvent);
+
+   //Add filter placeholders...
+   $('#dtMarkers').off('draw.dt', addFilterPlaceholders);
+   $('#dtMarkers').on('draw.dt', { 'tableId': 'dtMarkers', 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Data Type', 'Value Type', 'Sample Medium'] }, addFilterPlaceholders);
+
+
     //workaround reorder to align headers
 
     //BC - Test - make each table row selectable by clicking anywhere on the row...
@@ -2734,9 +2788,25 @@ function setUpDatatables(clusterid) {
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
     $("div.toolbar").html('<span style="float: left; margin-left: 1em;" id="spanSelectAll"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAll" style="float:left;"/>&nbsp;Select Top ' + 
                           $('#dtMarkers').attr('data-selectedtimeseriesmax') + '?</span>' +
-                          '<input type="button" style="margin-left: 2em; float:left;" class="btn btn-warning" disabled id="btnClearSelections" value="Clear Selection(s)"/>' +
-                          '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelections" value="Export Selection(s)"/>' +
-                          '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnManageSelections" value="Add Selection(s) to Workspace"/>' +
+
+                          '<div id="divClearSelections" style="display: inline-block; margin-left: 2em; float:left;">' +
+                           '<button type="button" class="btn btn-warning" disabled id="btnClearSelections">' +
+                             '<span class="glyphicon glyphicon-remove-sign" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +
+                             '<span id="spanClearSelections">Clear Selection(s)</span>' +
+                           '</button>' +
+                          '</div>' +
+                          '<div id="divZipSelections" style="display: inline-block; margin-left: 2em; float:left;">' +
+                          '<button type="button" class="ColVis-Button btn btn-primary" disabled id="btnZipSelections">' +
+                             '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +
+                             '<span id="spanZipSelections">Export Selection(s)</span>' +
+                           '</button>' +
+                          '</div>' +
+                          '<div id="divManageSelections" style="display: inline-block; margin-left: 2em; float:left;">' +
+                           '<button type="button" class="ColVis-Button btn btn-primary" disabled id="btnManageSelections">' +
+                            '<span class="glyphicon glyphicon-plus-sign" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +  
+                            '<span id="spanManageSelections">Add Selection(s) to Workspace</span>' +
+                           '</button>' +
+                          '</div>' +
                           '<span class="clsMessageArea" style="display: none; float:left; margin-left: 2em;"></span>');
     //$("div.toolbar").css('border', '1px solid red');
   
@@ -2847,6 +2917,33 @@ function setUpDatatables(clusterid) {
 
 }
 
+//Initialize 'static' tooltips - those not subject to change during the application session...
+function setupToolTips() {
+
+    var texts = [ "To download one or more data files, please click the associated table row(s) and click the 'Export Selections' button.",
+                  "To work with one or more time series, please click the associated table row(s) and click the 'Add Selection(s) to Workspace' button."
+                ];
+
+    var divs = { 'divZipSelections': {'text': texts[0]},
+                 'divManageSelections' : {'text': texts[1]},
+                 'divZipSelectionsTS': {'text': texts[0]},
+                 'divManageSelectionsTS' : {'text': texts[1]}    
+               };
+
+    for (var div in divs) {
+
+        var divTooltip = $('#' + div);
+
+        divTooltip.tooltip('destroy');
+        divTooltip.tooltip({
+                        'animation': true,
+                        'placement': 'auto',
+                        'trigger': 'hover',
+                        'title': divs[div].text });
+    }
+
+}
+
 
 //Set up Data Manager datatables instance...
 function setupDataManagerTable() {
@@ -2861,11 +2958,16 @@ function setupDataManagerTable() {
     //Reset the selected row count...
     selectedRowCounts[tableName].count = 0;
 
+    //BCC - 30-Nov-2015 - DataTables feature!!!
+    //      If you specify a column title using the 'sTitle' option, DataTables uses that value, not the one specified in the *.cshtml file containing
+    //       the <th> elements for the table headers. So if you have added links/icons for zendesk help files in the *.cshtml file - you won't see them 
+    //       when the table displays in the browser...
     var oTable = $(tableId).dataTable({
         'deferRender': false,
         'dom': 'C<"clear">l<"toolbarDataMgr">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+        "autoWidth": false,
         'columns': [
-           { 'data': 'TimeSeriesRequestStatus', 'sTitle': 'Status', 'visible': true,
+           { 'data': 'TimeSeriesRequestStatus', 'visible': true,
              'render': function (data, type, full, meta) { 
 
                  var html = ''
@@ -2906,24 +3008,29 @@ function setupDataManagerTable() {
              }
            },
            { 'sTitle': 'Saved?',
+             //'data': 'Saved',  'visible': false,
              'data': 'Saved',  'visible': true,
              'render': function (data, type, full, meta) { 
-                 return '<span class="glyphicon ' + (data ? 'glyphicon_cloud' : 'glyphicon-cloud-upload') + '"></span> ' + (data ? '<em>Saved</em>' : '<em>Not Saved</em>');
+                 return '<span class="glyphicon ' + (data ? 'glyphicon-cloud' : 'glyphicon-cloud-upload') + '"></span> ' + (data ? '<em>Saved</em>' : '<em>Not Saved</em>');
              }
            },
-           { 'data': 'Organization', 'width': '50px', 'visible': true },
-           { 'data': 'ServTitle', 'sTitle': 'Service Title', 'visible': true },
-           { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
-           { 'data': 'VariableName', 'width': '50px', 'sTitle': 'Variable Name', 'visible': true },
-           { 'data': 'BeginDate', 'sTitle': 'Start Date', 'visible': true },
-           { 'data': 'EndDate', 'sTitle': 'End Date', 'visible': true },
-           { 'data': 'ValueCount', 'visible': true },
-           { 'data': 'SiteName', 'sTitle': 'Site Name', 'visible': true },
+           { 'data': 'Organization', 'visible': true, "className": "tableColWrap10pct" },
+           { 'data': 'ServTitle', 'visible': true, "className": "tableColWrap10pct" },
+           { "data": "ConceptKeyword", "visible": true },
            { 'data': 'DataType', 'visible': true },
            { "data": "ValueType", "visible": true },
+           { "data": "SampleMedium", "visible": true },
+           { 'data': 'BeginDate', 'visible': true },
+           { 'data': 'EndDate', 'visible': true },
+           { 'data': 'ValueCount', 'visible': true },
+           { 'data': 'SiteName', 'visible': true },
+           { 'data': 'VariableName', 'width': '50px', 'visible': true },
+           { 'data': 'TimeSupport', 'visible': true },
+           { 'data': 'TimeUnit', 'visible': true },
+
            { 'data': 'SeriesId', 'visible': true },
            //BCC - Make these columns visible for testing...
-           { 'data': 'WofUri', 'sTitle': 'WaterOneFlow URI', 'visible': true },
+           { 'data': 'WofUri', 'visible': true },
            { 'data': 'TimeSeriesRequestId', 'visible': true}
         ],
 
@@ -2952,28 +3059,29 @@ function setupDataManagerTable() {
 
 
     //Set column adjustment
-    $('#datamgrModal').off('shown.bs.modal', adjustColumns);
-    $('#datamgrModal').on('shown.bs.modal', { 'tableId': tableName, 'containerId': 'datamgrModal' }, adjustColumns);
+    $('#dataMgrPane').off('shown.bs.tab', adjustColumns);
+    $('#dataMgrPane').on('shown.bs.tab', { 'tableId': tableName, 'containerId': 'dataMgrPane' }, adjustColumns);
 
 
     //Set translates array...
-    var translates = [{ 'columnIndex': 1,
-                        'translates': [{ 'value': true,
-                                         'translate': 'Saved'
-                                       },
-                                       {
-                                           'value': false,
-                                           'translate': 'Not Saved'
-                                       }
-                                      ]}];
+    //var translates = [{ 'columnIndex': 1,
+    //                    'translates': [{ 'value': true,
+    //                                     'translate': 'Saved'
+    //                                   },
+    //                                   {
+    //                                       'value': false,
+    //                                       'translate': 'Not Saved'
+    //                                   }
+    //                                  ]}];
 
     //Set footer filters...
     $(tableId).off('draw.dt', setfooterFiltersEvent);
-    $(tableId).on('draw.dt', { 'tableId': tableName, 'columnsArray': [1, 2, 3, 4, 5, 9], 'chkbxId': null, 'translates': translates }, setfooterFiltersEvent);
+    //$(tableId).on('draw.dt', { 'tableId': tableName, 'columnsArray': [1, 3, 4, 6, 7], 'chkbxId': null, 'translates': translates }, setfooterFiltersEvent);
+    $(tableId).on('draw.dt', { 'tableId': tableName, 'columnsArray': [2, 3, 4, 5, 6, 7], 'chkbxId': null, 'translates': null }, setfooterFiltersEvent);
 
     //Add filter placeholders...
     $(tableId).off('draw.dt', addFilterPlaceholders);
-    $(tableId).on('draw.dt', { 'tableId': tableName, 'placeHolders': ['Saved?', 'Organization', 'Service Title', 'Keyword', 'Variable Name', 'Site Name'] }, addFilterPlaceholders);
+    $(tableId).on('draw.dt', { 'tableId': tableName, 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Data Type', 'Value Type', 'Sample Medium'] }, addFilterPlaceholders);
 
     //Make each row selectable by clicking anywhere on the row
     //Source: https://datatables.net/examples/api/select_row.html
@@ -2991,13 +3099,14 @@ function setupDataManagerTable() {
                                     '<div class="dropdown" style="position: relative; display: inline-block; float: left; font-size: 1.00em;">' +
                                       '<button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">' +
                                         '<span class="glyphicon glyphicon-list-alt" style="font-weight: bold; font-size: 1.00em;"></span>' +
-                                        '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Data&nbsp;</span>' +
+                                        '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Selection&nbsp;</span>' +
                                         '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
                                       '</button>' +
                                       '<ul class="dropdown-menu" aria-labelledby="dropdownMenu1">' +
                                         '<li><a href="#" id="anchorAllSelectionsDataMgr" style="font-weight: bold;" ><span class="text-muted">Select All</span></a></li>' +
                                         '<li><a href="#" id="anchorClearSelectionsDataMgr" style="font-weight: bold;"><span class="text-warning">Clear Selections</span></a></li>' +
                                         '<li><a href="#" id="anchorRemoveSelectionsDataMgr" style="font-weight: bold;"><span class="text-danger">Remove Selected Entries</span></a></li>' +
+                                        '<li><a href="#" id="anchorSaveSelectionsDataMgr" style="font-weight: bold;"><span class="text-info">Save Selected Entries</span></a></li>' +
                                         //Defer implementation of Refresh Selections until a later release (post 1.1)
                                         //'<li><a href="#" id="anchorRefreshSelectionsDataMgr" style="font-weight: bold;"><span class="text-warning">Refresh Selected Entries</span></a></li>' +
                                       '</ul>' +
@@ -3016,7 +3125,6 @@ function setupDataManagerTable() {
                                                 '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Tools&nbsp;</span>' +
                                                 '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
                                               '</div>' +
-
                                               '<div id="ddIntegratedDataTools" data-noneselected="true">' + 
                                                 '<span class="glyphicon glyphicon-wrench" style="font-weight: bold; max-width: 100%; font-size: 1.0em;"></span>' +
                                                 '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Tools&nbsp;</span>' +
@@ -3064,7 +3172,7 @@ function setupDataManagerTable() {
 
                                   '</div>' +
                                   '<div id="divLaunchHydrodataToolDataMgr" style="display: inline-block;">' +
-                                    '<input type="button" style="margin-left: 0.5em;" class="ColVis-Button btn btn-primary" disabled id="btnLaunchHydrodataToolDataMgr" value="Launch"/>' +
+                                    '<input type="button" style="margin-left: 0.5em;" class="ColVis-Button btn btn-primary" disabled id="btnLaunchHydrodataToolDataMgr" value="Launch Tool" />' +
                                   '</div>' +
                                   '<span class="clsMessageArea" style="display: none; margin-left: 2em;"></span>' +
                                   '</div>' + 
@@ -3086,6 +3194,10 @@ function setupDataManagerTable() {
     //Avoid multiple registrations of the same handler...
     $('#anchorRemoveSelectionsDataMgr').off('click', removeSelections);
     $('#anchorRemoveSelectionsDataMgr').on('click', { 'tableId': tableName}, removeSelections);
+
+    //Avoid multiple registrations of the same handler...
+    $('#anchorSaveSelectionsDataMgr').off('click', saveSelections);
+    $('#anchorSaveSelectionsDataMgr').on('click', { 'tableId': tableName}, saveSelections);
 
     //Avoid multiple registrations of the same handler...
     $('#btnLaunchHydrodataToolDataMgr').off('click', downloadSelections);
@@ -3244,7 +3356,7 @@ function btnDisableCheck(buttonId) {
 
     if ('btnLaunchHydrodataToolDataMgr' === buttonId ) {
         var appName = $('#' + 'ddIntegratedDataTools').text().trim();
-        console.log(appName);
+//        console.log(appName);
 
         var table = $('#' + 'tblDataManager').DataTable();
         var selectedRows = table.rows('.selected').data();
@@ -4181,6 +4293,88 @@ function removeSelections(event) {
     }
 }
 
+//Save all the --UNSAVED-- table selections, regardless of current sort/search order...
+function saveSelections(event) {
+
+    //Check for user authentication...
+    if ( (! currentUser.authenticated ) || 
+            (null === currentUser.login)) {
+        return; 
+    }
+
+    var userTimeSeries = { 'UserEmail' : currentUser.login,
+                           'TimeSeries' : [] };
+
+    //Retrieve and save all unsaved selected rows
+    var table = $('#' + event.data.tableId).DataTable();
+
+    var selectedRows = table.rows( '.selected' ).data();
+    var selectedCount = selectedRows.length;
+
+    //For each unsaved timeseries...
+    for ( var i = 0; i < selectedCount; ++i) {
+        var datamgrRecord = selectedRows[i];
+        
+        if ( datamgrRecord.Saved) {
+            continue;
+        }
+
+        var serverRecord = {};
+
+        serverRecord.UserEmail = currentUser.login;
+
+        serverRecord.Organization = datamgrRecord.Organization;
+        serverRecord.ServiceTitle = datamgrRecord.ServTitle;
+        serverRecord.Keyword = datamgrRecord.ConceptKeyword;
+        serverRecord.DataType = datamgrRecord.DataType;
+        serverRecord.ValueType = datamgrRecord.ValueType;
+        serverRecord.SampleMedium = datamgrRecord.SampleMedium;
+        serverRecord.StartDate = datamgrRecord.BeginDate;
+        serverRecord.EndDate = datamgrRecord.EndDate;
+
+        serverRecord.ValueCount = datamgrRecord.ValueCount;
+        serverRecord.SiteName = datamgrRecord.SiteName;
+        serverRecord.VariableName = datamgrRecord.VariableName;
+        serverRecord.TimeUnit = datamgrRecord.TimeUnit;
+        serverRecord.TimeSupport = datamgrRecord.TimeSupport;
+
+        serverRecord.SeriesId = datamgrRecord.SeriesId;
+        serverRecord.WaterOneFlowURI = datamgrRecord.WofUri;
+        serverRecord.Status = datamgrRecord.TimeSeriesRequestStatus;
+        serverRecord.TimeSeriesRequestId = datamgrRecord.TimeSeriesRequestId;
+
+        userTimeSeries.TimeSeries.push(serverRecord);
+    }
+
+    //If no unsaved time series, return early
+    if ( 0 >= userTimeSeries.TimeSeries.length) {
+        return;
+    }
+
+    var url = '/DataManager/Post';
+    var utsString = JSON.stringify(userTimeSeries);
+
+    var promise = $.ajax({
+                        url: url,
+                        type: 'POST',
+                        dataType: 'json',
+                        cache: false,           //Per IE...
+                        async: true,
+                        data: utsString,
+                        contentType: 'application/json',
+                        context: utsString,
+                    });
+
+    promise.done( function (data) {
+            console.log('/DataManager/Post - successful!!')
+        });
+
+    promise.fail( function (jqXHR, textStatus, errorThrown) {
+            console.log('/DataManager/Post - error - ' + textStatus + ' - ' + errorThrown);
+        });
+}
+
+
 function downloadSelections(event) {
 
     //console.log('downloadSelections(...) called!!');
@@ -4537,13 +4731,17 @@ function copySelectionsToDataManager(event) {
         datamgrRecord.Organization = selectedRows[rI].Organization;
         datamgrRecord.ServTitle = selectedRows[rI].ServTitle;
         datamgrRecord.ConceptKeyword = selectedRows[rI].ConceptKeyword;
-        datamgrRecord.VariableName = selectedRows[rI].VariableName;
+        datamgrRecord.DataType = selectedRows[rI].DataType;
+        datamgrRecord.ValueType = selectedRows[rI].ValueType;
+        datamgrRecord.SampleMedium = selectedRows[rI].SampleMedium;
         datamgrRecord.BeginDate = selectedRows[rI].BeginDate;
         datamgrRecord.EndDate = selectedRows[rI].EndDate;
         datamgrRecord.ValueCount = selectedRows[rI].ValueCount;
         datamgrRecord.SiteName = selectedRows[rI].SiteName;
-        datamgrRecord.DataType = selectedRows[rI].DataType;
-        datamgrRecord.ValueType = selectedRows[rI].ValueType;
+        datamgrRecord.VariableName = selectedRows[rI].VariableName;
+        datamgrRecord.TimeUnit = selectedRows[rI].TimeUnit;
+        datamgrRecord.TimeSupport = selectedRows[rI].TimeSupport;
+
         datamgrRecord.SeriesId = selectedRows[rI].SeriesId;
         datamgrRecord.WofUri = 'Not yet available';
         datamgrRecord.TimeSeriesRequestStatus = timeSeriesRequestStatus.NotStarted;
@@ -4559,6 +4757,95 @@ function copySelectionsToDataManager(event) {
                         { 'tableId': 'tblDataManager', 'modalDialogId': 'datamgrModal' }
                 };
     retrieveWaterOneFlowForTimeSeries(event1);
+}
+
+function loadDataManager() {
+
+    //console.log('loadDataManager called!!');
+
+    //NOTE: IIS feature...
+	//To successfully transfer something like an e-mail address to the server - you MUST include a trailing forward slash 
+	// as explained here.  The trailing forward slash tells IIS that the string does not represent a file path!!!
+	// http://stackoverflow.com/questions/11728846/dots-in-url-causes-404-with-asp-net-mvc-and-iis
+
+    //Query server for saved time series, if any...
+    if ( (! currentUser.dataManagerLoaded ) && 
+            currentUser.authenticated && 
+            (null != currentUser.login)) {
+        var url = '/DataManager/Get/' + currentUser.login + '/';
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            async: true,
+            dataType: 'json',
+            cache: false,   //So IE does not cache when calling the same URL - source: http://stackoverflow.com/questions/7846707/ie9-jquery-ajax-call-first-time-doing-well-second-time-not
+            success: function (data, textStatus, jqXHR) {
+                //Success - update indicator
+                currentUser.dataManagerLoaded = true;
+
+                //Load retrieve time series into table...
+                var datamgrTableName = 'tblDataManager';
+                var datamgrTableId = '#' + datamgrTableName;
+                var datamgrTable = $(datamgrTableId).DataTable();
+
+                var userTimeSeries = JSON.parse(data);
+                var timeSeries = userTimeSeries.TimeSeries
+                var length = timeSeries.length;
+                var reDraw = false;
+
+                for (var i = 0; i < length; ++i) {
+                    var serverRecord = timeSeries[i];
+                    var datamgrRecord = {};
+
+                    datamgrRecord.Saved = true;
+                    datamgrRecord.Organization = serverRecord.Organization;
+                    datamgrRecord.ServTitle = serverRecord.ServiceTitle;
+                    datamgrRecord.ConceptKeyword = serverRecord.Keyword;
+                    datamgrRecord.DataType = serverRecord.DataType;
+                    datamgrRecord.ValueType = serverRecord.ValueType;
+                    datamgrRecord.SampleMedium = serverRecord.SampleMedium;
+                    
+                    //Convert JSON dates to JavaScript dates as explained here:
+                    //http://blog.degree.no/2012/10/converting-json-date-string-to-javascript-date-object/
+                    var date = new Date(parseInt(serverRecord.StartDate.substr(6)));
+                    datamgrRecord.BeginDate = date.getFullYear().toString() + '-' + 
+                                              ('0' + (date.getMonth() + 1)).toString().slice(-2) + '-' + 
+                                              ('0' + date.getDate()).toString().slice(-2);
+
+                    date = new Date(parseInt(serverRecord.EndDate.substr(6)));
+                    datamgrRecord.EndDate = date.getFullYear().toString() + '-' + 
+                                            ('0' + (date.getMonth() + 1)).toString().slice(-2) + '-' + 
+                                            ('0' + date.getDate()).toString().slice(-2);
+
+                    datamgrRecord.ValueCount = serverRecord.ValueCount;
+                    datamgrRecord.SiteName = serverRecord.SiteName;
+                    datamgrRecord.VariableName = serverRecord.VariableName;
+                    datamgrRecord.TimeUnit = serverRecord.TimeUnit;
+                    datamgrRecord.TimeSupport = serverRecord.TimeSupport;
+
+                    datamgrRecord.SeriesId = serverRecord.SeriesId;
+                    datamgrRecord.WofUri = serverRecord.WaterOneFlowURI;
+                    datamgrRecord.TimeSeriesRequestStatus = serverRecord.Status;
+                    datamgrRecord.TimeSeriesRequestId = serverRecord.TimeSeriesRequestId;
+
+                    //Add the newly created record...
+                    datamgrTable.row.add(datamgrRecord);    
+                    reDraw = true;
+                }
+
+                //Redraw table, if indicated...
+                if ( reDraw) {
+                    datamgrTable.draw();
+                }
+            },
+            error: function (xmlhttprequest, textStatus, message) {
+                //Failure - Log messsage received from server...
+                console.log('DataManager GET reports error: ' + xmlhttprequest.status + ' (' + message + ')');
+            }                
+        });
+    }
+
 }
 
 //Retrieve all the selected rows per the input table name...
@@ -4690,37 +4977,28 @@ function setUpTimeseriesDatatable() {
         "ajax": actionUrl,
         "dom": 'C<"clear">l<"toolbarTS">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
         "deferRender": true,
+        "autoWidth": false,
         "columns": [
-            { "data": "Organization", "width": "50px", "visible": true },
+            { "data": "Organization", "visible": true, "className": "tableColWrap10pct" },
             //BCC - 09-Sep-2015 - GitHub Issue #23 - Replace Network Name with Data Service Title
-            { "data": "ServTitle", "sTitle": "Service Title", "visible": true },
+            { "data": "ServTitle", "sTitle": "Service Title", "visible": true, "className": "tableColWrap10pct" },
             { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
-            { "data": "ServURL", "visible": false },
-            { "data": "VariableName", "width": "50px", "sTitle": "Variable Name" },
-            //BCC - 10-Jul-2015 - Internal QA Issue #29 - Include VariableCode and SiteCode
-            { "data": "SiteCode", "sTitle": "Site Code", "visible": true },
-            { "data": "VariableCode", "sTitle": "Variable Code", "visible": true },
-            { "data": "BeginDate", "sTitle": "Start Date" },
-            { "data": "EndDate", "sTitle": "End Date" },
-            { "data": "ValueCount" },
-            { "data": "SiteName", "sTitle": "Site Name" },
-            //{ "data": "Latitude", "visible": true },
-            //{ "data": "Longitude", "visible": true },
             { "data": "DataType", "visible": true },
             { "data": "ValueType", "visible": true },
             { "data": "SampleMedium", "visible": true },
-            { "data": "TimeUnit", "visible": true },
-            //{ "data": "GeneralCategory", "visible": false },
+            { "data": "BeginDate", "sTitle": "Start Date", "visible": true },
+            { "data": "EndDate", "sTitle": "End Date", "visible": true },
+            { "data": "ValueCount", "visible": true },
+            { "data": "SiteName", "sTitle": "Site Name", "visible": true },
+            { "data": "VariableName", "width": "50px", "sTitle": "Variable Name", "visible": true },
             { "data": "TimeSupport", "visible": true },
-
-    	    //BCC - 15-Oct-29015 -  Suppress display of IsRegular
-            //{ "data": "IsRegular", "visible": true },
-            //{ "data": "VariableUnits","visible": false },
-            //{ "data": "Citation", "visible": false }            
-            { "data": "SeriesId" },
-            //BCC - 10-Jul-2015 - Add links to Description URL and Service URL (WSDL)
+            { "data": "TimeUnit", "visible": true },
             { "data": null, "sTitle": "Service URL", "visible": true },
-            { "data": "ServURL", "sTitle": "Web Service Description URL", "visible": true }
+
+            { "data": "SiteCode", "sTitle": "Site Code", "visible": false },
+            { "data": "VariableCode", "sTitle": "Variable Code", "visible": false },
+            { "data": "SeriesId", "visible": false  },
+            { "data": "ServURL", "sTitle": "Web Service Description URL", "visible": false }
            ],
         "scrollX": true,
         "scrollY": "30em",
@@ -4733,11 +5011,28 @@ function setUpTimeseriesDatatable() {
             var servCode = data.ServCode;
 
             var descUrl = getDescriptionUrl(servCode);
-            $('td', row).eq(17).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
+            $('td', row).eq(13).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
 
             //Create a link to the Web Service Description URL...
-            var servUrl = data.ServURL;
-            $('td', row).eq(16).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
+            //var servUrl = data.ServURL;
+            //$('td', row).eq(16).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
+
+            //For valid date strings - remove hours, minutes, seconds from date columns...
+            var dateCols = [6, /*Start Date*/
+                            7  /*End Date*/];
+            var diLength = dateCols.length;
+
+            for (var di = 0; di < diLength; ++di) {
+
+                var text = $('td', row).eq(dateCols[di]).html();
+                if ( ! isNaN(Date.parse(text))) {
+                    var date = new Date(text);
+
+                    $('td', row).eq(dateCols[di]).html(date.getFullYear().toString() + '-' + 
+                                                      ('0' + (date.getMonth() + 1)).toString().slice(-2) + '-' + 
+                                                      ('0' + date.getDate()).toString().slice(-2) );
+                }
+            }
 
             //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
             if ($('#chkbxSelectAllTS').prop('checked')) {
@@ -4749,8 +5044,10 @@ function setUpTimeseriesDatatable() {
         "initComplete": function () {
 
             //BCC - 10-Aug-2015 - GitHub Issue #35 - Add filter by Site Name
-            //BCC - 30-Oct-2015 - Problems with setfooterFilters here??
-            //setfooterFilters('dtTimeseries', [0, 1, 2, 4, 10], 'chkbxSelectAllTS');
+            setfooterFilters('dtTimeseries', [0, 1, 2, 3, 4, 5], 'chkbxSelectAllTS');
+
+            //Set up tooltips
+            setupToolTips();
 
             //oTable.fnAdjustColumnSizing();
             $('#dtTimeseries').dataTable().fnAdjustColumnSizing();
@@ -4768,9 +5065,24 @@ function setUpTimeseriesDatatable() {
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
     $("div.toolbarTS").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS" style="float:left;"/>&nbsp;Select Top ' +
                             $('#dtTimeseries').attr('data-selectedtimeseriesmax') + '?</span>' +
-                            '<input type="button" style="margin-left: 2em; float:left;" class="btn btn-warning" disabled id="btnClearSelectionsTS" value="Clear Selection(s)"/>' +
-                            '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelectionsTS" value="Export Selection(s)"/>' +
-                            '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnManageSelectionsTS" value="Add Selection(s) to Workspace"/>' +
+                           '<div id="divClearSelectionsTS" style="display: inline-block; margin-left: 2em; float:left;">' +
+                            '<button type="button" class="btn btn-warning" disabled id="btnClearSelectionsTS">' + 
+                             '<span class="glyphicon glyphicon-remove-sign" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +
+                             '<span id="spanClearSelectionsTS">Clear Selection(s)</span>' +
+                            '</button>' +
+                          '</div>' +
+                           '<div id="divZipSelectionsTS" style="display: inline-block; margin-left: 2em; float:left;">' +
+                            '<button type="button" class="ColVis-Button btn btn-primary" disabled id="btnZipSelectionsTS">' +
+                             '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +
+                             '<span id="spanZipSelectionsTS">Export Selection(s)</span>' +
+                            '</button>' +
+                          '</div>' +
+                          '<div id="divManageSelectionsTS" style="display: inline-block; margin-left: 2em; float:left;">' +
+                            '<button type="button" class="ColVis-Button btn btn-primary" disabled id="btnManageSelectionsTS">' +
+                            '<span class="glyphicon glyphicon-plus-sign" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +  
+                            '<span id="spanManageSelectionsTS">Add Selection(s) to Workspace</span>' +
+                            '</button>' +
+                          '</div>' +
                             '<span class="clsMessageArea" style="display: none; float:left; margin-left: 2em;"></span>');
 
     //Add click handlers...
@@ -4990,4 +5302,41 @@ function setUpTooltips(elementId) {
 
     }
 
+}
+
+
+//Query the server for the current authenticated user...
+function loadCurrentUser() {
+
+    var url = '/Account/CurrentUser';
+
+    $.ajax({
+        url: url,
+        type: 'GET',
+        async: true,
+        dataType: 'json',
+        cache: false,   //So IE does not cache when calling the same URL - source: http://stackoverflow.com/questions/7846707/ie9-jquery-ajax-call-first-time-doing-well-second-time-not
+        success: function (data, textStatus, jqXHR) {
+
+            var CurrentUser = jQuery.parseJSON(data);
+
+            if (null !== CurrentUser) {
+                //Success - assign/reset retrieved current user values...
+                currentUser.authenticated = CurrentUser.Authenticated;
+                currentUser.login = CurrentUser.UserEmail;
+                currentUser.userName = CurrentUser.UserName;
+                currentUser.dataManagerLoaded = false;
+            }
+
+            //Load saved time series for current user, if indicated
+            if (currentUser.authenticated && (! currentUser.dataManagerLoaded)) {
+                loadDataManager();
+            }
+        },
+        error: function (xmlhttprequest, textStatus, message) {
+
+            //Failure - Log messsage received from server...
+            console.log('Account/CurrentUser reports error: ' + xmlhttprequest.status + ' (' + message + ')');
+        }  
+    });              
 }

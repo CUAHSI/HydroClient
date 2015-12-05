@@ -8,7 +8,12 @@ using System.Web.Mvc;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
+
+using System.Web.Script.Serialization;
+
 using HISWebClient.Models;
+
+using HISWebClient.Models.DataManager;
 
 namespace HISWebClient.Controllers
 {
@@ -335,18 +340,23 @@ namespace HISWebClient.Controllers
 
             // Sign in the user with this external login provider if the user already has a login
             var externalIdentity = HttpContext.GetOwinContext().Authentication.GetExternalIdentityAsync(DefaultAuthenticationTypes.ExternalCookie);
-            var emailClaim = externalIdentity.Result.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+
+			//Retain external username and email values for later reference 
+			var emailClaim = externalIdentity.Result.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
             var email = emailClaim.Value;
+
+			var nameClaim = externalIdentity.Result.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name);
+			var userName = nameClaim.Value;  //Same as: externalIdentity.Result.GetUserName(); ??
           
-            
-            
             var result = await SignInManager.ExternalSignInAsync(loginInfo, isPersistent: false);
-            //get user
-          
-            switch (result)
+			
+			switch (result)
             {
                 case SignInStatus.Success:
-                    return RedirectToLocal(returnUrl);
+					//set external login values for session
+					setSessionExternalLogin(userName, email );
+                   
+					return RedirectToLocal(returnUrl);
                 case SignInStatus.LockedOut:
                     return View("Lockout");
                 case SignInStatus.RequiresVerification:
@@ -358,30 +368,44 @@ namespace HISWebClient.Controllers
                     //ViewBag.LoginProvider = loginInfo.Login.LoginProvider;
                     //return View("ExternalLoginConfirmation", new ExternalLoginConfirmationViewModel { Email = loginInfo.Email });
 
-                var user = UserManager.FindByName(email);
+                //var user = UserManager.FindByName(email);
+				var user = UserManager.FindByEmail(email);
+
                 if (user != null)
                 {
                     await SignInManager.SignInAsync(user, false, false);
-                    return RedirectToLocal(returnUrl);
+
+					//set external login values for session
+					setSessionExternalLogin(userName, email);
+
+					return RedirectToLocal(returnUrl);
                 }
                 else
                 {
-
-
                     var info = await AuthenticationManager.GetExternalLoginInfoAsync();
                     if (info == null)
                     {
                         return View("ExternalLoginFailure");
                     }
-                    var newUser = new ApplicationUser() { UserName = email };
+
+					//BCC - 30-Nov-2015 - Set email field to avoid error: 'Email cannot be null or empty...
+					//BCC - TEST - 03-Dec-2015 - r: UserName = email w: UserName = userName
+					var newUser = new ApplicationUser() { UserName = userName, Email = email, UserEmail = email };
+
                     var rst = await UserManager.CreateAsync(newUser);
-                    if (rst.Succeeded)
+					
+					if (rst.Succeeded)
                     {
                         var r = await UserManager.AddLoginAsync(newUser.Id, info.Login);
-                        if (r.Succeeded)
+						
+						if (r.Succeeded)
                         {
                             await SignInManager.SignInAsync(newUser, false, false);
-                            return RedirectToLocal(returnUrl);
+
+							//set external login values for session
+							setSessionExternalLogin(userName, email);
+							
+							return RedirectToLocal(returnUrl);
                         }
                     }
                     //AddErrors(result);
@@ -389,6 +413,52 @@ namespace HISWebClient.Controllers
                 }
             }
         }
+
+
+		//Set information for the current external login in the current session...
+		private void setSessionExternalLogin( string userName, string eMail, bool authenticated = true)
+		{
+			//Validate/initialize input parameters...
+			if ( String.IsNullOrWhiteSpace(userName) || String.IsNullOrWhiteSpace(eMail))
+			{
+				return;		//Invalid parameter return early...
+			}
+
+			CurrentUser cu = new CurrentUser(userName, eMail, authenticated);
+
+			var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
+
+			httpContext.Session[httpContext.Session.SessionID] = cu;
+		}
+
+		//Reset external login information for the current session
+ 		private void resetSessionExternalLogin()
+		{
+			var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
+			httpContext.Session[httpContext.Session.SessionID] = null;
+		}
+
+
+		//Return the current user, if any
+		[HttpGet]
+		public ActionResult CurrentUser()
+		{
+			//Check current session for current user
+			var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
+			CurrentUser cu = httpContext.Session[httpContext.Session.SessionID] as CurrentUser;
+			if ( null == cu )
+			{
+				//Not found - return 'Not Found'...
+				return new HttpStatusCodeResult(System.Net.HttpStatusCode.NotFound, "No current user!!");
+			}
+
+			//Sucess - convert retrieved data to JSON and return...
+			var javaScriptSerializer = new JavaScriptSerializer();
+			var json = javaScriptSerializer.Serialize(cu);
+
+			Response.StatusCode = (int)System.Net.HttpStatusCode.OK;
+			return Json(json, "application/json", JsonRequestBehavior.AllowGet);
+		}
 
         //
         // POST: /Account/ExternalLoginConfirmation

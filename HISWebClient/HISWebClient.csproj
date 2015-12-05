@@ -287,6 +287,7 @@
     <Compile Include="Common\FileDownloadAttribute.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\Class1.cs" />
+    <Compile Include="Controllers\DataManagerController.cs" />
     <Compile Include="Controllers\ExportController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\IMetadataQuery.cs" />
@@ -296,6 +297,10 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\AccountViewModels.cs" />
+    <Compile Include="Models\DataManager\CurrentUser.cs" />
+    <Compile Include="Models\DataManager\DM_TimeSeries.cs" />
+    <Compile Include="Models\DataManager\UserTimeSeries.cs" />
+    <Compile Include="Models\DataManager\UserTimeSeriesDbContext.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
     <Compile Include="Models\OntologyHelper.cs" />
@@ -557,6 +562,7 @@
     <Folder Include="Content\yeti\" />
     <Folder Include="Files\" />
     <Folder Include="NewFolder1\" />
+    <Folder Include="Views\DataManager\" />
     <Folder Include="Views\Export\" />
   </ItemGroup>
   <ItemGroup>

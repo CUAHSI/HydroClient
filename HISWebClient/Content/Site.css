@@ -470,6 +470,43 @@ BCC - 14-Oct-2015 - Causes problems when displaying time series after zooming in
     float: left;
     max-width: 100%;    /* Override 1170px value from container class... */
 }
+
+
+/* DataTables column widths - 
+    NOTE: <td> widths can be expressed in px or % only!!
+*/
+/*.tableCol5pct {
+    width: 5%;
+}*/
+
+/* DataTables column wrapping - 
+    NOTE: <td> widths can be expressed in px or % only!!
+*/
+/*.tableColWrap10pct {
+    white-space:normal;
+    width: 10%;
+}
+
+.tableColWrap15pct {
+    white-space: normal;
+    width: 15%;
+}
+
+.tableColWrap20pct {
+    white-space: normal;
+    width: 20%;
+}
+
+.tableColWrap25pct {
+    white-space: normal;
+    width: 25%;
+}
+
+.tableColWrap30pct {
+    white-space: normal;
+    width: 30%;
+}*/
+
 /* BCC - 13-Nov-2015 - Probably no longer needed
 
 #tblDataManagerGroup {
