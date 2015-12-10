@@ -25,7 +25,7 @@
 
         <div class="nav navbar navbar-inverse navbar-fixed-top" style="min-width: 70em;">
             @*<img class="img-responsive pull-left" src="~/Content/Images/beta.png" />*@
-            <img class="img-responsive pull-left" src="~/Content/Images/cuahsi_logo_small.png" />
+            <a href="http://www.cuahsi.org" target="_blank"> <img class="img-responsive pull-left" src="~/Content/Images/cuahsi_logo_small.png" /></a>
 
             @if (User.Identity.IsAuthenticated)
             {
@@ -35,7 +35,7 @@
                         <span class="badge">@User.Identity.Name</span>
                     </div>
                 </div>
-                <script type="text/javascript">
+                @*<script type="text/javascript">
                     onload = function onloadScript() {
                         //Retrieve authenticated current user information for later reference...
                         
@@ -46,7 +46,7 @@
                             console.log('Web client cannot find function: loadCurrentUser() - no current user loaded!!');
                         }
                     }
-                </script>
+                </script>*@
              }
 
             <ul class="nav nav-tabs pull-right" @*id="myTab"*@ @*style="display: inline-block; position: relative; float:right;"*@>
@@ -63,28 +63,28 @@
                 <li class="navbar-custom"><a href="" id="contactTab" data-toggle="modal" data-target="#contactModal"><span class="glyphicon glyphicon-earphone"></span> Contact</a></li>
                 <li class="btn-separator"></li>
                 <li class="navbar-custom" style="margin-right: 1em;"><a href="" id="aboutTab" data-toggle="modal" data-target="#aboutModal"><span class="glyphicon glyphicon-info-sign"></span> About</a></li>
-                <li class="navbar-custom" style="margin-right: 1em;">
+                @*<li class="navbar-custom" style="margin-right: 1em;">
 
-                    <form action="/Account/ExternalLogin?ReturnUrl=%2F" method="post">
+        <form action="/Account/ExternalLogin?ReturnUrl=%2F" method="post">
 
-                        <button type="submit" class="btn btn-sm btn-primary active center" id="Google" name="provider" value="Google" title="Log in using your Google account">Google</button>
+            <button type="submit" class="btn btn-sm btn-primary active center" id="Google" name="provider" value="Google" title="Log in using your Google account">Google</button>
 
-                    </form>
+        </form>
 
 
-                </li>
-                @if (User.IsInRole("Admin") || User.Identity.Name == "mseul@cuahsi.org")
-                {
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin<b class="caret"></b></a>
-                        <ul class="dropdown-menu">
-                            <li>@Html.ActionLink("Roles", "Index", "Roles", new { area = "Admin" }, null)</li>
-                            @*<li>@Html.ActionLink("Add Connection", "Index", "ConnectionParameters", new { area = "Admin" }, null)</li>
-                                <li>@Html.ActionLink("Link Connections", "Index", "ConnectionParametersUsers", new { area = "Admin" }, null)</li>*@
-                            <li>@Html.ActionLink("Register as a new user", "Register", "Account", new { area = "" }, null)</li>
-                        </ul>
-                    </li>
-                }
+    </li>
+    @if (User.IsInRole("Admin") || User.Identity.Name == "mseul@cuahsi.org")
+    {
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin<b class="caret"></b></a>
+            <ul class="dropdown-menu">
+                <li>@Html.ActionLink("Roles", "Index", "Roles", new { area = "Admin" }, null)</li>
+                @*<li>@Html.ActionLink("Add Connection", "Index", "ConnectionParameters", new { area = "Admin" }, null)</li>
+                    <li>@Html.ActionLink("Link Connections", "Index", "ConnectionParametersUsers", new { area = "Admin" }, null)</li>
+                <li>@Html.ActionLink("Register as a new user", "Register", "Account", new { area = "" }, null)</li>
+            </ul>
+        </li>
+    }*@
             </ul>
 
         </div>
@@ -125,9 +125,9 @@
                 <h3 class="modal-title" id="myModalLabel">Workspace</h3>
             </div>
             <!-- Nav tabs for tabbed panes - Data Manager and Download Manager -->
-            <ul class="nav nav-tabs" role="tablist" style="margin-top: 0.5em; font-size: 2.0em;">
-                <li role="presentation" class="active"><a href="#dataMgrPane" aria-controls="dataMgrPane" role="tab" data-toggle="tab" style="font-weight: bold;">Data</a></li>
-                <li role="presentation"><a href="#downloadMgrPane" aria-controls="downloadMgrPane" role="tab" data-toggle="tab" style="font-weight: bold;">Exports</a></li>
+            <ul class="nav nav-tabs" role="tablist" style="margin-top: 0.5em; font-size: 1.5em;">
+                <li role="presentation" class="active"><a href="#dataMgrPane" aria-controls="dataMgrPane" role="tab" data-toggle="tab" style="font-weight: bold; padding-left:0.2em; padding-right:0.2em">Data</a></li>
+                <li role="presentation"><a href="#downloadMgrPane" aria-controls="downloadMgrPane" role="tab" data-toggle="tab" style="font-weight: bold;padding-left:0.2em; padding-right:0.2em">Exports</a></li>
             </ul>
 
             <!-- Tabbed panes - Data Manager and Download Manager -->
@@ -340,7 +340,7 @@
 
                 <div style="margin-left: 2.0em;">
                     <address style="margin-top: 2.0em;">
-                        <strong>Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)</strong>
+                        <H3>Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)</H3>
                         <br />
                         <br />
                         196 Boston Ave, Suite 3000<br />
@@ -370,7 +370,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
-                <h3 class="modal-title" id="myModalLabel">About  <a href="http://www.github.com/cuahsi" target="_blank">(Version 1.0)</a></h3>
+                <h3 class="modal-title" id="myModalLabel">About  <a href="http://www.github.com/cuahsi" target="_blank">(Version 1.1)</a></h3>
             </div>
             <div class="modal-body">
 
@@ -540,7 +540,7 @@
                     <div class="tabbable">
                         <!-- Only required for left/right tabs -->
                         <ul class="nav nav-tabs">
-                            <li class="active"><a href="#tab1" data-toggle="tab">Most Common</a></li>
+                            <li class="active"><a href="#tab1" data-toggle="tab"> Common </a></li>
                             <li><a href="#tab2" data-toggle="tab">Full List</a></li>
                         </ul>
                         <div class="tab-content">
@@ -686,7 +686,8 @@
             </div>
             <div class="modal-footer">
                 @*BCC - 30-Jun-2015 - QA Issue #44 - Popup 'Click to select Data Services': 'Save' button is missed *@
-                <button type="button" id="saveServiceSelection" class="btn btn-default btn-primary" data-dismiss="modal">Close</button>
+                <h6>Please be aware that data publishers are responsible for their service(s) and the accuracy of their data. </h6>
+                <button type="button" id="saveServiceSelection" class="btn btn-default btn-primary left" data-dismiss="modal">Close</button>
             </div>
             <!-- /.modal-content -->
         </div>
@@ -705,7 +706,7 @@
                 @*<a href="" id="seriesModal-DM" data-toggle="modal" data-target="#dmModal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</a>*@
                 @*<a href="" id="seriesModal-DataMgr" data-toggle="modal" data-target="#datamgrModal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-record"></span> Data Manager</a>*@
                 <h3 class="modal-title" id="myModalLabel">List of Timeseries in area</h3>
-                @*<h5 style="margin-bottom: 1em;">To zip one or more data files, please click the associated table row(s) and then click the 'Export Selections' button.</h5>*@
+                @*<h5 style="margin-bottom: 1em;">To zip one or more data files, please click the associated table row(s) and then click the 'Export Selections' button. You can check the status by opening the workspace and selecting the "Exports" tab.</h5>*@
             </div>
             <div class="modal-body modal-body-full">
                 @* BCC- 23-Jul-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set 'max-width: none' on the table element!!

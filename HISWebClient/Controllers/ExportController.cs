@@ -341,13 +341,24 @@ namespace HISWebClient.Controllers
 									//Retrieve the time series data in csv format
 									FileStreamResult filestreamresult = await DownloadFile(timeSeriesId, currentSeries, tsrIn.RequestFormat);
 
-									//Copy file contents to zip archive...
-									//ASSUMPTION: FileStreamResult instance properly disposes of FileStream member!!
-									var zipArchiveEntry = zipArchive.CreateEntry(filestreamresult.FileDownloadName);
-									using (var zaeStream = zipArchiveEntry.Open())
-									{
-										await filestreamresult.FileStream.CopyToAsync(zaeStream, bufSize);
-									}
+                                    //MS added to check for failed downloads. TO DO: Needs to be put into a proper status message 
+                                    if (filestreamresult.FileDownloadName.Contains("ERROR"))
+                                    {
+                                        UpdateTaskStatus(requestId, TimeSeriesRequestStatus.Completed, TimeSeriesRequestStatus.RequestTimeSeriesError.GetEnumDescription());
+                                        throw new System.ApplicationException();
+                                    }
+                                    else
+                                    {
+
+                                        //Copy file contents to zip archive...
+                                        //ASSUMPTION: FileStreamResult instance properly disposes of FileStream member!!
+                                        var zipArchiveEntry = zipArchive.CreateEntry(filestreamresult.FileDownloadName);
+                                        using (var zaeStream = zipArchiveEntry.Open())
+                                        {
+                                            await filestreamresult.FileStream.CopyToAsync(zaeStream, bufSize);
+                                        }
+                                        //add
+                                    }
 								}
 							//}
 						}
@@ -362,7 +373,8 @@ namespace HISWebClient.Controllers
 						//Time series processing complete - check for cancellation
 						if (!IsTaskCancelled(requestId, cancellationEnum, cancellationMessage))
 						{
-							UpdateTaskStatus(requestId, TimeSeriesRequestStatus.SavingZipArchive, TimeSeriesRequestStatus.SavingZipArchive.GetEnumDescription());
+							
+                            UpdateTaskStatus(requestId, TimeSeriesRequestStatus.SavingZipArchive, TimeSeriesRequestStatus.SavingZipArchive.GetEnumDescription());
 
 							//Reposition to start of memory stream...
 							memoryStream.Seek(0, SeekOrigin.Begin);
@@ -671,8 +683,12 @@ namespace HISWebClient.Controllers
 				ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 
 				HttpClient httpClient = new HttpClient();
+                //Prod
+                httpClient.BaseAddress = new Uri("https://apps.hydroshare.org/");
+				
 
-				httpClient.BaseAddress = new Uri("http://appsdev.hydroshare.org/");
+                //dev
+				//httpClient.BaseAddress = new Uri("http://appsdev.hydroshare.org/");
 				//httpClient.BaseAddress = new Uri("https://appsdev.hydroshare.org/");
 
 				HttpResponseMessage httpResponseMessage = await httpClient.GetAsync("apps/api/list_apps/");
@@ -889,7 +905,7 @@ namespace HISWebClient.Controllers
 				(! String.IsNullOrWhiteSpace(data.myVariable.TimeUnit.Name)) ? data.myVariable.TimeUnit.Name.ToString() :
 					(! String.IsNullOrWhiteSpace(data.myVariable.TimeUnit.Abbreviation)) ? data.myVariable.TimeUnit.Abbreviation.ToString() : 
 						ServerSideHydroDesktop.ObjectModel.Unit.UnknownTimeUnit.Name.ToString(),
-				data.myVariable.TimeUnit.Name.ToString(),
+				//data.myVariable.TimeUnit.Name.ToString(),
 				data.myVariable.Speciation.ToString(),
 				data.myMetadata.SiteName,
 				data.myMetadata.SiteCode,

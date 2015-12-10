@@ -748,18 +748,18 @@ function enableSearch() {
     //Check search conditions, set tooltip if indicated...
     var tooltip = '';
     var allMax = 1000000;
-
+    var max = 250000;
     if (area > allMax) {
         bSearchEnabled = false;
-        tooltip = "The selected area is too large to search. Please limit search area to less than " +allMax.toLocaleString() + " sq km and/or reduce search keywords.";
+        tooltip = "Please limit search area to less than " + allMax.toLocaleString() + " sq km for 1 keyword or "+max.toLocaleString() + " for multiple keyword searches.";
     }
     else {
-            var max = 250000;
+            
             if (area > max) {
 
                 if ( 0 >= selectedKeys.length ) {
                     bSearchEnabled = false;
-                    tooltip = "The selected area is too large to search for ALL keywords. Please limit search area to less than " +max.toLocaleString() + " sq km and/or limit keywords.";                
+                    tooltip = "Please limit search area to less than " +max.toLocaleString() + " sq km or select only 1 keyword .";                
                 }
                 else if (1 < selectedKeys.length ) {
                     bSearchEnabled = false;
@@ -1710,7 +1710,7 @@ function AreaSizeControl(controlDiv, map) {
     controlText.style.paddingLeft = '3px';
     controlText.style.paddingRight = '3px';
     controlText.style.paddingBottom = '0px';
-    controlText.style.borderRadius = '15px';
+    controlText.style.borderRadius = '5px';
     controlText.style.backgroundColor = 'rgba(255,255,255,0.8)'/* slighly transparent white */
     controlText.style.border = '5px'
     controlText.innerHTML = "Area in sq km";
@@ -2920,8 +2920,8 @@ function setUpDatatables(clusterid) {
 //Initialize 'static' tooltips - those not subject to change during the application session...
 function setupToolTips() {
 
-    var texts = [ "To download one or more data files, please click the associated table row(s) and click the 'Export Selections' button.",
-                  "To work with one or more time series, please click the associated table row(s) and click the 'Add Selection(s) to Workspace' button."
+    var texts = [ "To download one or more data files, please click the associated table row(s) and click the 'Export Selections' button. You can check the status by opening the workspace a selecting the 'Exports' tab.",
+                  "To work with one or more time series, please click the associated table row(s) and click the 'Add Selection(s) to Workspace' button. You can check the status by opening the workspace and selecting the 'Data' tab."
                 ];
 
     var divs = { 'divZipSelections': {'text': texts[0]},
@@ -3009,7 +3009,7 @@ function setupDataManagerTable() {
            },
            { 'sTitle': 'Saved?',
              //'data': 'Saved',  'visible': false,
-             'data': 'Saved',  'visible': true,
+             'data': 'Saved',  'visible': false,
              'render': function (data, type, full, meta) { 
                  return '<span class="glyphicon ' + (data ? 'glyphicon-cloud' : 'glyphicon-cloud-upload') + '"></span> ' + (data ? '<em>Saved</em>' : '<em>Not Saved</em>');
              }
@@ -3099,15 +3099,15 @@ function setupDataManagerTable() {
                                     '<div class="dropdown" style="position: relative; display: inline-block; float: left; font-size: 1.00em;">' +
                                       '<button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">' +
                                         '<span class="glyphicon glyphicon-list-alt" style="font-weight: bold; font-size: 1.00em;"></span>' +
-                                        '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Selection&nbsp;</span>' +
+                                        '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Selections&nbsp;</span>' +
                                         '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
                                       '</button>' +
                                       '<ul class="dropdown-menu" aria-labelledby="dropdownMenu1">' +
                                         '<li><a href="#" id="anchorAllSelectionsDataMgr" style="font-weight: bold;" ><span class="text-muted">Select All</span></a></li>' +
                                         '<li><a href="#" id="anchorClearSelectionsDataMgr" style="font-weight: bold;"><span class="text-warning">Clear Selections</span></a></li>' +
                                         '<li><a href="#" id="anchorRemoveSelectionsDataMgr" style="font-weight: bold;"><span class="text-danger">Remove Selected Entries</span></a></li>' +
-                                        '<li><a href="#" id="anchorSaveSelectionsDataMgr" style="font-weight: bold;"><span class="text-info">Save Selected Entries</span></a></li>' +
-                                        //Defer implementation of Refresh Selections until a later release (post 1.1)
+                                        //'<li><a href="#" id="anchorSaveSelectionsDataMgr" style="font-weight: bold;"><span class="text-info">Save Selected Entries</span></a></li>' +
+                                        ////Defer implementation of Refresh Selections until a later release (post 1.1)
                                         //'<li><a href="#" id="anchorRefreshSelectionsDataMgr" style="font-weight: bold;"><span class="text-warning">Refresh Selected Entries</span></a></li>' +
                                       '</ul>' +
                                     '</div>' +
@@ -3122,12 +3122,12 @@ function setupDataManagerTable() {
                                         '<button class="btn btn-primary" data-toggle="dropdown" style="font-size: 1.00em;">' +
                                               '<div id="ddIntegratedDataToolsOriginal" style="display: none;">' + 
                                                 '<span class="glyphicon glyphicon-wrench" style="font-weight: bold; max-width: 100%; font-size: 1.0em;"></span>' +
-                                                '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Tools&nbsp;</span>' +
+                                                '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Select Tool&nbsp;</span>' +
                                                 '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
                                               '</div>' +
                                               '<div id="ddIntegratedDataTools" data-noneselected="true">' + 
                                                 '<span class="glyphicon glyphicon-wrench" style="font-weight: bold; max-width: 100%; font-size: 1.0em;"></span>' +
-                                                '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Tools&nbsp;</span>' +
+                                                '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Select Tool&nbsp;</span>' +
                                                 '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
                                               '</div>' +
 
@@ -4790,12 +4790,12 @@ function loadDataManager() {
                 var datamgrTable = $(datamgrTableId).DataTable();
 
                 var userTimeSeries = JSON.parse(data);
-                var timeSeries = userTimeSeries.TimeSeries
-                var length = timeSeries.length;
+                //var timeSeries = userTimeSeries.TimeSeries
+                var length = userTimeSeries.length;
                 var reDraw = false;
 
                 for (var i = 0; i < length; ++i) {
-                    var serverRecord = timeSeries[i];
+                    var serverRecord = userTimeSeries[i];
                     var datamgrRecord = {};
 
                     datamgrRecord.Saved = true;

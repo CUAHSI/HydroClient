@@ -296,6 +296,19 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201512020008146_InitialCreate.cs" />
+    <Compile Include="Migrations\201512020008146_InitialCreate.Designer.cs">
+      <DependentUpon>201512020008146_InitialCreate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201512070210068_RemoveForeignKey_Email.cs" />
+    <Compile Include="Migrations\201512070210068_RemoveForeignKey_Email.Designer.cs">
+      <DependentUpon>201512070210068_RemoveForeignKey_Email.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201512070259123_test2.cs" />
+    <Compile Include="Migrations\201512070259123_test2.Designer.cs">
+      <DependentUpon>201512070259123_test2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\DataManager\CurrentUser.cs" />
     <Compile Include="Models\DataManager\DM_TimeSeries.cs" />
@@ -606,6 +619,17 @@
       <Project>{5dba60f1-4292-4ea0-9a78-a03ac3511dc7}</Project>
       <Name>CUAHSI.ServerSideHydroDesktop</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201512020008146_InitialCreate.resx">
+      <DependentUpon>201512020008146_InitialCreate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201512070210068_RemoveForeignKey_Email.resx">
+      <DependentUpon>201512070210068_RemoveForeignKey_Email.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201512070259123_test2.resx">
+      <DependentUpon>201512070259123_test2.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

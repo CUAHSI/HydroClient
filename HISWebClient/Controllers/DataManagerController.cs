@@ -45,7 +45,9 @@ namespace HISWebClient.Controllers
 			}
 
 			//Lookup user time series, set found indicator...
-			UserTimeSeries uts = _utsDbContext.UserTimeSeriesSet.SingleOrDefault(u => u.UserEmail == id);
+             var uts = _utsDbContext.DM_TimeSeriesSet.Where(u => (u.UserEmail.Equals(id))).ToList();
+
+          
 			if (null == uts)
 			{
 				//Failure - return 'Not Found'...

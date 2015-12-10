@@ -20,7 +20,7 @@ namespace HISWebClient.Models.DataManager
 		[Key]
 		public int TimeSeriesId { get; set; }
 
-		[ForeignKey("UserTimeSeries")]
+        //[ForeignKey("Email")]
 		public string UserEmail { get; set; }
 
 		//Members...
