@@ -2634,8 +2634,8 @@ function setUpDatatables(clusterid) {
            { "data": "TimeUnit", "visible": true, "className": "tableCol5pct"},
            { "data": null, "sTitle": "Service URL", "visible": true, "className": "tableColWrap10pct"},
 
-           { "data": "SiteCode", "sTitle": "Site Code", "visible": false },
-           { "data": "VariableCode", "sTitle": "Variable Code", "visible": false },           
+           { "data": "SiteCode", "sTitle": "Site Code", "visible": true },
+           { "data": "VariableCode", "sTitle": "Variable Code", "visible": true },           
            { "data": "SeriesId", "visible": false },
            { "data": "ServURL", "sTitle": "Web Service Description URL", "visible": false }
         ],
@@ -2920,8 +2920,8 @@ function setUpDatatables(clusterid) {
 //Initialize 'static' tooltips - those not subject to change during the application session...
 function setupToolTips() {
 
-    var texts = [ "To download one or more data files, please click the associated table row(s) and click the 'Export Selections' button. You can check the status by opening the workspace a selecting the 'Exports' tab.",
-                  "To work with one or more time series, please click the associated table row(s) and click the 'Add Selection(s) to Workspace' button. You can check the status by opening the workspace and selecting the 'Data' tab."
+    var texts = ["Select one or more rows to export. You can check the status by opening the workspace and selecting the 'Exports' tab.",
+                  "Select one or more rows to  add to your workspace. Work with your data by opening the workspace and selecting the 'Data' tab."
                 ];
 
     var divs = { 'divZipSelections': {'text': texts[0]},
@@ -4995,8 +4995,8 @@ function setUpTimeseriesDatatable() {
             { "data": "TimeUnit", "visible": true },
             { "data": null, "sTitle": "Service URL", "visible": true },
 
-            { "data": "SiteCode", "sTitle": "Site Code", "visible": false },
-            { "data": "VariableCode", "sTitle": "Variable Code", "visible": false },
+            { "data": "SiteCode", "sTitle": "Site Code", "visible": true },
+            { "data": "VariableCode", "sTitle": "Variable Code", "visible": true },
             { "data": "SeriesId", "visible": false  },
             { "data": "ServURL", "sTitle": "Web Service Description URL", "visible": false }
            ],

@@ -691,7 +691,7 @@ namespace HISWebClient.Controllers
 				//httpClient.BaseAddress = new Uri("http://appsdev.hydroshare.org/");
 				//httpClient.BaseAddress = new Uri("https://appsdev.hydroshare.org/");
 
-				HttpResponseMessage httpResponseMessage = await httpClient.GetAsync("apps/api/list_apps/");
+				HttpResponseMessage httpResponseMessage = await httpClient.GetAsync("apps/timeseries-viewer/api/list_apps/");
 
 				string strJSON = String.Empty;
 				if (httpResponseMessage.IsSuccessStatusCode)
