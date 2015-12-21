@@ -32,5 +32,5 @@ namespace HISWebClient.Models
         public CancellationTokenSource CTS { get; set; }
 
         public String BlobUri { get; set; }
-    }
+	}
 }

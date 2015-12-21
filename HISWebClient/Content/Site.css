@@ -148,8 +148,8 @@ table
 	float: left;
 }
 
-#dataview{
-	padding-top:75px;
+.padded-tab-pane{
+	padding-top:65px;
 }
 
 div.GblueLabel16, div.GblueLabel20, div.GblueLabel22,div.GblueLabel24,div.GblueLabel26,div.GblueLabel28,div.GblueLabel30,div.GblueLabel32,div.GblueLabel36,div.GblueLabel40,div.GblueLabel42,div.GblueLabel44,div.GblueLabel48,div.GblueLabel56,div.GblueLabel64 
@@ -446,3 +446,82 @@ input[readonly].default-cursor {
   -webkit-user-select: none; /* Chrome, Safari, and Opera */
   -webkit-touch-callout: none; /* Disable Android and iOS callouts*/
 }
+
+
+/* Adjust z-index of modal background when multiple modal dialogs appear 'layered' atop one another
+
+    Source: http://www.bootply.com/86973#
+
+BCC - 14-Oct-2015 - Causes problems when displaying time series after zooming in on the map. More research required...
+
+.modal:nth-of-type(even) {
+    z-index: 1042 !important;
+}
+.modal-backdrop.in:nth-of-type(even) {
+    z-index: 1041 !important;
+}
+
+*/
+
+/* Styling for tblDataManager - align 'Show x entries' and 'Search' inputs on right, align custom toolbar on left... */
+.toolbarDataMgr {
+    display: inline-block;
+    position: relative;
+    float: left;
+    max-width: 100%;    /* Override 1170px value from container class... */
+}
+
+
+/* DataTables column widths - 
+    NOTE: <td> widths can be expressed in px or % only!!
+*/
+/*.tableCol5pct {
+    width: 5%;
+}*/
+
+/* DataTables column wrapping - 
+    NOTE: <td> widths can be expressed in px or % only!!
+*/
+/*.tableColWrap10pct {
+    white-space:normal;
+    width: 10%;
+}
+
+.tableColWrap15pct {
+    white-space: normal;
+    width: 15%;
+}
+
+.tableColWrap20pct {
+    white-space: normal;
+    width: 20%;
+}
+
+.tableColWrap25pct {
+    white-space: normal;
+    width: 25%;
+}
+
+.tableColWrap30pct {
+    white-space: normal;
+    width: 30%;
+}*/
+
+/* BCC - 13-Nov-2015 - Probably no longer needed
+
+#tblDataManagerGroup {
+    display: inline-block;
+    position: relative;
+    float: right;
+
+}
+
+#tblDataManager_filter {
+    float: none;
+}
+
+#tblDataManager_length {
+    float: none;
+}
+*/
+

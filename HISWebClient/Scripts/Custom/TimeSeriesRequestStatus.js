@@ -1,5 +1,5 @@
 ﻿//
-//A JavaScript 'enum' to time series request status values
+//A JavaScript 'enum' for time series request status values
 //NOTE: Values defined here and in the C# equivalent MUST always match!!
 
 //Implementation - Dynamic Prototype Pattern...
@@ -20,9 +20,10 @@ function TimeSeriesRequestStatus() {
                         "SavingZipArchive": [7, "Saving Zip archive..."],
                         "ProcessingError": [8, "Processing error: "],
                         "UnknownTask": [9, "Unknown Task!!"],
-                        "RequestTimeSeriesError": [10,"Request Time Series Error"], //Not currently used
-                        "CheckTaskError": [11,"Check Task Error"],
-                        "EndTaskError": [12,"End Task Error"]
+                        "RequestTimeSeriesError": [10, "Request Time Series Error"], //Not currently used
+                        "CheckTaskError": [11, "Check Task Error"],
+                        "EndTaskError": [12, "End Task Error"],
+                        "NotStarted": [13,"Not Started"]
                     };
 
     if ("function" !== typeof this.getEnum) {
@@ -31,3 +32,4 @@ function TimeSeriesRequestStatus() {
         }
     }
 }
+

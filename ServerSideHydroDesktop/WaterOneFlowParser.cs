@@ -189,6 +189,7 @@ namespace ServerSideHydroDesktop
         private IList<Series> ReadValues(XmlReader reader)
         {
             Site site = null;
+            Source source = null;
             Variable varInfo = null;
             IList<Series> seriesList = null;
             while (reader.Read())
@@ -203,9 +204,10 @@ namespace ServerSideHydroDesktop
                         //var qry = ReadQueryInfo(reader);
                         //xmlFileInfo.QueryInfo = qry;
                     }
-                    else if (readerName == "source" || readerName == "sourceinfo")
+                    
+                    else if (readerName == "sourceinfo")//sourceinfo does contains site information but does contain not source values. Source is separate tag in response 
                     {
-                        //Read the site information
+                        //Read the source information
                         site = ReadSite(reader);
                     }
                     else if (readerName == "variable")
@@ -222,6 +224,10 @@ namespace ServerSideHydroDesktop
                             if (varInfo != null)
                             {
                                 series.Variable = varInfo;
+                            }
+                            if (source != null)
+                            {
+                                series.Source = source;
                             }
                             if (site != null)
                             {

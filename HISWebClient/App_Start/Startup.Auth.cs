@@ -58,11 +58,16 @@ namespace HISWebClient
             //   appId: "",
             //   appSecret: "");
 
-            //app.UseGoogleAuthentication(new GoogleOAuth2AuthenticationOptions()
-            //{
-            //    ClientId = "",
-            //    ClientSecret = ""
-            //});
+            var googleOAuth2AuthenticationOptions = new GoogleOAuth2AuthenticationOptions
+            {
+                ClientId = "208043537148-ds7a83pm5ssa61kj2jpg7rpojqrqchfj.apps.googleusercontent.com",
+                ClientSecret = "ah5IH-1uSPb0LAgusAGy5AZM",
+                CallbackPath = new PathString("/signin-google")
+            };
+
+
+            app.UseGoogleAuthentication(googleOAuth2AuthenticationOptions);
+         
         }
     }
 }

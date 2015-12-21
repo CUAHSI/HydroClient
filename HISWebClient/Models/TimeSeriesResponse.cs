@@ -46,7 +46,10 @@ namespace HISWebClient.Models
         CheckTaskError = 11,
 
         [Description("End Task Error")]
-        EndTaskError = 12    
+        EndTaskError = 12,
+    
+		[Description("Not Started")]
+		NotStarted = 13
    }
 
 
@@ -82,8 +85,9 @@ namespace HISWebClient.Models
         public String Status { get; set; }
 
         /// <summary>
-        /// BlobUri
+        /// BlobUri - for blob files...
         /// </summary>
         public String BlobUri {get; set; }
-    }
+
+	}
 }

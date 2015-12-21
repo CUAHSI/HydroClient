@@ -18,25 +18,49 @@ var randomId;
 var currentPlaceName = '';
 var currentMarkerPlaceName = '';
 var timeSeriesRequestStatus;
+var timeSeriesFormat;
 var slider;
 var sidepanelVisible = false;
-
-var selectedTimeSeriesMax = 25;
 
 var conceptsType = '';
 
 var selectedRowCounts = {
-    'dtMarkers': {'targetId': 'btnZipSelections', 'count': 0},
-    'dtTimeseries': { 'targetId': 'btnZipSelectionsTS', 'count': 0 }
+    'dtMarkers': {'targetIds': ['spanClearSelections', 'spanZipSelections','spanManageSelections'], 'count': 0},
+    'dtTimeseries': { 'targetIds': ['spanClearSelectionsTS', 'spanZipSelectionsTS', 'spanManageSelectionsTS'], 'count': 0 },
+    'tblDataManager': { 'targetIds': ['lblSelectionsDataMgr'], 'count': 0, 'customCounter': customCounter }
 };
 
 //BC - 19-Jun-2015 - Disable concept counting - possible later use...
 //var selectedConceptsMax = 4;
 
-//lisy of services that only have 
+var downloadMonitor = { 'intervalId' : null,
+                        'timeSeriesMonitored': {}
+                      };
+
+var unknownTaskCounts = {};
+
+//list of services that only have 
 var ArrayOfNonObservedServices = ["84","187","189","226","262","267","274"]
 
 var taskCount = 0;
+
+var byuAppsList = {};
+
+var currentUser = { 'authenticated' : false,
+                    'dataManagerLoaded' : false,
+                    'login' : null,
+                    'userName' : null
+                  };
+
+
+//Number.isInteger 'polyfill' for use with browsers (like IE) which do not support the 'native' function
+//Sources: http://stackoverflow.com/questions/31720269/internet-explorer-11-object-doesnt-support-property-or-method-isinteger
+//         https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isInteger 
+Number.isInteger = Number.isInteger || function (value) {
+    return typeof value === "number" &&
+           isFinite(value) &&
+           Math.floor(value) === value;
+};
 
 $(document).ready(function () {
 
@@ -46,27 +70,170 @@ $(document).ready(function () {
     //Periodically check selected time series...
     setInterval(function () {
         //console.log('Checking selected time series...');
-        var firstPart = 'Process '
+        var firstPart = '';
         var secondPart = ['Selection(s)', 'Selection', ' Selections'];        //For each tableId in selected row counts...
+        var lastPart = '';
 
         for (var tableId in selectedRowCounts) {
             if ($('#' + tableId).is(":visible")) {
                 //table visible - evaluate count
                 var count = selectedRowCounts[tableId].count;
-                var targetId = selectedRowCounts[tableId].targetId;
+
+                //Update control(s) text with current count...
+                var length = selectedRowCounts[tableId].targetIds.length;
+                for (var tI = 0; tI < length; ++tI) {
+                    //Determine control type and associated jQuery method to retrieve text...
+                    var targetId = selectedRowCounts[tableId].targetIds[tI];
+                    var control = $('#' + targetId);
+                    var method = null;
+
+                    if (control.is('input[type="button"]')) {
+                        method = control.val;
+                    }
+                    else {
+                        if (control.is('label') || control.is('span')) {
+                            method = control.text;
+                            //method = control.html;
+                        }
+                    }
+
+                    if (null === method) {
+                        continue;
+                    }
+
+                    //Retrieve control text... 
+                    var value = method.call(control);
+                    var values = value.split(' ');
+                    //if ('spanZipSelectionsTS' === targetId ) {
+                    //    console.log(value);
+                    //    console.log(values);
+                    //}
+
+                    //Evaluate text - set insert indicator...
+                    firstPart = values[0] + ' ';
+                    var bInsert = -1 === firstPart.indexOf('Select') ? true : false;
+
+                    //Determine trailing text, if any
+                    var length = values.length;
+                    lastPart = '';
+                    var bFound = false;
+
+                    for (var li = 0; li < length; ++li) {
+                        if (!bFound) {
+                            bFound = (-1 !== values[li].indexOf('Selection')) ? true: false;
+                            continue;
+                        }
+                        
+                        lastPart += ' ' + values[li];
+                    }
+
 
                 if (0 < count) {
                     //Selections found - update targetId text...
-                    $('#' + targetId).val(firstPart + (1 < count ? count + secondPart[2] : secondPart[1]));
+                            method.call(control, firstPart + (bInsert ? (1 < count ? count + secondPart[2] : secondPart[1]) : count) + lastPart );
                 } else {
                     //Nothing selected - reset targetId text...                    
-                    $('#' + targetId).val(firstPart + secondPart[0]);
+                            method.call(control, firstPart + ( bInsert ? secondPart[0] : '') + lastPart);
+                        }
+                }
+
+                if ('undefined' !== typeof selectedRowCounts[tableId].customCounter) {
+                    //Custom counter defined - call...
+                    selectedRowCounts[tableId].customCounter(tableId);
                 }
             }
         }
     }, 250);
 
 });
+
+
+function customCounter(tableName) {
+    
+    //console.log('customCounter called for: ' + tableName);
+    if ('tblDataManager' === tableName) {
+        //Initialize counts...
+        var countClear = 0;
+        var countLaunch = 0;
+        var countRemove = 0;
+        var countSelectable = 0;
+        var countSave = 0;
+
+        //Retrieve data for all table rows... 
+        var table = $('#' + tableName).DataTable();
+        var rows = table.rows();
+        var nodes = rows.nodes();
+        var data = rows.data();
+
+        //For each instance...
+        $.each(nodes, function (i, obj) {
+            //Retrieve node, check for class: selected
+            var jqueryObj = $(obj);
+
+            if (jqueryObj.hasClass('selected')) {
+                //Row is selected...
+                var dataItem = data[i];
+
+                //Update counts...
+                ++countClear;
+                ++countRemove;
+
+                if ( ! dataItem.Saved) {
+                    ++countSave;
+                }
+
+                if ('true' !== $('#ddIntegratedDataTools').attr('data-noneselected')) {
+                    ++countLaunch;
+                }
+            }
+            else {
+                //Row is NOT selected...
+                ++countSelectable;
+            }
+});
+
+        //Update button text with counts...
+        var buttons = [{ 'name': 'btnLaunchHydrodataToolDataMgr', 'count': countLaunch, 'disableCheck': btnDisableCheck }];
+        var bLength = buttons.length;
+
+        for (var i = 0; i < bLength; ++i) {
+            var button = $('#' + buttons[i].name); 
+            var value = button.val();
+            var count = buttons[i].count;
+            //var values = value.split(' ');
+            var values = value.split(':');
+
+            if (0 >= count) {
+                button.val(values[0]);
+                button.prop('disabled', true);
+            }
+            else {
+                button.val(values[0] + ': (' + count.toString() + ')');
+                button.prop('disabled', null !== buttons[i].disableCheck ? buttons[i].disableCheck(buttons[i].name)  : false); 
+            }
+        }
+
+        //Update dropdown items per counts...
+        var anchors = [{'name': 'anchorAllSelectionsDataMgr', 'count': countSelectable},
+                       { 'name': 'anchorClearSelectionsDataMgr', 'count': countClear},
+                       { 'name': 'anchorRemoveSelectionsDataMgr', 'count': countRemove},
+                       { 'name': 'anchorSaveSelectionsDataMgr', 'count': countSave} ];
+        var aLength = anchors.length;
+
+        for (var ii = 0; ii < aLength; ++ii) {
+            var anchor = $('#' + anchors[ii].name); 
+            var li = anchor.parent();
+            var count = anchors[ii].count;
+
+            if (0 >= count) {
+                li.addClass('disabled');
+            }
+            else {
+                li.removeClass('disabled'); 
+            }
+        }
+    }
+}
 
 function initialize() {
 
@@ -100,8 +267,8 @@ function initialize() {
         },
         mapTypeControlOptions: {
             style: google.maps.MapTypeControlStyle.DEFAULT,
-            position: google.maps.ControlPosition.LEFT_BOTTOM,
-            mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.TERRAIN]
+            position: google.maps.ControlPosition.LEFT_BOTTOM
+            //mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.TERRAIN]
         },
     };
 
@@ -120,20 +287,18 @@ function initialize() {
 
     addLocationSearch();
 
-    //triger update of map on these events
+    //trigger update of map on these events
     google.maps.event.addListener(map, 'dblclick', function () {
         if ((clusteredMarkersArray.length > 0)) {
             updateMap(false)
             //
         }
-        //$("#MapAreaControl").html(getMapAreaSize());
     });
     google.maps.event.addListener(map, 'dragend', function () {
         if ((clusteredMarkersArray.length > 0)) {
             updateMap(false)
 
         }
-        //$("#MapAreaControl").html(getMapAreaSize());
     });
 
     google.maps.event.addListener(map, 'zoom_changed', function () {
@@ -150,7 +315,14 @@ function initialize() {
         //if ((clusteredMarkersArray.length > 0)) {
         //updateMap(false)
 
-        $("#MapAreaControl").html(getMapAreaSize());
+        var area = getMapAreaSize();
+        var control = $("#MapAreaControl");
+
+        control.html( 'Area: ' + area.toLocaleString() + ' sq km' );
+        control.attr('data-areasizeinsqkm', area);
+
+        //Check current search parameters...
+        enableSearch();
 
         //}
     });
@@ -279,6 +451,9 @@ function initialize() {
 
     var desc  = steObj.description;
 
+    //Allocate a TimeSeriesFormat instance...
+    timeSeriesFormat = (new TimeSeriesFormat()).getEnum();
+
     //Download All button click handler..
     $('#btnDownloadAll').on('click', function (event) {
         //For each zip blob download button element...
@@ -316,11 +491,18 @@ function initialize() {
         //updateKeywordList("Common");       
         updateKeywordList();
 
+        //Check current search parameters...
+        enableSearch();
+
     });
 
     $('#btnHierarchySelect').click(function () {
 
         updateKeywordList();
+
+        //Check current search parameters...
+        enableSearch();
+
         //if (0 < length) {
         //    //Certain concepts selected...
         //    for (var i = 0; i < length; ++i) {
@@ -403,19 +585,23 @@ function initialize() {
         //var formData = getFormData();
         var path = [];
         path = GetPathForBounds(map.getBounds())
-        var area = GetAreaInSquareKilometers(path)
+//        var area = GetAreaInSquareKilometers(path)
 
         //BCC - 10-Jul-2015 
         // Since keyword selections on 'Common' and 'Full' tabs are kept in sync at all times, 
         //  retrieve selected keys from 'Full' tab...
-        var selectedKeys = [];
-        var tree = $("#tree").fancytree("getTree");
+//        var selectedKeys = [];
+//        var tree = $("#tree").fancytree("getTree");
 
-        selectedKeys = $.map(tree.getSelectedNodes(true), function (node) { //true switch returns all top level nodes
-            return node.title;
-        });
+//        selectedKeys = $.map(tree.getSelectedNodes(true), function (node) { //true switch returns all top level nodes
+//            return node.title;
+//        });
 
-        if (!validateQueryParameters(area, selectedKeys)) return;
+        //BCC - 20-Nov-2015 - Query parameters should be valid at this point...
+//        if (!validateQueryParameters(area, selectedKeys)) return;
+
+        //Update the map per the new search parameters...
+        updateMap(true);
 
         // Construct the polygon.
         areaRect = new google.maps.Polygon({
@@ -462,6 +648,10 @@ function initialize() {
 
         //reset search parameters...
         resetSearchParameters();
+
+        //Check current search parameters...
+        enableSearch();
+
     });
 
     //click event for tab
@@ -479,7 +669,7 @@ function initialize() {
             //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
             //Assign a handler to the DataTable 'draw.dt' event
             table.off('draw.dt', addFilterPlaceholders);
-            table.on('draw.dt', { 'tableId': 'dtTimeseries' }, addFilterPlaceholders);
+            table.on('draw.dt', { 'tableId': 'dtTimeseries', 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Data Type', 'Value Type', 'Sample Medium'] }, addFilterPlaceholders);
 
             //BCC - 09-Jul-2015 -  - QA Issue #25 - Data tab: table column titles stay in wrong order after sorting table
             //Remove/add column adjustment event handler...
@@ -531,7 +721,97 @@ function initialize() {
     //Shown and hidden handlers for Select Data Services...
     $('#SelectServicesModal').on('shown.bs.modal', shownSelectDataServices);
     $('#SelectServicesModal').on('hidden.bs.modal', hiddenSelectDataServices);
+
+    //Initialize the Data Manager datatables instance...
+    setupDataManagerTable();
 }
+
+//Check search conditions - enable/disable search button per findings...
+//                          return - true (search enabled), false otherwise
+function enableSearch() {
+
+    //Retrieve current search area value, convert to numeric
+    var area = $('#MapAreaControl').attr('data-areasizeinsqkm');
+    area *= 1;  
+    bSearchEnabled = true;  //Assume success...
+
+    //Retrieve currently selected keywords
+    // NOTE: Since keyword selections on 'Common' and 'Full' tabs are kept in sync at all times, 
+    //          retrieve selected keys from 'Full' tab...
+    var selectedKeys = [];
+    var tree = $("#tree").fancytree("getTree");
+
+    selectedKeys = $.map(tree.getSelectedNodes(true), function (node) { //true switch returns all top level nodes
+        return node.title;
+    });
+
+    //Check search conditions, set tooltip if indicated...
+    var tooltip = '';
+    var allMax = 1000000;
+    var max = 250000;
+    if (area > allMax) {
+        bSearchEnabled = false;
+        tooltip = "Please limit search area to less than " + allMax.toLocaleString() + " sq km for 1 keyword or "+max.toLocaleString() + " for multiple keyword searches.";
+    }
+    else {
+            
+            if (area > max) {
+
+                if ( 0 >= selectedKeys.length ) {
+                    bSearchEnabled = false;
+                    tooltip = "Please limit search area to less than " +max.toLocaleString() + " sq km or select only 1 keyword .";                
+                }
+                else if (1 < selectedKeys.length ) {
+                    bSearchEnabled = false;
+                    tooltip = "For the selected area, you chose more than one keyword. Please reduce the area or choose only one keyword.";                                    
+                }
+
+            }
+    }
+
+
+    //Destroy current tooltip, if any...
+    var divTooltip = $('#searchBtnDiv');
+    var btnSearch = $('form#Search button[type="submit"]');
+    var areaControl = $('#MapAreaControl');
+    var className = 'disabled';
+
+    divTooltip.tooltip('destroy');
+
+    areaControl.css('color', '');
+    areaControl.css('background-color', '');
+    if (bSearchEnabled) {
+        //Search enabled - enable search button, 
+        btnSearch.removeClass(className);
+        //areaControl.css('border', '5px solid green');
+        areaControl.removeClass('text-danger');
+        areaControl.removeClass('alert-danger');
+        areaControl.addClass('text-success')
+        areaControl.addClass('alert-success');
+    }
+    else {
+        //Search disabled - disable search button
+        btnSearch.addClass(className);
+        //areaControl.css('border', '5px solid red');
+        areaControl.removeClass('text-success')
+        areaControl.removeClass('alert-success');
+        areaControl.addClass('text-danger');
+        areaControl.addClass('alert-danger');
+    
+        if (0 < tooltip.length) {
+            //Tooltip text exists - set tooltip
+            divTooltip.tooltip({
+                            'animation': true,
+                            'placement': 'auto',
+                            'trigger': 'hover',
+                            'title': tooltip });
+}
+    }
+
+    //Proceesing complete - return result
+    return bSearchEnabled;
+}
+
 
 //Shown handler for Select Data Services...
 function shownSelectDataServices() {
@@ -767,54 +1047,55 @@ function compareFromDateAndToDate(event) {
 
 
 //BCC - 26-Jun-2015 - Various fixes related to QA Issue #15 - Warning messages: typos in warning message when selecting 2+ keywords and area is 25sq km+
-function validateQueryParameters(area, selectedKeys) {
-    //validate inputs
+//BCC - 20-Nov-2015 - Old code - re-factored - see enableSearch()
+//function validateQueryParameters(area, selectedKeys) {
+//    //validate inputs
 
-    area *= 1;  //Convert to numeric value...
+//    area *= 1;  //Convert to numeric value...
 
-    var allMax = 1000000;
-    if (area > allMax) {
+//    var allMax = 1000000;
+//    if (area > allMax) {
         
-        bootbox.alert("<h4>The selected area (" +area.toLocaleString() + " sq km) is too large to search. <br> Please limit search area to less than " +allMax.toLocaleString() + " sq km and/or reduce search keywords.</h4>");
-        return false;
-    }
+//        bootbox.alert("<h4>The selected area (" +area.toLocaleString() + " sq km) is too large to search. <br> Please limit search area to less than " +allMax.toLocaleString() + " sq km and/or reduce search keywords.</h4>");
+//        return false;
+//    }
 
-    max = 250000;
-    if (area > max && selectedKeys.length == 0) {
-        bootbox.alert("<h4>The selected area (" + area.toLocaleString() + " sq km) is too large to search for <strong>All</strong> keywords. <br> Please limit search area to less than " + max.toLocaleString() + " sq km and/or limit keywords.</h4>");
-        return false;
-    }
-    if (area > max && selectedKeys.length == 1) {
-        //bootbox.confirm("<h4>Searching the selected area (" + area.toLocaleString() + " sq km) can take a long time. Do you want to continue?</h4>", function (bContinue) {
+//    max = 250000;
+//    if (area > max && selectedKeys.length == 0) {
+//        bootbox.alert("<h4>The selected area (" + area.toLocaleString() + " sq km) is too large to search for <strong>All</strong> keywords. <br> Please limit search area to less than " + max.toLocaleString() + " sq km and/or limit keywords.</h4>");
+//        return false;
+//    }
+//    if (area > max && selectedKeys.length == 1) {
+//        //bootbox.confirm("<h4>Searching the selected area (" + area.toLocaleString() + " sq km) can take a long time. Do you want to continue?</h4>", function (bContinue) {
 
-                //if (bContinue) {
+//                //if (bContinue) {
                     
-                //}
-            //});
-        updateMap(true);
-    }
-    else {
-            if (area > max && selectedKeys.length > 1) {
-                bootbox.alert("<h4>For the selected area (" + area.toLocaleString() + " sq km), you selected more than one keyword. <br> Please reduce area or select only one keyword.</h4>");
-                return false;
-        }
-            if (area < max && selectedKeys.length > 1) {
-                //bootbox.confirm("<h4>For the selected area (" + area.toLocaleString() + " sq km), you selected several keywords. This search can take a long time and might timeout. Do you want to continue?</h4>", function (bContinue) {
+//                //}
+//            //});
+//        updateMap(true);
+//    }
+//    else {
+//            if (area > max && selectedKeys.length > 1) {
+//                bootbox.alert("<h4>For the selected area (" + area.toLocaleString() + " sq km), you selected more than one keyword. <br> Please reduce area or select only one keyword.</h4>");
+//                return false;
+//        }
+//            if (area < max && selectedKeys.length > 1) {
+//                //bootbox.confirm("<h4>For the selected area (" + area.toLocaleString() + " sq km), you selected several keywords. This search can take a long time and might timeout. Do you want to continue?</h4>", function (bContinue) {
 
-                    //if (bContinue) {
+//                    //if (bContinue) {
                         
-                    //}
-                //});
-            updateMap(true);
-        }
-        else
-        {
-            updateMap(true)
-            }     
-        }
+//                    //}
+//                //});
+//            updateMap(true);
+//        }
+//        else
+//        {
+//            updateMap(true)
+//            }     
+//        }
 
-    return true;
-}
+//    return true;
+                    //}
 
 //Fancy tree click handler...
 function keywordClickHandler(event, data) {
@@ -1422,13 +1703,14 @@ function AreaSizeControl(controlDiv, map) {
     var controlText = document.createElement('div');
     controlText.style.color = 'rgb(125, 125, 125)';
     controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+    controlText.style.fontWeight = 'bold';
     controlText.style.fontSize = '12px';
     controlText.style.lineHeight = '25px';
     controlText.style.paddingTop = '0px';
     controlText.style.paddingLeft = '3px';
     controlText.style.paddingRight = '3px';
     controlText.style.paddingBottom = '0px';
-    controlText.style.borderRadius = '15px';
+    controlText.style.borderRadius = '5px';
     controlText.style.backgroundColor = 'rgba(255,255,255,0.8)'/* slighly transparent white */
     controlText.style.border = '5px'
     controlText.innerHTML = "Area in sq km";
@@ -1454,8 +1736,7 @@ function AreaSizeControl(controlDiv, map) {
     //}
 }
 
-function addLocationSearch()
-{
+function addLocationSearch() {
     var input = /** @type {HTMLInputElement} */(
       document.getElementById('pac-input'));
 
@@ -1521,23 +1802,21 @@ function addLocationSearch()
     setupClickListener('changetype-geocode', ['geocode']);
 }
 
-function getMapAreaSize()
-{
+function getMapAreaSize() {
     var path = GetPathForBounds(map.getBounds())
     var area = GetAreaInSquareKilometers(path)
-    return 'Area: ' + (area *= 1).toLocaleString() + ' sq km';
+    //return 'Area: ' + (area *= 1).toLocaleString() + ' sq km';
+    return (area *= 1);
 }
 
-function resetMap()
-{
+function resetMap() {
     deleteClusteredMarkersOverlays();
     $('.data').addClass('disabled');
     //resetUserSelection()
     if (typeof areaRect != "undefined") areaRect.setMap(null);
 }
 
-function processMarkers(geoJson)
-{
+function processMarkers(geoJson) {
     //map.data.loadGeoJson('https://storage.googleapis.com/maps-devrel/google.json');
 
     var json = JSON.parse(geoJson);
@@ -1649,8 +1928,7 @@ function processMarkers(geoJson)
     }
 }
 
-function getFormData()
-{
+function getFormData() {
     var formdata = []//$("#Search").serializeArray()
 
     var bounds = map.getBounds();
@@ -1719,12 +1997,12 @@ function updateMap(isNewRequest) {
   
     if (clusteredMarkersArray.length == 0 && isNewRequest == false) return;//only map navigation
     var formData = getFormData();
-    if (typeof formData == "undefined") return; //error in formdate retrieval
+    if (typeof formData == "undefined") return; //error in formdata retrieval
 
     $("#pageloaddiv").show();
 
     //get the action-url of the form
-    var actionurl = '/home/updateMarkers';
+    //var actionurl = '/home/updateMarkers';
     
     if (clusteredMarkersArray.length == 0) {
 
@@ -1740,25 +2018,28 @@ function updateMap(isNewRequest) {
    //get Markers
    var actionurl = '/home/updateMarkers';
 
-    $.ajax({
+   //BCC - 19-Nov-2015 - Alternate $.ajax call using the Promise interface available in jQuery 1.5+
+    var promise = $.ajax({
         url: actionurl,
         type: 'POST',
         dataType: 'json',
         timeout: 60000,
         //processData: false,
-        data: formData,
-        success: function (data) {
+                        data: formData
+                    });
+    
+    promise.done( function (data) {
             processMarkers(data)
             //setUpTimeseriesDatatable();
             //BCC - 26-Jun-2015 - Conditionally enable 'Data' button... 
             //QA Issue #13 - Data tab (usability): if search doesn't return any results, data tab should be disabled
             //$('.data').removeClass('disabled');
             $("#pageloaddiv").hide();
-        },
-        error: function (xmlhttprequest, textstatus, message) {
-            serviceFailed(xmlhttprequest, textstatus, message)
+        });
+        
+    promise.fail( function (jqXHR, textstatus, errorThrown) {
+            serviceFailed(jqXHR, textstatus, errorThrown)
             $("#pageloaddiv").hide();
-        }
     });
     
     //$("#timeOfLastRefresh").html("Last refresh: " + getTimeStamp());
@@ -1838,26 +2119,45 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
     if (count == 1) {
 
-        var marker = new MarkerWithLabel({
+        var image = {
+            url: clusterMarkerPath + 'm6_single_36.png',
+            // This marker is 20 pixels wide by 32 pixels high.
+            size: new google.maps.Size(36, 36),
+            // The origin for this image is (0, 0).
+            origin: new google.maps.Point(0, 0),
+            // The anchor for this image is the base of the flagpole at (0, 32).
+            anchor: new google.maps.Point(13, 13)
+        };
+        var marker = new google.maps.Marker({
             position: point,
-            icon: new google.maps.MarkerImage(clusterMarkerPath + 'm6_single.png', new google.maps.Size(25, 25), null, null, new google.maps.Size(25, 25)),
-            //icon: new google.maps.MarkerImage(markerPath + 'm6_single.png', new google.maps.Size(53, 52), null, new google.maps.Point(icon_width / 2, icon_width / 2), new google.maps.Size(icon_width, icon_width)),
-
-            //icon: new google.maps.MarkerImage(/Content.png', new google.maps.Size(32, 32), null, null, new google.maps.Size(28, 28)),
-            draggable: false,
-            raiseOnDrag: true,
             map: map,
-            anchorPoint: new google.maps.Point(14, 32),
-            labelContent: "",
-            //labelAnchor: new google.maps.Point(0, 0),
-            //labelClass: "labels", // the CSS class for the label
-            labelStyle: { opacity: 0.95 },
-            tooltip: '',
-            zIndex: 1500,
-            flat: true,
-            visible: true
-
+            icon: image,
+            zIndex: 1500
         });
+
+
+        //var marker = new MarkerWithLabel({
+        //    position: point,
+        //    icon: new google.maps.MarkerImage(clusterMarkerPath + 'm6_single.png', new google.maps.Size(52, 52), null, new google.maps.Size(26, 26), new google.maps.Size(52, 52)),
+        //    //icon: new google.maps.MarkerImage(clusterMarkerPath + "m6.png", new google.maps.Size(53, 52), null, new google.maps.Point(icon_width / 2, icon_width / 2), new google.maps.Size(icon_width, icon_width)),
+
+        //    //icon: new google.maps.MarkerImage(markerPath + 'm6_single.png', new google.maps.Size(53, 52), null, new google.maps.Point(icon_width / 2, icon_width / 2), new google.maps.Size(icon_width, icon_width)),
+
+        //    //icon: new google.maps.MarkerImage(/Content.png', new google.maps.Size(32, 32), null, null, new google.maps.Size(28, 28)),
+        //    draggable: false,
+        //    raiseOnDrag: true,
+        //    map: map,
+        //    //anchorPoint: new google.maps.Point(26,26),
+        //    labelContent: "",
+        //    labelAnchor: new google.maps.Point(0, 0),
+        //    labelClass: "GblueLabel44", // the CSS class for the label
+        //    labelStyle: { opacity: 0.95 },
+        //    tooltip: '',
+        //    zIndex: 1500,
+        //    flat: true,
+        //    visible: true
+
+        //});
 
         //BC - disable mouse event listening for now...
         //setMouseEventListeners(map, marker, clusterid);
@@ -1909,13 +2209,15 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
             //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
             //Assign a handler to the DataTable 'draw.dt' event
-            table.off('draw.dt', addFilterPlaceholders);
-            table.on('draw.dt', { 'tableId': 'dtMarkers' }, addFilterPlaceholders);
+//            table.off('draw.dt', addFilterPlaceholders);
+//            table.on('draw.dt', { 'tableId': 'dtMarkers', 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Data Type', 'Value Type', 'Sample Medium'] }, addFilterPlaceholders);
 
             //BCC - 29-Jun-2015 - QA Issue #25 - Data tab: table column titles stay in wrong order after sorting table
             //Remove/add column adjustment event handler...
-            $('#SeriesModal').off('shown.bs.modal', adjustColumns);
-            $('#SeriesModal').on('shown.bs.modal', {'tableId': 'dtMarkers', 'containerId': 'SeriesModal'}, adjustColumns);
+
+            //BC - TEST - 30-Nov-2015 - Are these calls necessary? NO...
+//            $('#SeriesModal').off('shown.bs.modal', adjustColumns);
+//            $('#SeriesModal').on('shown.bs.modal', {'tableId': 'dtMarkers', 'containerId': 'SeriesModal'}, adjustColumns);
 
             $('#SeriesModal').modal('show');
 
@@ -2040,13 +2342,15 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
             //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
             //Assign a handler to the DataTable 'draw.dt' event
-            table.off('draw.dt', addFilterPlaceholders);
-            table.on('draw.dt', { 'tableId': 'dtMarkers' }, addFilterPlaceholders);
+//            table.off('draw.dt', addFilterPlaceholders);
+//            table.on('draw.dt', { 'tableId': 'dtMarkers', 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Data Type', 'Value Type', 'Sample Medium'] }, addFilterPlaceholders);
                 
             //BCC - 29-Jun-2015 - QA Issue #25 - Data tab: table column titles stay in wrong order after sorting table
             //Remove/add column adjustment event handler...
-            $('#SeriesModal').off('shown.bs.modal', adjustColumns);
-            $('#SeriesModal').on('shown.bs.modal', { 'tableId': 'dtMarkers', 'containerId': 'SeriesModal' }, adjustColumns);
+
+            //BC - TEST - 30-Nov-2015 - Are these calls necessary?  NO...
+//            $('#SeriesModal').off('shown.bs.modal', adjustColumns);
+//            $('#SeriesModal').on('shown.bs.modal', { 'tableId': 'dtMarkers', 'containerId': 'SeriesModal' }, adjustColumns);
 
             $('#SeriesModal').modal('show');
 
@@ -2074,9 +2378,7 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 function addFilterPlaceholders(event) {
 
     var tableId = event.data.tableId;
-    //BCC - 10-Aug-2015 - GitHub Issue #35 - Add filter by Site Name
-    //BCC - 09-Sep-2015 - GitHub Issue #23 - Replace Network Name with Data Service Title
-    var placeHolders = ['Organization', 'Service Title', 'Keyword', 'Variable Name', 'Site Name'];
+    var placeHolders = event.data.placeHolders;
 
     var selector = '#' + tableId + '_wrapper > div.dataTables_scroll > div.dataTables_scrollFoot > div > table > tfoot > tr > th > select';
 
@@ -2195,11 +2497,12 @@ function setupServices()
         "ajax": actionUrl,
         "order": [2, 'asc'],
         "dom": 'l<"toolbarDS">frtip', //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+        "autoWidth": false,
          "columns": [
 
-            { "data": "Organization" },
+            { "data": "Organization", "visible": true, "className": "tableColWrap20pct" },
             { "data": "ServiceCode", "visible": false },
-            { "data": "Title" },
+            { "data": "Title", "visible": true, "className": "tableColWrap20pct" },
             { "data": "DescriptionUrl", "visible": false },
             { "data": "ServiceUrl", "visible": false },
             { "data": "Checked", "visible": false },
@@ -2208,7 +2511,7 @@ function setupServices()
             { "data": "Variables", "visible": true },
             { "data": "Values", "visible": true },
            { "data": "ServiceBoundingBox", "visible": false },
-            { "data": "ServiceID" }
+            { "data": "ServiceID", "visible": true }
          ],
          //"rowCallback": function( row, data ) {
          //    if ( $.inArray(data.DT_RowId, mySelectedServices) !== -1 ) {
@@ -2226,7 +2529,8 @@ function setupServices()
          },
          //"scrollX": true,
          initComplete: function () {
-             this.fnAdjustColumnSizing();
+             //this.fnAdjustColumnSizing();
+             $('#dtServices').dataTable().fnAdjustColumnSizing();
          }
     });
     //$('a.toggle-vis').on('click', function (e) {
@@ -2269,8 +2573,7 @@ function setupServices()
     //return table;
 }
 //Datatable for Marker
-function setUpDatatables(clusterid)
-{
+function setUpDatatables(clusterid) {
     
 //    var dataSet = [
 //    ['Trident','Internet Explorer 4.0','Win 95+','4','X'],
@@ -2313,38 +2616,28 @@ function setUpDatatables(clusterid)
         //       }
         //    ]
         //},
+        "autoWidth": true,
         "columns": [
-           { "data": "Organization", "width": "50px", "visible": true },
+           { "data": "Organization", "visible": true, "className": "tableColWrap10pct"},
             //BCC - 09-Sep-2015 - GitHub Issue #23 - Replace Network Name with Data Service Title
-           {"data": "ServCode", "visible": false },
-           {"data": "ServTitle", "sTitle": "Service Title", "visible": true },
-           { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
-           { "data": "ServURL", "visible": false },
-           { "data": "VariableName", "width": "50px", "sTitle": "Variable Name", "visible": true },
-           //BCC - 10-Jul-2015 - Internal QA Issue #29 - Include VariableCode and SiteCode
+           {"data": "ServTitle", "sTitle": "Service Title", "visible": true, "className": "tableColWrap10pct"},
+           { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true, "className": "tableColWrap10pct"},
+           { "data": "DataType", "visible": true, "className": "tableCol5pct"},
+           { "data": "ValueType", "visible": true, "className": "tableCol5pct"},
+           { "data": "SampleMedium", "visible": true, "className": "tableCol5pct"},
+           { "data": "BeginDate", "sTitle": "Start Date", "visible": true, "className": "tableCol5pct"},
+           { "data": "EndDate","sTitle": "End Date", "visible": true, "className": "tableCol5pct"},
+           { "data": "ValueCount", "visible": true, "className": "tableCol5pct"},
+           { "data": "SiteName", "sTitle": "Site Name", "visible": true, "className": "tableColWrap10pct"},
+           { "data": "VariableName", "width": "50px", "sTitle": "Variable Name", "visible": true, "className": "tableColWrap10pct"},
+           { "data": "TimeSupport", "visible": true, "className": "tableCol5pct"},
+           { "data": "TimeUnit", "visible": true, "className": "tableCol5pct"},
+           { "data": null, "sTitle": "Service URL", "visible": true, "className": "tableColWrap10pct"},
+
            { "data": "SiteCode", "sTitle": "Site Code", "visible": true },
            { "data": "VariableCode", "sTitle": "Variable Code", "visible": true },
-           { "data": "BeginDate", "sTitle": "Start Date" },
-           { "data": "EndDate","sTitle": "End Date" },
-           { "data": "ValueCount" },
-           { "data": "SiteName", "sTitle": "Site Name" },
-           //{ "data": "Latitude", "visible": true },
-           //{ "data": "Longitude", "visible": true },
-           { "data": "DataType", "visible": true },
-           { "data": "ValueType", "visible": true },
-           { "data": "SampleMedium", "visible": true },
-           { "data": "TimeUnit", "visible": true },
-           //{ "data": "GeneralCategory", "visible": false },
-           { "data": "TimeSupport", "visible": true },
-           
-    	   //BCC - 15-Oct-29015 -  Suppress display of IsRegular
-           //{ "data": "IsRegular", "visible": true },
-           //{ "data": "VariableUnits","visible": false },
-           //{ "data": "Citation", "visible": false }            
-           { "data": "SeriesId" },
-           //BCC - 10-Jul-2015 - Add links to Description URL and Service URL (WSDL)
-           { "data": null, "sTitle": "Service URL", "visible": true },
-           { "data": "ServURL", "sTitle": "Web Service Description URL", "visible": true }
+           { "data": "SeriesId", "visible": false },
+           { "data": "ServURL", "sTitle": "Web Service Description URL", "visible": false }
         ],
 
         "scrollX": true,
@@ -2358,18 +2651,38 @@ function setUpDatatables(clusterid)
                  var servCode = data.ServCode;
 
                  var descUrl = getDescriptionUrl(servCode);
-                 //$('td', row).eq(17).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
-                 $('td', row).eq(16).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
+                 $('td', row).eq(13).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
+
+                 //BCC - Test - 24-Nov-2015 - For <td> sizing - insert a <div class="tableColWrap10em"></div> into the 'Organization' <td>
+                //$('td', row).eq(0).html('<div class="tableColWrap10em" >' + org + '</div>');
 
                  //Create a link to the Web Service Description URL...
                  //var servUrl = $('td', row).eq(18).html();
                  //$('td', row).eq(18).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
-                 var servUrl = $('td', row).eq(17).html();
-                 $('td', row).eq(17).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
+                 //var servUrl = $('td', row).eq(16).html();
+                 //var servUrl = data.ServURL;
+                 //$('td', row).eq(13).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
+
+                //For valid date strings - remove hours, minutes, seconds from date columns...
+                var dateCols = [6, /*Start Date*/
+                                7  /*End Date*/];
+                var diLength = dateCols.length;
+
+                for (var di = 0; di < diLength; ++di) {
+
+                    var text = $('td', row).eq(dateCols[di]).html();
+                    if ( ! isNaN(Date.parse(text))) {
+                        var date = new Date(text);
+
+                        $('td', row).eq(dateCols[di]).html(date.getFullYear().toString() + '-' + 
+                                                            ('0' + (date.getMonth() + 1)).toString().slice(-2) + '-' + 
+                                                            ('0' + date.getDate()).toString().slice(-2) );
+                    }
+                }
 
                  //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
                  if ($('#chkbxSelectAll').prop('checked')) {
-                     //BC - Call check box hander here
+                     //BC - Call check box handler here
                      $('#chkbxSelectAll').triggerHandler('click');
                  }
 
@@ -2419,15 +2732,18 @@ function setUpDatatables(clusterid)
 
              //}
          },
-        initComplete: function () {
+        "initComplete": function () {
 
             //BCC - 10-Aug-2015 - GitHub Issue #35 - Add filter by Site Name 
-            setfooterFilters('dtMarkers', [0, 2, 3, 5, 11], 'chkbxSelectAll');
+            //setfooterFilters('dtMarkers', [0, 1, 2, 3, 4, 5], 'chkbxSelectAll');
 
             //BC - 10-Jul-2015 - Temporarily disable tooltips...
             //setUpTooltips('dtMarkers');
+            setupToolTips();
         
-            oTable.fnAdjustColumnSizing();
+            //oTable.fnAdjustColumnSizing();
+            $('#dtMarkers').dataTable().fnAdjustColumnSizing();
+        
         }
         
          
@@ -2451,21 +2767,47 @@ function setUpDatatables(clusterid)
     });
 
 
+    //Set footer filters...
+   $('#dtMarkers').off('draw.dt', setfooterFiltersEvent);
+   $('#dtMarkers').on('draw.dt', { 'tableId': 'dtMarkers', 'columnsArray': [0, 1, 2, 3, 4, 5], 'chkbxId': 'chkbxSelectAll', 'translates': null }, setfooterFiltersEvent);
+
+   //Add filter placeholders...
+   $('#dtMarkers').off('draw.dt', addFilterPlaceholders);
+   $('#dtMarkers').on('draw.dt', { 'tableId': 'dtMarkers', 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Data Type', 'Value Type', 'Sample Medium'] }, addFilterPlaceholders);
+
+
     //workaround reorder to align headers
 
     //BC - Test - make each table row selectable by clicking anywhere on the row...
     //Source: https://datatables.net/examples/api/select_row.html
     //Avoid multiple registrations of the same handler...
     $('#dtMarkers tbody').off('click', 'tr', toggleSelected);
-    $('#dtMarkers tbody').on('click', 'tr', {'tableId': 'dtMarkers', 'btnId': 'btnZipSelections', 'btnClearId': 'btnClearSelections'},toggleSelected);
+    $('#dtMarkers tbody').on('click', 'tr', {'tableId': 'dtMarkers', 'btnIds': ['btnZipSelections','btnManageSelections'], 'btnClearId': 'btnClearSelections'},toggleSelected);
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
     $("div.toolbar").html('<span style="float: left; margin-left: 1em;" id="spanSelectAll"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAll" style="float:left;"/>&nbsp;Select Top ' + 
-                          selectedTimeSeriesMax.toString() + '?</span>' +
-                          '<input type="button" style="margin-left: 2em; float:left;" class="btn btn-warning" disabled id="btnClearSelections" value="Clear Selection(s)"/>' +
-                          '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelections" value="Process Selection(s)"/>' +
-                          '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;"></span>');
+                          $('#dtMarkers').attr('data-selectedtimeseriesmax') + '?</span>' +
+
+                          '<div id="divClearSelections" style="display: inline-block; margin-left: 2em; float:left;">' +
+                           '<button type="button" class="btn btn-warning" disabled id="btnClearSelections">' +
+                             '<span class="glyphicon glyphicon-remove-sign" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +
+                             '<span id="spanClearSelections">Clear Selection(s)</span>' +
+                           '</button>' +
+                          '</div>' +
+                          '<div id="divZipSelections" style="display: inline-block; margin-left: 2em; float:left;">' +
+                          '<button type="button" class="ColVis-Button btn btn-primary" disabled id="btnZipSelections">' +
+                             '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +
+                             '<span id="spanZipSelections">Export Selection(s)</span>' +
+                           '</button>' +
+                          '</div>' +
+                          '<div id="divManageSelections" style="display: inline-block; margin-left: 2em; float:left;">' +
+                           '<button type="button" class="ColVis-Button btn btn-primary" disabled id="btnManageSelections">' +
+                            '<span class="glyphicon glyphicon-plus-sign" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +  
+                            '<span id="spanManageSelections">Add Selection(s) to Workspace</span>' +
+                           '</button>' +
+                          '</div>' +
+                          '<span class="clsMessageArea" style="display: none; float:left; margin-left: 2em;"></span>');
     //$("div.toolbar").css('border', '1px solid red');
   
     // BC - Do not respond to data table load event...
@@ -2477,15 +2819,21 @@ function setUpDatatables(clusterid)
 
     //Avoid multiple registrations of the same handler...
     $('#chkbxSelectAll').off('click', selectAll);
-    $('#chkbxSelectAll').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll', 'btnId': 'btnZipSelections', 'btnClearId': 'btnClearSelections'}, selectAll);
+    $('#chkbxSelectAll').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll', 'btnIds': ['btnZipSelections', 'btnManageSelections'], 'btnClearId': 'btnClearSelections' }, selectAll);
 
     //Avoid multiple registrations of the same handler...
-    $('#btnZipSelections').off('click', zipSelections);
-    $('#btnZipSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, zipSelections);
+    //$('#btnZipSelections').off('click', zipSelections);
+    //$('#btnZipSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, zipSelections);
+    $('#btnZipSelections').off('click', zipSelections_2);
+    $('#btnZipSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, zipSelections_2);
+
+    //Avoid multiple registrations of the same handler...
+    $('#btnManageSelections').off('click', copySelectionsToDataManager);
+    $('#btnManageSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, copySelectionsToDataManager)
 
     //Avoid multiple registrations of the same handler...
     $('#btnClearSelections').off('click', clearSelections);
-    $('#btnClearSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll', 'btnId': 'btnZipSelections', 'btnClearId': 'btnClearSelections' }, clearSelections);
+    $('#btnClearSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll', 'btnIds': ['btnZipSelections','btnManageSelections'], 'btnClearId': 'btnClearSelections' }, clearSelections);
 
     //Add DataTables event handlers...
     //Search event...
@@ -2495,6 +2843,7 @@ function setUpDatatables(clusterid)
     //Order event...
     $('#dtMarkers').off('order.dt', dtSearchOrOrder);
     $('#dtMarkers').on('order.dt', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, dtSearchOrOrder);
+
 
     //BC - TEST - Retrieve the colvis button control - assign a click handler for scrollx control...
     //var colvis = new $.fn.DataTable.ColVis(oTable);
@@ -2566,8 +2915,923 @@ function setUpDatatables(clusterid)
 
                     });
 
+}
+
+//Initialize 'static' tooltips - those not subject to change during the application session...
+function setupToolTips() {
+
+    var texts = ["Select one or more rows to export. You can check the status by opening the workspace and selecting the 'Exports' tab.",
+                  "Select one or more rows to  add to your workspace. Work with your data by opening the workspace and selecting the 'Data' tab."
+                ];
+
+    var divs = { 'divZipSelections': {'text': texts[0]},
+                 'divManageSelections' : {'text': texts[1]},
+                 'divZipSelectionsTS': {'text': texts[0]},
+                 'divManageSelectionsTS' : {'text': texts[1]}    
+               };
+
+    for (var div in divs) {
+
+        var divTooltip = $('#' + div);
+
+        divTooltip.tooltip('destroy');
+        divTooltip.tooltip({
+                        'animation': true,
+                        'placement': 'auto',
+                        'trigger': 'hover',
+                        'title': divs[div].text });
+    }
+
+}
+
+
+//Set up Data Manager datatables instance...
+function setupDataManagerTable() {
+
+    var tableName = 'tblDataManager';
+    var tableId = '#' + tableName;
+
+    if ($.fn.DataTable.isDataTable(tableId)) {
+        $(tableId).DataTable().clear().destroy();
+    }
+
+    //Reset the selected row count...
+    selectedRowCounts[tableName].count = 0;
+
+    //BCC - 30-Nov-2015 - DataTables feature!!!
+    //      If you specify a column title using the 'sTitle' option, DataTables uses that value, not the one specified in the *.cshtml file containing
+    //       the <th> elements for the table headers. So if you have added links/icons for zendesk help files in the *.cshtml file - you won't see them 
+    //       when the table displays in the browser...
+    var oTable = $(tableId).dataTable({
+        'deferRender': false,
+        'dom': 'C<"clear">l<"toolbarDataMgr">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+        "autoWidth": false,
+        'columns': [
+           { 'data': 'TimeSeriesRequestStatus', 'visible': true,
+             'render': function (data, type, full, meta) { 
+
+                 var html = ''
+                 var val = parseInt(data);
+                 switch (val) {
+                    case timeSeriesRequestStatus.NotStarted:
+                        html = '<span class="glyphicon glyphicon-refresh spin" style="color: #32cd32"></span><em> Not Started</em>';
+                        break;
+                    case timeSeriesRequestStatus.Starting:
+                        html = '<span class="glyphicon glyphicon-refresh spin" style="color: #32cd32"></span><em> Starting</em>';
+                        break;
+                    case timeSeriesRequestStatus.SavingZipArchive:
+                        html = '<span class="glyphicon glyphicon-refresh spin" style="color: #32cd32"></span><em> Saving archive</em>';
+                        break;
+                    case timeSeriesRequestStatus.ProcessingTimeSeriesId:
+                    case timeSeriesRequestStatus.Started:
+                        html = '<span class="glyphicon glyphicon-refresh spin" style="color: #32cd32"></span><em> Generating</em>';
+                        break;
+                    case timeSeriesRequestStatus.Completed:
+                        html = '<span class="glyphicon glyphicon-thumbs-up" style="color: #32cd32"></span><em> Completed</em>';
+                        break;
+                    case timeSeriesRequestStatus.CheckTaskError:
+                    case timeSeriesRequestStatus.EndTaskError:
+                    case timeSeriesRequestStatus.ProcessingError:
+                    case timeSeriesRequestStatus.RequestTimeSeriesError:
+                        html = '<span class="glyphicon glyphicon-thumbs-down"></span><em> Error</em>';
+                        break;
+                    case timeSeriesRequestStatus.UnknownTask:
+                        html = '<span class="glyphicon glyphicon-thumbs-down"></span><em> Unknown task</em>';
+                        break;
+                    default:
+                        console.log('data = ' + data.toString());
+                        html = '<span class="glyphicon glyphicon-question-sign"></span><em> Unknown Status</em>';
+                        break;
+                 }
+
+                 return html;
+             }
+           },
+           { 'sTitle': 'Saved?',
+             //'data': 'Saved',  'visible': false,
+             'data': 'Saved',  'visible': false,
+             'render': function (data, type, full, meta) { 
+                 return '<span class="glyphicon ' + (data ? 'glyphicon-cloud' : 'glyphicon-cloud-upload') + '"></span> ' + (data ? '<em>Saved</em>' : '<em>Not Saved</em>');
+             }
+           },
+           { 'data': 'Organization', 'visible': true, "className": "tableColWrap10pct" },
+           { 'data': 'ServTitle', 'visible': true, "className": "tableColWrap10pct" },
+           { "data": "ConceptKeyword", "visible": true },
+           { 'data': 'DataType', 'visible': true },
+           { "data": "ValueType", "visible": true },
+           { "data": "SampleMedium", "visible": true },
+           { 'data': 'BeginDate', 'visible': true },
+           { 'data': 'EndDate', 'visible': true },
+           { 'data': 'ValueCount', 'visible': true },
+           { 'data': 'SiteName', 'visible': true },
+           { 'data': 'VariableName', 'width': '50px', 'visible': true },
+           { 'data': 'TimeSupport', 'visible': true },
+           { 'data': 'TimeUnit', 'visible': true },
+
+           { 'data': 'SeriesId', 'visible': true },
+           //BCC - Make these columns visible for testing...
+           { 'data': 'WofUri', 'visible': true },
+           { 'data': 'TimeSeriesRequestId', 'visible': true}
+        ],
+
+        'scrollX': true,
+        'scrollY': '30em',
+        'scrollCollapse': true,
+        'initComplete': function () {
+
+            //Adjust column sizing...
+            $(tableId).dataTable().fnAdjustColumnSizing();
+        }
+    });
+
+    //Suppress DataTable display of server errors as alerts...
+    $.fn.dataTable.ext.errMode = 'none',
+
+    //Server-error handler for tblDataManager...
+    $(tableId).on('error.dt', function (event, settings, techNote, message) {
+
+        //open 'Server Error' dialog
+        $('#serverErrorModal').modal('show');
+
+        //Log messsage received from server...
+        console.log( tableName + ' reports error: ' + message);
+    });
+
+
+    //Set column adjustment
+    $('#dataMgrPane').off('shown.bs.tab', adjustColumns);
+    $('#dataMgrPane').on('shown.bs.tab', { 'tableId': tableName, 'containerId': 'dataMgrPane' }, adjustColumns);
+
+
+    //Set translates array...
+    //var translates = [{ 'columnIndex': 1,
+    //                    'translates': [{ 'value': true,
+    //                                     'translate': 'Saved'
+    //                                   },
+    //                                   {
+    //                                       'value': false,
+    //                                       'translate': 'Not Saved'
+    //                                   }
+    //                                  ]}];
+
+    //Set footer filters...
+    $(tableId).off('draw.dt', setfooterFiltersEvent);
+    //$(tableId).on('draw.dt', { 'tableId': tableName, 'columnsArray': [1, 3, 4, 6, 7], 'chkbxId': null, 'translates': translates }, setfooterFiltersEvent);
+    $(tableId).on('draw.dt', { 'tableId': tableName, 'columnsArray': [2, 3, 4, 5, 6, 7], 'chkbxId': null, 'translates': null }, setfooterFiltersEvent);
+
+    //Add filter placeholders...
+    $(tableId).off('draw.dt', addFilterPlaceholders);
+    $(tableId).on('draw.dt', { 'tableId': tableName, 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Data Type', 'Value Type', 'Sample Medium'] }, addFilterPlaceholders);
+
+    //Make each row selectable by clicking anywhere on the row
+    //Source: https://datatables.net/examples/api/select_row.html
+    //Avoid multiple registrations of the same handler...
+    var tblSelector = tableId + ' tbody';
+    $(tblSelector).off('click', 'tr', toggleSelectedDataManager);
+    $(tblSelector).on('click', 'tr', { 'tableId': tableName}, toggleSelectedDataManager);
+
+    //Add a custom toolbar to the table...
+    $('div.toolbarDataMgr').addClass('container');
+    $('div.toolbarDataMgr').html(
+                                  '<div class="inline-form">' +
+                                  '<div class="form-group" style="margin-left: 1em; float:left; display:inline-block;">' +
+
+                                    '<div class="dropdown" style="position: relative; display: inline-block; float: left; font-size: 1.00em;">' +
+                                      '<button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">' +
+                                        '<span class="glyphicon glyphicon-list-alt" style="font-weight: bold; font-size: 1.00em;"></span>' +
+                                        '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Selections&nbsp;</span>' +
+                                        '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
+                                      '</button>' +
+                                      '<ul class="dropdown-menu" aria-labelledby="dropdownMenu1">' +
+                                        '<li><a href="#" id="anchorAllSelectionsDataMgr" style="font-weight: bold;" ><span class="text-muted">Select All</span></a></li>' +
+                                        '<li><a href="#" id="anchorClearSelectionsDataMgr" style="font-weight: bold;"><span class="text-warning">Clear Selections</span></a></li>' +
+                                        '<li><a href="#" id="anchorRemoveSelectionsDataMgr" style="font-weight: bold;"><span class="text-danger">Remove Selected Entries</span></a></li>' +
+                                        //'<li><a href="#" id="anchorSaveSelectionsDataMgr" style="font-weight: bold;"><span class="text-info">Save Selected Entries</span></a></li>' +
+                                        ////Defer implementation of Refresh Selections until a later release (post 1.1)
+                                        //'<li><a href="#" id="anchorRefreshSelectionsDataMgr" style="font-weight: bold;"><span class="text-warning">Refresh Selected Entries</span></a></li>' +
+                                      '</ul>' +
+                                    '</div>' +
+
+                                  '<div style="display: inline-block; margin-left: 0.5em; vertical-align: top">' +
+                                  '<div>' +
+
+                                       //Source(s) for Bootstrap dropdown styling:
+                                       //    http://jsfiddle.net/KyleMit/5p341amh/
+                                       //    http://jsfiddle.net/74eu3y15/
+                                      '<div class="dropdown" id="ddHydrodataToolDataMgr">' +    //Integrated Data Tools Dropdown
+                                        '<button class="btn btn-primary" data-toggle="dropdown" style="font-size: 1.00em;">' +
+                                              '<div id="ddIntegratedDataToolsOriginal" style="display: none;">' + 
+                                                '<span class="glyphicon glyphicon-wrench" style="font-weight: bold; max-width: 100%; font-size: 1.0em;"></span>' +
+                                                '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Select Tool&nbsp;</span>' +
+                                                '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
+                                              '</div>' +
+                                              '<div id="ddIntegratedDataTools" data-noneselected="true">' + 
+                                                '<span class="glyphicon glyphicon-wrench" style="font-weight: bold; max-width: 100%; font-size: 1.0em;"></span>' +
+                                                '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Select Tool&nbsp;</span>' +
+                                                '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
+                                              '</div>' +
+
+                                        '</button>' +
+
+                                           //Application list...
+                                           '<ul id="ddHydroshareList" class="dropdown-menu" style="width: 20em;">' +
+                                           //Export section...
+                                            '<li class="dropdown-header" id="exportApps">' +
+                                               '<span disabled class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 2.0em;"></span>' +
+                                               '<span disabled style="font-weight: bold; font-size: 1.5em; vertical-align: super;" >  Export</span>' +
+
+                                               '<ul style="list-style: none; padding-left: 0em;">' +
+                                                '<li data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV data format">' +
+                                                    '<a  id="idDownloadToClient" tabindex="-1" href="#" style="font-weight: bold; font-size: 1.0em;">' +
+                                                            '<span class="glyphicon glyphicon-download" style="max-width: 100%; font-size: 1.5em;"></span>' +
+                                                            '<span style="font-weight: bold; display: inline-block; vertical-align: super;">' + '&nbsp;Download CSV' + '</span>' +
+                                                    '</a>' +
+                                                '</li>' +
+                                               '</ul>' +
+
+                                            '</li>' +
+                                            '<li role="separator" class="divider"></li>' +
+
+                                            //Visualization section...
+                                            '<li class="dropdown-header" id="byuApps">' +
+                                               '<span disabled class="glyphicon glyphicon-eye-open" style="max-width: 100%; font-size: 2em;"></span>' +
+                                               '<span disabled style="font-weight: bold; font-size: 1.5em; vertical-align: super;" >  Visualization</span>' +
+                                            '</li>' +
+
+                                            '<li role="separator" class="divider"></li>' +
+
+                                            //'None' option...
+                                            '<li><a id="idNone" tabindex="-1" href="#" style="font-size: 1.0em;">' +
+                                                    '<span class="glyphicon glyphicon-remove-sign" style="max-width: 100%; font-size: 1.5em;"></span>' +
+                                                    ' <span style="font-weight: bold; display: inline-block; vertical-align: super;">' + 'None' + '</span>' +
+                                                 '</a></li>' +
+
+                                          '</ul>' +
+                                      '</div>' +
+                                  '</div>' +
+
+                                  '</div>' +
+                                  '<div id="divLaunchHydrodataToolDataMgr" style="display: inline-block;">' +
+                                    '<input type="button" style="margin-left: 0.5em;" class="ColVis-Button btn btn-primary" disabled id="btnLaunchHydrodataToolDataMgr" value="Launch Tool" />' +
+                                  '</div>' +
+                                  '<span class="clsMessageArea" style="display: none; margin-left: 2em;"></span>' +
+                                  '</div>' + 
+                                  '</div>' );
+
+    $('div.toolbarDataMgr').css('display', 'inline-block');
+
+    //Populate the select with the BYU apps...
+    loadByuHydroshareApps();
+
+    //Avoid multiple registrations of the same handler 
+    $('#anchorAllSelectionsDataMgr').off('click', selectAll);
+    $('#anchorAllSelectionsDataMgr').on('click', { 'tableId': tableName  }, selectAll);
+
+    //Avoid multiple registrations of the same handler...
+    $('#anchorClearSelectionsDataMgr').off('click', clearSelections);
+    $('#anchorClearSelectionsDataMgr').on('click', { 'tableId': tableName }, clearSelections);
+
+    //Avoid multiple registrations of the same handler...
+    $('#anchorRemoveSelectionsDataMgr').off('click', removeSelections);
+    $('#anchorRemoveSelectionsDataMgr').on('click', { 'tableId': tableName}, removeSelections);
+
+    //Avoid multiple registrations of the same handler...
+    $('#anchorSaveSelectionsDataMgr').off('click', saveSelections);
+    $('#anchorSaveSelectionsDataMgr').on('click', { 'tableId': tableName}, saveSelections);
+
+    //Avoid multiple registrations of the same handler...
+    $('#btnLaunchHydrodataToolDataMgr').off('click', downloadSelections);
+    $('#btnLaunchHydrodataToolDataMgr').on('click', { 'divId': 'ddIntegratedDataTools', 'tableId': tableName, 'appName': 'Download CSV' }, downloadSelections);
+
+    //Avoid multiple registrations of the same handler...
+    $('#btnLaunchHydrodataToolDataMgr').off('click', launchByuHydroshareApp);
+    $('#btnLaunchHydrodataToolDataMgr').on('click', {'divId': 'ddIntegratedDataTools', 'tableId': tableName, 'getApps': getByuAppsList}, launchByuHydroshareApp);
+    
+    //Avoid multiple registrations of the same handler...
+    $('#ddHydrodataToolDataMgr').off('click', 'li a', ddHydrodataToolDataMgr);
+    $('#ddHydrodataToolDataMgr').on('click', 'li a', {'divId': 'ddIntegratedDataTools', 'divIdOriginal': 'ddIntegratedDataToolsOriginal', 
+                                                        'tableId': tableName, 'getApps': getByuAppsList, 'divLaunchId': 'divLaunchHydrodataToolDataMgr' }, ddHydrodataToolDataMgr);
+}
+
+function getByuAppsList() {
+    return byuAppsList;
+}
+
+//Load the list of BYU Hydroshare apps...
+function loadByuHydroshareApps() {
+
+    //Initialize list contents and apps object
+    var appsDropdown = $('ul#ddHydroshareList > li.dropdown-header#byuApps');
+
+    byuAppsList = {};
+
+    var proxyURL = '/Export/GetHydroshareAppsList';
+    $.ajax({
+        url: proxyURL,
+        type: 'GET',
+        async: true,
+        dataType: 'json',
+        cache: false,   //So IE does not cache when calling the same URL - source: http://stackoverflow.com/questions/7846707/ie9-jquery-ajax-call-first-time-doing-well-second-time-not
+        success: function (data, textStatus, jqXHR) {
+
+            //Success - populate apps object and select
+            byuAppsList = data;
+
+            var apps = byuAppsList.apps;
+            var length = apps.length;
+            var listItems = '<ul style="list-style: none; padding-left: 0em;">';
+
+            for (var i = 0; i < length; ++i) {
+                //Source(s) for Bootstrap dropdown styling:
+                //    http://jsfiddle.net/KyleMit/5p341amh/
+                //    http://jsfiddle.net/74eu3y15/
+                //NOTE: Use of styles: max-width: 100%, height and width to scale app icons...
+                //Source: https://wpbeaches.com/make-images-scale-responsive-web-design/
+                listItems += '<li data-toggle="tooltip" data-placement="top" title="' + apps[i].description + '"><a  style="font-weight: bold; font-size: 1.0em;" tabindex="-1" href="#">' +
+                             '<img src="' + apps[i].icon + '"' +
+                             ' style="max-width: 100%;height: 2em; width: 2em;">' + 
+                              ' ' + apps[i].name +
+                             '</a></li>';
+            }
+
+            listItems += '</ul>';
+            appsDropdown.append(listItems);
+
+            //initialize tooltips...
+            $('[data-toggle="tooltip"]').tooltip();
+        },
+        error: function (xmlhttprequest, textStatus, message) {
+
+            //Failure - Log messsage received from server...
+            console.log('BYU Hydroshare API reports error: ' + xmlhttprequest.status + ' (' + message + ')');
+        }                
+                    });
+}
+
+//Update the span text and image with the selection from the Bootstrap 'dropdown'
+function ddHydrodataToolDataMgr(event) {
+
+    var appName = $(this).text();
+    var img = $('img', this);
+    var id = $(this).attr("id");
+    var imgStyle = null;
+
+    $('#' + event.data.divLaunchId).tooltip('destroy');     //Remove any previously set tooltip on the 'launch' button... 
+    $('#' + event.data.divId).removeClass();                //Remove any previously set classes...
+
+    if ( 'idNone' === id) {
+        //'None' option selected - retrieve 'original' values...
+        $('#' + event.data.divId).html($('#' + event.data.divIdOriginal).html());
+        $('#' + event.data.divId).attr('data-noneselected', "true");
+        $('#' + event.data.divId).show();
+
+        return;
+    }
+    else if ('idDownloadToClient' === id ) {
+        //'Download to Client' option selected - set option name and glyphicons...
+        //$('#' + event.data.divId + ' img').removeAttr( 'style');
+        $('#' + event.data.divId + ' img').html('');
+
+        var obj = $('#' + id);
+    
+        $('#' + event.data.divId).html(obj.html());
+        $('#' + event.data.divId).css('height', '1.5em');
+        $('#' + event.data.divId).attr('data-noneselected', "false");
+
+        return;
+    }
+    else {
+        imgStyle = {'max-width': '100%', 'height': '1.5em', 'width': '2.0em'};    
         }
 
+    $('#' + event.data.divId + ' img').removeAttr( 'style');
+    $('#' + event.data.divId + ' img').removeAttr( 'class');
+    $('#' + event.data.divId + ' img').html('');
+
+    $('#' + event.data.divId).text(appName);
+    $('#' + event.data.divId).prepend( '<img src="' + img.attr('src') + '">' );
+    $('#' + event.data.divId).css('font-weight', 'bold');
+    $('#' + event.data.divId).css('font-size', '1.0em');
+    $('#' + event.data.divId).attr('data-noneselected', "false");
+
+
+    if (null !== imgStyle) {
+        $('#' + event.data.divId + ' img').css(imgStyle);
+    }
+
+    //Set min and max series tooltip for current selection...
+    var apps = event.data.getApps().apps;
+    var length = apps.length;
+
+    for (var i = 0; i < length; ++i) {
+        if ( appName.trim() === apps[i].name) {
+            var maxSeries = apps[i].max_series;
+            var minSeries = apps[i].min_series;
+    
+            if ( 0 < minSeries && 0 < maxSeries ) {
+                var tooltip = 'Please select ' + minSeries + ' to ' + maxSeries + ' time series';
+                if (maxSeries === minSeries) {
+                    if ( 1 < maxSeries) {
+                        tooltip = 'Please select ' + maxSeries + ' time series';
+                    }
+                    else {
+                        tooltip = 'Please select one time series';                    
+                    }
+                }
+            
+                //$('#' + event.data.btnLaunchId).tooltip({'title': tooltip, 'container': '#' + event.data.btnLaunchId });    //Set tooltip on the 'launch' button... 
+                $('#' + event.data.divLaunchId).tooltip({'title': tooltip});    //Set tooltip on the 'launch' button... 
+            }
+
+            break;    
+        }
+    }
+}
+
+//Return true to disable the input button Id, false otherwise
+function btnDisableCheck(buttonId) {
+
+    var button = $('#' + buttonId);
+    var result = false;
+
+    if ('btnLaunchHydrodataToolDataMgr' === buttonId ) {
+        var appName = $('#' + 'ddIntegratedDataTools').text().trim();
+//        console.log(appName);
+
+        var table = $('#' + 'tblDataManager').DataTable();
+        var selectedRows = table.rows('.selected').data();
+        var rowsLength = selectedRows.length;
+
+        var apps = getByuAppsList().apps;
+        var length = apps.length;
+
+        for (var i = 0; i < length; ++i) {
+            if ( -1 !== appName.indexOf(apps[i].name)) {    //Need index of here - Bootstrap tooltip display appends tooltip text to string returned by text() call!!
+                var maxSeries = apps[i].max_series;
+                var minSeries = apps[i].min_series;
+
+                if (minSeries > rowsLength || maxSeries < rowsLength ) {
+                    result = true;  //Rows selected out of range - disable launch button...
+                }
+
+                break;
+            }
+        }
+    
+    }
+
+    return result;
+}
+
+function launchByuHydroshareApp(event) {
+
+    var tableId = '#' + event.data.tableId;
+    var table = $(tableId).DataTable();
+    var apps = event.data.getApps().apps;
+
+    //Currently selected BYU app
+    var valueSelected = $('#' + event.data.divId).text().trim();
+    var byuUrl= null;
+
+    //New selection - find the associated app URL...
+    var length = apps.length;
+
+    for (var i = 0; i < length; ++i) {
+        if (valueSelected === apps[i].name) {
+            byuUrl = apps[i].url;
+            break;
+        }
+    }
+
+    if (null !== byuUrl) {
+        //URL found - find selected water one flow archives...
+        var selectedRows = table.rows('.selected').data();
+        var rowsLength = selectedRows.length;
+        var wofParams = '';
+        var extension = '.zip';
+
+        for (var ii = 0; ii < rowsLength; ++ii) {
+            if (timeSeriesRequestStatus.Completed == selectedRows[ii].TimeSeriesRequestStatus) {
+                if ('' !== wofParams) {
+                    wofParams += ',';
+                }
+                wofParams += (selectedRows[ii].WofUri.split(extension))[0];
+            }
+        }
+
+        if ( '' !== wofParams) {
+            //Selections found - call BYU app with parameters...
+            // URL format: [app base name]/?src=cuahsi&res_id=abcdefj+abcdefh+abcedfi+abcdefk 
+            var fullUrl = byuUrl + '/?src=cuahsi&res_id=' + wofParams;
+
+            window.open(fullUrl, '_blank', '', false);
+            
+            //BCC - 23-Oct-2013 - Test with smaller files per Matt's e-mail
+            //window.open('http://appsdev.hydroshare.org/apps/ts-converter/?src=cuahsi&res_id=cuahsi-wdc-2015-10-13-65480230,cuahsi-wdc-2015-10-13-65533256', 
+            //            '_blank', '', false);
+        }
+    }
+}
+
+
+//Draw event handler...
+function retrieveWaterOneFlowForTimeSeries(event) {
+
+    //console.log('retrieveWaterOneFlowForTimeSeries(...) called for table: ' + event.data.tableId);
+    var tableName = event.data.tableId;
+    var tableId = '#' + tableName;
+    var table = $(tableId).DataTable();
+
+    var modalDialogName = event.data.modalDialogId;
+
+    //Scan table data for 'Not started' time series request(s)...
+    var reDraw = false;
+    table.rows().every(function (rowIdx, tableLoop, rowLoop) {
+
+        var rowData = this.data();
+        if (timeSeriesRequestStatus.NotStarted === rowData.TimeSeriesRequestStatus) {
+            //'Not started' request found - initiate request...
+            var requestId = randomId.generateId();
+
+            //Update table row with newly generated request Id and 'Starting' status...
+            rowData.TimeSeriesRequestId = requestId;
+            rowData.TimeSeriesRequestStatus = timeSeriesRequestStatus.Starting;
+            this.invalidate();
+            reDraw = true;
+
+            //Request time series from server...
+            requestTimeSeries(tableName, { 'RequestName': 'CUAHSI-WDC',
+                                              'RequestId': requestId,
+                                              'TimeSeriesIds': [rowData.SeriesId],
+                                              'RequestFormat': timeSeriesFormat.WaterOneFlow
+                                            }, modalDialogName);
+        }
+
+    });
+
+    if ( reDraw) {
+        table.draw();
+    }
+}
+
+//Call Export Controller RequestTimeSeries per the input values...
+function requestTimeSeries(tableName, timeSeriesRequest, modalDialogName) {
+
+    //Check for current entry...
+    if (timeSeriesRequest.requestId in downloadMonitor.timeSeriesMonitored) {
+        return;     //Current entry found - return early...
+    }
+
+    //Set monitor entry
+    downloadMonitor.timeSeriesMonitored[timeSeriesRequest.RequestId] = { 'tableName': tableName,
+                                                                         'timeSeriesRequest': timeSeriesRequest,
+                                                                         'timeSeriesRequestStatus': timeSeriesRequestStatus.Starting 
+                                                                       };
+
+    //Call controller method...
+    var timeSeriesRequestString = JSON.stringify(timeSeriesRequest);
+    var actionUrl = "/Export/RequestTimeSeries";
+
+    $.ajax({
+        url: actionUrl,
+        type: 'POST',
+        dataType: 'json',
+        cache: false,           //Per IE...
+        async: true,
+        data: timeSeriesRequestString,
+        contentType: 'application/json',
+        context: timeSeriesRequestString,
+        success: function (data, textStatus, jqXHR) {
+            var response = jQuery.parseJSON(data);
+
+//          console.log('WaterML blob uri: ' + response.BlobUri);
+            //startRequestTimeSeriesMonitor(response);
+            startRequestTimeSeriesMonitor();    //Start monitoring all current requests, if indicated...
+
+        },
+        error: function (xmlhttprequest, textstatus, message) {
+            //Server error: Close modal dialog, if indicated - open 'Server Error' dialog
+            if ($('#' + modalDialogName).is(":visible")) {
+                $('#' + modalDialogName).modal('hide');
+            }
+
+            $('#serverErrorModal').modal('show');
+
+            //Log messsage received from server...
+            console.log('RequestTimeSeries reports error: ' + xmlhttprequest.status + ' (' + message + ')');
+
+            //Set monitor status...
+            var requestId = timeSeriesRequest.requestId;
+            downloadMonitor.timeSeriesMonitored[requestId].timeSeriesRequestStatus = timeSeriesRequestStatus.RequestTimeSeriesError;
+
+            //Update Data Manager row...
+            updateTimeSeriesRequestStatus( tableName, requestId, timeSeriesRequestStatus.RequestTimeSeriesError);
+        }
+    });
+}
+
+//For the input table name and requestId, update the associated row with the input status...
+function updateTimeSeriesRequestStatus( tableName, requestId, timeSeriesRequestStatus) {
+
+    var tableId = '#' + tableName;
+    var table = $(tableId).DataTable();
+
+    //Scan table data for input requestId...
+    var reDraw = false;
+    //table.rows().every(function (rowIdx, tableLoop, rowLoop) {    //parameters available in DataTables v1.10.8+
+    table.rows().every(function () {
+
+        var rowData = this.data();
+        if (requestId === rowData.TimeSeriesRequestId) {
+            //Found - update row with input status
+            rowData.TimeSeriesRequestStatus = timeSeriesRequestStatus;
+            this.invalidate();
+            reDraw = true;
+        }
+    });
+
+    if ( reDraw) {
+        table.draw();
+    }
+}
+
+function updateTimeSeriesBlobUri( tableName, requestId, blobUri) {
+
+    var tableId = '#' + tableName;
+    var table = $(tableId).DataTable();
+
+    //Scan table data for input requestId...
+    var reDraw = false;
+    //table.rows().every(function (rowIdx, tableLoop, rowLoop) {      //parameters available in DataTables v1.10.8+
+    table.rows().every(function () {
+
+        var rowData = this.data();
+        if (requestId === rowData.TimeSeriesRequestId) {
+            //Found - update row with input status
+            rowData.WofUri = blobUri;
+            this.invalidate();
+            reDraw = true;
+        }
+    });
+
+    if ( reDraw) {
+        table.draw();
+    }
+}
+
+//Start monitoring all current time series requests, if indicated...
+function startRequestTimeSeriesMonitor() {
+
+    if ( null === downloadMonitor.intervalId) {
+        //Monitor function not running - start...
+        downloadMonitor.intervalId = setInterval(function() {
+
+            //Create array of intervalIds
+            var Ids = [];
+            for (var requestId in downloadMonitor.timeSeriesMonitored) {
+                Ids.push(requestId);
+            }
+
+            if ( 0 >= Ids.length) {
+                return; //Return early - no requests to monitor...
+            }
+
+            var actionUrl =  "/Export/CheckTasks";
+            $.ajax({
+                url: actionUrl,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(Ids),
+                success: function (data, textStatus, jqXHR) {
+
+                    var timeSeriesResponses = JSON.parse(data);
+                    var length = timeSeriesResponses.length;
+
+                    for (var i = 0; i < length; ++i) {
+                        var timeSeriesResponse = timeSeriesResponses[i];
+                        var requestId = timeSeriesResponse.RequestId;
+
+                        if ('undefined' !== typeof downloadMonitor.timeSeriesMonitored[requestId]) {
+                            downloadMonitor.timeSeriesMonitored[requestId].timeSeriesRequestStatus = timeSeriesResponse.RequestStatus;
+                            var tableName = downloadMonitor.timeSeriesMonitored[requestId].tableName;
+
+                            if ( 'tblDownloadManager' === tableName) {
+                                //Retrieve associated row from Download Manager table...
+                                //var tableRow = $("#tblServerTaskCart > td").filter(function () {
+                                var tableRow = $("#tblDownloadManager tr td").filter(function () {
+                                    return $(this).text() === requestId;
+                                }).parent("tr");
+
+                                //Check current status...
+                                var statusCurrent = parseInt(tableRow.find('td:eq(5)').html());
+
+                                //Update table row, if indicated...
+                                if (statusCurrent !== timeSeriesRequestStatus.EndTaskError &&
+                                    statusCurrent !== timeSeriesRequestStatus.UnknownTask &&
+                                    statusCurrent != timeSeriesRequestStatus.RequestTimeSeriesError &&
+                                    ( ! (statusCurrent === timeSeriesRequestStatus.ClientSubmittedCancelRequest && 
+                                         timeSeriesResponse.RequestStatus === timeSeriesRequestStatus.ProcessingTimeSeriesId))) {
+                                tableRow.find('#statusMessageText').html(timeSeriesResponse.Status);
+                                tableRow.find('#blobUriText').html(timeSeriesResponse.BlobUri);
+                                tableRow.find('td:eq(5)').html(timeSeriesResponse.RequestStatus);
+
+                                //Color row as 'info'
+                                tableRow.addClass('info');
+                                }
+
+                                //Check for completed/cancelled task/unknown task/error
+                                var requestStatus = parseInt(tableRow.find('td:eq(5)').html());
+
+                                if (timeSeriesRequestStatus.Completed === requestStatus ||
+                                    timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus ||
+                                    timeSeriesRequestStatus.RequestTimeSeriesError === requestStatus ||
+                                    timeSeriesRequestStatus.EndTaskError === requestStatus ||
+                                    timeSeriesRequestStatus.UnknownTask === requestStatus) {
+                                    //If task completed - re-assign 'Stop Task' button to 'Download'
+                                    if (timeSeriesRequestStatus.Completed === requestStatus) {
+                                        //Success - retrieve the base blob URI... 
+                                        var baseUri = (timeSeriesResponse.BlobUri).split('.zip');
+                                        var blobUri = baseUri[0] += '.zip';
+
+                                        //Retrieve the full file name from the base blob URI...
+                                        var uriComponents = baseUri[0].split('/');
+                                        var fileName = uriComponents[(uriComponents.length - 1)];
+
+                                        //Set base blob URI into text in column 3
+                                        //NOTE: Need to decode the string twice because:
+                                        //       If the string contains an encoded character like %27 ('),
+                                        //       the browser(?) separely encodes the (&) character as %25
+                                        //       resulting in %25%27 in the string.  Two string decodes 
+                                        //       are required to remove the two escape sequences...
+                                        var decoded = decodeURIComponent(fileName);
+                                        var decoded1 = decodeURIComponent(decoded);
+                                        tableRow.find('#blobUriText').html(decoded1);
+
+                                        //Create a download button...
+                                        var button = tableRow.find('td:eq(4)');
+
+                                        button = $("<button class='zipBlobDownload btn btn-success' style='font-size: 1.5vmin' data-blobUri='" + blobUri +  "'>Download Archive</button>");
+
+                                        button.on('click', function (event) {
+                                            var blobUri = $(this).attr('data-blobUri');
+                                            location.href = blobUri;
+
+                                            //Fade row and remove from table...
+                                            tableRow.fadeTo(1500, 0.5, function() {
+                                                    $(this).remove();
+                                            });
+
+                                            event.stopPropagation();
+                                        });
+
+                                        tableRow.find('td:eq(4)').html(button);
+
+                                        //Change the glyphicon and stop the animation
+                                        var glyphiconSpan = tableRow.find('#glyphiconSpan');
+
+                                        glyphiconSpan.removeClass('glyphicon-refresh spin');
+                                        glyphiconSpan.addClass('glyphicon-thumbs-up');
+
+                                        tableRow.find('#statusMessageText').html(timeSeriesResponse.Status);
+
+                                        tableRow.addClass('success');   //Color row as 'successful'
+
+                                        if ($("#chkbxAutoDownload").prop("checked")) {
+                                                //Autodownload checkbox checked - click the newly created button...
+                                            button.click();
+                                        }
+                                    }
+                                    else {
+                                        if (timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus ||
+                                            timeSeriesRequestStatus.UnknownTask === requestStatus || 
+                                            timeSeriesRequestStatus.EndTaskError === requestStatus) {
+                                            //Task canceled OR unknown OR end task error - color row as 'danger'
+                                            tableRow.addClass('danger');
+
+                                            //Fade row and remove from table...
+                                            tableRow.fadeTo(1500, 0.5, function () {
+                                                $(this).remove();
+                                            });
+                                        }
+                                        else {
+                                            if (timeSeriesRequestStatus.RequestTimeSeriesError === requestStatus) {
+                                        
+                                                //Request Time Series Processing Error - DO NOT remove the row!! 
+                                        
+                                                //Reset blob URI
+                                                tableRow.find('#blobUriText').html('');
+
+                                                //Hide the 'Stop Processing' button
+                                                tableRow.find('td:eq(4)').hide();
+
+                                                //Change the glyphicon and stop the animation
+                                                var glyphiconSpan = tableRow.find('#glyphiconSpan');
+
+                                                glyphiconSpan.removeClass('glyphicon-refresh spin');
+                                                glyphiconSpan.addClass('glyphicon-thumbs-down');
+                                                glyphiconSpan.css('color', 'red');
+
+                                                //Color table row as 'warning'
+                                                tableRow.removeClass('info');
+                                                tableRow.addClass('warning');
+                                            }
+                                        }
+                                    }
+                            
+                                    //Clear the interval
+                                    //clearInterval(intervalId);
+                                    //return;
+                                    //remove monitoring entry...
+                                    delete downloadMonitor.timeSeriesMonitored[timeSeriesResponse.RequestId];
+                                }
+                            }
+                            else { 
+                                if ( 'tblDataManager' === tableName ) {
+
+                                    updateTimeSeriesRequestStatus( downloadMonitor.timeSeriesMonitored[requestId].tableName, requestId, timeSeriesResponse.RequestStatus);
+
+        //                            //Write the blob URI to the console...
+                                      console.log(requestId);
+                                      console.log(timeSeriesResponse.Status);
+                                      console.log(timeSeriesResponse.BlobUri);
+
+                                    if (timeSeriesRequestStatus.Completed === timeSeriesResponse.RequestStatus) {
+                                        //Completed status - update table entry with received blob URI, remove monitoring entry...
+                                        var wofaFileName = retrieveWaterOneFileArchiveFileName(timeSeriesResponse.BlobUri);
+                                        updateTimeSeriesBlobUri( downloadMonitor.timeSeriesMonitored[requestId].tableName, requestId, wofaFileName);
+                                        delete downloadMonitor.timeSeriesMonitored[timeSeriesResponse.RequestId];
+                                    }
+                                    else {
+                                        if ( timeSeriesRequestStatus.UnknownTask === timeSeriesResponse.RequestStatus) {
+                                            //BCC - TEST - 28-Oct-2015 - Comment out the delete here - early status calls for a new task might return unknown task
+                                            //delete downloadMonitor.timeSeriesMonitored[timeSeriesResponse.RequestId];
+
+                                            if ( 'undefined' === typeof unknownTaskCounts[requestId] ) {
+                                                unknownTaskCounts[requestId] = {'count': 0 };
+                                                //console.log('Initialize unknown task count for: ' + requestId);
+                                            }
+                                            else {
+                                                unknownTaskCounts[requestId].count += 1;
+                                                //console.log('Increment unknown task count for: ' + requestId);
+
+                                                if ( 20 <= unknownTaskCounts[requestId].count) {
+                                                    //unknown task count exceeded - delete monitor entry...
+                                                    delete downloadMonitor.timeSeriesMonitored[requestId];
+                                                    delete unknownTaskCounts[requestId];
+                                                }
+                                            }
+                                        }
+                                        else {
+                                            if (timeSeriesRequestStatus.CanceledPerClientRequest === timeSeriesResponse.RequestStatus || 
+                                                timeSeriesRequestStatus.EndTaskError === timeSeriesResponse.RequestStatus ||
+                                                timeSeriesRequestStatus.RequestTimeSeriesError === timeSeriesResponse.RequestStatus ||
+                                                timeSeriesRequestStatus.ProcessingError === timeSeriesResponse.RequestStatus) {
+                                                    //Request cancelled --OR-- server error - delete monitor entry...
+                                                    delete downloadMonitor.timeSeriesMonitored[timeSeriesResponse.RequestId];
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                error: function (xmlhttprequest, textStatus, message) {
+
+                    //For now - take no action...
+                    //ASSUMPTION: Next request will succeed
+
+                    //Log messsage received from server...
+                    console.log(actionUrl + ' reports error: ' + xmlhttprequest.status + ' (' + message + ')');
+                }                
+            });
+
+        }, 1000);
+    }
+
+}
+
+//Retrieve the WaterOneFlow zip archive file name from a full Azure blob URI
+// ASSUMPTION: Full Azure blob URI format: https://ziptest.blob.core.windows.net/time-series/cuahsi-wdc-2015-10-20-34754857.zip?
+//                                          sv=2014-02-14&sr=b&sig=P2GRXRgmDZBuvCVeNp1b2922vJ%2FMMG4cj5HYWuB2y5I%3D&se=2015-11-19T13%3A39%3A14Z&sp=r'
+function retrieveWaterOneFileArchiveFileName(fullAzureBlobUri) {
+
+    if ('undefined' === typeof fullAzureBlobUri || null === fullAzureBlobUri) {
+        return null;  //Invalid input parameter - return early
+    }
+
+    var firstIndex = fullAzureBlobUri.indexOf('cuahsi-wdc');
+    var extension = '.zip';
+    var lastIndex = fullAzureBlobUri.indexOf(extension)
+
+    if ( -1 === firstIndex || -1 === lastIndex ) {
+	    console.log('retrieveWaterOneFlowArchiveFileName - bad index for: ' + fullAzureBlobUri);
+        return null;
+    }
+
+    var waterOneFlowArchiveFilename = fullAzureBlobUri.slice(firstIndex, (lastIndex + extension.length));
+    return waterOneFlowArchiveFilename;
+}
 
 //Retrieve the Description Url from the Services DataTable for the input service code- Not found, return null
 //Assumption: The services DataTable is loaded immediately upon page load or refresh!!
@@ -2579,9 +3843,8 @@ function getDescriptionUrl(serviceCode) {
         var table = $('#dtServices').DataTable();
         var data = table.rows().data();
 
-        serviceCode = serviceCode.trim();
         $.each(data, function (i, obj) {
-            if (serviceCode === obj.ServiceCode.trim()) {
+            if (serviceCode === obj.ServiceCode) {
                 descriptionUrl = obj.DescriptionUrl;
                 return false;
             }
@@ -2592,8 +3855,18 @@ function getDescriptionUrl(serviceCode) {
     return descriptionUrl;
 }
 
+//Event-based 'wrapper' for setfooterFilters...
+function setfooterFiltersEvent(event) {
+
+    return setfooterFilters(event.data.tableId, event.data.columnsArray, event.data.chkbxId, event.data.translates);
+}
+
 //Create 'select'-based filters for the input tableId and columns array
-function setfooterFilters(tableId, columnsArray, chkbxId) {
+function setfooterFilters(tableId, columnsArray, chkbxId, translates) {
+
+    //Check for optional fourth parameter...
+    var bTranslates = (('undefined' !== typeof translates) && (null !== translates));
+    var myTranslates = translates;
 
     var api = $('#' + tableId).DataTable();
 
@@ -2601,28 +3874,52 @@ function setfooterFilters(tableId, columnsArray, chkbxId) {
         if (-1 !== columnsArray.indexOf(i)) {
             var column = api.column(i);
             var data = column.data();
-            //var select = $('<select><option value=""></option></select>')
-            var select = $('<select><option value="">Remove filter...</option></select>')
-                .appendTo($(column.footer()).empty())
+            var select = $('<select><option value="">Remove filter...</option></select>');
+
+            select.appendTo($(column.footer()).empty())
                 .on('change', function () {
+
                     var val = $.fn.dataTable.util.escapeRegex($(this).val());
 
-                    var dt = column.search(val ? '^' + val + '$' : '', true, false);
+                    //var dt = column.search(val ? '^' + val + '$' : '', true, false);
+                    //NOTE: Datatables API interprets 'data' for a <td> containing: <span class="glyphicon glyphicon-cloud-upload"></span> <em>Not Saved</em>
+                    //      as: ' Not Saved'.  Therefore the regex pattern includes zero or more leading space character <' '> occurrences...
+                    var dt = column.search(val ? '^[ ]*' + val + '$'  : '', true, false);
                     dt.draw();
 
                     //If 'Select Top' checkbox is checked, trigger the associated handler(s)
-                    if ($('#' + chkbxId).prop('checked')) {
+                    if (('undefined' !== typeof chkbxid) && (null !== chkbxid) && $('#' + chkbxId).prop('checked')) {
                         $('#' + chkbxId).triggerHandler('click');
                     }
                 });
 
+            
             column.data().unique().sort().each(function (d, j) {
-                select.append('<option value="' + d + '">' + d + '</option>')
+                
+                var optionString = '<option value="' + d + '">' + d + '</option>';
+                if (bTranslates) {
+                    var length = myTranslates.length;
+                    var bTranslated = false;
+                    for (var tI = 0; (tI < length) && (! bTranslated); ++tI) {
+                        var translate = myTranslates[tI];
+                        if (i === translate.columnIndex) {
+                            var translates = translate.translates;
+                            var tsLength = translates.length;
+                            for (var tsI = 0; (tsI < tsLength) && (! bTranslated); ++tsI) {
+                                if (d === translates[tsI].value) {
+                                    optionString = '<option value="' + translates[tsI].translate + '">' + translates[tsI].translate + '</option>';
+                                    bTranslated = true;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                select.append(optionString);
             });
         }
     });
 
-    $('#' + tableId).dataTable().fnAdjustColumnSizing();
 }
 
 function updateServicesList()
@@ -2640,8 +3937,20 @@ function updateServicesList()
     }
     else {
         //All services selected...
-        //list.append('Selected All of ' + myServicesDatatable.fnGetData().length + '');
         list.append('<li>All</li>');
+    }
+}
+
+function toggleSelectedDataManager(event) {
+
+    //Conditionally select the current row...
+    var rowData = $('#' + event.data.tableId).DataTable().row(this._DT_RowIndex).data();
+    var requestId = rowData.TimeSeriesRequestId;
+    var status = rowData.TimeSeriesRequestStatus;
+
+    if ('undefined' === typeof downloadMonitor.timeSeriesMonitored[requestId]) {
+        //Current row is not monitored - allow selection...
+        toggleSelected.call(this, event);   //Bind to the value of this!!!
     }
 }
 
@@ -2655,7 +3964,8 @@ function toggleSelected(event) {
     //Check selected row count...
     var count = selectedRowCounts[event.data.tableId].count;
 
-    if ((selectedTimeSeriesMax <= count) && (! $(this).hasClass(className))) {
+    var selectedTimeSeriesMax = parseInt($('#' + event.data.tableId).attr('data-selectedtimeseriesmax'));
+    if (Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax <= count) && (!$(this).hasClass(className))) {
         //Maximum selections reached - current row not yet selected - warn and return early
         bootbox.alert('<h4>A maximum of ' + selectedTimeSeriesMax + ' time series rows may be selected.</h4>');
         return;
@@ -2675,7 +3985,6 @@ function toggleSelected(event) {
     $(this).toggleClass(className);
 
     //Update selected row count...
-    //selectedRowCounts[event.data.tableId].count = $(this).hasClass(className) ? count + 1 : count - 1;
     if ($(this).hasClass(className)) {
         selectedRowCounts[event.data.tableId].count = count + 1;
         $(this).removeClass(nonClassName);  //Remove manually unselected indicator...
@@ -2693,9 +4002,14 @@ function toggleSelected(event) {
         $(this).removeClass(endRange);
     }
 
-    //Check state of 'Process Selections' button...
-    enableDisableButton(event.data.tableId, event.data.btnId);
+    //Check button(s) state...
+    if ('undefined' !== typeof event.data.btnIds) {
+        enableDisableButtons(event.data.tableId, event.data.btnIds);
+    }
+
+    if ( 'undefined' !== typeof event.data.btnClearId) {
     enableDisableButton(event.data.tableId, event.data.btnClearId);
+}
 }
 
 //Process the range selection for the input table Id
@@ -2745,8 +4059,9 @@ function processRangeSelection(tableId, startRangeClass, endRangeClass, selectCl
     //Check 'rows to select' count and current rows selected count against allowed maximum...
     var toSelect = Math.abs(endPos - startPos);
     var count = selectedRowCounts[tableId].count;
+    var selectedTimeSeriesMax = parseInt($('#' + tableId).attr('data-selectedtimeseriesmax'));
 
-    if (selectedTimeSeriesMax < (toSelect + count)) {
+    if (Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax < (toSelect + count))) {
         //Allowed maximum exceeded - warn, remove start and end range classes, return
         bootbox.alert('Specified range and selected rows (' + (toSelect + count) + ') exceed the maximum allowed (' + selectedTimeSeriesMax + ')');
 
@@ -2862,7 +4177,7 @@ function selectAll(event) {
     jqueryObjects.removeClass(className);
 
     //Apply 'selected' class to the 'top' <selectedTimeSeriesMax> rendered nodes, if indicated 
-    if ($('#' + event.data.chkbxId).prop("checked")) {
+    if ( 'undefined' === typeof event.data.chkbxId || $('#' + event.data.chkbxId).prop("checked")) {
         //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
         //Source: http://datatables.net/reference/api/rows().nodes()
         rows = table.rows({ 'order': 'current', 'search': 'applied' });    //Retrieve rows per current sort/search order...
@@ -2872,7 +4187,9 @@ function selectAll(event) {
         var length = nodesRendered.length;
 
         //Initialize the selected row count...
-        var count = totalRows < selectedTimeSeriesMax ? totalRows : selectedTimeSeriesMax;
+        // Check for the 'time series max' attribute - if found, compare it to the 'total rows' value to determine the count. Otherwise, set the count from the 'total rows' value
+        var selectedTimeSeriesMax = parseInt($('#' + event.data.tableId).attr('data-selectedtimeseriesmax'));
+        var count = Number.isInteger(selectedTimeSeriesMax) ? (totalRows < selectedTimeSeriesMax ? totalRows : selectedTimeSeriesMax) : totalRows;
 
         //For each rendered node...
         for (var i = 0; i < length; ++i) {
@@ -2880,7 +4197,7 @@ function selectAll(event) {
             //Determine the position of the associated row in the current sort/search order...
             var position = rows[0].indexOf(nodesRendered[i]._DT_RowIndex)
             
-            if (position < selectedTimeSeriesMax) {
+            if (isNaN(selectedTimeSeriesMax) || (position < selectedTimeSeriesMax)) {
                 //Row is within the 'top' <selectedTimeSeriesMax> - apply class, if indicated
                 var jqueryObject = $(nodesRendered[i]);
 
@@ -2903,9 +4220,14 @@ function selectAll(event) {
         selectedRowCounts[event.data.tableId].count = 0;
     }
 
-    //Check state of 'Process Selections' button...
-    enableDisableButton(event.data.tableId, event.data.btnId);
+    //Check button(s) states...
+    if ( 'undefined' !== typeof event.data.btnIds) {
+        enableDisableButtons(event.data.tableId, event.data.btnIds);
+    }
+
+    if ( 'undefined' !== typeof event.data.btnClearId) {
     enableDisableButton(event.data.tableId, event.data.btnClearId);
+}
 }
 
 //Clear --ALL-- table selections, regardless of current sort/search order...
@@ -2930,11 +4252,165 @@ function clearSelections(event) {
     selectedRowCounts[event.data.tableId].count = 0;
 
     //Uncheck the 'top ...' checkbox
-    $('#' + event.data.chkbxId).prop("checked", false);
+    if ( 'undefined' !== typeof event.data.chkbxId) {
+        $('#' + event.data.chkbxId).prop("checked", false);
+    }
 
-    //Check button states...
-    enableDisableButton(event.data.tableId, event.data.btnId);
+    //Check button(s) states...
+    if ( 'undefined' !== typeof event.data.btnIds) {
+        enableDisableButtons(event.data.tableId, event.data.btnIds);
+    }
+
+    if ( 'undefined' !== typeof event.data.btnClearId) {
+        enableDisableButton(event.data.tableId, event.data.btnClearId);
+    }
+}
+
+//Remove --ALL-- table selections, regardless of current sort/search order...
+function removeSelections(event) {
+
+    //Retrieve and remove all selected rows, re-draw the table...
+    //Source: https://datatables.net/reference/api/rows().remove()
+    var table = $('#' + event.data.tableId).DataTable();
+
+    var rows = table.rows( '.selected' ).remove().draw();
+
+    //Reset the selected row count...
+    selectedRowCounts[event.data.tableId].count = 0;
+
+    //Uncheck the 'top ...' checkbox
+    if ( 'undefined' !== typeof event.data.chkbxId) {
+    $('#' + event.data.chkbxId).prop("checked", false);
+    }
+
+    //Check button(s) states...
+    if ( 'undefined' !== typeof event.data.btnIds) {
+        enableDisableButtons(event.data.tableId, event.data.btnIds);
+    }
+
+    if ( 'undefined' !== typeof event.data.btnClearId) {
     enableDisableButton(event.data.tableId, event.data.btnClearId);
+}
+}
+
+//Save all the --UNSAVED-- table selections, regardless of current sort/search order...
+function saveSelections(event) {
+
+    //Check for user authentication...
+    if ( (! currentUser.authenticated ) || 
+            (null === currentUser.login)) {
+        return; 
+    }
+
+    var userTimeSeries = { 'UserEmail' : currentUser.login,
+                           'TimeSeries' : [] };
+
+    //Retrieve and save all unsaved selected rows
+    var table = $('#' + event.data.tableId).DataTable();
+
+    var selectedRows = table.rows( '.selected' ).data();
+    var selectedCount = selectedRows.length;
+
+    //For each unsaved timeseries...
+    for ( var i = 0; i < selectedCount; ++i) {
+        var datamgrRecord = selectedRows[i];
+        
+        if ( datamgrRecord.Saved) {
+            continue;
+        }
+
+        var serverRecord = {};
+
+        serverRecord.UserEmail = currentUser.login;
+
+        serverRecord.Organization = datamgrRecord.Organization;
+        serverRecord.ServiceTitle = datamgrRecord.ServTitle;
+        serverRecord.Keyword = datamgrRecord.ConceptKeyword;
+        serverRecord.DataType = datamgrRecord.DataType;
+        serverRecord.ValueType = datamgrRecord.ValueType;
+        serverRecord.SampleMedium = datamgrRecord.SampleMedium;
+        serverRecord.StartDate = datamgrRecord.BeginDate;
+        serverRecord.EndDate = datamgrRecord.EndDate;
+
+        serverRecord.ValueCount = datamgrRecord.ValueCount;
+        serverRecord.SiteName = datamgrRecord.SiteName;
+        serverRecord.VariableName = datamgrRecord.VariableName;
+        serverRecord.TimeUnit = datamgrRecord.TimeUnit;
+        serverRecord.TimeSupport = datamgrRecord.TimeSupport;
+
+        serverRecord.SeriesId = datamgrRecord.SeriesId;
+        serverRecord.WaterOneFlowURI = datamgrRecord.WofUri;
+        serverRecord.Status = datamgrRecord.TimeSeriesRequestStatus;
+        serverRecord.TimeSeriesRequestId = datamgrRecord.TimeSeriesRequestId;
+
+        userTimeSeries.TimeSeries.push(serverRecord);
+    }
+
+    //If no unsaved time series, return early
+    if ( 0 >= userTimeSeries.TimeSeries.length) {
+        return;
+    }
+
+    var url = '/DataManager/Post';
+    var utsString = JSON.stringify(userTimeSeries);
+
+    var promise = $.ajax({
+                        url: url,
+                        type: 'POST',
+                        dataType: 'json',
+                        cache: false,           //Per IE...
+                        async: true,
+                        data: utsString,
+                        contentType: 'application/json',
+                        context: utsString,
+                    });
+
+    promise.done( function (data) {
+            console.log('/DataManager/Post - successful!!')
+        });
+
+    promise.fail( function (jqXHR, textStatus, errorThrown) {
+            console.log('/DataManager/Post - error - ' + textStatus + ' - ' + errorThrown);
+        });
+}
+
+
+function downloadSelections(event) {
+
+    //console.log('downloadSelections(...) called!!');
+    var appName = event.data.appName;
+    var valueSelected = $('#' + event.data.divId).text().trim();
+
+    if ( appName !== valueSelected) {
+        return; //Currently selected app is NOT the download app - return early...
+    }
+
+    var taskId = getNextTaskId();
+    var txtClass = '.clsMessageArea';
+
+    //Update the text...
+    var txt = 'Task: @@taskId@@ started.  To check the download status, please open the Exports tab';
+    var txts = txt.split('@@taskId@@');
+
+    $(txtClass).text( txts[0] + taskId.toString() + txts[1]);
+
+    //Display the 'Zip processing started... message
+    displayAndFadeLabel(txtClass);
+
+    //Retrieve selected rows...
+    var table = $('#' + event.data.tableId).DataTable();
+
+    var selectedRows = table.rows( '.selected' ).data();
+    var selectedCount = selectedRows.length;
+    var timeSeriesIds = [];
+
+    //Retrieve water one flow ids...
+    for ( var i = 0; i < selectedCount; ++i) {
+        var row = selectedRows[i];
+        timeSeriesIds.push(row.SeriesId);
+    }
+
+    retrieveCSVTimeSeries(taskId, timeSeriesIds);
 }
 
 //Clear all table selections...
@@ -2976,6 +4452,25 @@ function enableDisableButton(tableId, btnId) {
     }
 }
 
+//Set/reset 'disabled' attribute on referenced buttons per contents of referenced Data Table...
+function enableDisableButtons(tableId, btnIds) {
+
+    var table = $('#' + tableId).DataTable();
+    var selectedRows = table.rows('.selected').data();
+    var selectedCount = selectedRows.length;
+
+    var length = btnIds.length;
+    for (var i = 0; i < length; ++i) {
+        if (0 < selectedCount) {
+            $('#' + btnIds[i]).prop('disabled', false);
+        }
+        else {
+            $('#' + btnIds[i]).prop('disabled', true);
+        }
+    }
+}
+
+
 //Dispaly the referenced label class and then fade...
 function displayAndFadeLabel(labelClass) {
 
@@ -2987,90 +4482,34 @@ function displayAndFadeLabel(labelClass) {
     }, 5000);
 }
 
-//Enable/disable 'Select All' checkbox per max. selectable row count check...
-//function dataTableLoad(event, settings, json, xhr) {
 
-//    if ((null !== json) && (null !== json.data)) {
-//        //Successful AJAX query - check total rows received against max. selectable row count...
-//        var length = json.data.length;
-//        var propValue = (selectedTimeSeriesMax >= length) ? false : true;
-
-//        //$(event.data.chkbxId).prop('disabled', propValue);
-
-//        //Remove the tooltip and title attributes...
-//        $(event.data.chkbxId).removeAttr('data-toggle data-placement title');
-//        $(event.data.chkbxId).removeClass('disabled');
-//        //$(event.data.chkbxId).prop('disabled', propValue);
-
-//        if (true === propValue) {
-//            //Checkbox disabled - add disabled class 
-//            $(event.data.chkbxId).addClass('disabled');
-
-//            //Add tooltip explaining why
-//            $(event.data.chkbxId).attr('data-toggle', 'tooltip');
-//            $(event.data.chkbxId).attr('data-placement', 'right');
-//            $(event.data.chkbxId).attr('title', 'The total timeseries rows (' + length.toString() + ') exceed the selectable maximum (' + selectedTimeSeriesMax.toString() + ')');
-
-//            //Enable Bootstrap tooltips...
-//            $('[data-toggle="tooltip"]').tooltip();
-//        }
-//    }
-//}
-
-function zipSelections(event) {
+//Zip selections click handler...
+function zipSelections_2(event) {
 
     //Get the next Task Id...
     var taskId = getNextTaskId();
-    var txtClass = '.clsZipStarted';
+    var txtClass = '.clsMessageArea';
 
     //Update the text...
-    var txt = 'Task: @@taskId@@ started.  To check the download status, please open Download Manager';
+    var txt = 'Task: @@taskId@@ started.  To check the download status, please open the Exports tab';
     var txts = txt.split('@@taskId@@');
 
     $(txtClass).text( txts[0] + taskId.toString() + txts[1]);
 
-    //Display the 'Zip processing started... messag e
+    //Display the 'Zip processing started... message
     displayAndFadeLabel(txtClass);
 
     //Create the list of selected time series ids...
-    //var table = $('#dtMarkers').DataTable();
     var table = $('#' + event.data.tableId).DataTable();
     var selectedRows = table.rows('.selected').data();
+    var selectedTimeSeriesMax = parseInt($('#' + event.data.tableId).attr('data-selectedtimeseriesmax'));
 
-    if ($('#' + event.data.chkbxId).prop("checked") && (selectedTimeSeriesMax > selectedRows.length)) {
+    if ($('#' + event.data.chkbxId).prop("checked") && Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax > selectedRows.length)) {
         //User has clicked the 'Select Top ...' check box but not all selected rows have been rendered
         //NOTE: If the DataTable instance has the 'deferRender' option set - not all rows may have been rendered at this point.
         //        Thus one cannot rely on the selectedRows above, since in this case only rendered rows appear in the selectedRows...
-
-        var rows = table.rows({ 'order': 'current', 'search': 'applied' });           //Retrieve rows per current sort/search order...
-
-        var length = rows[0].length;    //Need length of rows array here!!
-        selectedRows = [];
-
-        for (var i = 0; i < length; ++i) {
-            //BCC - 01-Sep-2015 - Reference the row's position per the current sort/search!!
-            var position = rows[0][i];
-
-            //If row is rendered, check if selected...
-            var node = table.row(position).node();
-            var bSelected = false;
-
-            if (null !== node) {
-                var jqueryObj = $(node); 
-                if (jqueryObj.hasClass('notSelected')) {
-                    continue;   //Row rendered and NOT selected, continue to next row...
+        selectedRows = getSelectedRows(event.data.tableId);
                 }
-                else if (jqueryObj.hasClass('selected')) {
-                    bSelected = true;   //NOTE: User can manually select rows outside the 'Select Top ...'
-                }
-            }
-
-            if ((i < selectedTimeSeriesMax) || bSelected) {
-                //Current row position within 'Select Top ...' --OR-- user has manually selected the row - append row data to selected rows...
-                selectedRows.push(table.row(position).data());
-            }
-        }
-    }
 
     var selectedCount = selectedRows.length;
     var timeSeriesIds = [];
@@ -3082,10 +4521,11 @@ function zipSelections(event) {
         timeSeriesIds.push(id);
     }
 
-    //NOTE- This code gives the count of selected rows...
-    //$('#button').click(function () {
-    //    alert(table.rows('.selected').data().length + ' row(s) selected');
-    //});
+    retrieveCSVTimeSeries(taskId, timeSeriesIds);
+}
+
+//Retrieve the time series per the input series ids...
+function retrieveCSVTimeSeries(taskId, timeSeriesIds) {
 
     //Create the request object...
     var requestId = randomId.generateId();
@@ -3109,21 +4549,21 @@ function zipSelections(event) {
     }
 
     var timeSeriesRequest = {
-        "RequestName": requestName,
-        "RequestId": requestId,
-        "TimeSeriesIds": timeSeriesIds
+        'RequestName': requestName,
+        'RequestId': requestId,
+        'TimeSeriesIds': timeSeriesIds,
+        'RequestFormat': timeSeriesFormat.CSV
     };
 
     var timeSeriesRequestString = JSON.stringify(timeSeriesRequest);
 
     var actionUrl = "/Export/RequestTimeSeries";
 
+    //POST to create the time series...
     $.ajax({
         url: actionUrl,
         type: 'POST',
         dataType: 'json',
-        //timeout: 60000,
-        //processData: false,
         cache: false,           //Per IE...
         async: true,
         data: timeSeriesRequestString,
@@ -3155,10 +4595,48 @@ function zipSelections(event) {
             div = $('<div class="btn" id="blobUriText" style="font-size: 1em; font-weight: bold; margin: 0 auto; text-overflow: ellipsis;">' + response.BlobUri + '</div>');
             cols.push(div);
 
-            //Column 4
+            //Button for Column 4
             var button = $("<button class='stopTask btn btn-warning' style='font-size: 1.5vmin'>Stop Processing</button>");
+            addEndTaskClickHandler(button, response);
 
-            button.click(function (event) {
+            //Column 4
+            cols.push(button);
+
+            //Column 5
+            cols.push(response.RequestStatus);
+
+            //Add the new row and hide the RequestStatus column...
+            var newrow = newRow($("#tblDownloadManager"), cols);
+            newrow.find('td:eq(5)').hide();
+
+            //Add row styles
+            addRowStylesDM(newrow);
+
+            //Set monitor entry
+            downloadMonitor.timeSeriesMonitored[timeSeriesRequest.RequestId] = { 'tableName': 'tblDownloadManager',
+                                                                                 'timeSeriesRequest': timeSeriesRequest,
+                                                                                 'timeSeriesRequestStatus': timeSeriesRequestStatus.Starting 
+                                                                               };
+           startRequestTimeSeriesMonitor();    //Start monitoring all current requests, if indicated...
+         },
+         error: function (xmlhttprequest, textstatus, message) {
+            //Server error: Close modal dialog, if indicated - open 'Server Error' dialog
+            if ($('#SeriesModal').is(":visible")) {
+                $('#SeriesModal').modal('hide');
+            }
+
+            $('#serverErrorModal').modal('show');
+
+            //Log messsage received from server...
+            console.log('retrieveCSVTimeSeries reports error: ' + xmlhttprequest.status + ' (' + message + ')');
+        }
+    });
+}
+
+//Add an 'end task' click handler to the input jquery button object
+function addEndTaskClickHandler(jqueryButton, response) {
+
+    jqueryButton.click(function(event) {
                 //Hide the button...
                 $(event.target).hide();
                 //Send request to server to stop task...
@@ -3218,196 +4696,195 @@ function zipSelections(event) {
                         }
                     });
             });
+}
             
-            //Column 4 (cont'd) 
-            cols.push(button);
+function copySelectionsToDataManager(event) {
+    //Retrieve the selected rows...
+    var table = $('#' + event.data.tableId).DataTable();
+    var selectedRows = table.rows('.selected').data();
+    var selectedTimeSeriesMax = parseInt($('#' + event.data.tableId).attr('data-selectedtimeseriesmax'));
 
-            //Column 5
-            cols.push(response.RequestStatus);
+    if ($('#' + event.data.chkbxId).prop("checked") && Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax > selectedRows.length)) {
+        //User has clicked the 'Select Top ...' check box but not all selected rows have been rendered
+        //NOTE: If the DataTable instance has the 'deferRender' option set - not all rows may have been rendered at this point.
+        //        Thus one cannot rely on the selectedRows above, since in this case only rendered rows appear in the selectedRows...
+        selectedRows = getSelectedRows(event.data.tableId);
+    }
 
-            //Add the new row and hide the RequestStatus column...
-            var newrow = newRow($("#tblDownloadManager"), cols);
-            newrow.find('td:eq(5)').hide();
+    var selectedCount = selectedRows.length;
+    var txtClass = '.clsMessageArea';
 
-            //Center the button in the td-3
-            //var td3 = newrow.find('td:eq(3)');
-            //td3.addClass('text-center');
+    //Display a 'copied...' message
+    $(txtClass).text('Copied ' + selectedCount.toString() + ' selections to Workspace');
+    displayAndFadeLabel(txtClass);
 
-            addRowStylesDM(newrow);
+    var datamgrTableName = 'tblDataManager';
+    var datamgrTableId = '#' + datamgrTableName;
+    var datamgrTable = $(datamgrTableId).DataTable();
 
+    //For each selected row...
+    for (var rI = 0; rI < selectedCount; ++rI ) {
+        //Create a 'Data Manager' record
+        var datamgrRecord = {};
 
-            //Color row as 'info'
-            //newrow.addClass('info');
+        datamgrRecord.Saved = false;
+        datamgrRecord.Organization = selectedRows[rI].Organization;
+        datamgrRecord.ServTitle = selectedRows[rI].ServTitle;
+        datamgrRecord.ConceptKeyword = selectedRows[rI].ConceptKeyword;
+        datamgrRecord.DataType = selectedRows[rI].DataType;
+        datamgrRecord.ValueType = selectedRows[rI].ValueType;
+        datamgrRecord.SampleMedium = selectedRows[rI].SampleMedium;
+        datamgrRecord.BeginDate = selectedRows[rI].BeginDate;
+        datamgrRecord.EndDate = selectedRows[rI].EndDate;
+        datamgrRecord.ValueCount = selectedRows[rI].ValueCount;
+        datamgrRecord.SiteName = selectedRows[rI].SiteName;
+        datamgrRecord.VariableName = selectedRows[rI].VariableName;
+        datamgrRecord.TimeUnit = selectedRows[rI].TimeUnit;
+        datamgrRecord.TimeSupport = selectedRows[rI].TimeSupport;
 
-            //Add a new monitor for the newly created task...
-            var intervalId = setInterval(function () {
+        datamgrRecord.SeriesId = selectedRows[rI].SeriesId;
+        datamgrRecord.WofUri = 'Not yet available';
+        datamgrRecord.TimeSeriesRequestStatus = timeSeriesRequestStatus.NotStarted;
+        datamgrRecord.TimeSeriesRequestId = null;
 
-                //Retrieve status from server
-                //var actionUrl = rootDir + 'home/CT';
-                var actionUrl = "/Export/CheckTask";
+        //Add the newly created record...
+        datamgrTable.row.add(datamgrRecord);
+    }
 
-                $.ajax({
-                    url: actionUrl + '/' + response.RequestId,
-                    type: 'GET',
-                    contentType: 'application/json',
-                    context: response.RequestId,
-                    cache: false,   //So IE does not cache when calling the same URL - source: http://stackoverflow.com/questions/7846707/ie9-jquery-ajax-call-first-time-doing-well-second-time-not
-                    success: function (data, textStatus, jqXHR) {
-
-                        var statusResponse = jQuery.parseJSON(data);
-
-                        //Retrieve associated row from Download Manager table...
-                        //var tableRow = $("#tblServerTaskCart > td").filter(function () {
-                        var tableRow = $("#tblDownloadManager tr td").filter(function () {
-                            return $(this).text() === response.RequestId;
-                        }).parent("tr");
-
-                        //Check current status...
-                        var statusCurrent = parseInt(tableRow.find('td:eq(5)').html());
-
-                        //Update table row, if indicated...
-                        if (statusCurrent !== timeSeriesRequestStatus.EndTaskError &&
-                            statusCurrent !== timeSeriesRequestStatus.UnknownTask &&
-                            statusCurrent != timeSeriesRequestStatus.RequestTimeSeriesError &&
-                            ( ! (statusCurrent === timeSeriesRequestStatus.ClientSubmittedCancelRequest && 
-                                 statusResponse.RequestStatus === timeSeriesRequestStatus.ProcessingTimeSeriesId))) {
-                        tableRow.find('#statusMessageText').html(statusResponse.Status);
-                        tableRow.find('#blobUriText').html(statusResponse.BlobUri);
-                        tableRow.find('td:eq(5)').html(statusResponse.RequestStatus);
-
-                        //Color row as 'info'
-                        tableRow.addClass('info');
+    //All data loaded  - redraw the table...
+    var event1 = { 'data': 
+                        //{ 'tableId': tableName, 'modalDialogId': 'datamgrModal' }
+                        { 'tableId': 'tblDataManager', 'modalDialogId': 'datamgrModal' }
+                };
+    retrieveWaterOneFlowForTimeSeries(event1);
                         }
 
-                        //Check for completed/cancelled task/unknown task/error
-                        var requestStatus = parseInt(tableRow.find('td:eq(5)').html());
+function loadDataManager() {
 
-                        if (timeSeriesRequestStatus.Completed === requestStatus ||
-                            timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus ||
-                            timeSeriesRequestStatus.RequestTimeSeriesError === requestStatus ||
-                            timeSeriesRequestStatus.EndTaskError === requestStatus ||
-                            timeSeriesRequestStatus.UnknownTask === requestStatus) {
-                            //If task completed - re-assign 'Stop Task' button to 'Download'
-                            if (timeSeriesRequestStatus.Completed === requestStatus) {
-                                //Success - retrieve the base blob URI... 
-                                var baseUri = (statusResponse.BlobUri).split('.zip');
-                                var blobUri = baseUri[0] += '.zip';
+    //console.log('loadDataManager called!!');
 
-                                //Retrieve the full file name from the base blob URI...
-                                var uriComponents = baseUri[0].split('/');
-                                var fileName = uriComponents[(uriComponents.length - 1)];
+    //NOTE: IIS feature...
+	//To successfully transfer something like an e-mail address to the server - you MUST include a trailing forward slash 
+	// as explained here.  The trailing forward slash tells IIS that the string does not represent a file path!!!
+	// http://stackoverflow.com/questions/11728846/dots-in-url-causes-404-with-asp-net-mvc-and-iis
 
-                                //Set base blob URI into text in column 3
-                                //NOTE: Need to decode the string twice because:
-                                //       If the string contains an encoded character like %27 ('),
-                                //       the browser(?) separely encodes the (&) character as %25
-                                //       resulting in %25%27 in the string.  Two string decodes 
-                                //       are required to remove the two escape sequences...
-                                var decoded = decodeURIComponent(fileName);
-                                var decoded1 = decodeURIComponent(decoded);
-                                tableRow.find('#blobUriText').html(decoded1);
+    //Query server for saved time series, if any...
+    if ( (! currentUser.dataManagerLoaded ) && 
+            currentUser.authenticated && 
+            (null != currentUser.login)) {
+        var url = '/DataManager/Get/' + currentUser.login + '/';
 
-                                //Create a download button...
-                                var button = tableRow.find('td:eq(4)');
+        $.ajax({
+            url: url,
+            type: 'GET',
+            async: true,
+            dataType: 'json',
+            cache: false,   //So IE does not cache when calling the same URL - source: http://stackoverflow.com/questions/7846707/ie9-jquery-ajax-call-first-time-doing-well-second-time-not
+            success: function (data, textStatus, jqXHR) {
+                //Success - update indicator
+                currentUser.dataManagerLoaded = true;
 
-                                button = $("<button class='zipBlobDownload btn btn-success' style='font-size: 1.5vmin' data-blobUri='" + blobUri +  "'>Download Archive</button>");
+                //Load retrieve time series into table...
+                var datamgrTableName = 'tblDataManager';
+                var datamgrTableId = '#' + datamgrTableName;
+                var datamgrTable = $(datamgrTableId).DataTable();
 
-                                button.on('click', function (event) {
-                                    var blobUri = $(this).attr('data-blobUri');
-                                    location.href = blobUri;
+                var userTimeSeries = JSON.parse(data);
+                //var timeSeries = userTimeSeries.TimeSeries
+                var length = userTimeSeries.length;
+                var reDraw = false;
 
-                                    //Fade row and remove from table...
-                                    tableRow.fadeTo(1500, 0.5, function() {
-                                            $(this).remove();
-                                    });
+                for (var i = 0; i < length; ++i) {
+                    var serverRecord = userTimeSeries[i];
+                    var datamgrRecord = {};
 
-                                    event.stopPropagation();
-                                });
+                    datamgrRecord.Saved = true;
+                    datamgrRecord.Organization = serverRecord.Organization;
+                    datamgrRecord.ServTitle = serverRecord.ServiceTitle;
+                    datamgrRecord.ConceptKeyword = serverRecord.Keyword;
+                    datamgrRecord.DataType = serverRecord.DataType;
+                    datamgrRecord.ValueType = serverRecord.ValueType;
+                    datamgrRecord.SampleMedium = serverRecord.SampleMedium;
 
-                                tableRow.find('td:eq(4)').html(button);
+                    //Convert JSON dates to JavaScript dates as explained here:
+                    //http://blog.degree.no/2012/10/converting-json-date-string-to-javascript-date-object/
+                    var date = new Date(parseInt(serverRecord.StartDate.substr(6)));
+                    datamgrRecord.BeginDate = date.getFullYear().toString() + '-' + 
+                                              ('0' + (date.getMonth() + 1)).toString().slice(-2) + '-' + 
+                                              ('0' + date.getDate()).toString().slice(-2);
 
-                                //Change the glyphicon and stop the animation
-                                var glyphiconSpan = tableRow.find('#glyphiconSpan');
+                    date = new Date(parseInt(serverRecord.EndDate.substr(6)));
+                    datamgrRecord.EndDate = date.getFullYear().toString() + '-' + 
+                                            ('0' + (date.getMonth() + 1)).toString().slice(-2) + '-' + 
+                                            ('0' + date.getDate()).toString().slice(-2);
 
-                                glyphiconSpan.removeClass('glyphicon-refresh spin');
-                                glyphiconSpan.addClass('glyphicon-thumbs-up');
+                    datamgrRecord.ValueCount = serverRecord.ValueCount;
+                    datamgrRecord.SiteName = serverRecord.SiteName;
+                    datamgrRecord.VariableName = serverRecord.VariableName;
+                    datamgrRecord.TimeUnit = serverRecord.TimeUnit;
+                    datamgrRecord.TimeSupport = serverRecord.TimeSupport;
 
-                                tableRow.find('#statusMessageText').html(statusResponse.Status);
+                    datamgrRecord.SeriesId = serverRecord.SeriesId;
+                    datamgrRecord.WofUri = serverRecord.WaterOneFlowURI;
+                    datamgrRecord.TimeSeriesRequestStatus = serverRecord.Status;
+                    datamgrRecord.TimeSeriesRequestId = serverRecord.TimeSeriesRequestId;
 
-                                tableRow.addClass('success');   //Color row as 'successful'
+                    //Add the newly created record...
+                    datamgrTable.row.add(datamgrRecord);    
+                    reDraw = true;
+                }
 
-                                if ($("#chkbxAutoDownload").prop("checked")) {
-                                        //Autodownload checkbox checked - click the newly created button...
-                                    button.click();
+                //Redraw table, if indicated...
+                if ( reDraw) {
+                    datamgrTable.draw();
                                 }
+            },
+            error: function (xmlhttprequest, textStatus, message) {
+                //Failure - Log messsage received from server...
+                console.log('DataManager GET reports error: ' + xmlhttprequest.status + ' (' + message + ')');
                             }
-                            else {
-                                if (timeSeriesRequestStatus.CanceledPerClientRequest === requestStatus ||
-                                    timeSeriesRequestStatus.UnknownTask === requestStatus || 
-                                    timeSeriesRequestStatus.EndTaskError === requestStatus) {
-                                    //Task canceled OR unknown OR end task error - color row as 'danger'
-                                    tableRow.addClass('danger');
-
-                                    //Fade row and remove from table...
-                                    tableRow.fadeTo(1500, 0.5, function () {
-                                        $(this).remove();
                                     });
                                 }
-                                else {
-                                    if (timeSeriesRequestStatus.RequestTimeSeriesError === requestStatus) {
                                         
-                                        //Request Time Series Processing Error - DO NOT remove the row!! 
+}
                                         
-                                        //Reset blob URI
-                                        tableRow.find('#blobUriText').html('');
+//Retrieve all the selected rows per the input table name...
+function getSelectedRows(tableName) {
+    //Validate/initialize input parameters...
+    if ('undefined' === typeof tableName || null === tableName) {
+        return null;
+    }
 
-                                        //Hide the 'Stop Processing' button
-                                        tableRow.find('td:eq(4)').hide();
+    var table = $('#' + tableName).DataTable();
+    var rows = table.rows({ 'order': 'current', 'search': 'applied' });           //Retrieve rows per current sort/search order...
+    var length = rows[0].length;    //Need length of rows array here!!
+    var selectedRows = [];
+    var selectedTimeSeriesMax = parseInt($('#' + tableName).attr('data-selectedtimeseriesmax'));
 
-                                        //Change the glyphicon and stop the animation
-                                        var glyphiconSpan = tableRow.find('#glyphiconSpan');
+    for (var i = 0; i < length; ++i) {
+        var position = rows[0][i];  //Reference the row's position per the current sort/search!!
 
-                                        glyphiconSpan.removeClass('glyphicon-refresh spin');
-                                        glyphiconSpan.addClass('glyphicon-thumbs-down');
-                                        glyphiconSpan.css('color', 'red');
+        //If row is rendered, check if selected...
+        var node = table.row(position).node();
+        var bSelected = false;
 
-                                        //Color table row as 'warning'
-                                        tableRow.removeClass('info');
-                                        tableRow.addClass('warning');
-                                    }
+        if (null !== node) {
+            var jqueryObj = $(node);
+            if (jqueryObj.hasClass('notSelected')) {
+                continue;   //Row rendered and NOT selected, continue to next row...
                                 }
+            else if (jqueryObj.hasClass('selected')) {
+                bSelected = true;   //NOTE: User can manually select rows outside the 'Select Top ...'
                             }
-                            
-                            //Clear the interval
-                            clearInterval(intervalId);
-                            return;
                         }
-                    },
-                    error: function (xmlhttprequest, textStatus, message) {
 
-                        //For now - take no action...
-                        //ASSUMPTION: Next request will succeed
-
-                        //Log messsage received from server...
-                        console.log('CheckTask reports error: ' + xmlhttprequest.status + ' (' + message + ')');
+        if ((Number.isInteger(selectedTimeSeriesMax) && (i < selectedTimeSeriesMax)) || bSelected) {
+            //Current row position within 'Select Top ...' --OR-- user has manually selected the row - append row data to selected rows...
+            selectedRows.push(table.row(position).data());
                     }
-                });
-
-            }, 1000);
-
-        },
-        error: function (xmlhttprequest, textstatus, message) {
-            //Server error: Close modal dialog, if indicated - open 'Server Error' dialog
-            if ($('#SeriesModal').is(":visible")) {
-                $('#SeriesModal').modal('hide');
             }
 
-            $('#serverErrorModal').modal('show');
-
-            //Log messsage received from server...
-            console.log('RequestTimeSeries reports error: ' + xmlhttprequest.status + ' (' + message + ')');
-        }
-    });
+    return selectedRows;
 }
 
 //Format the html for the status message as follows - all elements inline:  <h3> - glyphicon spinner </h3> <span> status message text </span> 
@@ -3500,38 +4977,28 @@ function setUpTimeseriesDatatable() {
         "ajax": actionUrl,
         "dom": 'C<"clear">l<"toolbarTS">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
         "deferRender": true,
+        "autoWidth": false,
         "columns": [
-            { "data": "Organization", "width": "50px", "visible": true },
+            { "data": "Organization", "visible": true, "className": "tableColWrap10pct" },
             //BCC - 09-Sep-2015 - GitHub Issue #23 - Replace Network Name with Data Service Title
-            { "data": "ServCode", "visible": false },
-            { "data": "ServTitle", "sTitle": "Service Title", "visible": true },
+            { "data": "ServTitle", "sTitle": "Service Title", "visible": true, "className": "tableColWrap10pct" },
             { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
-            { "data": "ServURL", "visible": false },
-            { "data": "VariableName", "width": "50px", "sTitle": "Variable Name", "visible": true  },
-            //BCC - 10-Jul-2015 - Internal QA Issue #29 - Include VariableCode and SiteCode
-            { "data": "SiteCode", "sTitle": "Site Code", "visible": true },
-            { "data": "VariableCode", "sTitle": "Variable Code", "visible": true },
-            { "data": "BeginDate", "sTitle": "Start Date" },
-            { "data": "EndDate", "sTitle": "End Date" },
-            { "data": "ValueCount" },
-            { "data": "SiteName", "sTitle": "Site Name" },
-            //{ "data": "Latitude", "visible": true },
-            //{ "data": "Longitude", "visible": true },
             { "data": "DataType", "visible": true },
             { "data": "ValueType", "visible": true },
             { "data": "SampleMedium", "visible": true },
-            { "data": "TimeUnit", "visible": true },
-            //{ "data": "GeneralCategory", "visible": false },
+            { "data": "BeginDate", "sTitle": "Start Date", "visible": true },
+            { "data": "EndDate", "sTitle": "End Date", "visible": true },
+            { "data": "ValueCount", "visible": true },
+            { "data": "SiteName", "sTitle": "Site Name", "visible": true },
+            { "data": "VariableName", "width": "50px", "sTitle": "Variable Name", "visible": true },
             { "data": "TimeSupport", "visible": true },
-
-			//BCC - 15-Oct-29015 -  Suppress display of IsRegular
-            //{ "data": "IsRegular", "visible": true },
-            //{ "data": "VariableUnits","visible": false },
-            //{ "data": "Citation", "visible": false }            
-            { "data": "SeriesId" },
-            //BCC - 10-Jul-2015 - Add links to Description URL and Service URL (WSDL)
+            { "data": "TimeUnit", "visible": true },
             { "data": null, "sTitle": "Service URL", "visible": true },
-            { "data": "ServURL", "sTitle": "Web Service Description URL", "visible": true }
+
+            { "data": "SiteCode", "sTitle": "Site Code", "visible": true },
+            { "data": "VariableCode", "sTitle": "Variable Code", "visible": true },
+            { "data": "SeriesId", "visible": false  },
+            { "data": "ServURL", "sTitle": "Web Service Description URL", "visible": false }
            ],
         "scrollX": true,
         "scrollY": "30em",
@@ -3544,14 +5011,28 @@ function setUpTimeseriesDatatable() {
             var servCode = data.ServCode;
 
             var descUrl = getDescriptionUrl(servCode);
-            //$('td', row).eq(17).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
-            $('td', row).eq(16).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
+            $('td', row).eq(13).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
 
             //Create a link to the Web Service Description URL...
-            //var servUrl = $('td', row).eq(18).html();
-            //$('td', row).eq(18).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
-            var servUrl = $('td', row).eq(17).html();
-            $('td', row).eq(17).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
+            //var servUrl = data.ServURL;
+            //$('td', row).eq(16).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
+
+            //For valid date strings - remove hours, minutes, seconds from date columns...
+            var dateCols = [6, /*Start Date*/
+                            7  /*End Date*/];
+            var diLength = dateCols.length;
+
+            for (var di = 0; di < diLength; ++di) {
+
+                var text = $('td', row).eq(dateCols[di]).html();
+                if ( ! isNaN(Date.parse(text))) {
+                    var date = new Date(text);
+
+                    $('td', row).eq(dateCols[di]).html(date.getFullYear().toString() + '-' + 
+                                                      ('0' + (date.getMonth() + 1)).toString().slice(-2) + '-' + 
+                                                      ('0' + date.getDate()).toString().slice(-2) );
+                }
+            }
 
             //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
             if ($('#chkbxSelectAllTS').prop('checked')) {
@@ -3559,42 +5040,17 @@ function setUpTimeseriesDatatable() {
                 $('#chkbxSelectAllTS').triggerHandler('click');
             }
 
-            //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
-
-            //var id = $('td', row).eq(0).html();
-            //var d = $('td', row).eq(4).html();
-
-            /* BC - TEST - Do not include download icon or href in any table row...
-            $('td', row).eq(0).append("<a href='/Export/downloadFile/" + id + "' id=" + id + "<span><img  src='/Content/Images/download-icon-25.png' ></span> </a>");
-            $('td', row).eq(0).click(function () {
-                //downloadtimeseries('csv', id); return false;/Content/Images/ajax-loader-green.gif
-                //$('#spinner' + id).removeClass('hidden')
-                $(this).append("<span><img class='spinner' src='/Content/Images/ajax-loader-green.gif' style='padding-left:4px;padding-right:4px'></span>");
-                //$.fileDownload($(this).prop('href'), {
-                //    preparingMessageHtml: "We are preparing your report, please wait...",
-                //    failMessageHtml: "There was a problem generating your report, please try again."
-                //})
-
-                $.fileDownload($(this).prop('href'))
-                    .done(function () {
-                        $('.spinner').addClass('hidden');
-                        $('.spinner').parent().parent().addClass('selected');
-
-                    })
-                    .fail(function () {
-                        $('.spinner').addClass('hidden');
-                        $('.spinner').parent().parent().addClass('downloadFail');
-                    });
-
-            });
-*/
         },
         "initComplete": function () {
 
             //BCC - 10-Aug-2015 - GitHub Issue #35 - Add filter by Site Name
-            setfooterFilters('dtTimeseries', [0, 2, 3, 5, 11], 'chkbxSelectAllTS');
+            setfooterFilters('dtTimeseries', [0, 1, 2, 3, 4, 5], 'chkbxSelectAllTS');
 
-            oTable.fnAdjustColumnSizing();
+            //Set up tooltips
+            setupToolTips();
+
+            //oTable.fnAdjustColumnSizing();
+            $('#dtTimeseries').dataTable().fnAdjustColumnSizing();
         }
 
     });
@@ -3603,34 +5059,49 @@ function setUpTimeseriesDatatable() {
     //Source: https://datatables.net/examples/api/select_row.html
     //Avoid multiple registrations of the same handler...
     $('#dtTimeseries tbody').off('click', 'tr', toggleSelected);
-    $('#dtTimeseries tbody').on('click', 'tr', { 'tableId': 'dtTimeseries', 'btnId': 'btnZipSelectionsTS', 'btnClearId': 'btnClearSelectionsTS' }, toggleSelected);
+    $('#dtTimeseries tbody').on('click', 'tr', { 'tableId': 'dtTimeseries', 'btnIds': ['btnZipSelectionsTS', 'btnManageSelectionsTS'], 'btnClearId': 'btnClearSelectionsTS' }, toggleSelected);
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
     $("div.toolbarTS").html('<span style="float: left; margin-left: 1em;"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS" style="float:left;"/>&nbsp;Select Top ' +
-                            selectedTimeSeriesMax.toString() + '?</span>' +
-                            '<input type="button" style="margin-left: 2em; float:left;" class="btn btn-warning" disabled id="btnClearSelectionsTS" value="Clear Selection(s)"/>' +
-                            '<input type="button" style="margin-left: 2em; float:left;" class="ColVis-Button btn btn-primary" disabled id="btnZipSelectionsTS" value="Process Selection(s)"/>' +
-                            '<span class="clsZipStarted" style="display: none; float:left; margin-left: 2em;"></span>');
-
-    // BC - Do not respond to data table load event...
-    //Add data load event handler...
-    //$('#dtTimeseries').off('xhr.dt', dataTableLoad);
-    //$('#dtTimeseries').on('xhr.dt', { 'chkbxId': '#chkbxSelectAllTS' }, dataTableLoad);
+                            $('#dtTimeseries').attr('data-selectedtimeseriesmax') + '?</span>' +
+                           '<div id="divClearSelectionsTS" style="display: inline-block; margin-left: 2em; float:left;">' +
+                            '<button type="button" class="btn btn-warning" disabled id="btnClearSelectionsTS">' + 
+                             '<span class="glyphicon glyphicon-remove-sign" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +
+                             '<span id="spanClearSelectionsTS">Clear Selection(s)</span>' +
+                            '</button>' +
+                          '</div>' +
+                           '<div id="divZipSelectionsTS" style="display: inline-block; margin-left: 2em; float:left;">' +
+                            '<button type="button" class="ColVis-Button btn btn-primary" disabled id="btnZipSelectionsTS">' +
+                             '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +
+                             '<span id="spanZipSelectionsTS">Export Selection(s)</span>' +
+                            '</button>' +
+                          '</div>' +
+                          '<div id="divManageSelectionsTS" style="display: inline-block; margin-left: 2em; float:left;">' +
+                            '<button type="button" class="ColVis-Button btn btn-primary" disabled id="btnManageSelectionsTS">' +
+                            '<span class="glyphicon glyphicon-plus-sign" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +  
+                            '<span id="spanManageSelectionsTS">Add Selection(s) to Workspace</span>' +
+                            '</button>' +
+                          '</div>' +
+                            '<span class="clsMessageArea" style="display: none; float:left; margin-left: 2em;"></span>');
 
     //Add click handlers...
 
     //Avoid multiple registrations of the same handler...
     $('#chkbxSelectAllTS').off('click', selectAll);
-    $('#chkbxSelectAllTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS', 'btnId': 'btnZipSelectionsTS', 'btnClearId': 'btnClearSelectionsTS'}, selectAll);
+    $('#chkbxSelectAllTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS', 'btnIds': ['btnZipSelectionsTS', 'btnManageSelectionsTS'], 'btnClearId': 'btnClearSelectionsTS'}, selectAll);
 
     //Avoid multiple registrations of the same handler...
-    $('#btnZipSelectionsTS').off('click', zipSelections);
-    $('#btnZipSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS'}, zipSelections);
+    $('#btnZipSelectionsTS').off('click', zipSelections_2);
+    $('#btnZipSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS'}, zipSelections_2);
 
     //Avoid multiple registrations of the same handler...
     $('#btnClearSelectionsTS').off('click', clearSelections);
-    $('#btnClearSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS', 'btnId': 'btnZipSelectionsTS', 'btnClearId': 'btnClearSelectionsTS' }, clearSelections);
+    $('#btnClearSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS', 'btnIds': ['btnZipSelectionsTS', 'btnManageSelectionsTS'], 'btnClearId': 'btnClearSelectionsTS' }, clearSelections);
+
+    //Avoid multiple registrations of the same handler...
+    $('#btnManageSelectionsTS').off('click', copySelectionsToDataManager);
+    $('#btnManageSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS' }, copySelectionsToDataManager)
 
     //Add DataTables event handlers...
     //Search event...
@@ -3667,16 +5138,6 @@ function downloadtimeseries(format, id)
         }
     });
 
-    //bootbox.confirm("Are you sure?", function (url) {
-
-    //var _iframe_dl = $('<iframe onload="testalert()";/>')
-    //    .attr('src', url)
-    //    //.hide()
-    //    .appendTo('body')
-        
-    //;
-    //});                         
-   
 }
 
 function fnGetSelected(oTableLocal) {
@@ -3691,29 +5152,24 @@ function fnGetSelected(oTableLocal) {
 
 function serviceFailed(xmlhttprequest, textstatus, message)
 {
-    //hideLoadingImage();
-    
-    //AddMainMap(zoomlevel, Latlng)
-    //if (retryAttempts <= 3) {
-    //    updateMap(true);
-    //    retryAttempts++;
-    //}
-    //else 
-    //{
 
-    if ('undefined' !== typeof xmlhttprequest.responseText) {
-        var msg = JSON.parse(xmlhttprequest.responseText)
-        bootbox.alert(msg.Message);
+    //BCC - 19-Nov-2015 - per jQuery docs (http://api.jquery.com/jQuery.ajax/#jqXHR) 
+    //                      parsed JSON is available in the jqXHR.responseJSON object. 
+    //                      NOTE: IIS/IIS Express create the responseJSON object ONLY when 
+    //                              TrySkipIisCustomErrors = true on the controller's response object!!  
+    //                              See HomeController.UpdateMarkers(...) for more information...
+    if ('undefined' !== typeof xmlhttprequest.responseJSON) {
+        var msg = xmlhttprequest.responseJSON.Message;
+        bootbox.alert(msg);
     }
     else {
         //BCC - 26-Jun-2015 - QA Issue #9 - Timeout error message: typo in word 'occurred'
         bootbox.alert("<H4>An error occurred: '" + message + "'. Please limit search area or Keywords. Please contact Support if the problem persists.</H4>");
-
     }
+
     //clean up
     $("#pageloaddiv").hide();
     resetMap();
-    //}
 
 };
 
@@ -3846,4 +5302,41 @@ function setUpTooltips(elementId) {
 
     }
 
+}
+
+
+//Query the server for the current authenticated user...
+function loadCurrentUser() {
+
+    var url = '/Account/CurrentUser';
+
+    $.ajax({
+        url: url,
+        type: 'GET',
+        async: true,
+        dataType: 'json',
+        cache: false,   //So IE does not cache when calling the same URL - source: http://stackoverflow.com/questions/7846707/ie9-jquery-ajax-call-first-time-doing-well-second-time-not
+        success: function (data, textStatus, jqXHR) {
+
+            var CurrentUser = jQuery.parseJSON(data);
+
+            if (null !== CurrentUser) {
+                //Success - assign/reset retrieved current user values...
+                currentUser.authenticated = CurrentUser.Authenticated;
+                currentUser.login = CurrentUser.UserEmail;
+                currentUser.userName = CurrentUser.UserName;
+                currentUser.dataManagerLoaded = false;
+            }
+
+            //Load saved time series for current user, if indicated
+            if (currentUser.authenticated && (! currentUser.dataManagerLoaded)) {
+                loadDataManager();
+    }
+        },
+        error: function (xmlhttprequest, textStatus, message) {
+
+            //Failure - Log messsage received from server...
+            console.log('Account/CurrentUser reports error: ' + xmlhttprequest.status + ' (' + message + ')');
+        }  
+    });              
 }

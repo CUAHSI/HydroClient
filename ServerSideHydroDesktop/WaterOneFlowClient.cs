@@ -241,7 +241,23 @@ namespace ServerSideHydroDesktop
         /// <returns></returns>
         private static Stream ReadStreamFromResponse(WebResponse response)
         {
-            return response.GetResponseStream();
+			Stream stream = response.GetResponseStream();
+
+
+			//BCC - Test - Here the stream contains data...
+			//using (System.IO.FileStream output = new System.IO.FileStream(@"C:\CUAHSI\ReadFromStreamResponse.xml", FileMode.Create))
+			//{
+			//	stream.CopyTo(output);
+			//}
+
+			//BC TEST - Copy stream contents to a new memory stream and return the memory stream...
+			MemoryStream ms = new MemoryStream();
+			stream.CopyTo(ms);
+			ms.Seek(0, SeekOrigin.Begin);
+			return ms;
+
+
+            return stream;
         } 
 
 		#endregion

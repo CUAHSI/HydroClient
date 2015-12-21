@@ -287,14 +287,33 @@
     <Compile Include="Common\FileDownloadAttribute.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\Class1.cs" />
+    <Compile Include="Controllers\DataManagerController.cs" />
     <Compile Include="Controllers\ExportController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\IMetadataQuery.cs" />
     <Compile Include="Controllers\ManageController.cs" />
+    <Compile Include="Controllers\RESTfulInterfaceController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201512020008146_InitialCreate.cs" />
+    <Compile Include="Migrations\201512020008146_InitialCreate.Designer.cs">
+      <DependentUpon>201512020008146_InitialCreate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201512070210068_RemoveForeignKey_Email.cs" />
+    <Compile Include="Migrations\201512070210068_RemoveForeignKey_Email.Designer.cs">
+      <DependentUpon>201512070210068_RemoveForeignKey_Email.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201512070259123_test2.cs" />
+    <Compile Include="Migrations\201512070259123_test2.Designer.cs">
+      <DependentUpon>201512070259123_test2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
+    <Compile Include="Models\DataManager\CurrentUser.cs" />
+    <Compile Include="Models\DataManager\DM_TimeSeries.cs" />
+    <Compile Include="Models\DataManager\UserTimeSeries.cs" />
+    <Compile Include="Models\DataManager\UserTimeSeriesDbContext.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
     <Compile Include="Models\OntologyHelper.cs" />
@@ -340,6 +359,7 @@
     <Content Include="Content\Images\HydroserverLogo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Images\hydroshare-logo-sm.png" />
     <Content Include="Content\Images\Markers\ClusterIcons\blue-20.png" />
     <Content Include="Content\Images\Markers\ClusterIcons\blue-22.png" />
     <Content Include="Content\Images\Markers\ClusterIcons\blue-24.png" />
@@ -445,6 +465,8 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="Content\Test.zip" />
+    <Content Include="App_Data\Test.zip" />
     <None Include="Properties\PublishProfiles\bcc-hiswebclient - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\bcc-hiswebclient - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\dev-hiswebclient - FTP.pubxml" />
@@ -453,13 +475,13 @@
     <Content Include="Content\FancyTree\skin-xp\ui.fancytree.less" />
     <None Include="Properties\PublishProfiles\qa-hiswebclient - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\qa-hiswebclient - Web Deploy.pubxml" />
-    <Content Include="Properties\webjobs-list.json" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\Custom\DownloadHelper.js" />
     <Content Include="Scripts\Custom\freezeEnum.js" />
     <Content Include="Scripts\Custom\jquery-filedownload.js" />
     <Content Include="Scripts\Custom\RandomId.js" />
     <Content Include="Scripts\Custom\test1.js" />
+    <Content Include="Scripts\Custom\TimeSeriesFormat.js" />
     <Content Include="Scripts\Custom\TimeSeriesRequestStatus.js" />
     <Content Include="Scripts\Custom\webclient.js" />
     <Content Include="Scripts\Fancytree\jquery-ui.custom.js" />
@@ -546,12 +568,13 @@
     <Content Include="Views\Home\viztest.cshtml" />
     <Content Include="Views\Home\_DatatableTimeseriesColumns.cshtml" />
     <Content Include="Views\Home\_DatatableDataservicesColumns.cshtml" />
+    <Content Include="Views\Home\_DataManagerTimeseriesColumns.cshtml" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="App_Data\" />
     <Folder Include="Content\yeti\" />
     <Folder Include="Files\" />
     <Folder Include="NewFolder1\" />
+    <Folder Include="Views\DataManager\" />
     <Folder Include="Views\Export\" />
   </ItemGroup>
   <ItemGroup>
@@ -595,6 +618,17 @@
       <Project>{5dba60f1-4292-4ea0-9a78-a03ac3511dc7}</Project>
       <Name>CUAHSI.ServerSideHydroDesktop</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201512020008146_InitialCreate.resx">
+      <DependentUpon>201512020008146_InitialCreate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201512070210068_RemoveForeignKey_Email.resx">
+      <DependentUpon>201512070210068_RemoveForeignKey_Email.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201512070259123_test2.resx">
+      <DependentUpon>201512070259123_test2.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
