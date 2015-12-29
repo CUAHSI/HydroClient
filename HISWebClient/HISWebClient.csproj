@@ -376,6 +376,7 @@
     <Content Include="Content\Images\Markers\ClusterIcons\m5.png" />
     <Content Include="Content\Images\Markers\ClusterIcons\m6.png" />
     <Content Include="Content\Images\Markers\ClusterIcons\m6_single.png" />
+    <Content Include="Content\Images\Markers\ClusterIcons\m6_single_36.png" />
     <Content Include="Content\Images\Markers\Services\blue-20.png" />
     <Content Include="Content\Images\pageloader.gif" />
     <Content Include="Content\Images\cuahsi_logo_small.png" />
