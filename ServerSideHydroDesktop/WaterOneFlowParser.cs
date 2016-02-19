@@ -111,7 +111,17 @@ namespace ServerSideHydroDesktop
                         //Read the site information
                         site = ReadSite(reader);
                     }
-                    else if (site != null && readerName == "series")
+					//else if ("sourceinfo" == readerName)
+					//{
+					//	//BCC - 04-Jan-2016 - Add processing for 'sourceInfo' - see WaterOneFlowParser.ReadValues(...)
+					//	// Looks like this case contains only one 'series' - the 'values' list.
+					//	// Therefore, create one SeriesMetaData instance, add to list and return...
+					//	site = ReadSite(reader);
+					//	var newSeries = ReadSeriesFromSiteInfo(reader, site);
+					//	seriesList.Add(newSeries);
+					//	break;
+					//}
+                    else if (site != null && readerName == "series") 
                     {
                         var newSeries = ReadSeriesFromSiteInfo(reader, site);
                         seriesList.Add(newSeries);

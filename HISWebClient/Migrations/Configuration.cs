@@ -9,8 +9,8 @@ namespace HISWebClient.Migrations
     {
         public Configuration()
         {
-            AutomaticMigrationsEnabled = false;
-            ContextKey = "HISWebClient.Models.DataManager.UserTimeSeriesDbContext";
+            //AutomaticMigrationsEnabled = false;
+			AutomaticMigrationsEnabled = true;
         }
 
         protected override void Seed(HISWebClient.Models.DataManager.UserTimeSeriesDbContext context)

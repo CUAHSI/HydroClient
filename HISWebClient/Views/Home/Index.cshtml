@@ -15,7 +15,7 @@
             var o = this.createElement("script"); n && (this.domain = n),
                 o.id = "js-iframe-async", o.src = e, this.t = +new Date, this.zendeskHost = t, this.zEQueue = a, this.body.appendChild(o)
         }, o.write('<body onload="document._l();">'), o.close()
-}("//assets.zendesk.com/embeddable_framework/main.js", "cuahsi.zendesk.com");/*]]>*/</script>
+    }("//assets.zendesk.com/embeddable_framework/main.js", "cuahsi.zendesk.com");/*]]>*/</script>
 <!-- End of cuahsi Zendesk Widget script -->
 
 <div class="_container">
@@ -32,13 +32,13 @@
                 <div class="panel panel-default col-md-offset-2" style="display: inline-block;">
                     <div class="panel-heading" style="background-color: lightgray;">
                         <h3 class="panel-title" style="display: inline; font-weight: bold;"> Welcome: </h3>
-                        <span class="badge">@User.Identity.Name</span>
+                        <span class="badge" style="font-weight: bold; font-size: larger">@User.Identity.Name</span>
                     </div>
                 </div>
-                @*<script type="text/javascript">
+                <script type="text/javascript">
                     onload = function onloadScript() {
                         //Retrieve authenticated current user information for later reference...
-                        
+
                         if ('function' === typeof loadCurrentUser) {
                             loadCurrentUser();
                         }
@@ -46,31 +46,43 @@
                             console.log('Web client cannot find function: loadCurrentUser() - no current user loaded!!');
                         }
                     }
-                </script>*@
+                </script>
              }
-
             <ul class="nav nav-tabs pull-right" @*id="myTab"*@ @*style="display: inline-block; position: relative; float:right;"*@>
-                <li class="active navbar-custom"><a href="#map" id="mapTab" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> Map</a></li>
+                <li id="liMapTab" class="active navbar-custom" style="margin-right: 1em;"> <a href="#map" id="mapTab" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> Map</a></li>
                 @*   <li class="navbar-custom disabled"><a href="#graph" id="graphTab" data-toggle="tab"><span class="glyphicon glyphicon-home"></span> Graph</a></li>*@
-                <li class="navbar-custom data"><a href="#dataview" id="tableTab" data-toggle="tab"><span class="glyphicon glyphicon-list"></span> Data</a></li>
+                <li id="liTableTab" class="navbar-custom data"><a href="#dataview" id="tableTab" data-toggle="tab"><span class="glyphicon glyphicon-list"></span> Table</a></li>
                 <li class="btn-separator"></li>
-                <li class="navbar-custom"><a href="#tabbedDataMgr" id="tabbedDataMgrTab" data-toggle="tab"><span class="glyphicon glyphicon-record"></span> Workspace</a></li>
+                <li id="liTabbedDataMgrTab" class="navbar-custom"><a href="#tabbedDataMgr" id="tabbedDataMgrTab" data-toggle="tab"><span class="glyphicon glyphicon-record"></span> Workspace</a></li>
                 <li class="btn-separator"></li>
                 @*<li class="navbar-custom"><a href="" id="datamanagerTab" data-toggle="modal" data-target="#datamgrModal"><span class="glyphicon glyphicon-record"></span> Data Manager</a></li>
                     <li class="btn-separator"></li>*@
                 @*<li class="navbar-custom"><a href="" id="downloadmanagerTab" data-toggle="modal" data-target="#dmModal"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</a></li>
                     <li class="btn-separator"></li>*@
-                <li class="navbar-custom"><a href="" id="contactTab" data-toggle="modal" data-target="#contactModal"><span class="glyphicon glyphicon-earphone"></span> Contact</a></li>
+                <li id="liContactTab" class="navbar-custom"><a href="" id="contactTab" data-toggle="modal" data-target="#contactModal"><span class="glyphicon glyphicon-earphone"></span> Contact</a></li>
                 <li class="btn-separator"></li>
-                <li class="navbar-custom" style="margin-right: 1em;"><a href="" id="aboutTab" data-toggle="modal" data-target="#aboutModal"><span class="glyphicon glyphicon-info-sign"></span> About</a></li>
-                @*<li class="navbar-custom" style="margin-right: 1em;">
+                <li id="liAboutTab" class="navbar-custom" style="margin-right: 1em;"><a href="" id="aboutTab" data-toggle="modal" data-target="#aboutModal"><span class="glyphicon glyphicon-info-sign"></span> About</a></li>
+                <li id="liQuickStartTab" class="navbar-custom"> <a href="" id="quickStartTab" data-toggle="modal" data-target="#quickStartModal"><span class="glyphicon glyphicon-flash"></span> QuickStart</a></li>
+                <li class="btn-separator"></li>
+                <li id="liGoogleTab" class="navbar-custom" style="margin-right: 1em;">
+                    <div style="height: 2em;">
+                        @*<form id="formGoogleLogin" action="/Account/ExternalLogin?ReturnUrl=%2F" method="post">*@
+                        <form id="formGoogleLogin" action="/Account/ExternalLogin?ReturnUrl=%2FHome%2FIndex" method="post">
+                            <!-- Source: http://forums.asp.net/t/1901949.aspx?The+required+anti+forgery+cookie+__RequestVerificationToken+is+not+present+ -->
+                            @Html.AntiForgeryToken()
 
-        <form action="/Account/ExternalLogin?ReturnUrl=%2F" method="post">
-
-            <button type="submit" class="btn btn-sm btn-primary active center" id="Google" name="provider" value="Google" title="Log in using your Google account">Google</button>
+                            @{
+                                //Need to encode the '+' sign in the file name so that it is not converted to a space (' ') ...
+                                string url = "/home/getgoogleicon?id=" + Server.UrlEncode("btn_google+_signin_dark_normal_web.png");
+                                string url1 = "/home/getgoogleicon?id=" + Server.UrlEncode("btn_google+_signout_custom.png");
+                            }
+                            <!-- Need a 'hidden' input here.  The 'image' input cannot send any values to the server... -->
+                            <input type="hidden" id="Google" name="provider" value="Google" />
+                            <input type="image" id="imgSignIn" src="@url" style="height: 2.5em; width: 10em; margin-top: -0.25em;" />
+                            <input type="image" id="imgSignOut" src="@url1" class="hidden" style="height: 2.5em; width: 10em; margin-top: -0.25em;" />
 
         </form>
-
+                    </div>
 
     </li>
     @if (User.IsInRole("Admin") || User.Identity.Name == "mseul@cuahsi.org")
@@ -80,13 +92,12 @@
             <ul class="dropdown-menu">
                 <li>@Html.ActionLink("Roles", "Index", "Roles", new { area = "Admin" }, null)</li>
                 @*<li>@Html.ActionLink("Add Connection", "Index", "ConnectionParameters", new { area = "Admin" }, null)</li>
-                    <li>@Html.ActionLink("Link Connections", "Index", "ConnectionParametersUsers", new { area = "Admin" }, null)</li>
+                                <li>@Html.ActionLink("Link Connections", "Index", "ConnectionParametersUsers", new { area = "Admin" }, null)</li>*@
                 <li>@Html.ActionLink("Register as a new user", "Register", "Account", new { area = "" }, null)</li>
             </ul>
         </li>
-    }*@
+                }
             </ul>
-
         </div>
     </div>
 
@@ -126,20 +137,21 @@
             </div>
             <!-- Nav tabs for tabbed panes - Data Manager and Download Manager -->
             <ul class="nav nav-tabs" role="tablist" style="margin-top: 0.5em; font-size: 1.5em;">
-                <li role="presentation" class="active"><a href="#dataMgrPane" aria-controls="dataMgrPane" role="tab" data-toggle="tab" style="font-weight: bold; padding-left:0.2em; padding-right:0.2em">Data</a></li>
-                <li role="presentation"><a href="#downloadMgrPane" aria-controls="downloadMgrPane" role="tab" data-toggle="tab" style="font-weight: bold;padding-left:0.2em; padding-right:0.2em">Exports</a></li>
+                <li role="presentation" id="liDataMgrPane" class="active"><a href="#dataMgrPane" aria-controls="dataMgrPane" role="tab" data-toggle="tab" style="font-weight: bold; padding-left:0.2em; padding-right:0.2em">Data</a></li>
+                <li role="presentation" id="liDownloadMgrPane"><a href="#downloadMgrPane" aria-controls="downloadMgrPane" role="tab" data-toggle="tab" style="font-weight: bold;padding-left:0.2em; padding-right:0.2em">Exports</a></li>
             </ul>
 
             <!-- Tabbed panes - Data Manager and Download Manager -->
             <div class="tab-content">
-                <div role="tabpanel" class="tab-pane fade in active" id="dataMgrPane">
+                @*<div role="tabpanel" class="tab-pane fade in active" id="dataMgrPane">*@
+                <div role="tabpanel" class="tab-pane in active" id="dataMgrPane">
                     @*<h1>Data Manager</h1>*@
                     <div class="modal-body modal-body-full row">
                         @* BCC- 24-Sep-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set 'max-width: none' on the table element!!
                             NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
                             Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
                         *@
-                        <table id="tblDataManager" class="display disable-selection" cellspacing="0" style="max-width: none;">
+                        <table id="tblDataManager" class="display disable-selection" cellspacing="0" style="max-width: none;" data-timeseriesmax="50">
                             <thead>
                                 <tr>
                                     @Html.Partial("_DataManagerTimeseriesColumns")
@@ -312,6 +324,20 @@
                         <label for="changetype-geocode">Geocodes</label>
                     </div>
 
+                    <div id="panelMapFilters" class="searchbarcontrols panel-heading" style="padding: 0.5em; height: auto; width: auto; display: inline-block;">
+
+                        <div class="badge" style="text-align: left; display: inline;">
+                            <span id="badgeLatitude" style="font-size: medium; text-align: left;"></span>
+                            <span>/</span>
+                            <span id="badgeLongitude" style="font-size: medium; text-align: left;"></span>
+                        </div>
+                        <div id="panelMapFilters2" class="hidden" style="margin-top: 0.5em;">
+                            <span class="badge" style="text-align: left;">
+                                <span style="display: inline; font-weight: bold; text-align: left;" class="panel-title">Filters...</span>
+                                <span id="badgeMapFilters" style="margin-left: 0.5em; font-size: medium; text-align: left;">Filters go here!!!</span>
+                            </span>
+                        </div>
+                    </div>
                     @*<h1 id="home">
                             <a id="menu-toggle" href="#" class="glyphicon glyphicon-align-justify ">
                                 <i class="fa fa-bars"></i>
@@ -340,7 +366,7 @@
 
                 <div style="margin-left: 2.0em;">
                     <address style="margin-top: 2.0em;">
-                        <H3>Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)</H3>
+                        <h3>Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)</h3>
                         <br />
                         <br />
                         196 Boston Ave, Suite 3000<br />
@@ -370,7 +396,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
-                <h3 class="modal-title" id="myModalLabel">About  <a href="http://www.github.com/cuahsi" target="_blank">(Version 1.01)</a></h3>
+                <h3 class="modal-title" id="myModalLabel">About  <a href="http://www.github.com/cuahsi" target="_blank">(Version 1.1)</a></h3>
             </div>
             <div class="modal-body">
 
@@ -429,6 +455,57 @@
     </div>
 </div>
 
+
+<!-- Modal dialog for Quick Start -->
+<div class="modal fade" id="quickStartModal" tabindex="-1" role="dialog" aria-labelledby="quickStartModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
+                <h3 class="modal-title" id="myQuickStartLabel">Quick Start </h3>
+            </div>
+            <div class="modal-body">
+
+                <div style="margin-left: 2.0em;">
+
+                    <ul class="nav nav-tabs" role="tablist" data-tabs="tabs">
+                        <li class="active"><a href="#features" role="tab" data-toggle="tab">Features</a></li>
+                        <li><a href="#search" role="tab" data-toggle="tab">Search</a></li>
+                        <li><a href="#analysis" role="tab" data-toggle="tab">Analysis</a></li>
+                    </ul>
+
+                    <div class="tab-content">
+
+                        <div class="active tab-pane" id="features">
+
+                            <img style="width: 30em;" src="~/Content/Images/QuickStart/quickstart-guide-slide-1.png" />
+
+                            <p>With HydroClient, you can discover, export, and analyze environmental data.</p>
+                        </div>
+
+                        <div class ="tab-pane" id="search">
+                            <img style="width: 30em;" src="~/Content/Images/QuickStart/quickstart-guide-slide-2.png" />
+
+                            <p>To begin, search for data based on location, what is being measured, and the time period you are interested in.</p>
+                        </div>
+
+                        <div class="tab-pane" id="analysis">
+                            <img style="width: 30em;" src="~/Content/Images/QuickStart/quickstart-guide-slide-3.png" />
+
+                            <p>Once you have discovered data, save it to your workspace in the cloud. This enables you to bookmark interesting data sets or use data tools to view and analyze the data sets that have been saved to your workspace.</p>
+                        </div>
+                   </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <!--p>This is the modal footer!!</p-->
+                <address style="text-align: left;">
+                    <a href="https://cuahsi.zendesk.com/hc/en-us/articles/205419147-Overview-of-the-HydroClient-Homepage" target="_blank">Need additional help<span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></a>
+                </address>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Modal dialog for Server Error... -->
 <div class="modal fade" id="serverErrorModal" tabindex="-1" role="dialog" aria-labelledby="serverErrorModalLabel" aria-hidden="true">

@@ -26,8 +26,10 @@ namespace HISWebClient.Models.DataManager
 		//Members...
 		public int Status { get; set; }
 		public string Organization { get; set; }
+		public string ServiceCode { get; set; }
 		public string ServiceTitle { get; set; }
 		public string Keyword { get; set; }
+		public string VariableUnits { get; set; }
 		public string DataType { get; set; }
 		public string ValueType { get; set; }
 		public string SampleMedium { get; set; }
@@ -41,6 +43,7 @@ namespace HISWebClient.Models.DataManager
 
 		public int SeriesId { get; set; }
 		public string WaterOneFlowURI { get; set; }
+		public DateTime WaterOneFlowTimeStamp { get; set; }
 		public string TimeSeriesRequestId { get; set; }
 
 		//Reference to associated user

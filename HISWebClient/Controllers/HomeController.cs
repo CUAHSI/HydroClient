@@ -19,9 +19,13 @@ using CUAHSI.Models;
 using HISWebClient.Models;
 using System.Xml;
 using System.Text.RegularExpressions;
+using System.Reflection;
+
+using System.Net.Http;
 
 using log4net.Core;
 using HISWebClient.Util;
+using HISWebClient.Models.ClientFilterAndSearchCriteria;
 
 namespace HISWebClient.Controllers
 {
@@ -32,6 +36,45 @@ namespace HISWebClient.Controllers
 		private DbLogContext dblogcontext = new DbLogContext("DBLog", "AdoNetAppenderLog", "local-DBLog", "deploy-DBLog");
 
 		private DbErrorContext dberrorcontext = new DbErrorContext("DBError", "AdoNetAppenderError", "local-DBLog", "deploy-DBLog");
+
+		private List<WebServiceNode> webServiceList = getWebServiceList();
+
+		private ExportController exportController = new ExportController();
+
+		private static List<WebServiceNode> getWebServiceList()
+		{
+			var dataWorker = new DataWorker();
+
+			return dataWorker.getWebServiceList();
+		}
+
+		public string LookupValueFromTitle( clientDataSource cds, TimeSeriesViewModel tsvm )
+		{
+			string value = String.Empty;
+
+			//Validate/initialize input parameters
+			if (null == cds || null == tsvm)
+			{
+				return value;	//Invalid parameter(s) - return early
+			}
+
+			switch (cds.title)
+			{
+				case "Service URL":		//Data Service URL (NOT the WSDL URL)
+
+					//On the client's Data page, the DataTable's Service URL column lists the organization name.  The entry contains a link to the DescriptionUrl.
+ 					// On a search, the DataTable references the organization name value not the DescriptionUrl value...  
+					//value = webServiceList.Find(wsn => wsn.ServiceCode.Equals(tsvm.ServCode, StringComparison.CurrentCultureIgnoreCase)).DescriptionUrl;
+					value = tsvm.Organization;
+					break;
+				default:
+					//Unknown title, take no action...
+					break;
+			}
+
+			//Processing complete - return
+			return value;
+		}
 
 		public ActionResult Index()
 		{
@@ -131,7 +174,6 @@ namespace HISWebClient.Controllers
 			int MINCLUSTERDISTANCE = 25;
 			int MAXCLUSTERCOUNT = Convert.ToInt32(ConfigurationManager.AppSettings["MaxClustercount"].ToString()); //maximum ammount of clustered markers
 
-
 			UniversalTypeConverter.TryConvertTo<double>(collection["xMin"], out xMin);
 			UniversalTypeConverter.TryConvertTo<double>(collection["xMax"], out xMax);
 			UniversalTypeConverter.TryConvertTo<double>(collection["yMin"], out yMin);
@@ -139,6 +181,16 @@ namespace HISWebClient.Controllers
 			Box box = new Box(xMin, xMax, yMin, yMax);
 			UniversalTypeConverter.TryConvertTo<int>(collection["zoomLevel"], out zoomLevel);
 			var activeWebservices = new List<WebServiceNode>();
+
+			//Attempt to retrieve filtered timeseries ids, if indicated
+			string strFilterAndSearchCriteria = collection["filterAndSearchCriteria"];
+
+			clientFilterAndSearchCriteria filterAndSearchCriteria = null;
+
+			if (!String.IsNullOrWhiteSpace(strFilterAndSearchCriteria))
+			{
+				filterAndSearchCriteria = JsonConvert.DeserializeObject<clientFilterAndSearchCriteria>(strFilterAndSearchCriteria);
+			}
 
 			//if (collection["sessionGuid"] != null)
 			//{
@@ -265,7 +317,39 @@ namespace HISWebClient.Controllers
 							tvm = mapDataCartToTimeseries(series[i], i);
 							list.Add(tvm);
 						}
+
+						//TO DO - Transfer logic to tblDataManager loading and copying functions 
+						//			The retrieval of the Variable Units is too time consuming to do for every time series...
+						//var count = list.Count;
+						//var list1 = new List<TimeSeriesViewModel>();
+						//for (int i = 0; i < count; ++i)
+						//{
+						//	int seriesId = list[i].SeriesId;
+						//	list1.Add(list[i]);
+						//	SeriesData sd = null;
+
+						//	//Task<SeriesData> sd = Task.Run(async () =>
+						//	Task.Run(async () =>
+						//	{
+						//		//SeriesData sd1 = await exportController.GetSeriesDataFromSeriesID(seriesId, list1);
+						//		try
+						//		{
+						//			sd = await exportController.GetSeriesDataFromSeriesID(seriesId, list1);
+						//		}
+						//		catch (Exception ex)
+						//		{
+						//			//For now take no action...
+						//			sd = null;
+						//		}
+						//	}).Wait();
+
+						//	if (null != sd)
+						//	{
+						//		list[i].VariableUnits = sd.myVariable.VariableUnit.Name;
+						//	}
+						//}
 					}
+
 					var markerClustererHelper = new MarkerClustererHelper();
 
 					//save list for later
@@ -273,7 +357,7 @@ namespace HISWebClient.Controllers
 					// Session["test"] = "test";// series;
 
 					//transform list int clusteredpins
-					var pins = transformSeriesDataCartIntoClusteredPin(list);
+					var pins = transformSeriesDataCartIntoClusteredPin(list, filterAndSearchCriteria);
 
 					var clusteredPins = markerClustererHelper.clusterPins(pins, CLUSTERWIDTH, CLUSTERHEIGHT, CLUSTERINCREMENT, zoomLevel, MAXCLUSTERCOUNT, MINCLUSTERDISTANCE);
 					Session["ClusteredPins"] = clusteredPins;
@@ -326,7 +410,7 @@ namespace HISWebClient.Controllers
 				{
 					var markerClustererHelper = new MarkerClustererHelper();
 					//transform list int clusteredpins
-					var pins = transformSeriesDataCartIntoClusteredPin(retrievedSeries);
+					var pins = transformSeriesDataCartIntoClusteredPin(retrievedSeries, filterAndSearchCriteria);
 
 					var clusteredPins = markerClustererHelper.clusterPins(pins, CLUSTERWIDTH, CLUSTERHEIGHT, CLUSTERINCREMENT, zoomLevel, MAXCLUSTERCOUNT, MINCLUSTERDISTANCE);
 					Session["ClusteredPins"] = clusteredPins;
@@ -349,6 +433,120 @@ namespace HISWebClient.Controllers
 			}
 			return Json(markerjSON);
 
+		}
+
+		//GET home/{service code}
+		//NOTE: The hiscentral.cuahsi.org/getIcon service returns either a unique icon defined for the input service code --OR--
+		//		 the default icon (if the service has not defined a custom icon).  In providing the default icon, the  
+		//		 service returns the following:
+		//		
+		//		 - HTTP Status Code 302 - the requested resource resides temporarily under a different URI
+		//		 - The temporary URI in the response's Location field
+		//
+		//		Upon receipt of this response the browser (or HttpClient instance) performs a re-direct to 
+		//		the temporary URI.  Thus comparing the final URI contained in the response to the default icon's
+		//		URI provides a convenient means to know whether or not a re-direct has occurred.  
+		//
+		//		Can't really do anything like this in the browser since: 
+		//
+		//		 - The <img> tag's 'load' event does not provide an HTTP status code or final URI value
+		//		 - JavaScript's Image object does not support any events
+		//		 - Ajax calls to the getIcon service encounter 'cross-domain' security issues...
+		[HttpGet]
+		public async Task<ActionResult> getIcon(string id )		//MUST use 'id' here to match the identifier used in the MapRoute call!!
+		{
+			//Create Uris for default icon and CUAHSI logo...
+			Uri uriDefaultIcon = new Uri(ConfigurationManager.AppSettings["uriDefaultIcon"], UriKind.Absolute);
+			Uri uriCuahsiLogo = new Uri(ConfigurationManager.AppSettings["uriCuahsiLogo"], UriKind.Relative);
+
+			string uriIcon = String.Format("{0}{1}", "http://hiscentral.cuahsi.org/getIcon.aspx?name=", id);
+
+			//Download the icon to determine the final URI...
+			HttpResponseMessage response = await DownloadIcon(uriIcon);
+			Uri uriRequest = GetRequestUri(response);
+
+			//Compare default icon URI to final URI
+			if (CompareUris(uriDefaultIcon, uriRequest))
+			{
+				//Match - no custom icon defined for service - set URI to CUAHSI logo
+				uriRequest = uriCuahsiLogo;
+			}
+
+			//Re-direct to the final URI...
+			return Redirect( uriRequest.IsAbsoluteUri ? uriRequest.AbsoluteUri : uriRequest.OriginalString);
+		}
+
+		//NOTE: The use of '+'s in URLs - like /Content/Google+/... results in IIS error message: 
+		//			'The request filtering module is configured to deny a request that contains a double escape sequence.'
+		//		While this error checking can be disabled via configuration parameters, doing so can decrease site security.
+		//		The current controller method is provided to allow retention of file/directory name(s) as received from Google...
+		//			
+		[HttpGet]
+//		public async Task<ActionResult> getGoogleIcon(string id)			//MUST use 'id' here to match the identifier used in the MapRoute call!!
+		public ActionResult getGoogleIcon(string id)			//MUST use 'id' here to match the identifier used in the MapRoute call!!
+		{
+			//Validate/initialize input parameters
+			string fileName = id;
+			if (String.IsNullOrWhiteSpace(fileName))
+			{
+				return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest, "Invalid parameter(s)");
+			}
+
+			//Establish file path...
+			string filePathAndName = Server.MapPath("~/Content/Images/Google+/" + fileName.ToString());
+
+			//Attempt to read file contents... 
+			try
+			{
+				FileStream fs = new FileStream( filePathAndName, FileMode.Open);
+				fs.Seek(0, SeekOrigin.Begin);
+
+				//Success - return a file stream result...
+				FileStreamResult fsr = new FileStreamResult(fs, "image/png");
+
+				return fsr;
+
+			}
+			catch( Exception ex)
+			{
+				//Error - return a 'Not Found'...
+				return new HttpStatusCodeResult(System.Net.HttpStatusCode.NotFound, String.Format("Requested Google icon: {0} not found.", fileName).ToString());
+			}
+			
+		}
+
+		//For the input Icon URI, perform a response-header GET.  Return the response...
+		async static Task<HttpResponseMessage> DownloadIcon(string uri)
+		{
+			HttpResponseMessage response;
+			using (HttpClient client = new HttpClient())
+			{
+				response = await client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead);
+			}
+
+			return response;
+		}
+
+		//Return the response's final RequestUri
+		//NOTE: As explained here: http://stackoverflow.com/questions/17758667/c-sharp-how-to-get-last-url-from-httpclient (Answer 11)
+		//		 the RequestUri property contains the final URI returned (after all re-directs)
+		//		Also, one can configure HttpClient to prevent any re-directs as explained here: 
+		//		 http://stackoverflow.com/questions/14731980/using-httpclient-how-would-i-prevent-automatic-redirects-and-get-original-statu
+		static Uri GetRequestUri(HttpResponseMessage response)
+		{
+
+			if (null != response && null != response.RequestMessage && null != response.RequestMessage.RequestUri)
+			{
+				return response.RequestMessage.RequestUri;
+			}
+
+			return new Uri("unknown.gif", UriKind.Relative);
+		}
+
+		//Compare the input Uri, using the overloaded equality operator...
+		static bool CompareUris(Uri uriLHS, Uri uriRHS)
+		{
+			return (null == uriLHS || null == uriRHS) ? false : (uriLHS == uriRHS);
 		}
 
 		public string getSeriesDataForViz()
@@ -464,22 +662,123 @@ namespace HISWebClient.Controllers
 
 		}
 
-		public List<ClusteredPin> transformSeriesDataCartIntoClusteredPin(List<TimeSeriesViewModel> series)
+		public List<ClusteredPin> transformSeriesDataCartIntoClusteredPin(List<TimeSeriesViewModel> series, clientFilterAndSearchCriteria filterAndSearchCriteria)
 		{
 			List<ClusteredPin> clusterPins = new List<ClusteredPin>();
+			bool bUseFilter = ! (null == filterAndSearchCriteria || filterAndSearchCriteria.isEmpty());
+
+			if (  bUseFilter) {
+				//Retrieve COPIES of all time series which match filter criteria...
+				series = filterTimeSeries(series, filterAndSearchCriteria);
+			}
 
 			for (int i = 0; i < series.Count; i++)
 			{
+
 				var cl = new ClusteredPin();
 
 				cl.Loc = new LatLong(series[i].Latitude, series[i].Longitude);
 
 				cl.assessmentids.Add(series[i].SeriesId);
 				cl.PinType = "point";
+
+				//Retain the service code, title and highest value count for later reference...
+				string key = series[i].ServCode;
+				int count = series[i].ValueCount;
+				string title = series[i].ServTitle;
+
+				cl.ServiceCodeToTitle[key] = title + " (" + count.ToString() + ")";
+	
 				clusterPins.Add(cl);
 			}
 
 			return clusterPins;
+		}
+
+		//Determine whether or not to filter the input time series per the input criteria - 
+		private List<TimeSeriesViewModel> filterTimeSeries(List<TimeSeriesViewModel> series, clientFilterAndSearchCriteria filterAndSearchCriteria)
+		{
+			//Validate/initialize input parameters...
+			if (null == series || 0 >= series.Count || filterAndSearchCriteria.isEmpty())
+			{
+				//Null or empty time series list and/or criteria - return early
+				return series;
+			}
+
+			//Prior to applying the criteria - copy the input time series 
+			List<TimeSeriesViewModel> listFiltered = null;
+
+			//Initialize the LINQ predicate...
+			System.Linq.Expressions.Expression<Func<TimeSeriesViewModel, bool>> predicate;
+
+			//Apply search string (case-insensitive), if indicated...
+			string search = filterAndSearchCriteria.search;
+			if (! String.IsNullOrWhiteSpace(search))
+			{
+				//Initialize the LINQ predicate...
+				//NOTE: Initializing the predicate to always return false and then adding ORs 
+				//		 will select only those timeseries with values matching the search criteria
+				predicate = LinqPredicateBuilder.Create<TimeSeriesViewModel>(item => false);
+
+				//Scan datasources...
+				StringComparer comparer = StringComparer.CurrentCultureIgnoreCase;
+				foreach ( var datasource in filterAndSearchCriteria.dataSources)
+				{
+					if (! datasource.searchable)
+					{
+						continue;	//NOT searchable - continue
+					}
+
+					//Searchable... add value to predicate...
+					if (null != datasource.dataSource)
+					{
+						//Value in TimeSeriesViewModel property...
+						var source = datasource.dataSource;
+
+						//Add TimeSeriesViewModel property to LINQ predicate 
+						//NOTE: MUST specify a case-insensitive contains...
+						predicate = predicate.Or(item => item.GetType().GetProperty(source).GetValue(item, null).ToString().Contains(search, StringComparison.CurrentCultureIgnoreCase));
+					}
+					else if (null != datasource.title)
+					{
+						//Lookup value from title...
+						predicate = predicate.Or(item => (LookupValueFromTitle(datasource, item)).ToString().Contains(search, StringComparison.CurrentCultureIgnoreCase));
+
+					}
+				}
+
+				//Apply search criteria to current timeseries
+				var queryable = series.AsQueryable();
+				listFiltered = queryable.Where(predicate).ToList();
+			}
+
+			//Apply filters (case-insensitive), if indicated...
+			List<clientFilter> filters = filterAndSearchCriteria.filters;
+			if (0 < filters.Count)
+			{
+				//Initialize the LINQ predicate...
+				//NOTE: Initializing the predicate to always return true and then adding ANDs 
+				//		 will select only those timeseries with values matching the filter(s)
+				predicate = LinqPredicateBuilder.Create<TimeSeriesViewModel>(item => true);
+
+				//Set the queryable collection - listFiltered (if search criteria already applied, otherwise series)
+				var queryable = (null != listFiltered) ? listFiltered.AsQueryable() : series.AsQueryable(); 
+				foreach (var filter in filters)
+				{
+					var source = filter.dataSource;
+					var value = filter.value;
+
+					//Add TimeSeriesViewModel property to LINQ predicate
+					//NOTE: MUST specify a case-insensitive equals...
+					predicate = predicate.And(item => item.GetType().GetProperty(source).GetValue(item, null).ToString().Equals(value, StringComparison.CurrentCultureIgnoreCase));
+				}
+
+				//Apply search criteria to current timeseries
+				listFiltered = queryable.Where(predicate).ToList();
+			}
+
+			//Processing complete - return
+			return listFiltered;
 		}
 
 		private TimeSeriesViewModel mapDataCartToTimeseries(BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart dc, int id)
@@ -514,7 +813,7 @@ namespace HISWebClient.Controllers
 			obj.ConceptKeyword = dc.ConceptKeyword;
 			//BCC - 15-Oct-29015 -  Suppress display of IsRegular
 			//obj.IsRegular = dc.IsRegular;
-			//obj.VariableUnits = dc.VariableUnits;
+			obj.VariableUnits = dc.VariableUnits;
 			//obj.Citation = dc.Citation;
 			obj.Organization = dict.FirstOrDefault(x => x.Key == dc.ServCode).Value;
 

@@ -37,7 +37,7 @@ namespace HISWebClient.Models
             ConceptKeyword = tsvm.ConceptKeyword;
 			//BCC - 15-Oct-29015 -  Suppress display of IsRegular
 			//IsRegular = tsvm.IsRegular;
-            //VariableUnits = tsvm.VariableUnits;
+            VariableUnits = tsvm.VariableUnits;
             //Citation = tsvm.Citation;
             Organization = tsvm.Organization;
         }

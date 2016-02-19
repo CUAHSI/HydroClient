@@ -26,7 +26,7 @@ namespace HISWebClient.MarkerClusterer
         private int count = 0;
         private string pinType = null;
         public System.Collections.ArrayList assessmentids = new System.Collections.ArrayList();
-        private string themeParameter = null;
+        //private string themeParameter = null;
 
         //private NameValueCollection assessmentHeaderData;
 
@@ -37,6 +37,8 @@ namespace HISWebClient.MarkerClusterer
             pixelX = -1;
             pixelY = -1;
             ClusterArea = new Bounds();
+		
+			ServiceCodeToTitle = new Dictionary<string, string>();
         }
 
         public ClusteredPin(LatLong loc, Bounds clusterArea)
@@ -45,6 +47,8 @@ namespace HISWebClient.MarkerClusterer
             pixelY = -1;
             Loc = loc;
             ClusterArea = clusterArea;
+
+			ServiceCodeToTitle = new Dictionary<string, string>();
         }
         public ClusteredPin(LatLong loc, Bounds clusterArea, int assessmentid)
         {
@@ -54,6 +58,7 @@ namespace HISWebClient.MarkerClusterer
             ClusterArea = clusterArea;
             assessmentids.Add(assessmentid);
 
+			ServiceCodeToTitle = new Dictionary<string, string>();
         }
         public ClusteredPin(LatLong loc, Bounds clusterArea, int assessmentid, NameValueCollection assessmentHeaderData)
         {
@@ -64,6 +69,7 @@ namespace HISWebClient.MarkerClusterer
             assessmentids.Add(assessmentid);
           //  AssessmentHeaderData = assessmentHeaderData;
 
+			ServiceCodeToTitle = new Dictionary<string, string>();
         }
         public ClusteredPin(LatLong loc, Bounds clusterArea, int assessmentid, string pinType, NameValueCollection assessmentHeaderData)
         {
@@ -75,6 +81,7 @@ namespace HISWebClient.MarkerClusterer
             PinType = pinType;
            // AssessmentHeaderData = assessmentHeaderData;
 
+			ServiceCodeToTitle = new Dictionary<string, string>();
         }
 
         public ClusteredPin(LatLong loc, Bounds clusterArea, int assessmentid, string pinType, NameValueCollection assessmentHeaderData, string themeParameter)
@@ -88,6 +95,7 @@ namespace HISWebClient.MarkerClusterer
           //  AssessmentHeaderData = assessmentHeaderData;
           //  ThemeParameter = themeParameter;
 
+			ServiceCodeToTitle = new Dictionary<string, string>();
         }
 
 
@@ -96,6 +104,7 @@ namespace HISWebClient.MarkerClusterer
 
             //AssessmentHeaderData = assessmentHeaderData;
 
+			ServiceCodeToTitle = new Dictionary<string, string>();
         }
 
 
@@ -139,6 +148,14 @@ namespace HISWebClient.MarkerClusterer
         //    set { themeParameter = value; }
         //}
 
+		//Maps Service Codes to Service Titles...
+		public Dictionary<string, string> ServiceCodeToTitle
+		{
+			get;
+
+			set;
+		}
+
 
         #endregion
 
@@ -173,6 +190,9 @@ namespace HISWebClient.MarkerClusterer
             assessmentids.Add(newPin.assessmentids[0]);
             Count = Count + 1;
 
+			//Merge the two dictionaries into one dictionary
+			//Source: http://stackoverflow.com/questions/10559367/combine-multiple-dictionaries-into-a-single-dictionary
+			ServiceCodeToTitle = ServiceCodeToTitle.Concat(newPin.ServiceCodeToTitle).GroupBy(d => d.Key).ToDictionary(d => d.Key, d => d.First().Value);
         }
 
         /// <summary>
@@ -229,6 +249,10 @@ namespace HISWebClient.MarkerClusterer
 
             assessmentids.AddRange(newPin.assessmentids);
             Count = Count + newPin.Count;
+
+			//Merge the two dictionaries into one dictionary
+			//Source: http://stackoverflow.com/questions/10559367/combine-multiple-dictionaries-into-a-single-dictionary
+			ServiceCodeToTitle = ServiceCodeToTitle.Concat(newPin.ServiceCodeToTitle).GroupBy(d => d.Key).ToDictionary(d => d.Key, d => d.First().Value);
 
         }
         #region Interfaces

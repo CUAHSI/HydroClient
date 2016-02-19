@@ -65,9 +65,7 @@ namespace HISWebClient
                 CallbackPath = new PathString("/signin-google")
             };
 
-
             app.UseGoogleAuthentication(googleOAuth2AuthenticationOptions);
-         
         }
     }
 }

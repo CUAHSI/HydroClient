@@ -16,6 +16,7 @@ namespace CUAHSI.Common
         {
             foreach (var c in Path.GetInvalidFileNameChars()) { fileName = fileName.Replace(c, '-'); }
             fileName = fileName.Replace(' ','_');
+			fileName = fileName.Replace(',', '_');	//BCC - 06-Jan-2016 - replace commas with underscores...
             return fileName.ToLowerInvariant();
         }
 
