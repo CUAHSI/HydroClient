@@ -51,18 +51,49 @@
             <ul class="nav nav-tabs pull-right" @*id="myTab"*@ @*style="display: inline-block; position: relative; float:right;"*@>
                 <li id="liMapTab" class="active navbar-custom" style="margin-right: 1em;"> <a href="#map" id="mapTab" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> Map</a></li>
                 @*   <li class="navbar-custom disabled"><a href="#graph" id="graphTab" data-toggle="tab"><span class="glyphicon glyphicon-home"></span> Graph</a></li>*@
-                <li id="liTableTab" class="navbar-custom data"><a href="#dataview" id="tableTab" data-toggle="tab"><span class="glyphicon glyphicon-list"></span> Table</a></li>
+                @*<li id="liTableTab" class="navbar-custom data"><a href="#dataview" id="tableTab" data-toggle="tab"><span class="glyphicon glyphicon-list"></span> Table</a></li>*@
                 <li class="btn-separator"></li>
                 <li id="liTabbedDataMgrTab" class="navbar-custom"><a href="#tabbedDataMgr" id="tabbedDataMgrTab" data-toggle="tab"><span class="glyphicon glyphicon-record"></span> Workspace</a></li>
                 <li class="btn-separator"></li>
                 @*<li class="navbar-custom"><a href="" id="datamanagerTab" data-toggle="modal" data-target="#datamgrModal"><span class="glyphicon glyphicon-record"></span> Data Manager</a></li>
-                    <li class="btn-separator"></li>*@
+            <li class="btn-separator"></li>*@
                 @*<li class="navbar-custom"><a href="" id="downloadmanagerTab" data-toggle="modal" data-target="#dmModal"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</a></li>
-                    <li class="btn-separator"></li>*@
-                <li id="liContactTab" class="navbar-custom"><a href="" id="contactTab" data-toggle="modal" data-target="#contactModal"><span class="glyphicon glyphicon-earphone"></span> Contact</a></li>
-                <li class="btn-separator"></li>
-                <li id="liAboutTab" class="navbar-custom" style="margin-right: 1em;"><a href="" id="aboutTab" data-toggle="modal" data-target="#aboutModal"><span class="glyphicon glyphicon-info-sign"></span> About</a></li>
-                <li id="liQuickStartTab" class="navbar-custom"> <a href="" id="quickStartTab" data-toggle="modal" data-target="#quickStartModal"><span class="glyphicon glyphicon-flash"></span> QuickStart</a></li>
+            <li class="btn-separator"></li>*@
+
+                @*<li id="liContactTab" class="navbar-custom"><a href="" id="contactTab" data-toggle="modal" data-target="#contactModal"><span class="glyphicon glyphicon-earphone"></span> Contact</a></li>
+            <li class="btn-separator"></li>
+            <li id="liAboutTab" class="navbar-custom" style="margin-right: 1em;"><a href="" id="aboutTab" data-toggle="modal" data-target="#aboutModal"><span class="glyphicon glyphicon-info-sign"></span> About</a></li>
+            <li id="liQuickStartTab" class="navbar-custom"> <a href="" id="quickStartTab" data-toggle="modal" data-target="#quickStartModal"><span class="glyphicon glyphicon-flash"></span> QuickStart</a></li>*@
+
+                <li id="liAboutTab" class="navbar-custom" style="padding: 0;">
+
+                    <button class="btn btn-primary" data-toggle="dropdown" style="font-size: 1.00em;">
+                        <div id="ddAbout" data-noneselected="true">
+                            <span class="glyphicon glyphicon-info-sign" style="font-weight: bold; max-width: 100%; font-size: 1.0em;"></span>
+                            <span style="font-weight: bold; font-size: 1.00em;">&nbsp;About&nbsp;</span>
+                            <span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>
+                        </div>
+                    </button>
+
+                    <ul id="ddAboutList" class="dropdown-menu">
+                        <li id="liLicenseTab">
+                            <span>
+                                <a href="" id="licenseTab" data-toggle="modal" data-target="#licenseModal"><span class="glyphicon glyphicon-info-sign"></span> LicenseAgreement</a>
+                            </span>
+                        </li>
+                        <li id="liContactTab">
+                            <span>
+                                <a href="" id="contactTab" data-toggle="modal" data-target="#contactModal"><span class="glyphicon glyphicon-earphone"></span> Contact</a>
+                            </span>
+                        </li>
+                        <li id="liQuickStartTab">
+                            <span>
+                                <a href="" id="quickStartTab" data-toggle="modal" data-target="#quickStartModal"><span class="glyphicon glyphicon-flash"></span> QuickStart</a>
+                            </span>
+                        </li>
+                    </ul>
+                </li>
+
                 <li class="btn-separator"></li>
                 <li id="liGoogleTab" class="navbar-custom" style="margin-right: 1em;">
                     <div style="height: 2em;">
@@ -81,21 +112,21 @@
                             <input type="image" id="imgSignIn" src="@url" style="height: 2.5em; width: 10em; margin-top: -0.25em;" />
                             <input type="image" id="imgSignOut" src="@url1" class="hidden" style="height: 2.5em; width: 10em; margin-top: -0.25em;" />
 
-        </form>
+                        </form>
                     </div>
 
-    </li>
-    @if (User.IsInRole("Admin") || User.Identity.Name == "mseul@cuahsi.org")
-    {
-        <li class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin<b class="caret"></b></a>
-            <ul class="dropdown-menu">
-                <li>@Html.ActionLink("Roles", "Index", "Roles", new { area = "Admin" }, null)</li>
-                @*<li>@Html.ActionLink("Add Connection", "Index", "ConnectionParameters", new { area = "Admin" }, null)</li>
-                                <li>@Html.ActionLink("Link Connections", "Index", "ConnectionParametersUsers", new { area = "Admin" }, null)</li>*@
-                <li>@Html.ActionLink("Register as a new user", "Register", "Account", new { area = "" }, null)</li>
-            </ul>
-        </li>
+                </li>
+                @if (User.IsInRole("Admin") || User.Identity.Name == "mseul@cuahsi.org")
+                {
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin<b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            <li>@Html.ActionLink("Roles", "Index", "Roles", new { area = "Admin" }, null)</li>
+                            @*<li>@Html.ActionLink("Add Connection", "Index", "ConnectionParameters", new { area = "Admin" }, null)</li>
+                        <li>@Html.ActionLink("Link Connections", "Index", "ConnectionParametersUsers", new { area = "Admin" }, null)</li>*@
+                            <li>@Html.ActionLink("Register as a new user", "Register", "Account", new { area = "" }, null)</li>
+                        </ul>
+                    </li>
                 }
             </ul>
         </div>
@@ -104,17 +135,16 @@
     <div class="tab-content">
         <!--BCC - 29-Jun-2015 - QA Issue #24 - Data tab (GUI): no margins from left and right (need to increase)
                                 Added 1.0em left and right margins to 'data' tab -->
-        <div class="tab-pane padded-tab-pane" id="dataview" style="margin-left: 1.0em; margin-right: 1.0em;">
+        @*<div class="tab-pane padded-tab-pane" id="dataview" style="margin-left: 1.0em; margin-right: 1.0em;">
             <div class="modal-header modal-header-full">
                 <h3 class="modal-title" id="myModalLabel">Timeseries in Current Map Area</h3>
-                @*<h5 style="margin-bottom: 1em;">To download one or more data files, please click the associated table row(s) and click the 'Export Selections' button.</h5>*@
             </div>
             <div class="modal-body modal-body-full disable-selection" id="dtTimeSeriesModal">
                 @* BCC- 23-Jul-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set max-width: none on the table element!!
                     NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
                     Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
                 *@
-                <table id="dtTimeseries" class="display" cellspacing="0" style="max-width: none;" data-selectedtimeseriesmax="25">
+                @*<table id="dtTimeseries" class="display" cellspacing="0" style="max-width: none;" data-selectedtimeseriesmax="25">
                     <thead>
                         <tr>
                             @Html.Partial("_DatatableTimeseriesColumns")
@@ -128,7 +158,7 @@
                     </tfoot>
                 </table>
             </div>
-        </div>
+        </div>*@
 
         <div class="tab-pane padded-tab-pane" id="tabbedDataMgr" style="margin-left: 1.0em; margin-right: 1.0em;">
 
@@ -223,79 +253,91 @@
                 <div id="menu">
                     @*   <div><img class="expander" alt="Expand" src="~/Content/Images/closetop.png" /></div>*@
                     <div class="container" id="selectors">
-                        <form id="Search" class="searchForm form-horizontal">
-                            <!-- Button trigger modal -->
+                        <form id="Search" class="searchForm form-horizontal pull-left">
                             <div class="form-group">
-                                <fieldset>
-                                    <legend style="margin-bottom: 0.5em;">
-                                        @*<button class="btn btn-primary btn-block" id="btnDateRange" style="width: 90%; margin: 0 auto;" data-toggle="modal" data-target="#SelectDateModal">Select Date Range...</button>*@
-                                        <button class="btn btn-primary btn-block" id="btnDateRange" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectDateModal">Select Date Range...</button>
-                                    </legend>
-                                    <div class="non-modal-inputs">
-                                        <div id="grpStartDate" class="form-group" style="margin-bottom: 0em;">
-                                            <label class="control-label col-sm-2 col-sm-offset-1" for="startDate" id="lblStartDate">From: </label>
-                                            <div class="col-sm-7">
-                                                <input id="startDate" class="form-control default-cursor" type="text" style="margin-left: 0.5em;" readonly="readonly" />
-                                                <label id="lblStartDateError" class="help-block" style="display:none;"></label>
-                                            </div>
-                                        </div>
-                                        <div id="grpEndDate" class="form-group">
-                                            <label class="control-label col-sm-2 col-sm-offset-1" for="endDate" id="lblEndDate">To: </label>
-                                            <div class="col-sm-7">
-                                                <input id="endDate" class="form-control default-cursor" type="text" style="margin-left: 0.5em;" readonly="readonly" />
-                                                <label id="lblEndDateError" class="help-block" style="display:none;  margin-left: 0.5em;"></label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </fieldset>
+                                <div class="col-sm-8">
+                                    <button class="btn btn-primary form-control" id="btnDateRange" type="button" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectDateModal">Select Date Range...</button>
+                                </div>
                             </div>
-                            <div class="form-group" style="box-sizing: border-box;">
-                                <fieldset>
-                                    <legend style="margin-bottom: 0.25em;">
-                                        @*<button class="btn btn-primary btn-block" id="btnSelectKeywords" style="width: 90%; margin: 0 auto;" data-toggle="modal" data-target="#SelectVariableModal">Select Keyword(s)...</button>*@
-                                        @*<button class="btn btn-primary btn-block" id="btnSelectKeywords" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectVariableModal">Select Keyword(s)...</button>*@
-                                        @*<button class="btn btn-primary btn-block" type="button" id="btnSelectKeywords" disabled style="margin: 0 auto;">Select Keyword(s)...</button>*@
-                                        <button class="btn btn-primary btn-block" type="button" id="btnSelectKeywords" disabled style="margin: 0 auto;">
-                                            <h4 class="text-center" style="display: inline; vertical-align: middle;">
-                                                <span id="glyphiconSpanSK" class="glyphicon glyphicon-refresh spin" style="color: #32cd32;"></span>
-                                            </h4>
-                                            Loading Keyword(s)...
-                                        </button>
-                                    </legend>
+
+                            <div id="grpStartDate" class="form-group" style="margin-bottom: 2px;">
+                                <label class="control-label col-sm-2" for="startDate" id="lblStartDate">From: </label>
+                                <div class="col-sm-6">
+                                    <input id="startDate" class="form-control default-cursor" type="text" readonly="readonly" />
+                                    <label id="lblStartDateError" class="help-block" style="display:none;"></label>
+                                </div>
+                            </div>
+
+                            <div id="grpEndDate" class="form-group">
+                                <label class="control-label col-sm-2" for="endDate" id="lblEndDate">To: </label>
+                                <div class="col-sm-6">
+                                    <input id="endDate" class="form-control default-cursor" type="text" readonly="readonly" />
+                                    <label id="lblEndDateError" class="help-block" style="display:none;"></label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="col-sm-8">
+                                    <button class="btn btn-primary" type="button" id="btnSelectKeywords" disabled style="margin: 0 auto;">
+                                        <h4 class="text-center" style="display: inline; vertical-align: middle;">
+                                            <span id="glyphiconSpanSK" class="glyphicon glyphicon-refresh spin" style="color: #32cd32;"></span>
+                                        </h4>
+                                        Loading Keyword(s)...
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="col-sm-10">
                                     <div style="overflow-y: scroll; max-height: 10em;">
                                         <ol id="olConcepts" style="list-style: circle;">
                                             <li>All</li>
                                         </ol>
                                     </div>
-                                </fieldset>
+                                </div>
                             </div>
-                            <div class="form-group" style="box-sizing: border-box;">
-                                <fieldset>
-                                    <legend style="margin-bottom: 0.25em;">
-                                        @*<button class="btn btn-primary btn-block" style="width: 90%; margin: 0 auto;" data-toggle="modal" data-target="#SelectServicesModal">Select Data Service(s)...</button>*@
-                                        <button class="btn btn-primary btn-block" id="btnSelectDataServices" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectServicesModal">Select Data Service(s)...</button>
-                                    </legend>
-                                    @*<div style="overflow-y: scroll; max-height: 10em;">*@
+
+                            <div class="form-group">
+                                <div class="col-sm-8">
+                                    <button class="btn btn-primary form-control" type="button" id="btnSelectDataServices" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectServicesModal">
+                                        Select Data Service(s)...
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="col-sm-7">
                                     <div style="max-height: 10em;">
                                         <ol id="olServices" style="list-style: circle;">
                                             <li>All</li>
                                         </ol>
                                     </div>
-                                </fieldset>
+                                </div>
                             </div>
-                            <div id="SelectedDateRange">
 
-                            </div>
-                            <div class="form-group" style="box-sizing: border-box;" id="searchBtnDiv">
-
-                                <!-- For click handler see webclient.js $("#Search").submit(function (e) -->
-                                <button type="submit" class="btn btn-success btn-block" style="margin: 0 auto;">Search Map</button><br />
-                                <button id="btnSetDefaults" type="button" class="btn btn-warning btn-block" style="margin: 0 auto;">Reset</button>
-                                @*<div style ="text-align: center; margin-top: 1em; ">
-                                        <a href="http://www.github.com/cuahsi" target="_blank">Version 1.0</a>
+                            <div class="form-group" id="searchBtnDiv">
+                                <div class="col-sm-7">
+                                    <!-- For click handler see webclient.js $("#Search").submit(function (e) -->
+                                    <button type="submit" class="btn btn-success form-control" style="margin: 0 auto;">Search Map</button><br />
+                                    <button id="btnSetDefaults" type="button" class="btn btn-warning form-control" style="margin: 0 auto; margin-top: 0.5em;">Reset</button>
+                                    @*<div style="text-align: center; margin-top: 1em; ">
+                                    <a href="http://www.github.com/cuahsi" target="_blank">Version 1.0</a>
                                     </div>*@
+                                </div>
                             </div>
 
+                        </form>
+                    </div>
+                    <div class="container" style="margin-top: 2em;">
+                        <form class="form-horizontal pull-left">
+                            <div class="form-group">
+                                <div class="col-sm-12">
+                                    @*<a href="#dataview" id="tableTab" data-toggle="tab"><span class="glyphicon glyphicon-list"></span>Search Results</a>*@
+                                    <!-- NOTE: The ill-named 'data' class is used to enable/disable the control...
+                                                Let's use a more descriptive name... -->
+                                    <button class="btn btn-primary form-control enableWhenDataReceived" id="btnSearchResults" type="button" style="margin: 0 auto;" data-toggle="modal" data-target="#tableModal">Show Search Results...</button>
+                                </div>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -326,11 +368,11 @@
 
                     <div id="panelMapFilters" class="searchbarcontrols panel-heading" style="padding: 0.5em; height: auto; width: auto; display: inline-block;">
 
-                        <div class="badge" style="text-align: left; display: inline;">
+                        @*<div class="badge" style="text-align: left; display: inline;">
                             <span id="badgeLatitude" style="font-size: medium; text-align: left;"></span>
                             <span>/</span>
                             <span id="badgeLongitude" style="font-size: medium; text-align: left;"></span>
-                        </div>
+                        </div>*@
                         <div id="panelMapFilters2" class="hidden" style="margin-top: 0.5em;">
                             <span class="badge" style="text-align: left;">
                                 <span style="display: inline; font-weight: bold; text-align: left;" class="panel-title">Filters...</span>
@@ -391,12 +433,12 @@
 </div>
 
 <!-- Modal dialog for About -->
-<div class="modal fade" id="aboutModal" tabindex="-1" role="dialog" aria-labelledby="aboutModalLabel" aria-hidden="true">
+<div class="modal fade" id="licenseModal" tabindex="-1" role="dialog" aria-labelledby="aboutModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
-                <h3 class="modal-title" id="myModalLabel">About  <a href="http://www.github.com/cuahsi" target="_blank">(Version 1.1)</a></h3>
+                <h3 class="modal-title" id="myModalLabel">License Information  <a href="http://www.github.com/cuahsi" target="_blank">(Version n.n)</a></h3>
             </div>
             <div class="modal-body">
 
@@ -568,32 +610,29 @@
 </div>
 
 
+<!-- Modal dialog for Select Date ...-->
 <div class="modal fade" id="SelectDateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content col-sm-9">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h3 class="modal-title" id="myModalLabel">Please select your date range:</h3>
             </div>
             <div class="container">
-                <form class="form-horizontal">
+                <form class="form-horizontal pull-left">
                     <div class="modal-body form-group">
                         <div class="modal-inputs">
                             <div id="grpStartDateModal" class="form-group">
                                 <label id="lblStartDateModal" class="control-label col-sm-2" for="startDateModal">From</label>
-                                <div class="col-sm-4">
-                                    <input id="startDateModal" class="form-control modal-date-range" type="text" />
-                                </div>
                                 <div class="col-sm-6">
+                                    <input id="startDateModal" class="form-control modal-date-range" type="text" />
                                     <label id="lblStartDateErrorModal" class="help-block" style="display: none;"></label>
                                 </div>
                             </div>
                             <div id="grpEndDateModal" class="form-group">
                                 <label id="lblEndDateModal" class="control-label col-sm-2" for="endDateModal">To</label>
-                                <div class="col-sm-4">
-                                    <input id="endDateModal" class="form-control modal-date-range" type="text" />
-                                </div>
                                 <div class="col-sm-6">
+                                    <input id="endDateModal" class="form-control modal-date-range" type="text" />
                                     <label id="lblEndDateErrorModal" class="help-block" style="display: none;"></label>
                                 </div>
                             </div>
@@ -608,7 +647,8 @@
         <!-- /.modal-dialog -->
     </div>
 </div>
-<!-- Modal -->
+
+<!-- Modal dialog for Select Keywords ...-->
 <div class="modal fade" id="SelectVariableModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -619,7 +659,7 @@
 
             </div>
             <div class="modal-body">
-                <div class="col-lg-12">
+                <div class="" style="background-color: #ffffff">
                     <div class="tabbable">
                         <!-- Only required for left/right tabs -->
                         <ul class="nav nav-tabs">
@@ -628,7 +668,7 @@
                         </ul>
                         <div class="tab-content">
                             <div class="tab-pane active" id="tab1">
-                                <div class="row">
+                                <div class="row" style="margin-left: 0px;">
                                     <div class="controls col-lg-5">
                                         <label class="checkbox">
                                             <input type="checkbox" name="keywords" value="Evaporation, actual" id="inlineCheckbox1" class="topCategories" />Actual Evaporation
@@ -736,7 +776,7 @@
     <!-- /.modal-content -->
 </div>
 <!-- /.modal-dialog -->
-<!-- Modal -->
+<!-- Modal dialog for select services -->
 <!--BCC - 26-Jun-2015 - Changes for QA Issue #23 - GUI: popup design do not unified -->
 <div class="modal fade" id="SelectServicesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-full" role="document">
@@ -780,6 +820,8 @@
 @*  BCC - 29-Jun-2015 - Remove 'fade' class from modal div to ensure firing of 'shown.bs.modal' event!!
     Source: http://stackoverflow.com/questions/18568278/bootstrap-3-0-0-modal-events-not-firing
     <div class="modal fade full-screen" id="SeriesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">*@
+
+<!-- Modal dialog for map marker search results -->
 <div class="modal" id="SeriesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-full" role="document">
         <div class="modal-content modal-content-full">
@@ -822,6 +864,55 @@
         <!-- /.modal-dialog -->
     </div>
 </div>
+
+<!-- Modal dialog for all search results -->
+<div class="modal" id="tableModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-full" role="document">
+        <div class="modal-content modal-content-full">
+            <div class="modal-header modal-header-full">
+                <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
+                <!--button type="button" id="seriesModal-DM" style="float: right; margin-right: 2em; color: #428bca;"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</button -->
+                @*<a href="" id="seriesModal-DM" data-toggle="modal" data-target="#dmModal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</a>*@
+                @*<a href="" id="seriesModal-DataMgr" data-toggle="modal" data-target="#datamgrModal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-record"></span> Data Manager</a>*@
+                <h3 class="modal-title" id="myModalLabel">Timeseries in Current Map Area</h3>
+                @*<h5 style="margin-bottom: 1em;">To zip one or more data files, please click the associated table row(s) and then click the 'Export Selections' button. You can check the status by opening the workspace and selecting the "Exports" tab.</h5>*@
+            </div>
+            <div class="modal-body modal-body-full" id="dtTimeSeriesModal">
+                @* BCC- 23-Jul-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set 'max-width: none' on the table element!!
+            NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
+            Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
+                *@
+                <table id="dtTimeseries" class="display disable-selection" cellspacing="0" style="max-width: none;" data-selectedtimeseriesmax="25">
+                    <thead>
+                        <tr>
+                            @Html.Partial("_DatatableTimeseriesColumns")
+                        </tr>
+                    </thead>
+
+                    <tfoot>
+                        <tr>
+                            @Html.Partial("_DatatableTimeseriesColumns")
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="modal-footer modal-footer-full">
+                @*<span>
+                        @Html.ActionLink("Download as CSV", "downloadFile", "Export", new { id = 1 }, new { @class = "btn btn-info active pull-right", target = "_blank" })
+                    </span>
+                    <button id="DownloadAsCSV" type="button" class="btn btn-default">Download Selected as CSV</button>*@
+            </div>
+
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+</div>
+
+
+
+
+
 
 @*<div id="context-menu">
         <ul class="dropdown-menu" role="menu">

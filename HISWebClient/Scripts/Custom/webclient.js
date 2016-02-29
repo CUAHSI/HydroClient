@@ -26,7 +26,7 @@ var conceptsType = '';
 
 var selectedRowCounts = {
     'dtMarkers': {'targetIds': ['spanClearSelections', 'spanZipSelections','spanManageSelections'], 'count': 0},
-    'dtTimeseries': { 'targetIds': ['spanClearSelectionsTS', 'spanZipSelectionsTS', 'spanManageSelectionsTS'], 'count': 0 },
+    'dtTimeseries': { 'targetIds': ['spanClearSelectionsTS', 'spanZipSelectionsTS', 'spanManageSelectionsTS'], 'count': 0, 'customCounter': customCounter },
     'tblDataManager': { 'targetIds': ['lblSelectionsDataMgr'], 'count': 0, 'customCounter': customCounter }
 };
 
@@ -52,6 +52,10 @@ var currentUser = { 'authenticated' : false,
                     'userName' : null
                   };
 
+var currentPosition = {
+                        'latLng': null,
+                        'infoBubble': null
+                      };
 
 //Number.isInteger 'polyfill' for use with browsers (like IE) which do not support the 'native' function
 //Sources: http://stackoverflow.com/questions/31720269/internet-explorer-11-object-doesnt-support-property-or-method-isinteger
@@ -70,6 +74,23 @@ $(document).ready(function () {
     //Periodically check selected time series...
     setInterval(function () {
         //console.log('Checking selected time series...');
+
+        //Enable/disable 'Apply Filter to Map' checkbox, per user search and filter entries...
+        var criteria = retrieveSearchAndFilterCriteria('dtTimeseries', false);
+
+        var chkbx = $('#' + 'chkbxApplyFilterToMapTS');
+        var className = 'disabled';
+        if ('' === criteria.Search && 0 >= criteria.filters.length) {
+            //No search or filter entries - disable checkbox...
+
+            chkbx.prop('checked', false);
+            chkbx.addClass(className);
+        }
+        else {
+            //Search and/or filter entries exist - enable checkbox...
+            chkbx.removeClass(className);            
+        }
+
         var firstPart = '';
         var secondPart = ['Selection(s)', 'Selection', ' Selections'];        //For each tableId in selected row counts...
         var lastPart = '';
@@ -151,13 +172,19 @@ $(document).ready(function () {
 function customCounter(tableName) {
     
     //console.log('customCounter called for: ' + tableName);
+    var countClear = 0;
+    var countLaunch = 0;
+    var countRemove = 0;
+    var countSelectable = 0;
+    var countSave = 0;
+
     if ('tblDataManager' === tableName) {
         //Initialize counts...
-        var countClear = 0;
-        var countLaunch = 0;
-        var countRemove = 0;
-        var countSelectable = 0;
-        var countSave = 0;
+        countClear = 0;
+        countLaunch = 0;
+        countRemove = 0;
+        countSelectable = 0;
+        countSave = 0;
 
         //Retrieve data for all table rows... 
         var table = $('#' + tableName).DataTable();
@@ -218,6 +245,107 @@ function customCounter(tableName) {
                        { 'name': 'anchorClearSelectionsDataMgr', 'count': countClear},
                        { 'name': 'anchorRemoveSelectionsDataMgr', 'count': countRemove},
                        { 'name': 'anchorSaveSelectionsDataMgr', 'count': countSave} ];
+        var aLength = anchors.length;
+
+        for (var ii = 0; ii < aLength; ++ii) {
+            var anchor = $('#' + anchors[ii].name); 
+            var li = anchor.parent();
+            var count = anchors[ii].count;
+
+            if (0 >= count) {
+                li.addClass('disabled');
+            }
+            else {
+                li.removeClass('disabled'); 
+            }
+        }
+    }
+    else if ('dtTimeseries' === tableName) {
+        //Initialize counts...
+        countClear = 0;
+        countLaunch = 0;
+        countSelectable = 0;
+
+        //Retrieve data for all table rows... 
+        var table = $('#' + tableName).DataTable();
+        //var rows = table.rows();
+        var rows1 = table.rows({ 'order': 'current', 'search': 'applied' });    //Retrieve rows per current sort/search order...
+        var nodes = rows1.nodes();
+
+        //var nodes = rows.nodes();
+        //var data = rows.data();
+
+        ////For each instance...
+        //$.each(nodes, function (i, obj) {
+        //    //Retrieve node, check for class: selected
+        //    var jqueryObj = $(obj);
+
+        //    if (jqueryObj.hasClass('selected')) {
+        //        //Row is selected...
+
+        //        //Update counts...
+        //        ++countClear;
+
+        //        if ('true' !== $('#ddActionTS').attr('data-noneselected')) {
+        //            ++countLaunch;
+        //        }
+        //    }
+        //    else {
+        //        //Row is NOT selected...
+        //        ++countSelectable;
+        //    }
+        //});
+
+        //Since table: dtTimeseries is configured as 'deferRender': true, the table loads data
+        // one displayed page at a time.  Thus, if the user has viewed only three pages of a 
+        // five page table, only three pages of rows are contained in the table. Yet the user
+        // can 'select all rows' for such tables, even when they have not viewed all table pages.
+        //To find the total number of selected rows for such tables, refer to the selectedRowCounts array...
+        var selectedRows = selectedRowCounts[tableName].count;
+
+        countClear = selectedRows;
+
+        if ('true' !== $('#ddActionTS').attr('data-noneselected')) {
+            countLaunch = selectedRows;
+        }
+
+        //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
+        //Source: http://datatables.net/reference/api/rows().nodes()
+        var rows = table.rows({ 'order': 'current', 'search': 'applied' });    //Retrieve rows per current sort/search order...
+        var totalRows = rows[0].length;
+
+        countSelectable = totalRows - selectedRows;
+
+        //Update button text with counts...
+        var buttons = [{ 'name': 'btnApplyActionTS', 'count': countLaunch, 'disableCheck': btnDisableCheck }];
+        var bLength = buttons.length;
+
+        for (var i = 0; i < bLength; ++i) {
+            var button = $('#' + buttons[i].name); 
+            var value = button.val();
+
+            if ('undefined' === typeof value || null === value) {
+                //Button value not yet available - continue...
+                continue;
+            }
+
+            var count = buttons[i].count;
+            //var values = value.split(' ');
+            var values = value.split(':');
+
+            if (0 >= count) {
+                button.val(values[0]);
+                button.prop('disabled', true);
+            }
+            else {
+                button.val(values[0] + ': (' + count.toString() + ')');
+                button.prop('disabled', null !== buttons[i].disableCheck ? buttons[i].disableCheck(buttons[i].name)  : false); 
+            }
+        }
+
+        //Update dropdown items per counts...
+        var anchors = [{'name': 'anchorAllSelectionsTS', 'count': countSelectable},
+                       { 'name': 'anchorClearSelectionsTS', 'count': countClear} ];
         var aLength = anchors.length;
 
         for (var ii = 0; ii < aLength; ++ii) {
@@ -387,8 +515,12 @@ function initialize() {
     //Add mousemove listener for latitude/longitude reporting...
     google.maps.event.addListener(map, 'mousemove', function (event) {
 
-        $('#' + 'badgeLatitude').text(event.latLng.lat().toFixed(3));
-        $('#' + 'badgeLongitude').text(event.latLng.lng().toFixed(3));
+        //$('#' + 'badgeLatitude').text(event.latLng.lat().toFixed(3));
+        //$('#' + 'badgeLongitude').text(event.latLng.lng().toFixed(3));
+
+        currentPosition.latLng = event.latLng;
+        $('#' + 'MapLatitudeControl').text('Latitude: ' + event.latLng.lat().toFixed(3));
+        $('#' + 'MapLongitudeControl').text('Longitude: ' + event.latLng.lng().toFixed(3));
 
     });
 
@@ -396,8 +528,9 @@ function initialize() {
     var mouseEvent = {};
     mouseEvent.latLng = myCenter;
 
-    google.maps.event.trigger(map, 'mousemove', mouseEvent);
-
+    setTimeout( function() {
+        google.maps.event.trigger(map, 'mousemove', mouseEvent);
+    }, 1500);
     //google.maps.event.addListener(marker, 'click', function () {
 
     //    infowindow.setContent(contentString);
@@ -695,8 +828,12 @@ function initialize() {
         //Add mousemove listener for latitude/longitude reporting...
         google.maps.event.addListener(areaRect, 'mousemove', function (event) {
 
-            $('#' + 'badgeLatitude').text(event.latLng.lat().toFixed(3));
-            $('#' + 'badgeLongitude').text(event.latLng.lng().toFixed(3));
+            //$('#' + 'badgeLatitude').text(event.latLng.lat().toFixed(3));
+            //$('#' + 'badgeLongitude').text(event.latLng.lng().toFixed(3));
+
+            currentPosition.latLng = event.latLng;
+            $('#' + 'MapLatitudeControl').text('Latitude: ' + event.latLng.lat().toFixed(3));
+            $('#' + 'MapLongitudeControl').text('Longitude: ' + event.latLng.lng().toFixed(3));
 
         });
 
@@ -738,27 +875,12 @@ function initialize() {
 
     });
 
-    //click event for tab
-    $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+    //Click event for search results button...
+    $('#' + 'btnSearchResults').on('click', function(event) {
 
-        if ('#dataMgrPane' === e.target.hash ||         //tabbed panes - 'Data' tab clicked --OR--
-            ('#tabbedDataMgr' === e.target.hash &&      //navigation tabs - 'Workspace' tab clicked --AND--
-             $('#liDataMgrPane').hasClass('active'))) { //tabbed panes - 'Data' tab active
-
-            //Whenever the tab containing the data manager table is shown, adjust the table's columns and redraw to ensure columns are properly spaced...
-            var tableName = 'tblDataManager';
-            var tableId = '#' + tableName;
-            var jQueryDataTable = $(tableId).DataTable();
-
-            jQueryDataTable.columns.adjust().draw();
-        }
-
-        if (e.target.id == "tableTab") {
-            //Hide the zendesk iframe...
-            $('#launcher').hide();
-
-            if ( ! $('#chkbxApplyFilterToMapTS').prop('checked')) {
-                //'Apply to map' NOT engaged - initialize Data pane... 
+        var chkbx = $('#' + 'chkbxApplyFilterToMapTS')
+        if ( (! chkbx.prop('checked')) || chkbx.hasClass('disabled')) {
+            //'Apply to map' NOT engaged --OR-- disabled - initialize Data pane... 
             
             //Reset the current marker place name...
             currentMarkerPlaceName = '';
@@ -781,8 +903,25 @@ function initialize() {
             table.order([0, 'asc']).draw();
             //hide sidebar
             // slider.slideReveal("hide")
-            }
         }
+    
+    });
+
+    //click event for tab
+    $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+
+        if ('#dataMgrPane' === e.target.hash ||         //tabbed panes - 'Data' tab clicked --OR--
+            ('#tabbedDataMgr' === e.target.hash &&      //navigation tabs - 'Workspace' tab clicked --AND--
+             $('#liDataMgrPane').hasClass('active'))) { //tabbed panes - 'Data' tab active
+
+            //Whenever the tab containing the data manager table is shown, adjust the table's columns and redraw to ensure columns are properly spaced...
+            var tableName = 'tblDataManager';
+            var tableId = '#' + tableName;
+            var jQueryDataTable = $(tableId).DataTable();
+
+            jQueryDataTable.columns.adjust().draw();
+        }
+
         if (e.target.id == "mapTab") {
             //Show the zendesk iframe...
             $('#launcher').show();
@@ -796,7 +935,10 @@ function initialize() {
         // activated tab
     })
 
-    $('.data').addClass('disabled');
+//    $('.data').addClass('disabled');
+    $('.enableWhenDataReceived').addClass('disabled');
+
+    
 
     //disable 
     $('body').on('click', '.disabled', function (e) {
@@ -1814,7 +1956,7 @@ function AreaSizeControl(controlDiv, map) {
 
     // Set CSS for the control border
     var controlUI = document.createElement('div');
-    controlUI.style.backgroundColor = 'rgb(250, 250, 250)';
+//    controlUI.style.backgroundColor = 'rgb(250, 250, 250)';
     controlUI.style.border = '1px';
     controlUI.style.borderRadius = '5px';
     controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
@@ -1843,23 +1985,41 @@ function AreaSizeControl(controlDiv, map) {
     controlText.id = 'MapAreaControl';
     controlUI.appendChild(controlText);
 
-    // Setup the click event listeners: simply set the map to
-    // Chicago
-
-    //google.maps.event.addListener(map, 'zoom_changed', function () {
-    //    var path = GetPathForBounds(map.getBounds())
-    //    var area = GetAreainSqareKilometers(path)
-    //    controlText.innerHTML = area;
-    //});
-        
-
+    //Append divs for Latitude and Longitude...
+    controlText = document.createElement('div');
+    //controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+    //controlText.style.fontWeight = 'bold';
+    //controlText.style.fontSize = '12px';
+    //controlText.style.lineHeight = '25px';
+    //controlText.style.paddingTop = '0px';
+    //controlText.style.paddingLeft = '3px';
+    //controlText.style.paddingRight = '3px';
+    //controlText.style.paddingBottom = '0px';
+    //controlText.style.borderRadius = '5px';
+    //controlText.style.border = '5px'
+    //controlText.style.marginLeft = '3px';
+    controlText.innerHTML = "Latitude";
+    controlText.id = 'MapLatitudeControl';
+    controlText.classList.add('badge');
+    controlUI.appendChild(controlText);
     
+    controlText = document.createElement('div');
+    //controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+    //controlText.style.fontWeight = 'bold';
+    //controlText.style.fontSize = '12px';
+    //controlText.style.lineHeight = '25px';
+    //controlText.style.paddingTop = '0px';
+    //controlText.style.paddingLeft = '3px';
+    //controlText.style.paddingRight = '3px';
+    //controlText.style.paddingBottom = '0px';
+    //controlText.style.borderRadius = '5px';
+    //controlText.style.border = '5px'
+    //controlText.style.marginLeft = '3px';
+    controlText.innerHTML = "Longitude";
+    controlText.id = 'MapLongitudeControl';
+    controlText.classList.add('badge');
+    controlUI.appendChild(controlText);
 
-    //if (typeof slider != "undefined") { // Show
-
-    //} else { // Hide
-    //    self.slideReveal("hide");
-    //}
 }
 
 function addLocationSearch() {
@@ -1939,7 +2099,8 @@ function getMapAreaSize() {
 
 function resetMap() {
     deleteClusteredMarkersOverlays();
-    $('.data').addClass('disabled');
+    //$('.data').addClass('disabled');
+    $('.enableWhenDataReceived').addClass('disabled');
     //resetUserSelection()
     if (typeof areaRect != "undefined") areaRect.setMap(null);
 }
@@ -2050,7 +2211,8 @@ function processMarkers(geoJson) {
 
             //QA Issue #13
             if (bMarkerFound) {
-                $('.data').removeClass('disabled')
+                //$('.data').removeClass('disabled')
+                $('.enableWhenDataReceived').removeClass('disabled')
             }
         }
     }
@@ -2236,8 +2398,6 @@ function getMarkerPositionName(marker) {
         }
     });
 }
-
-
 
 function updateClusteredMarker(map, point, count, icontype, id, clusterid, label, serviceCodeToTitle) {
 
@@ -2583,13 +2743,6 @@ function createInfoWindow( map, marker, serviceCodeToTitle) {
                              'disableAnimation': true,
                              'disableAutoPan': true,
                              'hideCloseButton': true });
-//    iw.setMinHeight( listCount.toString() + 'em');
-//    iw.setMaxWidth('25em');
-
-    //Assume 16px (default font size) per em
-    //var defaultSize = 16;
-    //iw.setMinHeight(((listCount * 2) * defaultSize).toString());
-    //iw.setMaxWidth((20 * defaultSize).toString());
 
     //Calculate minimum height and width in 'px' units...
     //Convert from ems: (size on ems) * (parent font size in px)
@@ -2600,12 +2753,25 @@ function createInfoWindow( map, marker, serviceCodeToTitle) {
     iw.setMaxWidth((20 * fontsize).toString());
 
     //Open on mouseover...
-    google.maps.event.addListener(marker, 'mouseover', function () {
+    google.maps.event.addListener(marker, 'mouseover', function (event) {
+
+        //Close currently open window , if indicated...
+        if ( null !== currentPosition.infoBubble) {
+            currentPosition.infoBubble.close();
+            currentPosition.infoBubble = null;
+            //console.log('Closing current bubble!!!');
+        }
+
+        currentPosition.infoBubble = iw;
+        currentPosition.latLng = event.latLng;
+
         iw.open(map, marker);
     });
 
     //Close on mouseout...
     google.maps.event.addListener(marker, 'mouseout', function () {
+
+        currentPosition.infoBubble = null;
         iw.close();
     });
 }
@@ -3168,7 +3334,8 @@ function setupToolTips() {
                   "Display CUAHSI contact information.",
                   "Display information about the CUAHSI HydroClient.",
                   "Display a brief HydroClient tutorial.",
-                  "Login via Google to retrieve saved Workspace entries."
+                  "Login via Google to retrieve saved Workspace entries.",
+                  "Display HydroClient licensing information"
                 ];
 
     var divs = { 'divZipSelections': {'text': texts[0]},
@@ -3178,10 +3345,11 @@ function setupToolTips() {
                  'liMapTab': {'text': texts[2]},
                  'liTableTab': {'text': texts[3]},
                  'liTabbedDataMgrTab': {'text': texts[4]},
-                 'liContactTab': {'text': texts[5]},
-                 'liAboutTab': {'text': texts[6]},
-                 'liQuickStartTab': {'text': texts[7]},
-                 'liGoogleTab': {'text': texts[8]}
+                 'liContactTab': {'text': texts[5], 'placement': 'right'},
+                 'liAboutTab': {'text': texts[6], 'placement': 'right'},
+                 'liQuickStartTab': {'text': texts[7], 'placement': 'right'},
+                 'liGoogleTab': {'text': texts[8]},
+                 'liLicenseTab': {'text': texts[9], 'placement': 'right'}
                };
 
     for (var div in divs) {
@@ -3191,9 +3359,10 @@ function setupToolTips() {
         divTooltip.tooltip('destroy');
         divTooltip.tooltip({
                         'animation': true,
-                        'placement': 'auto',
+                        'placement': divs[div].placement ? divs[div].placement: 'auto',
                         'trigger': 'hover',
-                        'title': divs[div].text });
+                        'title': divs[div].text,
+                        'delay': divs[div].delay ? divs[div].delay: {'show': 1000, 'hide': 500}});
     }
 
 }
@@ -3456,9 +3625,9 @@ function setupDataManagerTable() {
 
                                             //'None' option...
                                             '<li><a id="idNone" tabindex="-1" href="#" style="font-size: 1.0em;">' +
-                                                    '<span class="glyphicon glyphicon-remove-sign" style="max-width: 100%; font-size: 1.5em;"></span>' +
-                                                    ' <span style="font-weight: bold; display: inline-block; vertical-align: super;">' + 'None' + '</span>' +
-                                                 '</a></li>' +
+                                               '<span class="glyphicon glyphicon-remove-sign" style="max-width: 100%; font-size: 1.5em;"></span>' +
+                                               ' <span style="font-weight: bold; display: inline-block; vertical-align: super;">' + 'None' + '</span>' +
+                                            '</a></li>' +
 
                                           '</ul>' +
                                       '</div>' +
@@ -3598,6 +3767,7 @@ function ddHydrodataToolDataMgr(event) {
         imgStyle = {'max-width': '100%', 'height': '1.5em', 'width': '2.0em'};    
         }
 
+    //Set the selected option...
     $('#' + event.data.divId + ' img').removeAttr( 'style');
     $('#' + event.data.divId + ' img').removeAttr( 'class');
     $('#' + event.data.divId + ' img').html('');
@@ -3671,7 +3841,15 @@ function btnDisableCheck(buttonId) {
                 break;
             }
         }
+    }
+    else if ('btnApplyActionTS' === buttonId) {
+        var table = $('#' + 'dtTimeseries').DataTable();
+        var selectedRows = table.rows('.selected').data();
+        var rowsLength = selectedRows.length;
     
+        if ( 0 >= rowsLength) {
+            result = true;  //NO rows selected - disable launch button...
+        }
     }
 
     return result;
@@ -4602,6 +4780,11 @@ function addRowStylesDM(newrow) {
 
 function selectAll(event) {
 
+    //Indicate a select is in progress...
+    if('undefined' !== typeof event.data.anchorId) {
+        $('#' + event.data.anchorId).attr('data-selecton', true);
+    }
+
     //Clear ALL table selections, regardless of current sort/search order
     var table = $('#' + event.data.tableId).DataTable();
     var rows = table.rows();                    //Retrieve ALL rows
@@ -4615,6 +4798,7 @@ function selectAll(event) {
     jqueryObjects.removeClass(className);
 
     //Apply 'selected' class to the 'top' <selectedTimeSeriesMax> rendered nodes, if indicated 
+    //if ( 'undefined' === typeof event.data.chkbxId || $('#' + event.data.chkbxId).prop("checked")) {
     if ( 'undefined' === typeof event.data.chkbxId || $('#' + event.data.chkbxId).prop("checked")) {
         //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
         //Source: http://datatables.net/reference/api/rows().nodes()
@@ -4627,7 +4811,13 @@ function selectAll(event) {
         //Initialize the selected row count...
         // Check for the 'time series max' attribute - if found, compare it to the 'total rows' value to determine the count. Otherwise, set the count from the 'total rows' value
         var selectedTimeSeriesMax = parseInt($('#' + event.data.tableId).attr('data-selectedtimeseriesmax'));
-        var count = Number.isInteger(selectedTimeSeriesMax) ? (totalRows < selectedTimeSeriesMax ? totalRows : selectedTimeSeriesMax) : totalRows;
+        //var count = Number.isInteger(selectedTimeSeriesMax) ? (totalRows < selectedTimeSeriesMax ? totalRows : selectedTimeSeriesMax) : totalRows;
+        var count = (('true' === event.data.selectAll) ? totalRows : ((Number.isInteger(selectedTimeSeriesMax) ? (totalRows < selectedTimeSeriesMax ? totalRows : selectedTimeSeriesMax) : totalRows)));
+
+        if ( isNaN(selectedTimeSeriesMax)) {
+            //data-selectedtimeseriesmax NOT defined - assign value of count...
+            selectedTimeSeriesMax = count;
+        }
 
         //For each rendered node...
         for (var i = 0; i < length; ++i) {
@@ -4635,7 +4825,8 @@ function selectAll(event) {
             //Determine the position of the associated row in the current sort/search order...
             var position = rows[0].indexOf(nodesRendered[i]._DT_RowIndex)
             
-            if (isNaN(selectedTimeSeriesMax) || (position < selectedTimeSeriesMax)) {
+            //if (isNaN(selectedTimeSeriesMax) || (position < selectedTimeSeriesMax)) {
+            if (('true' === event.data.selectAll) || (position < selectedTimeSeriesMax)) {
                 //Row is within the 'top' <selectedTimeSeriesMax> - apply class, if indicated
                 var jqueryObject = $(nodesRendered[i]);
 
@@ -4664,12 +4855,17 @@ function selectAll(event) {
     }
 
     if ( 'undefined' !== typeof event.data.btnClearId) {
-    enableDisableButton(event.data.tableId, event.data.btnClearId);
+        enableDisableButton(event.data.tableId, event.data.btnClearId);
     }
 }
 
 //Clear --ALL-- table selections, regardless of current sort/search order...
 function clearSelections(event) {
+
+    //Indicate a select is NOT in progress...
+    if('undefined' !== typeof event.data.anchorId) {
+        $('#' + event.data.anchorId).attr('data-selecton', false);
+    }
 
     //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
     //Source: http://datatables.net/reference/api/rows().nodes()
@@ -4720,7 +4916,7 @@ function applyFilterToMap(event) {
     //'Apply to Map' engaged - apply filter to the map...
 
     //Retrieve the table's current search/filter criteria
-    var criteria = retrieveSearchAndFilterCriteria(event.data.tableId);
+    var criteria = retrieveSearchAndFilterCriteria(event.data.tableId, true);
     //if ( 'dtTimeseries' === event.data.tableId && (! jQuery.isEmptyObject(criteria ))) {
     //    Set data source for service code when original value is null...
     //    if ( null === criteria.dataSources[13].dataSource) {
@@ -5444,12 +5640,23 @@ function addEndTaskClickHandler(jqueryButton, response) {
 }
 
 function copySelectionsToDataManager(event) {
+
+    //Check current anchor - return early, if indicated...
+    if ( 'dtTimeseries' === event.data.tableId) {
+        var currentAnchor = $('#divApplyActionTS').attr('data-currentanchor');
+
+        if ( currentAnchor !== event.data.currentAnchor) {
+            return;
+        }
+    }
+
     //Retrieve the selected rows...
     var table = $('#' + event.data.tableId).DataTable();
     var selectedRows = table.rows('.selected').data();
     var selectedTimeSeriesMax = parseInt($('#' + event.data.tableId).attr('data-selectedtimeseriesmax'));
 
-    if ($('#' + event.data.chkbxId).prop("checked") && Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax > selectedRows.length)) {
+    //if ($('#' + event.data.chkbxId).prop("checked") && Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax > selectedRows.length)) {
+    if (  ('false' === event.data.selectAll || $('#' + event.data.chkbxId).prop("checked") )  && Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax > selectedRows.length)) {
         //User has clicked the 'Select Top ...' check box but not all selected rows have been rendered
         //NOTE: If the DataTable instance has the 'deferRender' option set - not all rows may have been rendered at this point.
         //        Thus one cannot rely on the selectedRows above, since in this case only rendered rows appear in the selectedRows...
@@ -5769,7 +5976,8 @@ function setUpTimeseriesDatatable() {
     }
 
     //ALWAYS set the screen title...
-    $('#dataview #myModalLabel').html('List of Timeseries in: ' + currentPlaceName);
+    //$('#dataview #myModalLabel').html('List of Timeseries in: ' + currentPlaceName);
+    $('#tableModal #myModalLabel').html('List of Timeseries in: ' + currentPlaceName);
         
     //var dataSet = getDetailsForMarker(clusterid)
     var actionUrl = "/home/getTimeseries"
@@ -5838,10 +6046,17 @@ function setUpTimeseriesDatatable() {
             //$('td', row).eq(16).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
 
             //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
-            if ($('#chkbxSelectAllTS').prop('checked')) {
-                //BC - Call check box hander here
-                $('#chkbxSelectAllTS').triggerHandler('click');
+            //if ($('#chkbxSelectAllTS').prop('checked')) {
+            //    //BC - Call check box hander here
+            //    $('#chkbxSelectAllTS').triggerHandler('click');
+            //}
+
+            //If select in progress, call the 'click' handler
+            if ($('#' + 'anchorAllSelectionsTS').attr('data-selecton')) {
+                //$(row).addClass('selected');  //Only correct if ALL the rows are being selected...
+                $('#' + 'anchorAllSelectionsTS').triggerHandler('click');
             }
+
 
         },
         "initComplete": function () {
@@ -5921,55 +6136,195 @@ function setUpTimeseriesDatatable() {
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-    $("div.toolbarTS").html('<span style="float: left; margin-left: 1em;">' +
-                              '<label style="float:right;">' + 
-                              '<input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS" style="float:left;"/>&nbsp;Select Top ' +
-                              $('#dtTimeseries').attr('data-selectedtimeseriesmax') + '?' +
-                              '</label>' + 
-                           '</span>' +
-                           '<div id="divClearSelectionsTS" style="display: inline-block; margin-left: 2em; float:left;">' +
-                            '<button type="button" class="btn btn-warning" disabled id="btnClearSelectionsTS">' + 
-                             '<span class="glyphicon glyphicon-remove-sign" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +
-                             '<span id="spanClearSelectionsTS">Clear Selection(s)</span>' +
-                            '</button>' +
-                          '</div>' +
-                           '<div id="divZipSelectionsTS" style="display: inline-block; margin-left: 2em; float:left;">' +
-                            '<button type="button" class="ColVis-Button btn btn-primary" disabled id="btnZipSelectionsTS">' +
-                             '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +
-                             '<span id="spanZipSelectionsTS">Export Selection(s)</span>' +
-                            '</button>' +
-                          '</div>' +
-                          '<div id="divManageSelectionsTS" style="display: inline-block; margin-left: 2em; float:left;">' +
-                            '<button type="button" class="ColVis-Button btn btn-primary" disabled id="btnManageSelectionsTS">' +
-                            '<span class="glyphicon glyphicon-plus-sign" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +  
-                            '<span id="spanManageSelectionsTS">Add Selection(s) to Workspace</span>' +
-                            '</button>' +
-                          '</div>' +
-                          '<div id="divApplyFilterToMapTS" style="display: inline-block; margin-left: 2em; float:left;">' +
-                            '<label style="float:right;">' +
-//                            '<input type="checkbox" disabled id="chkbxApplyFilterToMapTS"/>&nbsp;Apply Filter to Map?' +
-                            '<input type="checkbox" id="chkbxApplyFilterToMapTS"/>&nbsp;Apply Filter to Map?' +
-                            '</label>' +
-                          '</div>' +
-                            '<span class="clsMessageArea" style="display: none; float:left; margin-left: 2em;"></span>');
+    $("div.toolbarTS").html(
+                            '<div class="inline-form">' +
+                            '<div class="form-group" style="margin-left: 1em; float:left; display:inline-block;">' +
+    
+                               // '<span id="spanSelectAllTS" style="float: left; margin-left: 1em;">' +
+                               //   '<label style="float:right;">' + 
+                               //   '<input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS" style="float:left;"/>&nbsp;Select Top ' +
+                               //   $('#dtTimeseries').attr('data-selectedtimeseriesmax') + '?' +
+                               //   '</label>' + 
+                               //'</span>' +
+
+                              // '<div id="divClearSelectionsTS" style="display: inline-block; margin-left: 2em; float:left;">' +
+                              //  '<button type="button" class="btn btn-warning" disabled id="btnClearSelectionsTS">' + 
+                              //   '<span class="glyphicon glyphicon-remove-sign" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +
+                              //   '<span id="spanClearSelectionsTS">Clear Selection(s)</span>' +
+                              //  '</button>' +
+                              //'</div>' +
+                              // '<div id="divZipSelectionsTS" style="display: inline-block; margin-left: 2em; float:left;">' +
+                              //  '<button type="button" class="ColVis-Button btn btn-primary" disabled id="btnZipSelectionsTS">' +
+                              //   '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +
+                              //   '<span id="spanZipSelectionsTS">Export Selection(s)</span>' +
+                              //  '</button>' +
+                              //'</div>' +
+                              //'<div id="divManageSelectionsTS" style="display: inline-block; margin-left: 2em; float:left;">' +
+                              //  '<button type="button" class="ColVis-Button btn btn-primary" disabled id="btnManageSelectionsTS">' +
+                              //  '<span class="glyphicon glyphicon-plus-sign" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +  
+                              //  '<span id="spanManageSelectionsTS">Add Selection(s) to Workspace</span>' +
+                              //  '</button>' +
+                              //'</div>' +
+
+                              '<div class="dropdown" style="position: relative; display: inline-block; float: left; font-size: 1.00em;">' +
+                                  '<button class="btn btn-primary dropdown-toggle" type="button" id="ddMenuSelectionsTS" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">' +
+                                   '<span class="glyphicon glyphicon-list-alt" style="font-weight: bold; font-size: 1.00em;"></span>' +
+                                   '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Selections&nbsp;</span>' +
+                                   '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
+                                  '</button>' +
+                                  '<ul class="dropdown-menu" aria-labelledby="ddMenuSelectionsTS">' +
+                                   
+                                   (currentUser.authenticated ? 
+                                       '<li><a href="#" id="anchorAllSelectionsTS" data-selectall="true" style="font-weight: bold;" ><span class="text-muted">Select All' : 
+                                       '<li><a href="#" id="anchorAllSelectionsTS" data-selectall="false" style="font-weight: bold;" ><span class="text-muted">Select Top' +
+                                        $('#dtTimeseries').attr('data-selectedtimeseriesmax') + '?') +
+
+                                   '</span></a></li>' +
+                                   '<li><a href="#" id="anchorClearSelectionsTS" style="font-weight: bold;"><span class="text-warning">Clear Selections</span></a></li>' +
+                                  '</ul>' +
+                              '</div>' +
+
+                              '<div style="position: relative; display: inline-block; float: left; margin-left: 0.5em; vertical-align: top">' +
+                                '<div>' +
+                                  '<div class="dropdown" id="ddActionsTS">' +
+                                      '<button class="btn btn-primary" data-toggle="dropdown" style="font-size: 1.00em;">' +
+
+                                        '<div id="ddActionTSOriginal" style="display: none;">' + 
+                                        '<span class="glyphicon glyphicon-circle-arrow-right" style="font-weight: bold; max-width: 100%; font-size: 1.0em;"></span>' +
+                                        '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Action&nbsp;</span>' +
+                                        '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
+                                        '</div>' +
+                                        '<div id="ddActionTS" data-noneselected="true">' + 
+                                        '<span class="glyphicon glyphicon-circle-arrow-right" style="font-weight: bold; max-width: 100%; font-size: 1.0em;"></span>' +
+                                        '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Action&nbsp;</span>' +
+                                        '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
+                                        '</div>' +
+
+                                      '</button>' +
+                                      '<ul class="dropdown-menu" style="width: 22em;">' +
+                                      //'<div>' +
+                                       '<ul style="list-style: none; padding-left: 0em;">' +
+
+                                       '<li data-toggle="tooltip" data-placement="top" title="Move all selected time series to the workspace">' +
+                                        '<a href="#" id="anchorAddSelectionsToWorkspaceTS" style="font-weight: bold;" >' + 
+                                        '<span class="glyphicon glyphicon-plus-sign" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
+                                        '<span id="spanManageSelectionsTS" style="font-weight: bold; display: inline-block; vertical-align: super;">Add Selection(s) to Workspace</span>' +
+                                       '</a>' +
+                                       '</li>' +
+
+                                       (currentUser.authenticated ?
+                                       //'<li class="dropdown-submenu" data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV format">' :
+                                       //'<li data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV format">') +
+                                       '<li class="dropdown-submenu" style="width: 90%" >' :
+                                       '<li data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV format">') +
+
+                                        '<a href="#" tabindex="-1" id="anchorExportSelectionsTS" style="font-weight: bold;">' +                                    
+                                        '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.5em;  margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +
+                                        '<span id="spanZipSelectionsTS"  style="font-weight: bold; display: inline-block; vertical-align: super;">Export Selection(s)</span>' +
+                                       '</a>' +
+
+                                       (currentUser.authenticated ? 
+                                           '<ul class="dropdown-menu">' + 
+                                            '<li>' +
+                                             '<a href="#" id="anchorAllTimeseriesInOneFileTS" style="font-weight: bold;" >' +
+                                               '<span class="glyphicon glyphicon-file" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
+                                               '<span style="font-weight: bold; display: inline-block; vertical-align: super;">All timeseries in one file?</span>' +
+                                             '</a>' +
+                                            '</li>' +
+                                            '<li>' +
+                                             '<a href="#" id="anchorEachTimeseriesInSeparateFileTS" style="font-weight: bold;" >' +
+                                               '<span class="glyphicon glyphicon-duplicate" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
+                                               '<span style="font-weight: bold; display: inline-block; vertical-align: super;">Each timeseries in a separate file?</span>' +
+                                             '</a>' +
+                                            '</li>' +
+                                           '</ul>' : '' ) + 
+
+                                       '</li>' +
+
+                                        '</ul>' +
+
+                                        '<li role="separator" class="divider"></li>' +
+
+                                      //  'None' option...
+                                        '<li><a id="idNoneTS" tabindex="-1" href="#" style=" font-size: 1.0em;">' +
+                                            '<span class="glyphicon glyphicon-remove-sign" style="max-width: 100%;  font-size: 1.5em;"></span>' +
+                                            ' <span style="font-weight: bold; display: inline-block; vertical-align: super;">' + 'None' + '</span>' +
+                                        '</a></li>' +
+
+                                      //'</div>' + 
+                                      '</ul>' +
+                                      '</div>' +
+                                  '</div>' +
+                              '</div>' +
+
+
+                            '<div id="divApplyActionTS" style="display: inline-block; position: relative; float: left">' +
+                            '<input type="button" style="margin-left: 0.5em;" class="ColVis-Button btn btn-primary" disabled id="btnApplyActionTS" value="Apply Action" />' +
+                            '</div>' +
+
+
+                              '<div id="divApplyFilterToMapTS" style="display: inline-block; margin-left: 1em; float:left;">' +
+                                '<label style="float:right;">' +
+    //                            '<input type="checkbox" disabled id="chkbxApplyFilterToMapTS"/>&nbsp;Apply Filter to Map?' +
+                                '<input type="checkbox" id="chkbxApplyFilterToMapTS"/>&nbsp;Apply Filter to Map?' +
+                                '</label>' +
+                              '</div>' +
+                                '<span class="clsMessageArea" style="display: none; float:left; margin-left: 2em;"></span>' +
+                            
+                            '</div>' + 
+                            '</div>');
+
+    //Adjust table html per current user's authentication...
+    //var jqSpan = $('#' + 'spanSelectAllTS');
+    
+    //jqSpan.prop('checked', false);
+    //if (currentUser.authenticated) {
+    //    //Hide the 'select all' checkbox and label...
+    //    jqSpan.addClass('hidden');
+    //}
+    //else {
+    //    jqSpan.removeClass('hidden');
+    //}
+
 
     //Add click handlers...
 
     //Avoid multiple registrations of the same handler...
-    $('#chkbxSelectAllTS').off('click', selectAll);
-    $('#chkbxSelectAllTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS', 'btnIds': ['btnZipSelectionsTS', 'btnManageSelectionsTS'], 'btnClearId': 'btnClearSelectionsTS'}, selectAll);
+    //$('#chkbxSelectAllTS').off('click', selectAll);
+    //$('#chkbxSelectAllTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS', 'btnIds': ['btnZipSelectionsTS', 'btnManageSelectionsTS'], 'btnClearId': 'btnClearSelectionsTS'}, selectAll);
+    $('#anchorAllSelectionsTS').off('click', selectAll);
+    $('#anchorAllSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'anchorId': 'anchorAllSelectionsTS', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall') }, selectAll);
 
     //Avoid multiple registrations of the same handler...
-    $('#btnZipSelectionsTS').off('click', zipSelections_2);
-    $('#btnZipSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS'}, zipSelections_2);
+    //$('#btnZipSelectionsTS').off('click', zipSelections_2);
+    //$('#btnZipSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS'}, zipSelections_2);
 
     //Avoid multiple registrations of the same handler...
-    $('#btnClearSelectionsTS').off('click', clearSelections);
-    $('#btnClearSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS', 'btnIds': ['btnZipSelectionsTS', 'btnManageSelectionsTS'], 'btnClearId': 'btnClearSelectionsTS' }, clearSelections);
+    //$('#btnClearSelectionsTS').off('click', clearSelections);
+    //$('#btnClearSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS', 'btnIds': ['btnZipSelectionsTS', 'btnManageSelectionsTS'], 'btnClearId': 'btnClearSelectionsTS' }, clearSelections);
+    $('#anchorClearSelectionsTS').off('click', clearSelections);
+    $('#anchorClearSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'anchorId': 'anchorAllSelectionsTS' }, clearSelections);
 
     //Avoid multiple registrations of the same handler...
-    $('#btnManageSelectionsTS').off('click', copySelectionsToDataManager);
-    $('#btnManageSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS' }, copySelectionsToDataManager)
+    //$('#btnManageSelectionsTS').off('click', copySelectionsToDataManager);
+    //$('#btnManageSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS' }, copySelectionsToDataManager)
+    $('#btnApplyActionTS').off('click', copySelectionsToDataManager);
+    $('#btnApplyActionTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall'), 'currentAnchor': 'anchorAddSelectionsToWorkspaceTS' }, copySelectionsToDataManager)
+
+    //TO DO - Need to revise zipSelections_2...
+
+    //Non-authenticated user...
+//    $('#btnApplyActionTS').off('click', zipSelections_2);
+//    $('#btnApplyActionTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall'), 'currentAnchor': 'anchorExportSelectionsTS'}, zipSelections_2);
+
+    //Authenticated user...
+//    $('#btnApplyActionTS').off('click', zipSelections_2);
+//    $('#btnApplyActionTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall'), 'currentAnchor': 'anchorAllTimeseriesInOneFileTS'}, zipSelections_2);
+
+    //Authenticated user...
+//    $('#btnApplyActionTS').off('click', zipSelections_2);
+//    $('#btnApplyActionTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall'), 'currentAnchor': 'anchorEachTimeseriesInSeparateFileTS'}, zipSelections_2);
+
 
     $('#chkbxApplyFilterToMapTS').off('click', applyFilterToMap);
     $('#chkbxApplyFilterToMapTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxApplyFilterToMapTS'}, applyFilterToMap);
@@ -5982,6 +6337,76 @@ function setUpTimeseriesDatatable() {
     //Order event...
     $('#dtTimeseries').off('order.dt', dtSearchOrOrder);
     $('#dtTimeseries').on('order.dt', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS', 'search': false, 'order': true, 'filterChkBxIds': [] }, dtSearchOrOrder);
+
+
+    //Actions dropdown handler...
+    $('#ddActionsTS').off('click', 'li a', ddActionsTS);
+    $('#ddActionsTS').on('click', 'li a', {'divId': 'ddActionTS', 'divIdOriginal': 'ddActionTSOriginal', 
+                                            'tableId': 'dtTimeseries', 'divLaunchId': 'divApplyActionTS' }, ddActionsTS);
+
+}
+
+//Handler for dtTimeseries 'Action' drop down...
+function ddActionsTS(event) {
+
+    var appName = $(this).text();
+    var id = $(this).attr("id");
+    var html = $(this).html();
+
+    if ('anchorExportSelectionsTS' === id && currentUser.authenticated) {
+        console.log('Sub-menu header clicked, current user authenticated - take no action!!');
+        return;
+    }
+    
+    $('#' + event.data.divLaunchId).tooltip('destroy');     //Remove any previously set tooltip on the 'launch' button... 
+    $('#' + event.data.divId).removeClass();                //Remove any previously set classes...
+
+    if ( 'idNoneTS' === id) {
+        //'None' option selected - retrieve 'original' values...
+        $('#' + event.data.divId).html($('#' + event.data.divIdOriginal).html());
+        $('#' + event.data.divId).attr('data-noneselected', "true");
+        $('#' + event.data.divId).show();
+
+        $('#' + event.data.divLaunchId).removeAttr('data-currentanchor');
+
+        return;
+    }
+
+    //Set the 'current anchor' attribute on the 'launch' button for later reference...
+    $('#' + event.data.divLaunchId).attr('data-currentanchor', id);
+
+
+    if ('anchorAddSelectionsToWorkspaceTS' === id ) {
+        console.log('Add Selection(s) to Workspace clicked!!');
+    } 
+    else if ('anchorAllTimeseriesInOneFileTS' === id ) {
+        console.log('All timeseries in one file clicked!!');
+    } 
+    else if ('anchorEachTimeseriesInSeparateFileTS' === id ) {
+        console.log('Each timeseries in a separate file clicked!!');
+    } 
+    else if ('anchorExportSelectionsTS' === id ) {
+        //User is NOT authenticated...
+        console.log('Export Selection(s) - non-authenticated user - clicked!!');
+    } 
+
+    //Set the selected option...
+    $('#' + event.data.divId + ' img').removeAttr( 'style');
+    $('#' + event.data.divId + ' img').removeAttr( 'class');
+    $('#' + event.data.divId + ' img').html('');
+
+//    $('#' + event.data.divId).text(appName);
+//    $('#' + event.data.divId).prepend( '<img src="' + img.attr('src') + '">' );
+//    $('#' + event.data.divId).css('font-weight', 'bold');
+//    $('#' + event.data.divId).css('font-size', '1.0em');
+
+    $('#' + event.data.divId).html(html);
+    $('#' + event.data.divId).attr('data-noneselected', "false");
+
+    //if (null !== imgStyle) {
+    //    $('#' + event.data.divId + ' img').css(imgStyle);
+    //}
+
 }
 
 //DataTables search event handler...
@@ -6008,7 +6433,7 @@ function dtSearchOrOrder(event, settings) {
 }
 
 //Retrieve current search and filter criteria from input tableId...
-function retrieveSearchAndFilterCriteria(tableId) {
+function retrieveSearchAndFilterCriteria(tableId, includeDataSources) {
 
     var criteria = {};
 
@@ -6024,23 +6449,25 @@ function retrieveSearchAndFilterCriteria(tableId) {
     //Check 'Filter by' dropdowns...
     var api = new $('#' + tableId).DataTable();
 
-    //Retrieve data source names for visible table columns (ASSUMPTION: only visible columns are searchable!!)
+    //Retrieve data source names for visible table columns, if indicated (ASSUMPTION: only visible columns are searchable!!)
     // NOTE: Separate calls to dataSrc() and visible() are required - calls cannot be 'chained'...
-    var dataSources = [];
-    var options = api.init();
+    if ( 'undefined' !== typeof includeDataSources && true === includeDataSources ) {
+        var dataSources = [];
+        var options = api.init();
 
-    var colLength = options.columns.length;
-    for (var colI= 0; colI < colLength; ++colI) {
-        var dataSrc = {};
+        var colLength = options.columns.length;
+        for (var colI= 0; colI < colLength; ++colI) {
+            var dataSrc = {};
 
-        dataSrc['dataSource'] = options.columns[colI].data;
-        dataSrc['title'] = ('undefined' != typeof options.columns[colI].sTitle) ? options.columns[colI].sTitle : options.columns[colI].data;
-        dataSrc['searchable'] = ('undefined' != typeof options.columns[colI].bSearchable) ? options.columns[colI].bSearchable : true;
+            dataSrc['dataSource'] = options.columns[colI].data;
+            dataSrc['title'] = ('undefined' != typeof options.columns[colI].sTitle) ? options.columns[colI].sTitle : options.columns[colI].data;
+            dataSrc['searchable'] = ('undefined' != typeof options.columns[colI].bSearchable) ? options.columns[colI].bSearchable : true;
 
-        dataSources.push(dataSrc);
-    }
+            dataSources.push(dataSrc);
+        }
     
-    criteria['dataSources'] = dataSources;
+        criteria['dataSources'] = dataSources;
+    }
 
     var filters = [];
     api.columns().indexes().flatten().each(function (i) {
@@ -6056,7 +6483,10 @@ function retrieveSearchAndFilterCriteria(tableId) {
 
             filter['value'] = selVal;
             filter['title'] = colTitle;
-            filter['dataSource'] = criteria['dataSources'][i].dataSource;
+            
+            if ( 'undefined' !== typeof includeDataSources && true === includeDataSources ) {
+                filter['dataSource'] = criteria['dataSources'][i].dataSource;
+            }
 
             filters.push(filter);
         }
