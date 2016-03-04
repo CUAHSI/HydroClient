@@ -672,6 +672,8 @@ namespace HISWebClient.Controllers
 				series = filterTimeSeries(series, filterAndSearchCriteria);
 			}
 
+//			Dictionary<string, int> servCodeCounts = new Dictionary<string, int>();
+
 			for (int i = 0; i < series.Count; i++)
 			{
 
@@ -684,10 +686,13 @@ namespace HISWebClient.Controllers
 
 				//Retain the service code, title and highest value count for later reference...
 				string key = series[i].ServCode;
-				int count = series[i].ValueCount;
+				//int count = series[i].ValueCount;
 				string title = series[i].ServTitle;
 
-				cl.ServiceCodeToTitle[key] = title + " (" + count.ToString() + ")";
+//				servCodeCounts[key] = (servCodeCounts.ContainsKey(key)) ? servCodeCounts[key] + 1 : 1;
+
+//				cl.ServiceCodeToTitle[key] = title + " (" + servCodeCounts[key].ToString() + ")";
+				cl.ServiceCodeToTitle[key] = title;
 	
 				clusterPins.Add(cl);
 			}

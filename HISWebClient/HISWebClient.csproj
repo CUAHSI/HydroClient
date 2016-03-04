@@ -311,6 +311,8 @@
     <Content Include="Content\bootstrap-datepicker3.css" />
     <Content Include="Content\bootstrap-modal-bs3patch.css" />
     <Content Include="Content\bootstrap-modal.css" />
+    <Content Include="Content\bootstrap-theme.css" />
+    <Content Include="Content\bootstrap-theme.min.css" />
     <Content Include="Content\dataTables.colVis.css" />
     <Content Include="Content\datatablescdn\jquery.dataTables.min.css" />
     <Content Include="Content\Images\ajax-loader-green.gif">
@@ -413,7 +415,7 @@
     <Content Include="Content\Images\sort_both.png" />
     <Content Include="Content\Images\sort_desc.png" />
     <Content Include="Content\Images\sort_desc_disabled.png" />
-    <Content Include="fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="modal_ajax_test.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -459,13 +461,10 @@
     <Content Include="Content\themes\base\theme.css" />
     <Content Include="Content\themes\base\tooltip.css" />
     <Content Include="favicon.ico" />
-    <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
     <Content Include="Scripts\bootstrap-modal.js" />
     <Content Include="Scripts\bootstrap-modalmanager.js" />
-    <Content Include="Scripts\bootstrap.js" />
-    <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="Areas\HelpPage\Views\Web.config" />
     <Content Include="Areas\HelpPage\Views\Shared\_Layout.cshtml" />
     <Content Include="Areas\HelpPage\Views\Help\ResourceModel.cshtml" />
@@ -493,6 +492,14 @@
     </Content>
     <Content Include="Content\Test.zip" />
     <Content Include="App_Data\Test.zip" />
+    <Content Include="fonts\glyphicons-halflings-regular.woff2" />
+    <Content Include="fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="fonts\glyphicons-halflings-regular.ttf" />
+    <Content Include="fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="Content\bootstrap-theme.min.css.map" />
+    <Content Include="Content\bootstrap-theme.css.map" />
+    <Content Include="Content\bootstrap.min.css.map" />
+    <Content Include="Content\bootstrap.css.map" />
     <None Include="Properties\PublishProfiles\bcc-hiswebclient - FTP %282%29.pubxml" />
     <None Include="Properties\PublishProfiles\bcc-hiswebclient - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\bcc-hiswebclient - Web Deploy.pubxml" />
@@ -504,6 +511,8 @@
     <None Include="Properties\PublishProfiles\qa-hiswebclient - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\qa-hiswebclient - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
+    <Content Include="Scripts\bootstrap.js" />
+    <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="Scripts\Custom\DownloadHelper.js" />
     <Content Include="Scripts\Custom\freezeEnum.js" />
     <Content Include="Scripts\Custom\jquery-filedownload.js" />
@@ -607,8 +616,6 @@
     <Folder Include="Views\Export\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="fonts\glyphicons-halflings-regular.ttf" />
-    <Content Include="fonts\glyphicons-halflings-regular.eot" />
     <Content Include="packages.config">
       <SubType>Designer</SubType>
     </Content>

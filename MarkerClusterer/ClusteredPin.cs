@@ -30,6 +30,8 @@ namespace HISWebClient.MarkerClusterer
 
         //private NameValueCollection assessmentHeaderData;
 
+		private Dictionary<string, int> servCodeCounts = new Dictionary<string, int>();
+
         #endregion
 
         public ClusteredPin()
@@ -192,7 +194,34 @@ namespace HISWebClient.MarkerClusterer
 
 			//Merge the two dictionaries into one dictionary
 			//Source: http://stackoverflow.com/questions/10559367/combine-multiple-dictionaries-into-a-single-dictionary
-			ServiceCodeToTitle = ServiceCodeToTitle.Concat(newPin.ServiceCodeToTitle).GroupBy(d => d.Key).ToDictionary(d => d.Key, d => d.First().Value);
+			//ServiceCodeToTitle = ServiceCodeToTitle.Concat(newPin.ServiceCodeToTitle).GroupBy(d => d.Key).ToDictionary(d => d.Key, d => d.First().Value);
+
+			//Update counts dictionary...
+			foreach( var key in newPin.ServiceCodeToTitle.Keys)
+			{
+				servCodeCounts[key] = (servCodeCounts.ContainsKey(key)) ? servCodeCounts[key] + 1 : 1;
+			}
+
+			//Update service code dictionary...
+			//	Expected format for strings:  <service title> (<service count>)
+			foreach( var key in servCodeCounts.Keys)
+			{
+				string titlePlusCount = ServiceCodeToTitle.ContainsKey(key) ? ServiceCodeToTitle[key] : newPin.ServiceCodeToTitle[key];
+
+				int last = titlePlusCount.LastIndexOf(')');
+				if (-1 != last)
+				{
+					titlePlusCount = titlePlusCount.Substring(0, last);
+				}
+
+				last = titlePlusCount.LastIndexOf(" (");
+				if (-1 != last)
+				{
+					titlePlusCount = titlePlusCount.Substring(0, last);
+				}
+
+				ServiceCodeToTitle[key] = titlePlusCount + " (" + servCodeCounts[key].ToString() + ")";
+			}
         }
 
         /// <summary>

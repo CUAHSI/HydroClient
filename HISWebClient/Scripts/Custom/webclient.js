@@ -52,10 +52,16 @@ var currentUser = { 'authenticated' : false,
                     'userName' : null
                   };
 
-var currentPosition = {
-                        'latLng': null,
-                        'infoBubble': null
-                      };
+//var currentPosition = {
+//                        'latLng': null,
+//                        'infoBubble': null
+//                      };
+
+//Currently open InfoBubble instance...
+var openInfoBubble = null;
+
+//Array of open InfoBubble positions...
+var openInfoBubbles = [];
 
 //Number.isInteger 'polyfill' for use with browsers (like IE) which do not support the 'native' function
 //Sources: http://stackoverflow.com/questions/31720269/internet-explorer-11-object-doesnt-support-property-or-method-isinteger
@@ -83,8 +89,8 @@ $(document).ready(function () {
         if ('' === criteria.Search && 0 >= criteria.filters.length) {
             //No search or filter entries - disable checkbox...
 
-            chkbx.prop('checked', false);
-            chkbx.addClass(className);
+            //chkbx.prop('checked', false);
+            //chkbx.addClass(className);
         }
         else {
             //Search and/or filter entries exist - enable checkbox...
@@ -518,9 +524,12 @@ function initialize() {
         //$('#' + 'badgeLatitude').text(event.latLng.lat().toFixed(3));
         //$('#' + 'badgeLongitude').text(event.latLng.lng().toFixed(3));
 
-        currentPosition.latLng = event.latLng;
+        //currentPosition.latLng = event.latLng;
         $('#' + 'MapLatitudeControl').text('Latitude: ' + event.latLng.lat().toFixed(3));
         $('#' + 'MapLongitudeControl').text('Longitude: ' + event.latLng.lng().toFixed(3));
+
+            //Close current InfoBubble instance, if indicated
+            checkInfoBubble(event.latLng);
 
     });
 
@@ -831,10 +840,14 @@ function initialize() {
             //$('#' + 'badgeLatitude').text(event.latLng.lat().toFixed(3));
             //$('#' + 'badgeLongitude').text(event.latLng.lng().toFixed(3));
 
-            currentPosition.latLng = event.latLng;
-            $('#' + 'MapLatitudeControl').text('Latitude: ' + event.latLng.lat().toFixed(3));
-            $('#' + 'MapLongitudeControl').text('Longitude: ' + event.latLng.lng().toFixed(3));
+            //currentPosition.latLng = event.latLng;
+            var lat = event.latLng.lat().toFixed(3);
+            var lng = event.latLng.lng().toFixed(3);
+            $('#' + 'MapLatitudeControl').text('Latitude: ' + lat);
+            $('#' + 'MapLongitudeControl').text('Longitude: ' + lng);
 
+            //Close current InfoBubble instance, if indicated
+            checkInfoBubble(event.latLng);
         });
 
         //NOTE: BCC - 21-Sep-2015 - Per review meeting, the following current place name logic is not used.
@@ -972,6 +985,33 @@ function initialize() {
 
     //Set an event handler on the Google form...
     $('#formGoogleLogin').on('submit', googleFormSubmit);
+
+    //Set event handlers for map and workspace tabs...
+    $('#' + 'liMapTab').on('click', function(event) {
+        $(this).addClass('hidden');
+        $('#' + 'liTabbedDataMgrTab').removeClass('hidden');
+    });
+     
+    $('#' + 'liTabbedDataMgrTab').on('click', function(event) {
+        $(this).addClass('hidden');
+        $('#' + 'liMapTab').removeClass('hidden');
+    });
+
+    //Set event handler for 'Open Workspace' button(s)...
+    $('#' + 'tableModal-DataMgr').on('click', function(event) {
+
+        //console.log('Workspace button clicked!!')
+        $('#tabbedDataMgrTab').tab('show');  //Show the tab...
+        $('#' + 'liTabbedDataMgrTab').triggerHandler('click');  //Toggle the Workspace button on the top bar...
+    });
+
+    $('#' + 'tableModal-DataMgrTS').on('click', function(event) {
+
+        //console.log('Workspace button clicked!!')
+        $('#tabbedDataMgrTab').tab('show');  //Show the tab...
+        $('#' + 'liTabbedDataMgrTab').triggerHandler('click');  //Toggle the Workspace button on the top bar...
+    });
+
 }
 
 //Event handler for Google form submit...
@@ -979,9 +1019,34 @@ function googleFormSubmit(event) {
 
     console.log('googleFormSubmit called!!');
 
+    //Check for remote logout...
+    if ( 'undefined' !== typeof event.currentTarget.action && -1 !== event.currentTarget.action.indexOf('ExternalLogOut')) {
+        //Remote logout - prevent default
+        event.preventDefault();
+    
+        //Confirm user wants to log out of Google...
+        var localeName = 'remoteLogoff';
+        bootbox.addLocale(localeName, {'OK': 'Log out from Google',
+                                       'CANCEL': 'Remain on Google',
+                                       'CONFIRM': 'Log out from Google' });
+        bootbox.setLocale(localeName);
+        bootbox.confirm('You are logging out from the HydroClient.  Do you want to log out from Google?', function(result) {
+        
+            if (result) {
+                //Google logout confirmed - submit...
+                event.target.submit();
+            }
+            else {
+                //Google logout NOT confirmed - perform a local logout...
+                event.currentTarget.action += '&localLogout=true';
+                event.target.submit();
+            }
+        });
+        bootbox.removeLocale(localeName);
+    }
+
     //Stop the event from propagating...
     //console.log ('delaying the submit for a little while...');
-    //event.preventDefault();
 
     //setTimeout( function() {
     //    console.log('Now triggering the submit...');
@@ -989,8 +1054,6 @@ function googleFormSubmit(event) {
     //    event.target.submit();
 
     //}, 5000);
-
-
 }
 
 
@@ -1075,6 +1138,11 @@ function enableSearch() {
                             'title': tooltip });
         }
     }
+
+    //Add 'thumbs up' or 'thumbs down' to area display, as indicated...
+    var html = areaControl.html();
+    var newHtml = '<span class="glyphicon ' + (bSearchEnabled ? 'glyphicon-thumbs-up' : 'glyphicon-thumbs-down') + '" style="font-size: 1.5em; margin-right: 0.5em; vertical-align: middle;" ></span>' + html;
+    areaControl.html(newHtml);
 
     //Proceesing complete - return result
     return bSearchEnabled;
@@ -2390,7 +2458,7 @@ function getMarkerPositionName(marker) {
             //Success - retrieve the location name...
             currentMarkerPlaceName = getMapLocationName(results);
             if ('' !== currentMarkerPlaceName) {
-                $('#SeriesModal #myModalLabel').html('List of Timeseries near: ' + currentMarkerPlaceName);
+                $('#SeriesModal #myModalLabel').html('Search Results near: ' + currentMarkerPlaceName);
             }
         } else {
             //Failure - reset variable
@@ -2505,7 +2573,7 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             //infoWindow.open(map, this);
             //$('#example').DataTable();
 
-            $('#SeriesModal #myModalLabel').html('List of Timeseries near Selected Marker');
+            $('#SeriesModal #myModalLabel').html('Search Results near Selected Marker');
             getMarkerPositionName(marker);
 
             setUpDatatables(clusterid);
@@ -2650,7 +2718,7 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             //infoWindow.open(map, this);
             //$('#example').DataTable();
 
-            $('#SeriesModal #myModalLabel').html('List of Timeseries near Selected Marker');
+            $('#SeriesModal #myModalLabel').html('Search Results near Selected Marker');
             getMarkerPositionName(marker);
 
             setUpDatatables(clusterid);
@@ -2755,25 +2823,97 @@ function createInfoWindow( map, marker, serviceCodeToTitle) {
     //Open on mouseover...
     google.maps.event.addListener(marker, 'mouseover', function (event) {
 
-        //Close currently open window , if indicated...
-        if ( null !== currentPosition.infoBubble) {
-            currentPosition.infoBubble.close();
-            currentPosition.infoBubble = null;
-            //console.log('Closing current bubble!!!');
-        }
+        //Check marker position - return early, if indicated...
+//        if ( checkMarkerPosition(marker.position)) {
+//            return;
+//        }
 
-        currentPosition.infoBubble = iw;
-        currentPosition.latLng = event.latLng;
-
+//        openInfoBubbles.push(marker.position);
+        openInfoBubble = iw;
         iw.open(map, marker);
     });
 
     //Close on mouseout...
     google.maps.event.addListener(marker, 'mouseout', function () {
 
-        currentPosition.infoBubble = null;
+        //Close currently open window(s) , if indicated...
+        //closeInfoWindows();
+//        removeMarkerPosition(marker.position);
         iw.close();
     });
+}
+
+//Check the position of the open InfoBubble instance against the input position
+function checkInfoBubble(currentPosition) { 
+
+    if (null !== openInfoBubble ) {
+        lat = currentPosition.lat().toFixed(1);
+        lng = currentPosition.lng().toFixed(1);
+
+        if ('undefined' !== typeof openInfoBubble.anchor /*&& 'undefined' !== typeof openInfoBubble.anchor.position */) {
+            var ibLat = openInfoBubble.anchor.position.lat().toFixed(1);
+            var ibLng = openInfoBubble.anchor.position.lng().toFixed(1)
+            if ( lat !== ibLat || lng !== ibLng) {
+                //Input position does not match InfoBubble position - close InfoBubble...
+                //console.log('????????? MISS ?????????');                
+                openInfoBubble.close();
+            }
+        }
+    }
+}
+
+//Check if the input position matches that of the open InfoBubble instance
+function checkMarkerPosition(position) {
+
+    var result = false; //Assume no match...
+    //var length = openInfoBubbles.length;
+    //for (var i = 0; i < length; ++i) {
+
+    //    if (position.equals(openInfoBubbles[i])) {
+    //        result = true;  //Match!!
+    //        break;
+    //    }
+    //}
+    if (null !== openInfoBubble ) {
+        lat = position.lat().toFixed(1);
+        lng = position.lng().toFixed(1);
+
+        if ('undefined' !== typeof openInfoBubble.anchor /*&& 'undefined' !== typeof openInfoBubble.anchor.position */) {
+            var ibLat = openInfoBubble.anchor.position.lat().toFixed(1);
+            var ibLng = openInfoBubble.anchor.position.lng().toFixed(1)
+            if ( lat === ibLat && lng === ibLng) {
+                result = true;  //Match!!
+            }
+        }
+    }
+
+    return result;
+}
+
+function removeMarkerPosition(position) {
+
+    var length = openInfoBubbles.length;
+    for (var i = 0; i < length; ++i) {
+
+        if (position.equals(openInfoBubbles[i])) {
+            openInfoBubbles.splice(i,1);    //Match - remove array element
+            break;            
+        }
+    }
+}
+
+
+
+
+//Close currently open window(s) , if indicated...
+function closeInfoWindows() {
+
+    var ib = null;
+    while (0 < openInfoBubbles.length) {
+        ib = openInfoBubbles.shift();
+        ib.close();
+        //ib = null;
+    }
 }
 
 //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
@@ -3003,7 +3143,7 @@ function setUpDatatables(clusterid) {
         //"autoWidth": true,    //BCC - 29-Jun-2015 - property defaults to true - no need to set here
         //"jQueryUI": false,    //BCC - 29-Jun-2015 - property defaults to false - no need to set here
         "deferRender": true,
-        "dom": 'C<"clear">l<"toolbar">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+        "dom": 'C<"clear"><"toolbar">frtilp',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
         //colVis: {
         //    //restore: "Restore",
         //    //showAll: "Show all",
@@ -3086,10 +3226,16 @@ function setUpDatatables(clusterid) {
                  //$('td', row).eq(13).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
 
                  //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
-                 if ($('#chkbxSelectAll').prop('checked')) {
-                     //BC - Call check box handler here
-                     $('#chkbxSelectAll').triggerHandler('click');
-                 }
+                 //if ($('#chkbxSelectAll').prop('checked')) {
+                 //    //BC - Call check box handler here
+                 //    $('#chkbxSelectAll').triggerHandler('click');
+                 //}
+
+                //If select in progress, call the 'click' handler
+                if ($('#' + 'anchorAllSelections').attr('data-selection')) {
+                    //$(row).addClass('selected');  //Only correct if ALL the rows are being selected...
+                    $('#' + 'anchorAllSelections').triggerHandler('click');
+                }
 
                  //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
 
@@ -3151,6 +3297,17 @@ function setUpDatatables(clusterid) {
         
             $('#dtMarkers').dataTable().fnAdjustColumnSizing();
 
+            //Revise layout for table's info, length and pagination controls...
+            $('#' + 'dtMarkers_info').css({'width': '25%'});
+
+            $('#' + 'dtMarkers_length').css({'width': '50%', 
+                                             'height': '2.5em'});
+
+           $('#' + 'dtMarkers_length' + ' > label').css({'text-align': 'center',
+                                                         'display': 'block',
+                                                         'margin-top': '1.0em'});
+
+            $('#' + 'dtMarkers_paginate').css({'width': '25%'});
         }
         
          
@@ -3192,28 +3349,132 @@ function setUpDatatables(clusterid) {
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-    $("div.toolbar").html('<span style="float: left; margin-left: 1em;" id="spanSelectAll"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAll" style="float:left;"/>&nbsp;Select Top ' + 
-                          $('#dtMarkers').attr('data-selectedtimeseriesmax') + '?</span>' +
+    $("div.toolbar").html(
+                          '<div class="inline-form">' +
+                          '<div class="form-group" style="margin-left: 1em; float:left; display:inline-block;">' +
+                          
+                          //'<span style="float: left; margin-left: 1em;" id="spanSelectAll"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAll" style="float:left;"/>&nbsp;Select Top ' + 
+                          //$('#dtMarkers').attr('data-selectedtimeseriesmax') + '?</span>' +
 
-                          '<div id="divClearSelections" style="display: inline-block; margin-left: 2em; float:left;">' +
-                           '<button type="button" class="btn btn-warning" disabled id="btnClearSelections">' +
-                             '<span class="glyphicon glyphicon-remove-sign" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +
-                             '<span id="spanClearSelections">Clear Selection(s)</span>' +
-                           '</button>' +
-                          '</div>' +
-                          '<div id="divZipSelections" style="display: inline-block; margin-left: 2em; float:left;">' +
-                          '<button type="button" class="ColVis-Button btn btn-primary" disabled id="btnZipSelections">' +
-                             '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +
-                             '<span id="spanZipSelections">Export Selection(s)</span>' +
-                           '</button>' +
-                          '</div>' +
-                          '<div id="divManageSelections" style="display: inline-block; margin-left: 2em; float:left;">' +
-                           '<button type="button" class="ColVis-Button btn btn-primary" disabled id="btnManageSelections">' +
-                            '<span class="glyphicon glyphicon-plus-sign" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +  
-                            '<span id="spanManageSelections">Add Selection(s) to Workspace</span>' +
-                           '</button>' +
-                          '</div>' +
-                          '<span class="clsMessageArea" style="display: none; float:left; margin-left: 2em;"></span>');
+                          //'<div id="divClearSelections" style="display: inline-block; margin-left: 2em; float:left;">' +
+                          // '<button type="button" class="btn btn-warning" disabled id="btnClearSelections">' +
+                          //   '<span class="glyphicon glyphicon-remove-sign" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +
+                          //   '<span id="spanClearSelections">Clear Selection(s)</span>' +
+                          // '</button>' +
+                          //'</div>' +
+                          //'<div id="divZipSelections" style="display: inline-block; margin-left: 2em; float:left;">' +
+                          //'<button type="button" class="ColVis-Button btn btn-primary" disabled id="btnZipSelections">' +
+                          //   '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +
+                          //   '<span id="spanZipSelections">Export Selection(s)</span>' +
+                          // '</button>' +
+                          //'</div>' +
+                          //'<div id="divManageSelections" style="display: inline-block; margin-left: 2em; float:left;">' +
+                          // '<button type="button" class="ColVis-Button btn btn-primary" disabled id="btnManageSelections">' +
+                          //  '<span class="glyphicon glyphicon-plus-sign" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +  
+                          //  '<span id="spanManageSelections">Add Selection(s) to Workspace</span>' +
+                          // '</button>' +
+                          //'</div>' +
+    
+                            '<div class="dropdown" style="position: relative; display: inline-block; float: left; font-size: 1.00em;">' +
+                                '<button class="btn btn-primary dropdown-toggle" type="button" id="ddMenuSelections" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">' +
+                                '<span class="glyphicon glyphicon-list-alt" style="font-weight: bold; font-size: 1.00em;"></span>' +
+                                '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Selections&nbsp;</span>' +
+                                '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
+                                '</button>' +
+                                '<ul class="dropdown-menu" aria-labelledby="ddMenuSelections">' +
+                                   
+                                (currentUser.authenticated ? 
+                                    '<li><a href="#" id="anchorAllSelections" data-selectall="true" style="font-weight: bold;" ><span class="text-muted">Select All' : 
+                                    '<li><a href="#" id="anchorAllSelections" data-selectall="false" style="font-weight: bold;" ><span class="text-muted">Select Top' +
+                                    $('#dtTimeseries').attr('data-selectedtimeseriesmax') + '?') +
+
+                                '</span></a></li>' +
+                                '<li><a href="#" id="anchorClearSelections" style="font-weight: bold;"><span class="text-warning">Clear Selections</span></a></li>' +
+                                '</ul>' +
+                            '</div>' +
+
+                            '<div style="position: relative; display: inline-block; float: left; margin-left: 0.5em; vertical-align: top">' +
+                            '<div>' +
+                                '<div class="dropdown" id="ddActions">' +
+                                    '<button class="btn btn-primary" data-toggle="dropdown" style="font-size: 1.00em;">' +
+
+                                    '<div id="ddActionOriginal" style="display: none;">' + 
+                                    '<span class="glyphicon glyphicon-circle-arrow-right" style="font-weight: bold; max-width: 100%; font-size: 1.0em;"></span>' +
+                                    '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Select Action&nbsp;</span>' +
+                                    '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
+                                    '</div>' +
+                                    '<div id="ddAction" data-noneselected="true">' + 
+                                    '<span class="glyphicon glyphicon-circle-arrow-right" style="font-weight: bold; max-width: 100%; font-size: 1.0em;"></span>' +
+                                    '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Select Action&nbsp;</span>' +
+                                    '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
+                                    '</div>' +
+
+                                    '</button>' +
+                                    '<ul class="dropdown-menu" style="width: 22em;">' +
+                                    //'<div>' +
+                                    '<ul style="list-style: none; padding-left: 0em;">' +
+
+                                    '<li data-toggle="tooltip" data-placement="top" title="Move all selected time series to the workspace">' +
+                                    '<a href="#" id="anchorAddSelectionsToWorkspace" style="font-weight: bold;" >' + 
+                                    '<span class="glyphicon glyphicon-plus-sign" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
+                                    '<span id="spanManageSelections" style="font-weight: bold; display: inline-block; vertical-align: super;">Add Selection(s) to Workspace</span>' +
+                                    '</a>' +
+                                    '</li>' +
+
+                                    (currentUser.authenticated ?
+                                    //'<li class="dropdown-submenu" data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV format">' :
+                                    //'<li data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV format">') +
+                                    '<li class="dropdown-submenu" style="width: 90%" >' +
+                                   '<a href="#" tabindex="-1" id="anchorExportSelections" style="font-weight: bold;">' +                                    
+                                    '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.5em;  margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +
+                                    '<span id="spanZipSelections"  style="font-weight: bold; display: inline-block; vertical-align: super;">Export Selection(s)</span>' +
+                                    '</a>' :
+
+                                    '<li data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV format">' +
+                                    '<a href="#" id="anchorEachTimeseriesInSeparateFile" style="font-weight: bold;">' +                                    
+                                    '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.5em;  margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +
+                                    '<span id="spanZipSelections"  style="font-weight: bold; display: inline-block; vertical-align: super;">Export Selection(s)</span>' +
+                                    '</a>') +
+
+                                    (currentUser.authenticated ? 
+                                        '<ul class="dropdown-menu">' + 
+                                        '<li class="disabled">' +
+                                            '<a href="#" id="anchorAllTimeseriesInOneFile" style="font-weight: bold; color: #337ab7;" >' +
+                                            '<span class="glyphicon glyphicon-file" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
+                                            '<span style="font-weight: bold; display: inline-block; vertical-align: super;">All selections in one file</span>' +
+                                            '</a>' +
+                                        '</li>' +
+                                        '<li>' +
+                                            '<a href="#" id="anchorEachTimeseriesInSeparateFile" style="font-weight: bold; color: #337ab7;" >' +
+                                            '<span class="glyphicon glyphicon-duplicate" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
+                                            '<span style="font-weight: bold; display: inline-block; vertical-align: super;">Each selection in a separate file</span>' +
+                                            '</a>' +
+                                        '</li>' +
+                                        '</ul>' : '' ) + 
+
+                                    '</li>' +
+
+                                    //'</ul>' +
+
+                                    //'<li role="separator" class="divider"></li>' +
+
+                                    //  'None' option...
+                                    //'<li><a id="idNoneTS" tabindex="-1" href="#" style=" font-size: 1.0em;">' +
+                                    //    '<span class="glyphicon glyphicon-remove-sign" style="max-width: 100%;  font-size: 1.5em;"></span>' +
+                                    //    ' <span style="font-weight: bold; display: inline-block; vertical-align: super;">' + 'None' + '</span>' +
+                                    //'</a></li>' +
+
+                                    //'</div>' + 
+                                    '</ul>' +
+                                    '</div>' +
+                                '</div>' +
+                            '</div>' +
+    
+
+                            '<span class="clsMessageArea" style="display: none; float:left; margin-left: 2em;"></span>' +
+                          '</div>' + 
+                          '</div>');
+
     //$("div.toolbar").css('border', '1px solid red');
   
     // BC - Do not respond to data table load event...
@@ -3224,22 +3485,28 @@ function setUpDatatables(clusterid) {
     //Add click handlers...
 
     //Avoid multiple registrations of the same handler...
-    $('#chkbxSelectAll').off('click', selectAll);
-    $('#chkbxSelectAll').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll', 'btnIds': ['btnZipSelections', 'btnManageSelections'], 'btnClearId': 'btnClearSelections' }, selectAll);
+    //$('#chkbxSelectAll').off('click', selectAll);
+    //$('#chkbxSelectAll').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll', 'btnIds': ['btnZipSelections', 'btnManageSelections'], 'btnClearId': 'btnClearSelections' }, selectAll);
+    $('#anchorAllSelections').off('click', selectAll);
+    $('#anchorAllSelections').on('click', { 'tableId': 'dtMarkers', 'anchorId': 'anchorAllSelections', 'selectAll' : $('#anchorAllSelections').attr('data-selectall') }, selectAll);
 
     //Avoid multiple registrations of the same handler...
-    //$('#btnZipSelections').off('click', zipSelections);
-    //$('#btnZipSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, zipSelections);
-    $('#btnZipSelections').off('click', zipSelections_2);
-    $('#btnZipSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, zipSelections_2);
+    //$('#btnZipSelections').off('click', zipSelections_2);
+    //$('#btnZipSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, zipSelections_2);
+    $('#anchorEachTimeseriesInSeparateFile').off('click', zipSelections_2);
+    $('#anchorEachTimeseriesInSeparateFile').on('click', { 'tableId': 'dtMarkers', 'selectAll' : $('#anchorAllSelections').attr('data-selectall') /*, 'currentAnchor': 'anchorEachTimeseriesInSeparateFile' */ }, zipSelections_2);
 
     //Avoid multiple registrations of the same handler...
-    $('#btnManageSelections').off('click', copySelectionsToDataManager);
-    $('#btnManageSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, copySelectionsToDataManager)
+    //$('#btnManageSelections').off('click', copySelectionsToDataManager);
+    //$('#btnManageSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, copySelectionsToDataManager)
+    $('#anchorAddSelectionsToWorkspace').off('click', copySelectionsToDataManager);
+    $('#anchorAddSelectionsToWorkspace').on('click', { 'tableId': 'dtMarkers', 'selectAll' : $('#anchorAllSelections').attr('data-selectall') /*, 'currentAnchor': 'anchorAddSelectionsToWorkspace' */ }, copySelectionsToDataManager)
 
     //Avoid multiple registrations of the same handler...
-    $('#btnClearSelections').off('click', clearSelections);
-    $('#btnClearSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll', 'btnIds': ['btnZipSelections','btnManageSelections'], 'btnClearId': 'btnClearSelections' }, clearSelections);
+    //$('#btnClearSelections').off('click', clearSelections);
+    //$('#btnClearSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll', 'btnIds': ['btnZipSelections','btnManageSelections'], 'btnClearId': 'btnClearSelections' }, clearSelections);
+    $('#anchorClearSelections').off('click', clearSelections);
+    $('#anchorClearSelections').on('click', { 'tableId': 'dtMarkers', 'anchorId': 'anchorAllSelections' }, clearSelections);
 
     //Add DataTables event handlers...
     //Search event...
@@ -3568,7 +3835,7 @@ function setupDataManagerTable() {
                                       '<ul class="dropdown-menu" aria-labelledby="dropdownMenu1">' +
                                         '<li><a href="#" id="anchorAllSelectionsDataMgr" style="font-weight: bold;" ><span class="text-muted">Select All</span></a></li>' +
                                         '<li><a href="#" id="anchorClearSelectionsDataMgr" style="font-weight: bold;"><span class="text-warning">Clear Selections</span></a></li>' +
-                                        '<li><a href="#" id="anchorRemoveSelectionsDataMgr" style="font-weight: bold;"><span class="text-danger">Remove Selections</span></a></li>' +
+                                        '<li><a href="#" id="anchorRemoveSelectionsDataMgr" style="font-weight: bold;"><span class="text-danger">Delete Selections</span></a></li>' +
                                         //'<li><a href="#" id="anchorSaveSelectionsDataMgr" style="font-weight: bold;"><span class="text-info">Save Selected Entries</span></a></li>' +
                                         ////Defer implementation of Refresh Selections until a later release (post 1.1)
                                         //'<li><a href="#" id="anchorRefreshSelectionsDataMgr" style="font-weight: bold;"><span class="text-warning">Refresh Selected Entries</span></a></li>' +
@@ -3599,15 +3866,15 @@ function setupDataManagerTable() {
                                            //Application list...
                                            '<ul id="ddHydroshareList" class="dropdown-menu" style="width: 20em;">' +
                                            //Export section...
+                                            //'<li class="dropdown-header" id="exportApps">' +
+                                            //   '<span disabled class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 2.0em;"></span>' +
+                                            //   '<span disabled style="font-weight: bold; font-size: 1.5em; vertical-align: super;" >  Export</span>' +
                                             '<li class="dropdown-header" id="exportApps">' +
-                                               '<span disabled class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 2.0em;"></span>' +
-                                               '<span disabled style="font-weight: bold; font-size: 1.5em; vertical-align: super;" >  Export</span>' +
-
                                                '<ul style="list-style: none; padding-left: 0em;">' +
                                                 '<li data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV data format">' +
                                                     '<a  id="idDownloadToClient" tabindex="-1" href="#" style="font-weight: bold; font-size: 1.0em;">' +
                                                             '<span class="glyphicon glyphicon-download" style="max-width: 100%; font-size: 1.5em;"></span>' +
-                                                            '<span style="font-weight: bold; display: inline-block; vertical-align: super;">' + '&nbsp;Download CSV' + '</span>' +
+                                                            '<span style="font-weight: bold; display: inline-block; vertical-align: super;">' + '&nbsp;Save as CSV' + '</span>' +
                                                     '</a>' +
                                                 '</li>' +
                                                '</ul>' +
@@ -3617,8 +3884,8 @@ function setupDataManagerTable() {
 
                                             //Visualization section...
                                             '<li class="dropdown-header" id="byuApps">' +
-                                               '<span disabled class="glyphicon glyphicon-eye-open" style="max-width: 100%; font-size: 2em;"></span>' +
-                                               '<span disabled style="font-weight: bold; font-size: 1.5em; vertical-align: super;" >  Visualization</span>' +
+                                               //'<span disabled class="glyphicon glyphicon-eye-open" style="max-width: 100%; font-size: 2em;"></span>' +
+                                               //'<span disabled style="font-weight: bold; font-size: 1.5em; vertical-align: super;" >  Visualization</span>' +
                                             '</li>' +
 
                                             '<li role="separator" class="divider"></li>' +
@@ -3664,7 +3931,7 @@ function setupDataManagerTable() {
 
     //Avoid multiple registrations of the same handler...
     $('#btnLaunchHydrodataToolDataMgr').off('click', downloadSelections);
-    $('#btnLaunchHydrodataToolDataMgr').on('click', { 'divId': 'ddIntegratedDataTools', 'tableId': tableName, 'appName': 'Download CSV' }, downloadSelections);
+    $('#btnLaunchHydrodataToolDataMgr').on('click', { 'divId': 'ddIntegratedDataTools', 'tableId': tableName, 'appName': 'Save as CSV' }, downloadSelections);
 
     //Avoid multiple registrations of the same handler...
     $('#btnLaunchHydrodataToolDataMgr').off('click', launchByuHydroshareApp);
@@ -4782,7 +5049,7 @@ function selectAll(event) {
 
     //Indicate a select is in progress...
     if('undefined' !== typeof event.data.anchorId) {
-        $('#' + event.data.anchorId).attr('data-selecton', true);
+        $('#' + event.data.anchorId).attr('data-selection', true);
     }
 
     //Clear ALL table selections, regardless of current sort/search order
@@ -4864,7 +5131,7 @@ function clearSelections(event) {
 
     //Indicate a select is NOT in progress...
     if('undefined' !== typeof event.data.anchorId) {
-        $('#' + event.data.anchorId).attr('data-selecton', false);
+        $('#' + event.data.anchorId).attr('data-selection', false);
     }
 
     //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
@@ -4904,9 +5171,13 @@ function clearSelections(event) {
 //    $('#chkbxApplyFilterToMapTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxApplyFilterToMapTS'}, applyFilterToMap);
 function applyFilterToMap(event) {
 
+    //var chkbx = $('#' + event.data.chkbxId);
+    //if (chkbx.hasClass('disabled')) {
+    //    return;     //Check box disabled - return early...
+    //}
     var panelId = 'panelMapFilters2';
     var className = 'hidden';
-    if ( ! $(this).prop('checked')) {
+    if ( (! $(this).prop('checked')) || $(this).hasClass('disabled')) {
         //'Apply to Map' NOT engaged - remove filter from map, hide filter panel on map...
         updateMap(false);
         $('#' + panelId).addClass(className);
@@ -4928,7 +5199,10 @@ function applyFilterToMap(event) {
     updateMap(false, criteria);
 
 
-    if ( ! jQuery.isEmptyObject(criteria)) {
+//    if ( ! jQuery.isEmptyObject(criteria)) {
+      if ('' !== criteria.Search || 0 < criteria.filters.length) {
+        //Filter criteria exists - build filter pane markup...
+
         var filters = '<ul class ="list-unstyled">';
         var length = 0;
 
@@ -4977,6 +5251,10 @@ function applyFilterToMap(event) {
 
             $('#' + panelId).removeClass(className);
         }
+    }
+    else {
+        //No filtering criteria - hide the filters panel...
+        $('#' + panelId).addClass(className);
     }
 }
 
@@ -5642,21 +5920,21 @@ function addEndTaskClickHandler(jqueryButton, response) {
 function copySelectionsToDataManager(event) {
 
     //Check current anchor - return early, if indicated...
-    if ( 'dtTimeseries' === event.data.tableId) {
-        var currentAnchor = $('#divApplyActionTS').attr('data-currentanchor');
+    //if ( 'dtTimeseries' === event.data.tableId) {
+    //    var currentAnchor = $('#divApplyActionTS').attr('data-currentanchor');
 
-        if ( currentAnchor !== event.data.currentAnchor) {
-            return;
-        }
-    }
+    //    if ( currentAnchor !== event.data.currentAnchor) {
+    //        return;
+    //    }
+    //}
 
     //Retrieve the selected rows...
     var table = $('#' + event.data.tableId).DataTable();
     var selectedRows = table.rows('.selected').data();
     var selectedTimeSeriesMax = parseInt($('#' + event.data.tableId).attr('data-selectedtimeseriesmax'));
 
-    //if ($('#' + event.data.chkbxId).prop("checked") && Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax > selectedRows.length)) {
-    if (  ('false' === event.data.selectAll || $('#' + event.data.chkbxId).prop("checked") )  && Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax > selectedRows.length)) {
+    if ($('#' + event.data.chkbxId).prop("checked") && Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax > selectedRows.length)) {
+    //if (  ('false' === event.data.selectAll || $('#' + event.data.chkbxId).prop("checked") )  && Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax > selectedRows.length)) {
         //User has clicked the 'Select Top ...' check box but not all selected rows have been rendered
         //NOTE: If the DataTable instance has the 'deferRender' option set - not all rows may have been rendered at this point.
         //        Thus one cannot rely on the selectedRows above, since in this case only rendered rows appear in the selectedRows...
@@ -5921,7 +6199,8 @@ function getMapLocationName(results) {
 
     if ('undefined' !== typeof results && null !== results && Array.isArray(results)) {
         //Input parameters valid - set preferred order of address types...
-        var addressTypes = ['postal_code', 'locality', 'administrative_area_level_3', 'administrative_area_level_2', 'administrative_area_level_1', 'country'];
+        //var addressTypes = ['postal_code', 'locality', 'administrative_area_level_3', 'administrative_area_level_2', 'administrative_area_level_1', 'country'];
+        var addressTypes = [ 'administrative_area_level_5', 'administrative_area_level_4', 'administrative_area_level_3', 'postal_town', 'postal_code', 'locality', 'administrative_area_level_2', 'administrative_area_level_1', 'country'];
 
         //Scan results array for address types...
         var componentIndices = {};
@@ -5977,7 +6256,7 @@ function setUpTimeseriesDatatable() {
 
     //ALWAYS set the screen title...
     //$('#dataview #myModalLabel').html('List of Timeseries in: ' + currentPlaceName);
-    $('#tableModal #myModalLabel').html('List of Timeseries in: ' + currentPlaceName);
+    $('#tableModal #myModalLabel').html('Search Results in: ' + currentPlaceName);
         
     //var dataSet = getDetailsForMarker(clusterid)
     var actionUrl = "/home/getTimeseries"
@@ -5985,7 +6264,8 @@ function setUpTimeseriesDatatable() {
     // $('#demo').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example"></table>' );
     var oTable = $('#dtTimeseries').dataTable({
         "ajax": actionUrl,
-        "dom": 'C<"clear">l<"toolbarTS">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+//        "dom": 'C<"clear">l<"toolbarTS">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+        "dom": 'C<"clear"><"toolbarTS">frtilp',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
         "deferRender": true,
         //"autoWidth": false,
         "autoWidth": true,
@@ -6052,7 +6332,7 @@ function setUpTimeseriesDatatable() {
             //}
 
             //If select in progress, call the 'click' handler
-            if ($('#' + 'anchorAllSelectionsTS').attr('data-selecton')) {
+            if ($('#' + 'anchorAllSelectionsTS').attr('data-selection')) {
                 //$(row).addClass('selected');  //Only correct if ALL the rows are being selected...
                 $('#' + 'anchorAllSelectionsTS').triggerHandler('click');
             }
@@ -6124,6 +6404,18 @@ function setUpTimeseriesDatatable() {
             setupToolTips();
 
             $('#dtTimeseries').dataTable().fnAdjustColumnSizing();
+
+            //Revise layout for table's info, length and pagination controls...
+            $('#' + 'dtTimeseries_info').css({'width': '25%'});
+
+            $('#' + 'dtTimeseries_length').css({'width': '50%', 
+                                                'height': '2.5em'});
+
+           $('#' + 'dtTimeseries_length' + ' > label').css({'text-align': 'center',
+                                                            'display': 'block',
+                                                            'margin-top': '1.0em'});
+
+            $('#' + 'dtTimeseries_paginate').css({'width': '25%'});
         }
 
     });
@@ -6169,7 +6461,7 @@ function setUpTimeseriesDatatable() {
                               '<div class="dropdown" style="position: relative; display: inline-block; float: left; font-size: 1.00em;">' +
                                   '<button class="btn btn-primary dropdown-toggle" type="button" id="ddMenuSelectionsTS" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">' +
                                    '<span class="glyphicon glyphicon-list-alt" style="font-weight: bold; font-size: 1.00em;"></span>' +
-                                   '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Selections&nbsp;</span>' +
+                                   '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Selection&nbsp;</span>' +
                                    '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
                                   '</button>' +
                                   '<ul class="dropdown-menu" aria-labelledby="ddMenuSelectionsTS">' +
@@ -6191,12 +6483,12 @@ function setUpTimeseriesDatatable() {
 
                                         '<div id="ddActionTSOriginal" style="display: none;">' + 
                                         '<span class="glyphicon glyphicon-circle-arrow-right" style="font-weight: bold; max-width: 100%; font-size: 1.0em;"></span>' +
-                                        '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Action&nbsp;</span>' +
+                                        '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Select Action&nbsp;</span>' +
                                         '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
                                         '</div>' +
                                         '<div id="ddActionTS" data-noneselected="true">' + 
                                         '<span class="glyphicon glyphicon-circle-arrow-right" style="font-weight: bold; max-width: 100%; font-size: 1.0em;"></span>' +
-                                        '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Action&nbsp;</span>' +
+                                        '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Select Action&nbsp;</span>' +
                                         '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
                                         '</div>' +
 
@@ -6215,41 +6507,45 @@ function setUpTimeseriesDatatable() {
                                        (currentUser.authenticated ?
                                        //'<li class="dropdown-submenu" data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV format">' :
                                        //'<li data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV format">') +
-                                       '<li class="dropdown-submenu" style="width: 90%" >' :
-                                       '<li data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV format">') +
-
+                                       '<li class="dropdown-submenu" style="width: 90%" >' + 
                                         '<a href="#" tabindex="-1" id="anchorExportSelectionsTS" style="font-weight: bold;">' +                                    
                                         '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.5em;  margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +
                                         '<span id="spanZipSelectionsTS"  style="font-weight: bold; display: inline-block; vertical-align: super;">Export Selection(s)</span>' +
-                                       '</a>' +
+                                       '</a>' :
+
+                                       '<li data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV format">' +
+                                        '<a href="#" id="anchorEachTimeseriesInSeparateFileTS" style="font-weight: bold;">' +                                    
+                                        '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.5em;  margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +
+                                        '<span id="spanZipSelectionsTS"  style="font-weight: bold; display: inline-block; vertical-align: super;">Export Selection(s)</span>' +
+                                       '</a>') +
 
                                        (currentUser.authenticated ? 
                                            '<ul class="dropdown-menu">' + 
-                                            '<li>' +
-                                             '<a href="#" id="anchorAllTimeseriesInOneFileTS" style="font-weight: bold;" >' +
+                                            '<li class="disabled">' +
+                                             '<a href="#" id="anchorAllTimeseriesInOneFileTS" style="font-weight: bold; color: #337ab7;" >' +
                                                '<span class="glyphicon glyphicon-file" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
-                                               '<span style="font-weight: bold; display: inline-block; vertical-align: super;">All timeseries in one file?</span>' +
+                                               '<span style="font-weight: bold; display: inline-block; vertical-align: super;">All selections in one file</span>' +
                                              '</a>' +
                                             '</li>' +
                                             '<li>' +
-                                             '<a href="#" id="anchorEachTimeseriesInSeparateFileTS" style="font-weight: bold;" >' +
+                                             '<a href="#" id="anchorEachTimeseriesInSeparateFileTS" style="font-weight: bold; color: #337ab7;" >' +
                                                '<span class="glyphicon glyphicon-duplicate" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
-                                               '<span style="font-weight: bold; display: inline-block; vertical-align: super;">Each timeseries in a separate file?</span>' +
+                                               '<span style="font-weight: bold; display: inline-block; vertical-align: super;">Each selection in a separate file</span>' +
                                              '</a>' +
                                             '</li>' +
                                            '</ul>' : '' ) + 
 
                                        '</li>' +
 
-                                        '</ul>' +
+                                       // '</ul>' +
 
-                                        '<li role="separator" class="divider"></li>' +
+                                       // '<li role="separator" class="divider"></li>' +
 
                                       //  'None' option...
-                                        '<li><a id="idNoneTS" tabindex="-1" href="#" style=" font-size: 1.0em;">' +
-                                            '<span class="glyphicon glyphicon-remove-sign" style="max-width: 100%;  font-size: 1.5em;"></span>' +
-                                            ' <span style="font-weight: bold; display: inline-block; vertical-align: super;">' + 'None' + '</span>' +
-                                        '</a></li>' +
+                                        //'<li><a id="idNoneTS" tabindex="-1" href="#" style=" font-size: 1.0em;">' +
+                                        //    '<span class="glyphicon glyphicon-remove-sign" style="max-width: 100%;  font-size: 1.5em;"></span>' +
+                                        //    ' <span style="font-weight: bold; display: inline-block; vertical-align: super;">' + 'None' + '</span>' +
+                                        //'</a></li>' +
 
                                       //'</div>' + 
                                       '</ul>' +
@@ -6258,15 +6554,16 @@ function setUpTimeseriesDatatable() {
                               '</div>' +
 
 
-                            '<div id="divApplyActionTS" style="display: inline-block; position: relative; float: left">' +
-                            '<input type="button" style="margin-left: 0.5em;" class="ColVis-Button btn btn-primary" disabled id="btnApplyActionTS" value="Apply Action" />' +
-                            '</div>' +
+                            //'<div id="divApplyActionTS" style="display: inline-block; position: relative; float: left">' +
+                            //'<input type="button" style="margin-left: 0.5em;" class="ColVis-Button btn btn-primary" disabled id="btnApplyActionTS" value="Apply Action" />' +
+                            //'</div>' +
 
 
                               '<div id="divApplyFilterToMapTS" style="display: inline-block; margin-left: 1em; float:left;">' +
                                 '<label style="float:right;">' +
     //                            '<input type="checkbox" disabled id="chkbxApplyFilterToMapTS"/>&nbsp;Apply Filter to Map?' +
-                                '<input type="checkbox" id="chkbxApplyFilterToMapTS"/>&nbsp;Apply Filter to Map?' +
+    //                            '<input type="checkbox" checked class="disabled" id="chkbxApplyFilterToMapTS"/>&nbsp;Apply Filter to Map' +
+                                '<input type="checkbox" checked id="chkbxApplyFilterToMapTS"/>&nbsp;Apply Filter to Map' +
                                 '</label>' +
                               '</div>' +
                                 '<span class="clsMessageArea" style="display: none; float:left; margin-left: 2em;"></span>' +
@@ -6308,8 +6605,12 @@ function setUpTimeseriesDatatable() {
     //Avoid multiple registrations of the same handler...
     //$('#btnManageSelectionsTS').off('click', copySelectionsToDataManager);
     //$('#btnManageSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS' }, copySelectionsToDataManager)
-    $('#btnApplyActionTS').off('click', copySelectionsToDataManager);
-    $('#btnApplyActionTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall'), 'currentAnchor': 'anchorAddSelectionsToWorkspaceTS' }, copySelectionsToDataManager)
+    //$('#btnApplyActionTS').off('click', copySelectionsToDataManager);
+    //$('#btnApplyActionTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall'), 'currentAnchor': 'anchorAddSelectionsToWorkspaceTS' }, copySelectionsToDataManager)
+    $('#anchorAddSelectionsToWorkspaceTS').off('click', copySelectionsToDataManager);
+    $('#anchorAddSelectionsToWorkspaceTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall') /*, 'currentAnchor': 'anchorAddSelectionsToWorkspaceTS' */ }, copySelectionsToDataManager)
+
+
 
     //TO DO - Need to revise zipSelections_2...
 
@@ -6324,6 +6625,8 @@ function setUpTimeseriesDatatable() {
     //Authenticated user...
 //    $('#btnApplyActionTS').off('click', zipSelections_2);
 //    $('#btnApplyActionTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall'), 'currentAnchor': 'anchorEachTimeseriesInSeparateFileTS'}, zipSelections_2);
+    $('#anchorEachTimeseriesInSeparateFileTS').off('click', zipSelections_2);
+    $('#anchorEachTimeseriesInSeparateFileTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall') /*, 'currentAnchor': 'anchorEachTimeseriesInSeparateFileTS' */ }, zipSelections_2);
 
 
     $('#chkbxApplyFilterToMapTS').off('click', applyFilterToMap);
@@ -6340,9 +6643,9 @@ function setUpTimeseriesDatatable() {
 
 
     //Actions dropdown handler...
-    $('#ddActionsTS').off('click', 'li a', ddActionsTS);
-    $('#ddActionsTS').on('click', 'li a', {'divId': 'ddActionTS', 'divIdOriginal': 'ddActionTSOriginal', 
-                                            'tableId': 'dtTimeseries', 'divLaunchId': 'divApplyActionTS' }, ddActionsTS);
+    //$('#ddActionsTS').off('click', 'li a', ddActionsTS);
+    //$('#ddActionsTS').on('click', 'li a', {'divId': 'ddActionTS', 'divIdOriginal': 'ddActionTSOriginal', 
+    //                                        'tableId': 'dtTimeseries', 'divLaunchId': 'divApplyActionTS' }, ddActionsTS);
 
 }
 
@@ -6380,10 +6683,10 @@ function ddActionsTS(event) {
         console.log('Add Selection(s) to Workspace clicked!!');
     } 
     else if ('anchorAllTimeseriesInOneFileTS' === id ) {
-        console.log('All timeseries in one file clicked!!');
+        console.log('All selections in one file clicked!!');
     } 
     else if ('anchorEachTimeseriesInSeparateFileTS' === id ) {
-        console.log('Each timeseries in a separate file clicked!!');
+        console.log('Each selection in a separate file clicked!!');
     } 
     else if ('anchorExportSelectionsTS' === id ) {
         //User is NOT authenticated...

@@ -49,12 +49,12 @@
                 </script>
              }
             <ul class="nav nav-tabs pull-right" @*id="myTab"*@ @*style="display: inline-block; position: relative; float:right;"*@>
-                <li id="liMapTab" class="active navbar-custom" style="margin-right: 1em;"> <a href="#map" id="mapTab" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> Map</a></li>
+                <li id="liMapTab" class="active navbar-custom hidden" style="margin-right: 1.0em; padding: 0;"> <button class="btn btn-primary" href="#map" id="mapTab" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> Search</button></li>
                 @*   <li class="navbar-custom disabled"><a href="#graph" id="graphTab" data-toggle="tab"><span class="glyphicon glyphicon-home"></span> Graph</a></li>*@
                 @*<li id="liTableTab" class="navbar-custom data"><a href="#dataview" id="tableTab" data-toggle="tab"><span class="glyphicon glyphicon-list"></span> Table</a></li>*@
-                <li class="btn-separator"></li>
-                <li id="liTabbedDataMgrTab" class="navbar-custom"><a href="#tabbedDataMgr" id="tabbedDataMgrTab" data-toggle="tab"><span class="glyphicon glyphicon-record"></span> Workspace</a></li>
-                <li class="btn-separator"></li>
+                @*<li class="btn-separator"></li>*@
+                <li id="liTabbedDataMgrTab" class="navbar-custom" style="margin-right: 1.0em; padding: 0;"><button class="btn btn-primary" href="#tabbedDataMgr" id="tabbedDataMgrTab" data-toggle="tab"><span class="glyphicon glyphicon-tasks"></span> Workspace</button></li>
+                @*<li class="btn-separator"></li>*@
                 @*<li class="navbar-custom"><a href="" id="datamanagerTab" data-toggle="modal" data-target="#datamgrModal"><span class="glyphicon glyphicon-record"></span> Data Manager</a></li>
             <li class="btn-separator"></li>*@
                 @*<li class="navbar-custom"><a href="" id="downloadmanagerTab" data-toggle="modal" data-target="#dmModal"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</a></li>
@@ -65,7 +65,7 @@
             <li id="liAboutTab" class="navbar-custom" style="margin-right: 1em;"><a href="" id="aboutTab" data-toggle="modal" data-target="#aboutModal"><span class="glyphicon glyphicon-info-sign"></span> About</a></li>
             <li id="liQuickStartTab" class="navbar-custom"> <a href="" id="quickStartTab" data-toggle="modal" data-target="#quickStartModal"><span class="glyphicon glyphicon-flash"></span> QuickStart</a></li>*@
 
-                <li id="liAboutTab" class="navbar-custom" style="padding: 0;">
+                <li id="liAboutTab" class="navbar-custom" style="margin-right: 1.0em; padding: 0;">
 
                     <button class="btn btn-primary" data-toggle="dropdown" style="font-size: 1.00em;">
                         <div id="ddAbout" data-noneselected="true">
@@ -94,7 +94,7 @@
                     </ul>
                 </li>
 
-                <li class="btn-separator"></li>
+                @*<li class="btn-separator"></li>*@
                 <li id="liGoogleTab" class="navbar-custom" style="margin-right: 1em;">
                     <div style="height: 2em;">
                         @*<form id="formGoogleLogin" action="/Account/ExternalLogin?ReturnUrl=%2F" method="post">*@
@@ -200,8 +200,8 @@
                 </div>
 
                 <div role="tabpanel" class="tab-pane fade" id="downloadMgrPane">
-                    <div class="checkbox">
-                        <label style="float:right; margin-right: 6em"><input type="checkbox" id="chkbxAutoDownload" checked="checked" />&nbsp;Auto Download Archives?</label>
+                    <div class="checkbox modal-header" > <!-- Need modal-header class here or checkbox does not work!! -->
+                        <label style="float:right; margin-right: 6em;"><input type="checkbox" id="chkbxAutoDownload" checked />&nbsp;Auto Download Archives?</label>
                     </div>
                     <div class="modal-body modal-body-full row">
                         <table id="tblDownloadManagerHeaders" class="table">
@@ -686,6 +686,9 @@
                                             <input type="checkbox" name="keywords" value="Groundwater Level" id="inlineCheckbox4" class="topCategories" />Groundwater Level
                                         </label>
                                         <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Methane" id="inlineCheckbox17" class="topCategories" />Methane
+                                        </label>
+                                        <label class="checkbox">
                                             <input type="checkbox" name="keywords" value="Nutrient" id="inlineCheckbox9" class="topCategories" />Nutrient
                                         </label>
                                         <label class="checkbox">
@@ -718,6 +721,9 @@
                                         @*<label class="checkbox">
                                                 <input type="checkbox" name="keywords" value="Water Level" id="inlineCheckbox3" class="topCategories" />Water Level
                                             </label>*@
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Turbidity" id="inlineCheckbox18" class="topCategories" />Turbidity
+                                        </label>
                                         <label class="checkbox">
                                             <input type="checkbox" name="keywords" value="Temperature, water" id="inlineCheckbox8" class="topCategories" />Water Temperature
                                         </label>
@@ -827,10 +833,8 @@
         <div class="modal-content modal-content-full">
             <div class="modal-header modal-header-full">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
-                <!--button type="button" id="seriesModal-DM" style="float: right; margin-right: 2em; color: #428bca;"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</button -->
-                @*<a href="" id="seriesModal-DM" data-toggle="modal" data-target="#dmModal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</a>*@
-                @*<a href="" id="seriesModal-DataMgr" data-toggle="modal" data-target="#datamgrModal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-record"></span> Data Manager</a>*@
-                <h3 class="modal-title" id="myModalLabel">List of Timeseries in area</h3>
+                <button class="btn btn-default" href="#tabbedDataMgrTab" id="tableModal-DataMgr" data-dismiss="modal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-tasks"></span> Open Workspace</button>
+                <h3 class="modal-title" id="myModalLabel">Search Results in area</h3>
                 @*<h5 style="margin-bottom: 1em;">To zip one or more data files, please click the associated table row(s) and then click the 'Export Selections' button. You can check the status by opening the workspace and selecting the "Exports" tab.</h5>*@
             </div>
             <div class="modal-body modal-body-full">
@@ -871,9 +875,7 @@
         <div class="modal-content modal-content-full">
             <div class="modal-header modal-header-full">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
-                <!--button type="button" id="seriesModal-DM" style="float: right; margin-right: 2em; color: #428bca;"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</button -->
-                @*<a href="" id="seriesModal-DM" data-toggle="modal" data-target="#dmModal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</a>*@
-                @*<a href="" id="seriesModal-DataMgr" data-toggle="modal" data-target="#datamgrModal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-record"></span> Data Manager</a>*@
+                <button class="btn btn-default" href="#tabbedDataMgrTab" id="tableModal-DataMgrTS" data-dismiss="modal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-tasks"></span> Open Workspace</button>
                 <h3 class="modal-title" id="myModalLabel">Timeseries in Current Map Area</h3>
                 @*<h5 style="margin-bottom: 1em;">To zip one or more data files, please click the associated table row(s) and then click the 'Export Selections' button. You can check the status by opening the workspace and selecting the "Exports" tab.</h5>*@
             </div>
