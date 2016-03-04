@@ -322,7 +322,7 @@ namespace HISWebClient.Controllers
 		[HttpPost]
 		[AllowAnonymous]
 		[ValidateAntiForgeryToken]
-		public ActionResult ExternalLogOut(string provider, string returnUrl)
+		public ActionResult ExternalLogOut(string provider, string returnUrl, string localLogout)
 		{
 			//Reset external login information for the current session
 			resetSessionExternalLogin();
@@ -367,6 +367,12 @@ namespace HISWebClient.Controllers
 			string authority = Request.Url.Authority;
 
 			string redirectUrl = String.Format("{0}{1}://{2}/{3}", googleUrl, scheme, authority, returnUrl);
+
+			if (!String.IsNullOrWhiteSpace(localLogout) && "true" == localLogout)
+			{
+				//Local logout only - reset redirect URL...
+				redirectUrl = String.Format("{0}://{1}/{2}", scheme, authority, returnUrl);
+			}
 
 			return Redirect(redirectUrl);
 		}

@@ -500,7 +500,7 @@
 
 <!-- Modal dialog for Quick Start -->
 <div class="modal fade" id="quickStartModal" tabindex="-1" role="dialog" aria-labelledby="quickStartModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
@@ -511,39 +511,47 @@
                 <div style="margin-left: 2.0em;">
 
                     <ul class="nav nav-tabs" role="tablist" data-tabs="tabs">
-                        <li class="active"><a href="#features" role="tab" data-toggle="tab">Features</a></li>
-                        <li><a href="#search" role="tab" data-toggle="tab">Search</a></li>
-                        <li><a href="#analysis" role="tab" data-toggle="tab">Analysis</a></li>
+                        <li class="active"><a href="#featuresTab" role="tab" data-toggle="tab">Features</a></li>
+                        <li><a href="#searchTab" role="tab" data-toggle="tab">Search</a></li>
+                        <li><a href="#analysisTab" role="tab" data-toggle="tab">Analysis</a></li>
                     </ul>
 
                     <div class="tab-content">
+                        <!-- NOTE: HAVE to use object tags here to get the browsers to open the pdf in the (built-in??) viewer... -->
+                        <div class="active tab-pane" id="featuresTab">
+                            <object data="~/Content/documents/QuickStartGuide/HydroClient Quick Start Guide.1.pdf"
+                                    type="application/pdf"
+                                    width="800"
+                                    height="600"></object>
 
-                        <div class="active tab-pane" id="features">
-
-                            <img style="width: 30em;" src="~/Content/Images/QuickStart/quickstart-guide-slide-1.png" />
-
-                            <p>With HydroClient, you can discover, export, and analyze environmental data.</p>
+                                @*<p>With HydroClient, you can discover, export, and analyze environmental data.</p>*@
                         </div>
 
-                        <div class ="tab-pane" id="search">
-                            <img style="width: 30em;" src="~/Content/Images/QuickStart/quickstart-guide-slide-2.png" />
+                        <div class ="tab-pane" id="searchTab">
+                            <object data="~/Content/documents/QuickStartGuide/HydroClient Quick Start Guide.2.pdf"
+                                    type="application/pdf"
+                                    width="800"
+                                    height="600"></object>
 
-                            <p>To begin, search for data based on location, what is being measured, and the time period you are interested in.</p>
+                            @*<p>To begin, search for data based on location, what is being measured, and the time period you are interested in.</p>*@
                         </div>
 
-                        <div class="tab-pane" id="analysis">
-                            <img style="width: 30em;" src="~/Content/Images/QuickStart/quickstart-guide-slide-3.png" />
+                        <div class="tab-pane" id="analysisTab">
+                            <object data="~/Content/documents/QuickStartGuide/HydroClient Quick Start Guide.3.pdf"
+                                    type="application/pdf"
+                                    width="800"
+                                    height="600"></object>
 
-                            <p>Once you have discovered data, save it to your workspace in the cloud. This enables you to bookmark interesting data sets or use data tools to view and analyze the data sets that have been saved to your workspace.</p>
+                            @*<p>Once you have discovered data, save it to your workspace in the cloud. This enables you to bookmark interesting data sets or use data tools to view and analyze the data sets that have been saved to your workspace.</p>*@
                         </div>
                    </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <!--p>This is the modal footer!!</p-->
-                <address style="text-align: left;">
+                @*<address style="text-align: left;">
                     <a href="https://cuahsi.zendesk.com/hc/en-us/articles/205419147-Overview-of-the-HydroClient-Homepage" target="_blank">Need additional help<span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></a>
-                </address>
+                </address>*@
             </div>
         </div>
     </div>
