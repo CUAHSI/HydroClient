@@ -37,6 +37,8 @@ var downloadMonitor = { 'intervalId' : null,
                         'timeSeriesMonitored': {}
                       };
 
+var labelMonitorIntervalId = null;
+
 var unknownTaskCounts = {};
 
 //list of services that only have 
@@ -52,16 +54,20 @@ var currentUser = { 'authenticated' : false,
                     'userName' : null
                   };
 
-//var currentPosition = {
-//                        'latLng': null,
+var currentPosition = {
+                        'latLng': null,
 //                        'infoBubble': null
-//                      };
+                      };
+
+var currentIntervals = [];
+
+var bResetMap = false;
 
 //Currently open InfoBubble instance...
-var openInfoBubble = null;
+//var openInfoBubble = null;
 
 //Array of open InfoBubble positions...
-var openInfoBubbles = [];
+//var openInfoBubbles = [];
 
 //Number.isInteger 'polyfill' for use with browsers (like IE) which do not support the 'native' function
 //Sources: http://stackoverflow.com/questions/31720269/internet-explorer-11-object-doesnt-support-property-or-method-isinteger
@@ -72,13 +78,31 @@ Number.isInteger = Number.isInteger || function (value) {
            Math.floor(value) === value;
 };
 
+
+//Clear the download and label monitors...
+function clearMonitors() {
+
+    var monitors = [ downloadMonitor.intervalId, labelMonitorIntervalId];
+
+    while (0 < monitors.length) {
+    
+        var monitor = monitors.pop();
+        if ( null !== monitor) {
+            clearInterval(monitor);
+            monitor = null;
+        }
+    }
+
+    monitors = null;
+}
+
 $(document).ready(function () {
 
     $("#pageloaddiv").hide();
     initialize();
 
     //Periodically check selected time series...
-    setInterval(function () {
+    labelMonitorIntervalId = setInterval(function () {
         //console.log('Checking selected time series...');
 
         //Enable/disable 'Apply Filter to Map' checkbox, per user search and filter entries...
@@ -481,9 +505,6 @@ function initialize() {
     google.maps.event.addListener(map, 'dblclick', function () {
         if ((clusteredMarkersArray.length > 0)) {
             //If a filter applied to the map, include the filter in the updateMap(...) call
-            //updateMap(false)
-            //$('#chkbxApplyFilterToMapTS').triggerHandler('click');
-
             var criteria = retrieveSearchAndFilterCriteria('dtTimeseries', false);
             if ('' !== criteria.Search || 0 < criteria.filters.length) {
                 //Filter criteria exists - be ready to apply criteria when you visit the server...
@@ -498,9 +519,6 @@ function initialize() {
     google.maps.event.addListener(map, 'dragend', function () {
         if ((clusteredMarkersArray.length > 0)) {
             //If a filter applied to the map, include the filter in the updateMap(...) call
-            //updateMap(false)
-            //$('#chkbxApplyFilterToMapTS').triggerHandler('click');
-
             var criteria = retrieveSearchAndFilterCriteria('dtTimeseries', false);
             if ('' !== criteria.Search || 0 < criteria.filters.length) {
                 //Filter criteria exists - be ready to apply criteria when you visit the server...
@@ -516,9 +534,6 @@ function initialize() {
     google.maps.event.addListener(map, 'zoom_changed', function () {
         if ((clusteredMarkersArray.length > 0)) {
             //If a filter applied to the map, include the filter in the updateMap(...) call
-            //updateMap(false);
-            //$('#chkbxApplyFilterToMapTS').triggerHandler('click');
-
             var criteria = retrieveSearchAndFilterCriteria('dtTimeseries', false);
             if ('' !== criteria.Search || 0 < criteria.filters.length) {
                 //Filter criteria exists - be ready to apply criteria when you visit the server...
@@ -553,12 +568,12 @@ function initialize() {
         //$('#' + 'badgeLatitude').text(event.latLng.lat().toFixed(3));
         //$('#' + 'badgeLongitude').text(event.latLng.lng().toFixed(3));
 
-        //currentPosition.latLng = event.latLng;
+        currentPosition.latLng = event.latLng;
         $('#' + 'MapLatitudeControl').text('Latitude: ' + event.latLng.lat().toFixed(3));
         $('#' + 'MapLongitudeControl').text('Longitude: ' + event.latLng.lng().toFixed(3));
 
-            //Close current InfoBubble instance, if indicated
-            checkInfoBubble(event.latLng);
+        //Close current InfoBubble instance, if indicated
+        //checkInfoBubble(event.latLng);
 
     });
 
@@ -820,7 +835,7 @@ function initialize() {
 
     $("#Search").submit(function (e) {
 
-        resetMap()
+        resetMap();
         //prevent Default functionality
         e.preventDefault();
         e.stopImmediatePropagation();
@@ -869,14 +884,14 @@ function initialize() {
             //$('#' + 'badgeLatitude').text(event.latLng.lat().toFixed(3));
             //$('#' + 'badgeLongitude').text(event.latLng.lng().toFixed(3));
 
-            //currentPosition.latLng = event.latLng;
+            currentPosition.latLng = event.latLng;
             var lat = event.latLng.lat().toFixed(3);
             var lng = event.latLng.lng().toFixed(3);
             $('#' + 'MapLatitudeControl').text('Latitude: ' + lat);
             $('#' + 'MapLongitudeControl').text('Longitude: ' + lng);
 
             //Close current InfoBubble instance, if indicated
-            checkInfoBubble(event.latLng);
+            //checkInfoBubble(event.latLng);
         });
 
         //NOTE: BCC - 21-Sep-2015 - Per review meeting, the following current place name logic is not used.
@@ -921,9 +936,13 @@ function initialize() {
     $('#' + 'btnSearchResults').on('click', function(event) {
 
         var chkbx = $('#' + 'chkbxApplyFilterToMapTS')
-        if ( (! chkbx.prop('checked')) || chkbx.hasClass('disabled')) {
-            //'Apply to map' NOT engaged --OR-- disabled - initialize Data pane... 
+        if ( (! chkbx.prop('checked')) || chkbx.hasClass('disabled') || bResetMap) {
+            //'Apply to map' NOT engaged --OR-- disabled - --OR-- map reset, initialize Data pane...
             
+            if (bResetMap) {
+                bResetMap = false;
+            }
+
             //Reset the current marker place name...
             currentMarkerPlaceName = '';
 
@@ -1041,6 +1060,10 @@ function initialize() {
         $('#' + 'liTabbedDataMgrTab').triggerHandler('click');  //Toggle the Workspace button on the top bar...
     });
 
+    //Add click handlers for Google SignIn/SignOut...
+    $('#' + 'imgSignIn').on('click', clearMonitors);
+    $('#' + 'imgSignOut').on('click', clearMonitors);
+    
 }
 
 //Event handler for Google form submit...
@@ -2200,6 +2223,15 @@ function resetMap() {
     $('.enableWhenDataReceived').addClass('disabled');
     //resetUserSelection()
     if (typeof areaRect != "undefined") areaRect.setMap(null);
+    
+    //Hide the filters panel...
+    $('#' + 'panelMapFilters2').addClass('hidden');
+
+    //Reset the search and filter criteria...
+    resetSearchAndFilterCriteria('dtTimeseries');
+
+    //Set reset indicator...
+    bResetMap = true;
 }
 
 function processMarkers(geoJson) {
@@ -2442,6 +2474,14 @@ function updateMap(isNewRequest, filterAndSearchCriteria) {
 function deleteClusteredMarkersOverlays() {
     clearOverlays();
     clusteredMarkersArray.length = 0;
+
+    //Clear all InfoBubble intervals...
+    while (0 < currentIntervals.length) {
+    
+        var currentInterval = currentIntervals.pop();
+        clearInterval(currentInterval);
+        currentInterval = null;
+    }
 }
 // Removes the overlays from the map, but keeps them in the array.
 function clearOverlays() {
@@ -2535,66 +2575,8 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
         //Create infowindow for marker, if indicated
         if ('undefined' !== typeof serviceCodeToTitle && null !== serviceCodeToTitle) {
-            createInfoWindow( map, marker, serviceCodeToTitle);        
+            createInfoWindow( map, marker, serviceCodeToTitle, 'google.maps.Marker');        
         }
-
-        //var marker = new MarkerWithLabel({
-        //    position: point,
-        //    icon: new google.maps.MarkerImage(clusterMarkerPath + 'm6_single.png', new google.maps.Size(52, 52), null, new google.maps.Size(26, 26), new google.maps.Size(52, 52)),
-        //    //icon: new google.maps.MarkerImage(clusterMarkerPath + "m6.png", new google.maps.Size(53, 52), null, new google.maps.Point(icon_width / 2, icon_width / 2), new google.maps.Size(icon_width, icon_width)),
-
-        //    //icon: new google.maps.MarkerImage(markerPath + 'm6_single.png', new google.maps.Size(53, 52), null, new google.maps.Point(icon_width / 2, icon_width / 2), new google.maps.Size(icon_width, icon_width)),
-
-        //    //icon: new google.maps.MarkerImage(/Content.png', new google.maps.Size(32, 32), null, null, new google.maps.Size(28, 28)),
-        //    draggable: false,
-        //    raiseOnDrag: true,
-        //    map: map,
-        //    //anchorPoint: new google.maps.Point(26,26),
-        //    labelContent: "",
-        //    labelAnchor: new google.maps.Point(0, 0),
-        //    labelClass: "GblueLabel44", // the CSS class for the label
-        //    labelStyle: { opacity: 0.95 },
-        //    tooltip: '',
-        //    zIndex: 1500,
-        //    flat: true,
-        //    visible: true
-
-        //});
-
-        //BC - disable mouse event listening for now...
-        //setMouseEventListeners(map, marker, clusterid);
-
-        //        icon = "./images/markers/assessments/" + icontype + ".png";
-        //        size = new google.maps.Size(15, 15);
-        //        icon.size = size;
-        //        scaledSize = new google.maps.Size(15, 15);
-        //        icon.scaledSize = scaledSize;
-        //        var img = new google.maps.MarkerImage('./images/markers/assessments/' + icontype + '.png', new google.maps.Size(32, 32), null,null, new google.maps.Size(25, 25));
-        //        var marker = clusteredMarkersArray[clusteredMarkersIndex];
-        //        marker.setVisible(true);
-        //        marker.setIcon(img);
-
-        //marker.setIcon();
-        //        marker.setPosition(point);
-        //        marker.labelContent= "";
-
-        //st Zindex
-        //       marker.setZIndex(1499);
-        //attach to map
-        //       if (marker.getMap != null) marker.setMap(map)
-
-        //        clusteredMarkersArray.push(marker);
-
-        //        marker.tooltip = "Assessments";
-
-        //        var tooltip = new Tooltip({ map: map }, marker);
-        //        tooltip.bindTo("text", marker, "tooltip");
-        //        google.maps.event.addListener(marker, 'mouseover', function () {
-
-        //            tooltip.addTip();
-        //            tooltip.getPos2(marker.getPosition());
-
-        //        });
 
         google.maps.event.addListener(marker, 'click', function () {
             //var c = getDetailforCluster(id, clusterid)
@@ -2607,34 +2589,10 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
             setUpDatatables(clusterid);
 
-            //Once the table loads its data, find the unique values in the ServCode column...
-            //NOTE: This happens too late - after the user has clicked the marker...
-            //      You need to retrieve the unique service codes for the marker's clusterId 
-            //      when the marker is created not when it is clicked...
-            //$('#dtMarkers')
-            //    .on( 'init.dt', function () {
-            //        console.log( 'Table initialisation complete...' );
-        
-            //        var table = $('#dtMarkers').DataTable();
-            //        var serviceCodes = table.column('ServiceCode:name').data().unique();
-            //        var scLength = serviceCodes.length;
-            //        for (var scI = 0; scI < scLength; ++scI) {
-            //            console.log(serviceCodes[scI]);                        
-            //        }
-            //    } );
-
-            //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
-            //Assign a handler to the DataTable 'draw.dt' event
-//            table.off('draw.dt', addFilterPlaceholders);
-//            table.on('draw.dt', { 'tableId': 'dtMarkers', 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Data Type', 'Value Type', 'Sample Medium'] }, addFilterPlaceholders);
-
             $('#SeriesModal').modal('show');
 
-            //var details = getDetailsForMarker(clusterid)
-            //createInfoWindowContent()
 
         });
-        //var infoBox = new InfoBox({ latlng: marker.getPosition(), map: map });
 
     }
 
@@ -2714,31 +2672,8 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
         //Create infowindow for marker, if indicated
         if ('undefined' !== typeof serviceCodeToTitle && null !== serviceCodeToTitle) {
-            createInfoWindow( map, marker, serviceCodeToTitle);        
+            createInfoWindow( map, marker, serviceCodeToTitle, 'MarkerWithLabel');        
         }
-
-        //BC - disable mouse event listening for now...
-        //setMouseEventListeners(map, marker, clusterid);
-
-        //   var marker = clusteredMarkersArray[clusteredMarkersIndex]
-        //    marker.setVisible(true);
-        //    marker.setIcon(icon);
-        //    marker.setPosition(point);
-
-        //    marker.labelContent = count;
-        //    marker.labelClass = icons[icon_choice].cssClass;
-        //    marker.labelAnchor = new google.maps.Point(icons[icon_choice].labelXoffset, icons[icon_choice].labelYoffset);
-        //    //st Zindex
-        //    marker.setZIndex(1500); 
-        //    //attach to map
-        //    if (marker.getMap != null) marker.setMap(map)
-
-        //    clusteredMarkersArray.push(marker);
-        //google.maps.event.clearInstanceListeners(marker);
-
-
-
-
 
 
         google.maps.event.addListener(marker, 'click', function () {
@@ -2751,28 +2686,6 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             getMarkerPositionName(marker);
 
             setUpDatatables(clusterid);
-
-            //Once the table loads its data, find the unique values in the ServCode column...
-            //NOTE: This happens too late - after the user has clicked the marker...
-            //      You need to retrieve the unique service codes for the marker's clusterId 
-            //      when the marker is created not when it is clicked...
-            //$('#dtMarkers')
-            //    .on( 'init.dt', function () {
-            //        console.log( 'Table initialisation complete...' );
-        
-            //        var table = $('#dtMarkers').DataTable();
-            //        var serviceCodes = table.column('ServiceCode:name').data().unique();
-            //        var scLength = serviceCodes.length;
-            //        for (var scI = 0; scI < scLength; ++scI) {
-            //            console.log(serviceCodes[scI]);                        
-            //        }
-            //    } );
-
-
-            //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
-            //Assign a handler to the DataTable 'draw.dt' event
-//            table.off('draw.dt', addFilterPlaceholders);
-//            table.on('draw.dt', { 'tableId': 'dtMarkers', 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Data Type', 'Value Type', 'Sample Medium'] }, addFilterPlaceholders);
                 
             $('#SeriesModal').modal('show');
 
@@ -2791,7 +2704,7 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
     return marker
 }
 
-function createInfoWindow( map, marker, serviceCodeToTitle) {
+function createInfoWindow( map, marker, serviceCodeToTitle, markerTypeName) {
 
     //Validate/initialize input parameters...
     if ('undefined' === typeof map || null === map ||
@@ -2849,101 +2762,137 @@ function createInfoWindow( map, marker, serviceCodeToTitle) {
     iw.setMinHeight((listCount * fontsize).toString());
     iw.setMaxWidth((20 * fontsize).toString());
 
-    //Open on mouseover...
-    google.maps.event.addListener(marker, 'mouseover', function (event) {
+    if ( 'google.maps.Marker' === markerTypeName) {
 
-        //Check marker position - return early, if indicated...
-//        if ( checkMarkerPosition(marker.position)) {
-//            return;
-//        }
+        //Open on mouseover...
+        google.maps.event.addListener(marker, 'mouseover', function openInfoBubble(event) {
+                iw.open(map, marker);
+        });
+    
+        //Close on mouseout...
+        google.maps.event.addListener(marker, 'mouseout', function () {
+            iw.close();
+        });
+    
+    }
+    else if ( 'MarkerWithLabel' === markerTypeName) {
+    
+    var currentInterval = setInterval(function() {
 
-//        openInfoBubbles.push(marker.position);
-        openInfoBubble = iw;
-        iw.open(map, marker);
-    });
+                if ( null !== currentPosition.latLng) {
+            
+                    lat = currentPosition.latLng.lat().toFixed(2);
+                    lng = currentPosition.latLng.lng().toFixed(2);
 
-    //Close on mouseout...
-    google.maps.event.addListener(marker, 'mouseout', function () {
+                    if ('undefined' !== typeof iw.anchor /*&& 'undefined' !== typeof iw.anchor.position */) {
+                        var ibLat = iw.anchor.position.lat().toFixed(2);
+                        var ibLng = iw.anchor.position.lng().toFixed(2)
+                        if ( lat === ibLat && lng === ibLng) {
+                            //Current mouse position matches InfoBubble position - open InfoBubble...
+                            if ( ! iw.isOpen()) {
+                                iw.open(map, marker);
+                            }
+                        }
+                        else {
+                            iw.close();
+                        }
+                    }
+                }
+            }, 500);
+
+        currentIntervals.push( currentInterval);
+
+        //Initial open on mouseover...
+        google.maps.event.addListenerOnce(marker, 'mouseover', function openInfoBubble(event) {
+            iw.open(map, marker);
+        });
+    
+    }
+
+
+
+//    Close on mouseout...
+//    google.maps.event.addListener(marker, 'mouseout', function () {
 
         //Close currently open window(s) , if indicated...
         //closeInfoWindows();
 //        removeMarkerPosition(marker.position);
-        iw.close();
-    });
+//        iw.close();
+//    });
 }
 
 //Check the position of the open InfoBubble instance against the input position
-function checkInfoBubble(currentPosition) { 
+//function checkInfoBubble(currentPosition) { 
 
-    if (null !== openInfoBubble ) {
-        lat = currentPosition.lat().toFixed(1);
-        lng = currentPosition.lng().toFixed(1);
+//    if (null !== openInfoBubble ) {
+//        lat = currentPosition.lat().toFixed(1);
+//        lng = currentPosition.lng().toFixed(1);
 
-        if ('undefined' !== typeof openInfoBubble.anchor /*&& 'undefined' !== typeof openInfoBubble.anchor.position */) {
-            var ibLat = openInfoBubble.anchor.position.lat().toFixed(1);
-            var ibLng = openInfoBubble.anchor.position.lng().toFixed(1)
-            if ( lat !== ibLat || lng !== ibLng) {
-                //Input position does not match InfoBubble position - close InfoBubble...
-                //console.log('????????? MISS ?????????');                
-                openInfoBubble.close();
-            }
-        }
-    }
-}
+//        if ('undefined' !== typeof openInfoBubble.anchor /*&& 'undefined' !== typeof openInfoBubble.anchor.position */) {
+//            var ibLat = openInfoBubble.anchor.position.lat().toFixed(1);
+//            var ibLng = openInfoBubble.anchor.position.lng().toFixed(1)
+//            if ( lat !== ibLat || lng !== ibLng) {
+//                //Input position does not match InfoBubble position - close InfoBubble...
+//                //console.log('????????? MISS ?????????');                
+//                openInfoBubble.close();
+//            }
+//        }
+//    }
+//}
 
 //Check if the input position matches that of the open InfoBubble instance
-function checkMarkerPosition(position) {
+//function checkMarkerPosition(position) {
 
-    var result = false; //Assume no match...
-    //var length = openInfoBubbles.length;
-    //for (var i = 0; i < length; ++i) {
+//    var result = false; //Assume no match...
+//    //var length = openInfoBubbles.length;
+//    //for (var i = 0; i < length; ++i) {
 
-    //    if (position.equals(openInfoBubbles[i])) {
-    //        result = true;  //Match!!
-    //        break;
-    //    }
-    //}
-    if (null !== openInfoBubble ) {
-        lat = position.lat().toFixed(1);
-        lng = position.lng().toFixed(1);
+//    //    if (position.equals(openInfoBubbles[i])) {
+//    //        result = true;  //Match!!
+//    //        break;
+//    //    }
+//    //}
+//    if (null !== openInfoBubble ) {
+//        lat = position.lat().toFixed(1);
+//        lng = position.lng().toFixed(1);
 
-        if ('undefined' !== typeof openInfoBubble.anchor /*&& 'undefined' !== typeof openInfoBubble.anchor.position */) {
-            var ibLat = openInfoBubble.anchor.position.lat().toFixed(1);
-            var ibLng = openInfoBubble.anchor.position.lng().toFixed(1)
-            if ( lat === ibLat && lng === ibLng) {
-                result = true;  //Match!!
-            }
-        }
-    }
+//        if ('undefined' !== typeof openInfoBubble.anchor /*&& 'undefined' !== typeof openInfoBubble.anchor.position */) {
+//            var ibLat = openInfoBubble.anchor.position.lat().toFixed(1);
+//            var ibLng = openInfoBubble.anchor.position.lng().toFixed(1)
+//            if ( lat === ibLat && lng === ibLng) {
+//                result = true;  //Match!!
+//            }
+//        }
+//    }
 
-    return result;
-}
+//    return result;
+//}
 
-function removeMarkerPosition(position) {
+//function removeMarkerPosition(position) {
 
-    var length = openInfoBubbles.length;
-    for (var i = 0; i < length; ++i) {
+//    var length = openInfoBubbles.length;
+//    for (var i = 0; i < length; ++i) {
 
-        if (position.equals(openInfoBubbles[i])) {
-            openInfoBubbles.splice(i,1);    //Match - remove array element
-            break;            
-        }
-    }
-}
+//        if (position.equals(openInfoBubbles[i])) {
+//            openInfoBubbles.splice(i,1);    //Match - remove array element
+//            break;            
+//        }
+//    }
+//}
 
 
 
 
 //Close currently open window(s) , if indicated...
-function closeInfoWindows() {
+//function closeInfoWindows() {
 
-    var ib = null;
-    while (0 < openInfoBubbles.length) {
-        ib = openInfoBubbles.shift();
-        ib.close();
-        //ib = null;
-    }
-}
+//    var ib = null;
+//    while (0 < openInfoBubbles.length) {
+//        ib = openInfoBubbles.shift();
+//        ib.close();
+//        //ib = null;
+//    }
+//}
 
 //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
 //Prepend disabled options as 'placeholders' to filtering selects... 
@@ -6829,6 +6778,33 @@ function retrieveSearchAndFilterCriteria(tableId, includeDataSources) {
     //Processing complete - return criteria
     return criteria;
 }
+
+function  resetSearchAndFilterCriteria( tableId ) {
+
+    if ( 'undefined' === typeof tableId || null === tableId ) {
+        return;    //Invalid parameter - return early
+    }
+
+    //Reset 'Search' input...
+    var val = $('#' + tableId + '_filter input').val('');
+
+    //Reset 'Filter by' dropdowns...
+    var api = new $('#' + tableId).DataTable();
+    api.columns().indexes().flatten().each(function (i) {
+
+        var column = api.column(i);
+        var select = $(column.footer()).find('select');
+        var selVal = (select && select.length) ? (null === select.val() ? '' : select.val() ) : '';
+        if ('' !== selVal) {
+            select.val('')
+        }
+    });
+
+
+    //Processing complete - return
+    return;
+}
+
 
 function downloadtimeseries(format, id)
 {
