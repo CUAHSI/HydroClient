@@ -133,6 +133,34 @@ namespace HISWebClient.Controllers
 			}
 		}
 
+		//Update variable units for the input time series id...
+		private void UpdateTaskStatus(string requestId, int timeseriesId, string variableUnits)
+		{
+			//Validate/initialize input parameters...
+			if (String.IsNullOrWhiteSpace(requestId) || String.IsNullOrWhiteSpace(variableUnits))
+			{
+				ArgumentNullException ane = new ArgumentNullException("Empty input parameter(s)!!!");
+
+				dberrorcontext.clearParameters();
+				dberrorcontext.createLogEntry(System.Web.HttpContext.Current,
+											  DateTime.UtcNow, "UpdateTaskStatus(string requestId, int timeseriesId, string variableUnits)",
+											  ane,
+											  ane.Message);
+
+				throw ane;
+			}
+
+			//Thread-safe access to dictionary
+			lock (lockObject)
+			{
+				if (_dictTaskStatus.ContainsKey(requestId)/* && _dictTaskStatus[requestId].SeriesIdsToVariableUnits.ContainsKey(timeseriesId)*/ )
+				{
+					//Task entry found - update task status
+					_dictTaskStatus[requestId].SeriesIdsToVariableUnits[timeseriesId] = variableUnits;
+				}
+			}
+		}
+
 		// GET: Export
 		public ActionResult Index()
 		{
@@ -255,7 +283,7 @@ namespace HISWebClient.Controllers
 			CancellationToken ct;
 			bool bNewTask = false;  //Assume time series retrieval task already exists...
 
-			Dictionary<int, string> dictSeriesIdsToVariableUnits = new Dictionary<int, string>();
+			//Dictionary<int, string> dictSeriesIdsToVariableUnits = new Dictionary<int, string>();
 
 			//Thread-safe access to dictionary
 			lock (lockObject) 
@@ -308,30 +336,53 @@ namespace HISWebClient.Controllers
 				var domainNameRef = domainName;
 
 				//Retrieve the variable units for the requested time series...
-				if (TimeSeriesFormat.WaterOneFlow == tsrIn.RequestFormat)
-				{
-					foreach (int timeSeriesId in tsrIn.TimeSeriesIds)
-					{
-						SeriesData sd = null;
+				//if (TimeSeriesFormat.WaterOneFlow == tsrIn.RequestFormat)
+				//{
+				//	foreach (int timeSeriesId in tsrIn.TimeSeriesIds)
+				//	{
+				//		SeriesData sd = null;
 
-						try
-						{
-							dictSeriesIdsToVariableUnits[timeSeriesId] = "unknown";
-							sd = await GetSeriesDataFromSeriesID(timeSeriesId, retrievedSeries);
+				//		try
+				//		{
+				//			dictSeriesIdsToVariableUnits[timeSeriesId] = "unknown";
+				//			sd = await GetSeriesDataFromSeriesID(timeSeriesId, retrievedSeries);
 
-							dictSeriesIdsToVariableUnits[timeSeriesId] = sd.myVariable.VariableUnit.Name;
-						}
-						catch (Exception ex)
-						{
-							//For now take no action...
-							sd = null;
-							continue;
-						}
-					}
-				}
+				//			dictSeriesIdsToVariableUnits[timeSeriesId] = sd.myVariable.VariableUnit.Name;
+				//		}
+				//		catch (Exception ex)
+				//		{
+				//			//For now take no action...
+				//			sd = null;
+				//			continue;
+				//		}
+				//	}
+				//}
 
 				Task.Run(async () =>
 				{
+
+					//Retrieve the variable units for the requested time series...
+					if (TimeSeriesFormat.WaterOneFlow == tsrIn.RequestFormat)
+					{
+						foreach (int timeSeriesId in tsrIn.TimeSeriesIds)
+						{
+							SeriesData sd = null;
+
+							try
+							{
+								//UpdateTaskStatus(tsrIn.RequestId, timeSeriesId, "unknown");
+
+								sd = await GetSeriesDataFromSeriesID(timeSeriesId, retrievedSeries);
+								UpdateTaskStatus(tsrIn.RequestId, timeSeriesId, sd.myVariable.VariableUnit.Name);
+							}
+							catch (Exception ex)
+							{
+								//For now take no action...
+								sd = null;
+								continue;
+							}
+						}
+					}
 
 					try
 					{
@@ -348,28 +399,29 @@ namespace HISWebClient.Controllers
 							int bufSize = 4096;
 							int i = 0;
 
-								//For each time series id...
-								int count = tsrIn.TimeSeriesIds.Count;
-								foreach (int timeSeriesId in tsrIn.TimeSeriesIds)
+							//For each time series id...
+							int count = tsrIn.TimeSeriesIds.Count;
+							foreach (int timeSeriesId in tsrIn.TimeSeriesIds)
+							{
+								//Check for cancellation...
+								if (IsTaskCancelled(requestId, cancellationEnum, cancellationMessage))
 								{
-									//Check for cancellation...
-									if (IsTaskCancelled(requestId, cancellationEnum, cancellationMessage))
-									{
-										break;
-									}
+									break;
+								}
 
-									UpdateTaskStatus(requestId, TimeSeriesRequestStatus.ProcessingTimeSeriesId,
-										TimeSeriesRequestStatus.ProcessingTimeSeriesId.GetEnumDescription() +
-																		  timeSeriesId.ToString() +
-																		  " (" + (++i).ToString() + " of " + count.ToString() + ")");
+								UpdateTaskStatus(requestId, TimeSeriesRequestStatus.ProcessingTimeSeriesId,
+															TimeSeriesRequestStatus.ProcessingTimeSeriesId.GetEnumDescription() +
+																								timeSeriesId.ToString() +
+																								" (" + (++i).ToString() + " of " + count.ToString() + ")");
 
 								//Retrieve the time series data in the input format: CSV --OR-- XML 
-									FileStreamResult filestreamresult = await DownloadFile(timeSeriesId, currentSeries, tsrIn.RequestFormat);
+								FileStreamResult filestreamresult = await DownloadFile(timeSeriesId, currentSeries, tsrIn.RequestFormat);
 
-                                //Check for failed/empty downloads.
+								//Check for failed/empty downloads.
 								if (filestreamresult.FileDownloadName.Contains("ERROR", StringComparison.CurrentCultureIgnoreCase) || 0 >= filestreamresult.FileStream.Length)
-                                    {
+								{
 									//BCC - 25-Jan-2016 - set task status error here - log error message - throw...
+									//BCC - 08-Mar-2016 - Revised logic to log the error only - do not want to throw (i.e., stop the entire task) for problem(s) with a single file...
 									Exception ex;
 
 									if ( filestreamresult.FileDownloadName.Contains("ERROR", StringComparison.CurrentCultureIgnoreCase) )
@@ -381,21 +433,25 @@ namespace HISWebClient.Controllers
 										ex = new Exception("Empty time series...");
 									}
 
-									throw ex;
-                                    }
-                                    else
-                                    {
-
-                                        //Copy file contents to zip archive...
-                                        //ASSUMPTION: FileStreamResult instance properly disposes of FileStream member!!
-                                        var zipArchiveEntry = zipArchive.CreateEntry(filestreamresult.FileDownloadName);
-                                        using (var zaeStream = zipArchiveEntry.Open())
-                                        {
-                                            await filestreamresult.FileStream.CopyToAsync(zaeStream, bufSize);
-                                        }
-                                        //add
-                                    }
+									dberrorcontextRef.clearParameters();
+									dberrorcontextRef.createLogEntry(sessionIdRef,
+																		userIpAddressRef,
+																		domainNameRef,
+																		DateTime.UtcNow,
+																		"RequestTimeSeries(TimeSeriesRequest tsrIn)",
+																		ex,
+																		"RequestTimeSeries error for Id: " + requestId + " message: " + ex.Message);
 								}
+
+
+                                //Copy file contents to zip archive...
+                                //ASSUMPTION: FileStreamResult instance properly disposes of FileStream member!!
+                                var zipArchiveEntry = zipArchive.CreateEntry(filestreamresult.FileDownloadName);
+                                using (var zaeStream = zipArchiveEntry.Open())
+                                {
+                                    await filestreamresult.FileStream.CopyToAsync(zaeStream, bufSize);
+                                }
+							}
 						}
 
 #if NEVER_DEFINED
@@ -483,10 +539,10 @@ namespace HISWebClient.Controllers
 			//Return a TimeSeriesResponse in JSON format...
 			var result = new TimeSeriesResponse(tsrIn.RequestId, requestStatus, status, blobUri, blobTimeStamp);
 
-			if ( 0 < dictSeriesIdsToVariableUnits.Count)
-			{
-				result.SeriesIdsToVariableUnits = dictSeriesIdsToVariableUnits;
-			}
+			//if ( 0 < dictSeriesIdsToVariableUnits.Count)
+			//{
+			//	result.SeriesIdsToVariableUnits = dictSeriesIdsToVariableUnits;
+			//}
 
 			//var javaScriptSerializer = new JavaScriptSerializer();
 			//var json = javaScriptSerializer.Serialize(result);
@@ -915,6 +971,7 @@ namespace HISWebClient.Controllers
 					tsr.Status = _dictTaskStatus[Id].Status;
 					tsr.BlobUri = _dictTaskStatus[Id].BlobUri;
 					tsr.BlobTimeStamp = _dictTaskStatus[Id].BlobTimeStamp;
+					tsr.SeriesIdsToVariableUnits = _dictTaskStatus[Id].SeriesIdsToVariableUnits;
 
 					//If task is cancelled or completed, remove associated entry from dictionary
 					if (TimeSeriesRequestStatus.Completed == tsr.RequestStatus ||
@@ -937,8 +994,9 @@ namespace HISWebClient.Controllers
 		{
 			TimeSeriesResponse tsr = checkTask(Id); 
 
-			var javaScriptSerializer = new JavaScriptSerializer();
-			var json = javaScriptSerializer.Serialize(tsr);
+			//var javaScriptSerializer = new JavaScriptSerializer();
+			//var json = javaScriptSerializer.Serialize(tsr);
+			var json = JsonConvert.SerializeObject(tsr);
 
 			//Processing complete - return 
 			return Json(json, "application/json", JsonRequestBehavior.AllowGet);
@@ -961,8 +1019,9 @@ namespace HISWebClient.Controllers
 			}
 
 			//Processing complete - return JSON result
-			var javaScriptSerializer = new JavaScriptSerializer();
-			var json = javaScriptSerializer.Serialize(tsrList);
+			//var javaScriptSerializer = new JavaScriptSerializer();
+			//var json = javaScriptSerializer.Serialize(tsrList);
+			var json = JsonConvert.SerializeObject(tsrList);
 
 			//Processing complete - return 
 			return Json(json, "application/json");

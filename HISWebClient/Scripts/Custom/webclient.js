@@ -3210,7 +3210,7 @@ function setUpDatatables(clusterid) {
                  //}
 
                 //If select in progress, call the 'click' handler
-                if ($('#' + 'anchorAllSelections').attr('data-selection')) {
+                if (! $('#' + 'spanSelectCheck').hasClass('hidden')) {
                     //$(row).addClass('selected');  //Only correct if ALL the rows are being selected...
                     $('#' + 'anchorAllSelections').triggerHandler('click');
                 }
@@ -3362,8 +3362,8 @@ function setUpDatatables(clusterid) {
                                 '<ul class="dropdown-menu" aria-labelledby="ddMenuSelections">' +
                                    
                                 (currentUser.authenticated ? 
-                                    '<li><a href="#" id="anchorAllSelections" data-selectall="true" style="font-weight: bold;" ><span class="text-muted">Select All' : 
-                                    '<li><a href="#" id="anchorAllSelections" data-selectall="false" style="font-weight: bold;" ><span class="text-muted">Select Top' +
+                                    '<li><a href="#" id="anchorAllSelections" data-selectall="true" style="font-weight: bold;" ><span id="spanSelectCheck" class="glyphicon glyphicon-ok-circle hidden">&nbsp;</span><span class="text-muted">Select All' : 
+                                    '<li><a href="#" id="anchorAllSelections" data-selectall="false" style="font-weight: bold;" ><span id="spanSelectCheck" class="glyphicon glyphicon-ok-circle hidden">&nbsp;</span><span class="text-muted">Select Top' +
                                     $('#dtTimeseries').attr('data-selectedtimeseriesmax') + '?') +
 
                                 '</span></a></li>' +
@@ -3466,25 +3466,25 @@ function setUpDatatables(clusterid) {
     //$('#chkbxSelectAll').off('click', selectAll);
     //$('#chkbxSelectAll').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll', 'btnIds': ['btnZipSelections', 'btnManageSelections'], 'btnClearId': 'btnClearSelections' }, selectAll);
     $('#anchorAllSelections').off('click', selectAll);
-    $('#anchorAllSelections').on('click', { 'tableId': 'dtMarkers', 'anchorId': 'anchorAllSelections', 'selectAll' : $('#anchorAllSelections').attr('data-selectall') }, selectAll);
+    $('#anchorAllSelections').on('click', { 'tableId': 'dtMarkers', 'anchorId': 'anchorAllSelections', 'checkId': 'spanSelectCheck', 'clearId': 'anchorClearSelections', 'selectAll' : $('#anchorAllSelections').attr('data-selectall') }, selectAll);
 
     //Avoid multiple registrations of the same handler...
     //$('#btnZipSelections').off('click', zipSelections_2);
     //$('#btnZipSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, zipSelections_2);
     $('#anchorEachTimeseriesInSeparateFile').off('click', zipSelections_2);
-    $('#anchorEachTimeseriesInSeparateFile').on('click', { 'tableId': 'dtMarkers', 'selectAll' : $('#anchorAllSelections').attr('data-selectall') /*, 'currentAnchor': 'anchorEachTimeseriesInSeparateFile' */ }, zipSelections_2);
+    $('#anchorEachTimeseriesInSeparateFile').on('click', { 'tableId': 'dtMarkers', 'selectAll' : $('#anchorAllSelections').attr('data-selectall'), 'checkId': 'spanSelectCheck' /*, 'currentAnchor': 'anchorEachTimeseriesInSeparateFile' */ }, zipSelections_2);
 
     //Avoid multiple registrations of the same handler...
     //$('#btnManageSelections').off('click', copySelectionsToDataManager);
     //$('#btnManageSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, copySelectionsToDataManager)
     $('#anchorAddSelectionsToWorkspace').off('click', copySelectionsToDataManager);
-    $('#anchorAddSelectionsToWorkspace').on('click', { 'tableId': 'dtMarkers', 'selectAll' : $('#anchorAllSelections').attr('data-selectall') /*, 'currentAnchor': 'anchorAddSelectionsToWorkspace' */ }, copySelectionsToDataManager)
+    $('#anchorAddSelectionsToWorkspace').on('click', { 'tableId': 'dtMarkers', 'selectAll' : $('#anchorAllSelections').attr('data-selectall'), 'checkId' : 'spanSelectCheck' /*, 'currentAnchor': 'anchorAddSelectionsToWorkspace' */ }, copySelectionsToDataManager)
 
     //Avoid multiple registrations of the same handler...
     //$('#btnClearSelections').off('click', clearSelections);
     //$('#btnClearSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll', 'btnIds': ['btnZipSelections','btnManageSelections'], 'btnClearId': 'btnClearSelections' }, clearSelections);
     $('#anchorClearSelections').off('click', clearSelections);
-    $('#anchorClearSelections').on('click', { 'tableId': 'dtMarkers', 'anchorId': 'anchorAllSelections' }, clearSelections);
+    $('#anchorClearSelections').on('click', { 'tableId': 'dtMarkers', 'anchorId': 'anchorAllSelections', 'checkId': 'spanSelectCheck' }, clearSelections);
 
     //Add DataTables event handlers...
     //Search event...
@@ -4218,19 +4218,19 @@ function requestTimeSeries(tableName, timeSeriesRequest, modalDialogName) {
         success: function (data, textStatus, jqXHR) {
             var response = jQuery.parseJSON(data);
 
-            if ( ! jQuery.isEmptyObject(response.SeriesIdsToVariableUnits)) {
-                updateTimeSeriesVariableUnits( tableName, response.SeriesIdsToVariableUnits);
+            //if ( ! jQuery.isEmptyObject(response.SeriesIdsToVariableUnits)) {
+            //    updateTimeSeriesVariableUnits( tableName, response.SeriesIdsToVariableUnits);
 
-                if ('tblDataManager' === tableName) {
+            //    if ('tblDataManager' === tableName) {
                 
-                    //Set footer filters...
-                    setfooterFilters( tableName, [2, 3, 4, 5, 6, 7, 8], null);
+            //        //Set footer filters...
+            //        setfooterFilters( tableName, [2, 3, 4, 5, 6, 7, 8], null);
 
-                    //Add filter placeholders...
-                    var tempEvent = { 'data': { 'tableId': tableName, 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Variable Units', 'Data Type', 'Value Type', 'Sample Medium'] }};
-                    addFilterPlaceholders(tempEvent);
-                }
-            }
+            //        //Add filter placeholders...
+            //        var tempEvent = { 'data': { 'tableId': tableName, 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Variable Units', 'Data Type', 'Value Type', 'Sample Medium'] }};
+            //        addFilterPlaceholders(tempEvent);
+            //    }
+            //}
 //          console.log('WaterML blob uri: ' + response.BlobUri);
             //startRequestTimeSeriesMonitor(response);
             startRequestTimeSeriesMonitor();    //Start monitoring all current requests, if indicated...
@@ -4387,12 +4387,12 @@ function startRequestTimeSeriesMonitor() {
                                     statusCurrent != timeSeriesRequestStatus.RequestTimeSeriesError &&
                                     ( ! (statusCurrent === timeSeriesRequestStatus.ClientSubmittedCancelRequest && 
                                          timeSeriesResponse.RequestStatus === timeSeriesRequestStatus.ProcessingTimeSeriesId))) {
-                                tableRow.find('#statusMessageText').html(timeSeriesResponse.Status);
-                                tableRow.find('#blobUriText').html(timeSeriesResponse.BlobUri);
-                                tableRow.find('td:eq(5)').html(timeSeriesResponse.RequestStatus);
+                                    tableRow.find('#statusMessageText').html(timeSeriesResponse.Status);
+                                    tableRow.find('#blobUriText').html(timeSeriesResponse.BlobUri);
+                                    tableRow.find('td:eq(5)').html(timeSeriesResponse.RequestStatus);
 
-                                //Color row as 'info'
-                                tableRow.addClass('info');
+                                    //Color row as 'info'
+                                    tableRow.addClass('info');
                                 }
 
                                 //Check for completed/cancelled task/unknown task/error
@@ -4503,6 +4503,18 @@ function startRequestTimeSeriesMonitor() {
                             }
                             else { 
                                 if ( 'tblDataManager' === tableName ) {
+
+                                    if ( ! jQuery.isEmptyObject(timeSeriesResponse.SeriesIdsToVariableUnits)) {
+                                        //Update variable units...
+                                        updateTimeSeriesVariableUnits( tableName, timeSeriesResponse.SeriesIdsToVariableUnits);
+
+                                        //Set footer filters...
+                                        setfooterFilters( tableName, [2, 3, 4, 5, 6, 7, 8], null);
+
+                                        //Add filter placeholders...
+                                        var tempEvent = { 'data': { 'tableId': tableName, 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Variable Units', 'Data Type', 'Value Type', 'Sample Medium'] }};
+                                        addFilterPlaceholders(tempEvent);
+                                    }
 
                                     updateTimeSeriesRequestStatus( downloadMonitor.timeSeriesMonitored[requestId].tableName, requestId, timeSeriesResponse.RequestStatus);
 
@@ -5025,10 +5037,30 @@ function addRowStylesDM(newrow) {
 
 function selectAll(event) {
 
-    //Indicate a select is in progress...
-    if('undefined' !== typeof event.data.anchorId) {
-        $('#' + event.data.anchorId).attr('data-selection', true);
+    //Check 'Select...' check mark
+    if ('undefined' !== typeof event.data.checkId && null !== event.data.checkId) {
+        var checkMark = $('#' + event.data.checkId);
+        var className1 = 'hidden';
+
+        if (checkMark.hasClass(className1)) {
+            //Check mark disabled - enable
+            checkMark.removeClass(className1);
+        }
+        else {
+            //Check mark enabled - disable, clear selections...
+            checkMark.addClass(className1);
+            if ('undefined' !== typeof event.data.clearId && null !== event.data.clearId) {
+                $('#' + event.data.clearId).triggerHandler('click');
+            }
+
+            return;
+        }
     }
+
+    //Indicate a select is in progress...
+    //if('undefined' !== typeof event.data.anchorId) {
+    //    $('#' + event.data.anchorId).attr('data-selection', true);
+    //}
 
     //Clear ALL table selections, regardless of current sort/search order
     var table = $('#' + event.data.tableId).DataTable();
@@ -5108,8 +5140,13 @@ function selectAll(event) {
 function clearSelections(event) {
 
     //Indicate a select is NOT in progress...
-    if('undefined' !== typeof event.data.anchorId) {
-        $('#' + event.data.anchorId).attr('data-selection', false);
+    //if('undefined' !== typeof event.data.anchorId) {
+    //    $('#' + event.data.anchorId).attr('data-selection', false);
+    //}
+
+    if ('undefined' !== typeof event.data.checkId) {
+        $('#' + event.data.checkId).addClass('hidden');
+    
     }
 
     //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
@@ -5735,12 +5772,20 @@ function zipSelections_2(event) {
     var selectedRows = table.rows('.selected').data();
     var selectedTimeSeriesMax = parseInt($('#' + event.data.tableId).attr('data-selectedtimeseriesmax'));
 
-    if ($('#' + event.data.chkbxId).prop("checked") && Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax > selectedRows.length)) {
+    if (currentUser.authenticated) {
+        //Current user is authenticated - allow selection of ALL table rows...
+        //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
+        //Source: http://datatables.net/reference/api/rows().nodes()
+        var rows = table.rows({ 'order': 'current', 'search': 'applied' });    //Retrieve rows per current sort/search order...
+        selectedTimeSeriesMax = rows[0].length;
+    }
+
+    if ( (! $('#' + event.data.checkId).hasClass("hidden")) && Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax > selectedRows.length)) {
         //User has clicked the 'Select Top ...' check box but not all selected rows have been rendered
         //NOTE: If the DataTable instance has the 'deferRender' option set - not all rows may have been rendered at this point.
         //        Thus one cannot rely on the selectedRows above, since in this case only rendered rows appear in the selectedRows...
-        selectedRows = getSelectedRows(event.data.tableId);
-                }
+        selectedRows = getSelectedRows(event.data.tableId, currentUser.authenticated ? selectedTimeSeriesMax : null);
+    }
 
     var selectedCount = selectedRows.length;
     var timeSeriesIds = [];
@@ -5911,12 +5956,19 @@ function copySelectionsToDataManager(event) {
     var selectedRows = table.rows('.selected').data();
     var selectedTimeSeriesMax = parseInt($('#' + event.data.tableId).attr('data-selectedtimeseriesmax'));
 
-    if ($('#' + event.data.chkbxId).prop("checked") && Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax > selectedRows.length)) {
-    //if (  ('false' === event.data.selectAll || $('#' + event.data.chkbxId).prop("checked") )  && Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax > selectedRows.length)) {
+    if (currentUser.authenticated) {
+        //Current user is authenticated - allow selection of ALL table rows...
+        //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
+        //Source: http://datatables.net/reference/api/rows().nodes()
+        var rows = table.rows({ 'order': 'current', 'search': 'applied' });    //Retrieve rows per current sort/search order...
+        selectedTimeSeriesMax = rows[0].length;
+    }
+
+    if ( (! $('#' + event.data.checkId).hasClass("hidden")) && Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax > selectedRows.length)) {
         //User has clicked the 'Select Top ...' check box but not all selected rows have been rendered
         //NOTE: If the DataTable instance has the 'deferRender' option set - not all rows may have been rendered at this point.
         //        Thus one cannot rely on the selectedRows above, since in this case only rendered rows appear in the selectedRows...
-        selectedRows = getSelectedRows(event.data.tableId);
+        selectedRows = getSelectedRows(event.data.tableId, currentUser.authenticated ? selectedTimeSeriesMax : null );
     }
 
     var selectedCount = selectedRows.length;
@@ -6114,7 +6166,7 @@ function loadDataManager() {
 }
 
 //Retrieve all the selected rows per the input table name...
-function getSelectedRows(tableName) {
+function getSelectedRows(tableName, timeSeriesMaxOverride) {
     //Validate/initialize input parameters...
     if ('undefined' === typeof tableName || null === tableName) {
         return null;
@@ -6125,6 +6177,10 @@ function getSelectedRows(tableName) {
     var length = rows[0].length;    //Need length of rows array here!!
     var selectedRows = [];
     var selectedTimeSeriesMax = parseInt($('#' + tableName).attr('data-selectedtimeseriesmax'));
+
+    if ('undefined' !== timeSeriesMaxOverride && null !== timeSeriesMaxOverride && Number.isInteger(timeSeriesMaxOverride) ) {
+        selectedTimeSeriesMax = timeSeriesMaxOverride;
+    }
 
     for (var i = 0; i < length; ++i) {
         var position = rows[0][i];  //Reference the row's position per the current sort/search!!
@@ -6303,14 +6359,8 @@ function setUpTimeseriesDatatable() {
             //var servUrl = data.ServURL;
             //$('td', row).eq(16).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
 
-            //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
-            //if ($('#chkbxSelectAllTS').prop('checked')) {
-            //    //BC - Call check box hander here
-            //    $('#chkbxSelectAllTS').triggerHandler('click');
-            //}
-
             //If select in progress, call the 'click' handler
-            if ($('#' + 'anchorAllSelectionsTS').attr('data-selection')) {
+            if (! $('#' + 'spanSelectCheckTS').hasClass('hidden')) {
                 //$(row).addClass('selected');  //Only correct if ALL the rows are being selected...
                 $('#' + 'anchorAllSelectionsTS').triggerHandler('click');
             }
@@ -6445,8 +6495,8 @@ function setUpTimeseriesDatatable() {
                                   '<ul class="dropdown-menu" aria-labelledby="ddMenuSelectionsTS">' +
                                    
                                    (currentUser.authenticated ? 
-                                       '<li><a href="#" id="anchorAllSelectionsTS" data-selectall="true" style="font-weight: bold;" ><span class="text-muted">Select All' : 
-                                       '<li><a href="#" id="anchorAllSelectionsTS" data-selectall="false" style="font-weight: bold;" ><span class="text-muted">Select Top' +
+                                       '<li><a href="#" id="anchorAllSelectionsTS" data-selectall="true" style="font-weight: bold;" ><span id="spanSelectCheckTS" class="glyphicon glyphicon-ok-circle hidden">&nbsp;</span><span class="text-muted">Select All' : 
+                                       '<li><a href="#" id="anchorAllSelectionsTS" data-selectall="false" style="font-weight: bold;" ><span id="spanSelectCheckTS" class="glyphicon glyphicon-ok-circle hidden">&nbsp;</span><span class="text-muted">Select Top ' +
                                         $('#dtTimeseries').attr('data-selectedtimeseriesmax') + '?') +
 
                                    '</span></a></li>' +
@@ -6568,7 +6618,7 @@ function setUpTimeseriesDatatable() {
     //$('#chkbxSelectAllTS').off('click', selectAll);
     //$('#chkbxSelectAllTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS', 'btnIds': ['btnZipSelectionsTS', 'btnManageSelectionsTS'], 'btnClearId': 'btnClearSelectionsTS'}, selectAll);
     $('#anchorAllSelectionsTS').off('click', selectAll);
-    $('#anchorAllSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'anchorId': 'anchorAllSelectionsTS', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall') }, selectAll);
+    $('#anchorAllSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'anchorId': 'anchorAllSelectionsTS', 'checkId': 'spanSelectCheckTS', 'clearId': 'anchorClearSelectionsTS', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall') }, selectAll);
 
     //Avoid multiple registrations of the same handler...
     //$('#btnZipSelectionsTS').off('click', zipSelections_2);
@@ -6578,7 +6628,7 @@ function setUpTimeseriesDatatable() {
     //$('#btnClearSelectionsTS').off('click', clearSelections);
     //$('#btnClearSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS', 'btnIds': ['btnZipSelectionsTS', 'btnManageSelectionsTS'], 'btnClearId': 'btnClearSelectionsTS' }, clearSelections);
     $('#anchorClearSelectionsTS').off('click', clearSelections);
-    $('#anchorClearSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'anchorId': 'anchorAllSelectionsTS' }, clearSelections);
+    $('#anchorClearSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'anchorId': 'anchorAllSelectionsTS', 'checkId': 'spanSelectCheckTS' }, clearSelections);
 
     //Avoid multiple registrations of the same handler...
     //$('#btnManageSelectionsTS').off('click', copySelectionsToDataManager);
@@ -6586,7 +6636,7 @@ function setUpTimeseriesDatatable() {
     //$('#btnApplyActionTS').off('click', copySelectionsToDataManager);
     //$('#btnApplyActionTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall'), 'currentAnchor': 'anchorAddSelectionsToWorkspaceTS' }, copySelectionsToDataManager)
     $('#anchorAddSelectionsToWorkspaceTS').off('click', copySelectionsToDataManager);
-    $('#anchorAddSelectionsToWorkspaceTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall') /*, 'currentAnchor': 'anchorAddSelectionsToWorkspaceTS' */ }, copySelectionsToDataManager)
+    $('#anchorAddSelectionsToWorkspaceTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall'), 'checkId' : 'spanSelectCheckTS' /*, 'currentAnchor': 'anchorAddSelectionsToWorkspaceTS' */ }, copySelectionsToDataManager)
 
 
 
@@ -6604,7 +6654,7 @@ function setUpTimeseriesDatatable() {
 //    $('#btnApplyActionTS').off('click', zipSelections_2);
 //    $('#btnApplyActionTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall'), 'currentAnchor': 'anchorEachTimeseriesInSeparateFileTS'}, zipSelections_2);
     $('#anchorEachTimeseriesInSeparateFileTS').off('click', zipSelections_2);
-    $('#anchorEachTimeseriesInSeparateFileTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall') /*, 'currentAnchor': 'anchorEachTimeseriesInSeparateFileTS' */ }, zipSelections_2);
+    $('#anchorEachTimeseriesInSeparateFileTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall'), 'checkId': 'spanSelectCheckTS' /*, 'currentAnchor': 'anchorEachTimeseriesInSeparateFileTS' */ }, zipSelections_2);
 
 
     $('#chkbxApplyFilterToMapTS').off('click', applyFilterToMap);

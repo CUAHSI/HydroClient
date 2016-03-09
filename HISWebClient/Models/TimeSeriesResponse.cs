@@ -98,8 +98,6 @@ namespace HISWebClient.Models
 		/// </summary>
 		public DateTime BlobTimeStamp { get; set; }
 
-
-
 		public Dictionary<int, string> SeriesIdsToVariableUnits { get; set; }
 	}
 }
