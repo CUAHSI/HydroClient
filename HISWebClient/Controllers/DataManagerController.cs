@@ -70,8 +70,9 @@ namespace HISWebClient.Controllers
 			//NOTE: Use of NewtonSoft JsonCovert here results in a 'circular dependency' error given the definition of class: DM_TimeSeries
 			//		Happily, use of JavaScriptSerializer avoids this problem but does introduce a difference in date handling.  Specifically,
 			//		dates are rendered in 'JSON' format: '/Date(nnnnnnnnnnnnn)/'
-			var javaScriptSerializer = new JavaScriptSerializer();
-			var json = javaScriptSerializer.Serialize(uts);
+			//var javaScriptSerializer = new JavaScriptSerializer();
+			//var json = javaScriptSerializer.Serialize(uts);
+			var json = JsonConvert.SerializeObject(uts);
 
 			Response.StatusCode = (int)System.Net.HttpStatusCode.OK;
 			return Json(json, "application/json", JsonRequestBehavior.AllowGet );
@@ -113,8 +114,9 @@ namespace HISWebClient.Controllers
 
 			//Success - convert input data to JSON and return (so to avoid a parsing error on the client...)
 			// Source: http://stackoverflow.com/questions/25173727/syntax-error-unexpected-end-of-input-parsejson
-			var javaScriptSerializer = new JavaScriptSerializer();
-			var json = javaScriptSerializer.Serialize(userTimeSeries);
+			//var javaScriptSerializer = new JavaScriptSerializer();
+			//var json = javaScriptSerializer.Serialize(userTimeSeries);
+			var json = JsonConvert.SerializeObject(userTimeSeries);
 
 			Response.StatusCode = (int)System.Net.HttpStatusCode.OK;
 			return Json(json, "application/json");
@@ -122,7 +124,7 @@ namespace HISWebClient.Controllers
 
 		//Delete DataManager/{dmTimeSeries}
 		[HttpDelete]
-		public ActionResult Delete(UserTimeSeries userTimeSeries)
+		public ActionResult Delete( [System.Web.Http.FromBody] UserTimeSeries userTimeSeries)
 		{
 			//Validate/initialize input parameters
 			if (null == userTimeSeries)
@@ -153,8 +155,9 @@ namespace HISWebClient.Controllers
 
 			//Success - convert input data to JSON and return (so to avoid a parsing error on the client...)
 			// Source: http://stackoverflow.com/questions/25173727/syntax-error-unexpected-end-of-input-parsejson
-			var javaScriptSerializer = new JavaScriptSerializer();
-			var json = javaScriptSerializer.Serialize(userTimeSeries);
+			//var javaScriptSerializer = new JavaScriptSerializer();
+			//var json = javaScriptSerializer.Serialize(userTimeSeries);
+			var json = JsonConvert.SerializeObject(userTimeSeries);
 
 			Response.StatusCode = (int)System.Net.HttpStatusCode.OK;
 			return Json(json, "application/json");

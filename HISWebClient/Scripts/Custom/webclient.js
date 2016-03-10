@@ -27,7 +27,7 @@ var conceptsType = '';
 var selectedRowCounts = {
     'dtMarkers': {'targetIds': ['spanClearSelections', 'spanZipSelections','spanManageSelections'], 'count': 0},
     'dtTimeseries': { 'targetIds': ['spanClearSelectionsTS', 'spanZipSelectionsTS', 'spanManageSelectionsTS'], 'count': 0, 'customCounter': customCounter },
-    'tblDataManager': { 'targetIds': ['lblSelectionsDataMgr'], 'count': 0, 'customCounter': customCounter }
+    'tblDataManager': { 'targetIds': ['spanClearSelectionsDM', 'spanRemoveSelectionsDM'], 'count': 0, 'customCounter': customCounter }
 };
 
 //BC - 19-Jun-2015 - Disable concept counting - possible later use...
@@ -3210,7 +3210,8 @@ function setUpDatatables(clusterid) {
                  //}
 
                 //If select in progress, call the 'click' handler
-                if (! $('#' + 'spanSelectCheck').hasClass('hidden')) {
+                var selectCheck = $('#' + 'spanSelectCheck'); 
+                if ( selectCheck.length && (! selectCheck.hasClass('hidden'))) {
                     //$(row).addClass('selected');  //Only correct if ALL the rows are being selected...
                     $('#' + 'anchorAllSelections').triggerHandler('click');
                 }
@@ -3362,12 +3363,18 @@ function setUpDatatables(clusterid) {
                                 '<ul class="dropdown-menu" aria-labelledby="ddMenuSelections">' +
                                    
                                 (currentUser.authenticated ? 
-                                    '<li><a href="#" id="anchorAllSelections" data-selectall="true" style="font-weight: bold;" ><span id="spanSelectCheck" class="glyphicon glyphicon-ok-circle hidden">&nbsp;</span><span class="text-muted">Select All' : 
-                                    '<li><a href="#" id="anchorAllSelections" data-selectall="false" style="font-weight: bold;" ><span id="spanSelectCheck" class="glyphicon glyphicon-ok-circle hidden">&nbsp;</span><span class="text-muted">Select Top' +
-                                    $('#dtTimeseries').attr('data-selectedtimeseriesmax') + '?') +
+                                    '<li><a href="#" id="anchorAllSelections" data-selectall="true" style="font-weight: bold;" >' +
+                                    '<span class="glyphicon glyphicon-plus-sign"></span>' +
+                                    '<span class="text-muted">&nbsp;Select All&nbsp;</span>' +
+                                    '<span id="spanSelectCheck" class="glyphicon glyphicon-ok-circle hidden"></span>' + 
+                                    '</a></li>': '' ) +                                    
+                                    //'<li><a href="#" id="anchorAllSelections" data-selectall="false" style="font-weight: bold;" ><span id="spanSelectCheck" class="glyphicon glyphicon-ok-circle hidden">&nbsp;</span><span class="text-muted">Select Top ' +
+                                    //$('#dtTimeseries').attr('data-selectedtimeseriesmax') + '?') +
 
-                                '</span></a></li>' +
-                                '<li><a href="#" id="anchorClearSelections" style="font-weight: bold;"><span class="text-warning">Clear Selections</span></a></li>' +
+                                '<li><a href="#" id="anchorClearSelections" style="font-weight: bold;">' +
+                                '<span class="glyphicon glyphicon-minus-sign"></span>' +
+                                '<span id="spanClearSelections" class="text-warning">&nbsp;Clear Selections</span>' + 
+                                '</a></li>' +
                                 '</ul>' +
                             '</div>' +
 
@@ -3465,9 +3472,11 @@ function setUpDatatables(clusterid) {
     //Avoid multiple registrations of the same handler...
     //$('#chkbxSelectAll').off('click', selectAll);
     //$('#chkbxSelectAll').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll', 'btnIds': ['btnZipSelections', 'btnManageSelections'], 'btnClearId': 'btnClearSelections' }, selectAll);
-    $('#anchorAllSelections').off('click', selectAll);
-    $('#anchorAllSelections').on('click', { 'tableId': 'dtMarkers', 'anchorId': 'anchorAllSelections', 'checkId': 'spanSelectCheck', 'clearId': 'anchorClearSelections', 'selectAll' : $('#anchorAllSelections').attr('data-selectall') }, selectAll);
 
+    if (currentUser.authenticated) {
+        $('#anchorAllSelections').off('click', selectAll);
+        $('#anchorAllSelections').on('click', { 'tableId': 'dtMarkers', 'anchorId': 'anchorAllSelections', 'checkId': 'spanSelectCheck', 'clearId': 'anchorClearSelections', 'selectAll' : $('#anchorAllSelections').attr('data-selectall') }, selectAll);
+    }
     //Avoid multiple registrations of the same handler...
     //$('#btnZipSelections').off('click', zipSelections_2);
     //$('#btnZipSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, zipSelections_2);
@@ -3811,9 +3820,18 @@ function setupDataManagerTable() {
                                         '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
                                       '</button>' +
                                       '<ul class="dropdown-menu" aria-labelledby="dropdownMenu1">' +
-                                        '<li><a href="#" id="anchorAllSelectionsDataMgr" style="font-weight: bold;" ><span class="text-muted">Select All</span></a></li>' +
-                                        '<li><a href="#" id="anchorClearSelectionsDataMgr" style="font-weight: bold;"><span class="text-warning">Clear Selections</span></a></li>' +
-                                        '<li><a href="#" id="anchorRemoveSelectionsDataMgr" style="font-weight: bold;"><span class="text-danger">Delete Selections</span></a></li>' +
+                                        '<li><a href="#" id="anchorAllSelectionsDataMgr" style="font-weight: bold;" >' + 
+                                        '<span class="glyphicon glyphicon-plus-sign"></span>' +
+                                        '<span class="text-muted">&nbsp;Select All</span>' +
+                                        '</a></li>' +
+                                        '<li><a href="#" id="anchorClearSelectionsDataMgr" style="font-weight: bold;">' + 
+                                        '<span class="glyphicon glyphicon-minus-sign"></span>' +
+                                        '<span id="spanClearSelectionsDM" class="text-warning">&nbsp;Clear Selections</span>' +
+                                        '</a></li>' +
+                                        '<li><a href="#" id="anchorRemoveSelectionsDataMgr" style="font-weight: bold;">' +
+                                        '<span class="glyphicon glyphicon-trash"></span>' +                                
+                                        '<span id="spanRemoveSelectionsDM" class="text-danger">&nbsp;Delete Selections</span>' + 
+                                        '</a></li>' +
                                         //'<li><a href="#" id="anchorSaveSelectionsDataMgr" style="font-weight: bold;"><span class="text-info">Save Selected Entries</span></a></li>' +
                                         ////Defer implementation of Refresh Selections until a later release (post 1.1)
                                         //'<li><a href="#" id="anchorRefreshSelectionsDataMgr" style="font-weight: bold;"><span class="text-warning">Refresh Selected Entries</span></a></li>' +
@@ -4838,7 +4856,7 @@ function toggleSelected(event) {
     var count = selectedRowCounts[event.data.tableId].count;
 
     var selectedTimeSeriesMax = parseInt($('#' + event.data.tableId).attr('data-selectedtimeseriesmax'));
-    if (Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax <= count) && (!$(this).hasClass(className))) {
+    if ( (! currentUser.authenticated) && Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax <= count) && (!$(this).hasClass(className))) {
         //Maximum selections reached - current row not yet selected - warn and return early
         bootbox.alert('<h4>A maximum of ' + selectedTimeSeriesMax + ' time series rows may be selected.</h4>');
         return;
@@ -5143,10 +5161,8 @@ function clearSelections(event) {
     //if('undefined' !== typeof event.data.anchorId) {
     //    $('#' + event.data.anchorId).attr('data-selection', false);
     //}
-
-    if ('undefined' !== typeof event.data.checkId) {
+    if (('undefined' !== typeof event.data.checkId) && $('#' + event.data.checkId).length ) {
         $('#' + event.data.checkId).addClass('hidden');
-    
     }
 
     //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
@@ -5780,7 +5796,8 @@ function zipSelections_2(event) {
         selectedTimeSeriesMax = rows[0].length;
     }
 
-    if ( (! $('#' + event.data.checkId).hasClass("hidden")) && Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax > selectedRows.length)) {
+    var selectCheck = $('#' + event.data.checkId);
+    if ( selectCheck.length && (! selectCheck.hasClass("hidden")) && Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax > selectedRows.length)) {
         //User has clicked the 'Select Top ...' check box but not all selected rows have been rendered
         //NOTE: If the DataTable instance has the 'deferRender' option set - not all rows may have been rendered at this point.
         //        Thus one cannot rely on the selectedRows above, since in this case only rendered rows appear in the selectedRows...
@@ -5964,7 +5981,8 @@ function copySelectionsToDataManager(event) {
         selectedTimeSeriesMax = rows[0].length;
     }
 
-    if ( (! $('#' + event.data.checkId).hasClass("hidden")) && Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax > selectedRows.length)) {
+    var selectCheck = $('#' + event.data.checkId); 
+    if ( selectCheck.length && (! selectCheck.hasClass("hidden")) && Number.isInteger(selectedTimeSeriesMax) && (selectedTimeSeriesMax > selectedRows.length)) {
         //User has clicked the 'Select Top ...' check box but not all selected rows have been rendered
         //NOTE: If the DataTable instance has the 'deferRender' option set - not all rows may have been rendered at this point.
         //        Thus one cannot rely on the selectedRows above, since in this case only rendered rows appear in the selectedRows...
@@ -6360,7 +6378,8 @@ function setUpTimeseriesDatatable() {
             //$('td', row).eq(16).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
 
             //If select in progress, call the 'click' handler
-            if (! $('#' + 'spanSelectCheckTS').hasClass('hidden')) {
+            var selectCheck = $('#' + 'spanSelectCheckTS'); 
+            if ( selectCheck.length && (! selectCheck.hasClass('hidden'))) {
                 //$(row).addClass('selected');  //Only correct if ALL the rows are being selected...
                 $('#' + 'anchorAllSelectionsTS').triggerHandler('click');
             }
@@ -6495,12 +6514,18 @@ function setUpTimeseriesDatatable() {
                                   '<ul class="dropdown-menu" aria-labelledby="ddMenuSelectionsTS">' +
                                    
                                    (currentUser.authenticated ? 
-                                       '<li><a href="#" id="anchorAllSelectionsTS" data-selectall="true" style="font-weight: bold;" ><span id="spanSelectCheckTS" class="glyphicon glyphicon-ok-circle hidden">&nbsp;</span><span class="text-muted">Select All' : 
-                                       '<li><a href="#" id="anchorAllSelectionsTS" data-selectall="false" style="font-weight: bold;" ><span id="spanSelectCheckTS" class="glyphicon glyphicon-ok-circle hidden">&nbsp;</span><span class="text-muted">Select Top ' +
-                                        $('#dtTimeseries').attr('data-selectedtimeseriesmax') + '?') +
+                                       '<li><a href="#" id="anchorAllSelectionsTS" data-selectall="true" style="font-weight: bold;" >' + 
+                                       '<span class="glyphicon glyphicon-plus-sign"></span>' +
+                                       '<span class="text-muted">&nbsp;Select All&nbsp;' +
+                                       '<span id="spanSelectCheckTS" class="glyphicon glyphicon-ok-circle hidden"></span>'  +
+                                       '</a></li>' : '') + 
+                                       //'<li><a href="#" id="anchorAllSelectionsTS" data-selectall="false" style="font-weight: bold;" ><span id="spanSelectCheckTS" class="glyphicon glyphicon-ok-circle hidden">&nbsp;</span><span class="text-muted">Select Top ' +
+                                       // $('#dtTimeseries').attr('data-selectedtimeseriesmax') + '?') +
 
-                                   '</span></a></li>' +
-                                   '<li><a href="#" id="anchorClearSelectionsTS" style="font-weight: bold;"><span class="text-warning">Clear Selections</span></a></li>' +
+                                   '<li><a href="#" id="anchorClearSelectionsTS" style="font-weight: bold;">' +
+                                   '<span class="glyphicon glyphicon-minus-sign"></span>' +
+                                   '<span id="spanClearSelectionsTS" class="text-warning">&nbsp;Clear Selections</span>' + 
+                                   '</a></li>' +
                                   '</ul>' +
                               '</div>' +
 
