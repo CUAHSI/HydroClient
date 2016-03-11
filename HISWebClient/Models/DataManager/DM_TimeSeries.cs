@@ -8,6 +8,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 using System.Web.Script.Serialization;
 
+using Newtonsoft.Json;
+
 
 ///
 ///A simple Entity Framework class representing one table row on the Data Manager page...
@@ -51,6 +53,7 @@ namespace HISWebClient.Models.DataManager
 		//		 use the ScriptIgnore attribute as explained here (answer 15)
 		//			http://stackoverflow.com/questions/14569207/javascriptserializer-circular-reference-when-using-scriptignore
 		[ScriptIgnore(ApplyToOverrides = true)]
+		[JsonIgnore]
 		public virtual UserTimeSeries UserTimeSeries { get; set; }
 	}
 }

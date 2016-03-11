@@ -12,6 +12,8 @@ using Microsoft.Owin.Security;
 using System.Configuration;
 using System.Web.Script.Serialization;
 
+using Newtonsoft.Json;
+
 using HISWebClient.Models;
 
 using HISWebClient.Models.DataManager;
@@ -612,8 +614,10 @@ namespace HISWebClient.Controllers
 			}
 
 			//Sucess - convert retrieved data to JSON and return...
-			var javaScriptSerializer = new JavaScriptSerializer();
-			var json = javaScriptSerializer.Serialize(cu);
+			//var javaScriptSerializer = new JavaScriptSerializer();
+			//var json = javaScriptSerializer.Serialize(cu);
+			var json = JsonConvert.SerializeObject(cu);
+
 
 			Response.StatusCode = (int)System.Net.HttpStatusCode.OK;
 			return Json(json, "application/json", JsonRequestBehavior.AllowGet);

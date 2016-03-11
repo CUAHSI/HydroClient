@@ -546,7 +546,6 @@ namespace HISWebClient.Controllers
 
 			//var javaScriptSerializer = new JavaScriptSerializer();
 			//var json = javaScriptSerializer.Serialize(result);
-
 			var json = JsonConvert.SerializeObject(result);
 
 #if NEVER_DEFINED
@@ -835,8 +834,9 @@ namespace HISWebClient.Controllers
 			//Return a TimeSeriesResponse in JSON format...
 			var result = new TimeSeriesResponse(crIn.RequestId, requestStatus, status, blobUri, blobTimeStamp);
 
-			var javaScriptSerializer = new JavaScriptSerializer();
-			var json = javaScriptSerializer.Serialize(result);
+			//var javaScriptSerializer = new JavaScriptSerializer();
+			//var json = javaScriptSerializer.Serialize(result);
+			var json = JsonConvert.SerializeObject(result);
 
 			//Processing complete - return 
 			return Json(json, "application/json");
@@ -1071,8 +1071,9 @@ namespace HISWebClient.Controllers
 				}
 			}
 
-			var javaScriptSerializer = new JavaScriptSerializer();
-			var json = javaScriptSerializer.Serialize(tsr);
+			//var javaScriptSerializer = new JavaScriptSerializer();
+			//var json = javaScriptSerializer.Serialize(tsr);
+			var json = JsonConvert.SerializeObject(tsr);
 
 #if NEVER_DEFINED
 			//Simulate a 500 error - Internal Server Error...
@@ -1113,9 +1114,10 @@ namespace HISWebClient.Controllers
 				{
 					//Serialize an anonymous object...
 					var jsonObj = new { apps = new List<string>() };
-					var javaScriptSerializer = new JavaScriptSerializer();
+					//var javaScriptSerializer = new JavaScriptSerializer();
 					//strJSON = javaScriptSerializer.Serialize("{'apps': []}");
-					strJSON = javaScriptSerializer.Serialize(jsonObj);
+					//strJSON = javaScriptSerializer.Serialize(jsonObj);
+					strJSON = JsonConvert.SerializeObject(jsonObj);
 				}
 
 				//Processing complete - return 
@@ -1129,9 +1131,10 @@ namespace HISWebClient.Controllers
 
 				//Serialize an anonymous object...
 				var jsonObj = new { apps = new List<string>() };
-				var javaScriptSerializer = new JavaScriptSerializer();
+				//var javaScriptSerializer = new JavaScriptSerializer();
 				//strJSON = javaScriptSerializer.Serialize("{'apps': []}");
-				strJSON = javaScriptSerializer.Serialize(jsonObj);
+				//strJSON = javaScriptSerializer.Serialize(jsonObj);
+				strJSON = JsonConvert.SerializeObject(jsonObj);
 
 				return new ContentResult { Content = strJSON, ContentType = "application/json" };
 			}
