@@ -55,13 +55,22 @@ var currentUser = { 'authenticated' : false,
                   };
 
 var currentPosition = {
-                        'latLng': null,
+                        'latLng': null
 //                        'infoBubble': null
                       };
 
 var currentIntervals = [];
 
 var bResetMap = false;
+
+
+var currentFilters = {
+                        'timeout': null,
+                        'filters': {
+                                     'search': null,
+                                     'filters': []
+                                   }
+                     };
 
 //Currently open InfoBubble instance...
 //var openInfoBubble = null;
@@ -3203,17 +3212,10 @@ function setUpDatatables(clusterid) {
                  //var servUrl = data.ServURL;
                  //$('td', row).eq(13).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
 
-                 //If the new row is in top <selectedTimeSeriesMax>, mark the row as selected per check box state...
-                 //if ($('#chkbxSelectAll').prop('checked')) {
-                 //    //BC - Call check box handler here
-                 //    $('#chkbxSelectAll').triggerHandler('click');
-                 //}
-
-                //If select in progress, call the 'click' handler
+                //If 'Select All' in progress, add the 'selected' class to the row...
                 var selectCheck = $('#' + 'spanSelectCheck'); 
                 if ( selectCheck.length && (! selectCheck.hasClass('hidden'))) {
-                    //$(row).addClass('selected');  //Only correct if ALL the rows are being selected...
-                    $('#' + 'anchorAllSelections').triggerHandler('click');
+                    $(row).addClass('selected');  //Only correct if ALL the rows are being selected...
                 }
 
                  //if (data[0].replace(/[\$,]/g, '') * 1 > 250000) {
@@ -3265,7 +3267,7 @@ function setUpDatatables(clusterid) {
         "initComplete": function () {
 
             //BCC - 10-Aug-2015 - GitHub Issue #35 - Add filter by Site Name 
-            setfooterFilters('dtMarkers', [0, 1, 2, 3, 4, 5], 'chkbxSelectAll');
+            setfooterFilters('dtMarkers', [0, 1, 2, 3, 4, 5]);
 
             var tempEvent = { 'data': { 'tableId': 'dtMarkers', 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Data Type', 'Value Type', 'Sample Medium'] } };
             addFilterPlaceholders(tempEvent);
@@ -3310,10 +3312,6 @@ function setUpDatatables(clusterid) {
     });
 
 
-    //Set footer filters...
-//   $('#dtMarkers').off('draw.dt', setfooterFiltersEvent);
-//   $('#dtMarkers').on('draw.dt', { 'tableId': 'dtMarkers', 'columnsArray': [0, 1, 2, 3, 4, 5], 'chkbxId': 'chkbxSelectAll', 'translates': null }, setfooterFiltersEvent);
-
    //Add filter placeholders...
 //   $('#dtMarkers').off('draw.dt', addFilterPlaceholders);
 //   $('#dtMarkers').on('draw.dt', { 'tableId': 'dtMarkers', 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Data Type', 'Value Type', 'Sample Medium'] }, addFilterPlaceholders);
@@ -3332,28 +3330,6 @@ function setUpDatatables(clusterid) {
                           '<div class="inline-form">' +
                           '<div class="form-group" style="margin-left: 1em; float:left; display:inline-block;">' +
                           
-                          //'<span style="float: left; margin-left: 1em;" id="spanSelectAll"><input type="checkbox" class="ColVis-Button" id="chkbxSelectAll" style="float:left;"/>&nbsp;Select Top ' + 
-                          //$('#dtMarkers').attr('data-selectedtimeseriesmax') + '?</span>' +
-
-                          //'<div id="divClearSelections" style="display: inline-block; margin-left: 2em; float:left;">' +
-                          // '<button type="button" class="btn btn-warning" disabled id="btnClearSelections">' +
-                          //   '<span class="glyphicon glyphicon-remove-sign" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +
-                          //   '<span id="spanClearSelections">Clear Selection(s)</span>' +
-                          // '</button>' +
-                          //'</div>' +
-                          //'<div id="divZipSelections" style="display: inline-block; margin-left: 2em; float:left;">' +
-                          //'<button type="button" class="ColVis-Button btn btn-primary" disabled id="btnZipSelections">' +
-                          //   '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +
-                          //   '<span id="spanZipSelections">Export Selection(s)</span>' +
-                          // '</button>' +
-                          //'</div>' +
-                          //'<div id="divManageSelections" style="display: inline-block; margin-left: 2em; float:left;">' +
-                          // '<button type="button" class="ColVis-Button btn btn-primary" disabled id="btnManageSelections">' +
-                          //  '<span class="glyphicon glyphicon-plus-sign" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +  
-                          //  '<span id="spanManageSelections">Add Selection(s) to Workspace</span>' +
-                          // '</button>' +
-                          //'</div>' +
-    
                             '<div class="dropdown" style="position: relative; display: inline-block; float: left; font-size: 1.00em;">' +
                                 '<button class="btn btn-primary dropdown-toggle" type="button" id="ddMenuSelections" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">' +
                                 '<span class="glyphicon glyphicon-list-alt" style="font-weight: bold; font-size: 1.00em;"></span>' +
@@ -3368,8 +3344,6 @@ function setUpDatatables(clusterid) {
                                     '<span class="text-muted">&nbsp;Select All&nbsp;</span>' +
                                     '<span id="spanSelectCheck" class="glyphicon glyphicon-ok-circle hidden"></span>' + 
                                     '</a></li>': '' ) +                                    
-                                    //'<li><a href="#" id="anchorAllSelections" data-selectall="false" style="font-weight: bold;" ><span id="spanSelectCheck" class="glyphicon glyphicon-ok-circle hidden">&nbsp;</span><span class="text-muted">Select Top ' +
-                                    //$('#dtTimeseries').attr('data-selectedtimeseriesmax') + '?') +
 
                                 '<li><a href="#" id="anchorClearSelections" style="font-weight: bold;">' +
                                 '<span class="glyphicon glyphicon-minus-sign"></span>' +
@@ -3396,7 +3370,6 @@ function setUpDatatables(clusterid) {
 
                                     '</button>' +
                                     '<ul class="dropdown-menu" style="width: 22em;">' +
-                                    //'<div>' +
                                     '<ul style="list-style: none; padding-left: 0em;">' +
 
                                     '<li data-toggle="tooltip" data-placement="top" title="Move all selected time series to the workspace">' +
@@ -3407,8 +3380,6 @@ function setUpDatatables(clusterid) {
                                     '</li>' +
 
                                     (currentUser.authenticated ?
-                                    //'<li class="dropdown-submenu" data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV format">' :
-                                    //'<li data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV format">') +
                                     '<li class="dropdown-submenu" style="width: 90%" >' +
                                    '<a href="#" tabindex="-1" id="anchorExportSelections" style="font-weight: bold;">' +                                    
                                     '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.5em;  margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +
@@ -3439,17 +3410,6 @@ function setUpDatatables(clusterid) {
 
                                     '</li>' +
 
-                                    //'</ul>' +
-
-                                    //'<li role="separator" class="divider"></li>' +
-
-                                    //  'None' option...
-                                    //'<li><a id="idNoneTS" tabindex="-1" href="#" style=" font-size: 1.0em;">' +
-                                    //    '<span class="glyphicon glyphicon-remove-sign" style="max-width: 100%;  font-size: 1.5em;"></span>' +
-                                    //    ' <span style="font-weight: bold; display: inline-block; vertical-align: super;">' + 'None' + '</span>' +
-                                    //'</a></li>' +
-
-                                    //'</div>' + 
                                     '</ul>' +
                                     '</div>' +
                                 '</div>' +
@@ -3463,47 +3423,25 @@ function setUpDatatables(clusterid) {
     //$("div.toolbar").css('border', '1px solid red');
   
     // BC - Do not respond to data table load event...
-    //Add data load event handler...
-    //$('#dtMarkers').off('xhr.dt', dataTableLoad);
-    //$('#dtMarkers').on('xhr.dt', { 'chkbxId': '#chkbxSelectAll'}, dataTableLoad);
 
     //Add click handlers...
 
     //Avoid multiple registrations of the same handler...
-    //$('#chkbxSelectAll').off('click', selectAll);
-    //$('#chkbxSelectAll').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll', 'btnIds': ['btnZipSelections', 'btnManageSelections'], 'btnClearId': 'btnClearSelections' }, selectAll);
-
     if (currentUser.authenticated) {
         $('#anchorAllSelections').off('click', selectAll);
         $('#anchorAllSelections').on('click', { 'tableId': 'dtMarkers', 'anchorId': 'anchorAllSelections', 'checkId': 'spanSelectCheck', 'clearId': 'anchorClearSelections', 'selectAll' : $('#anchorAllSelections').attr('data-selectall') }, selectAll);
     }
     //Avoid multiple registrations of the same handler...
-    //$('#btnZipSelections').off('click', zipSelections_2);
-    //$('#btnZipSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, zipSelections_2);
     $('#anchorEachTimeseriesInSeparateFile').off('click', zipSelections_2);
     $('#anchorEachTimeseriesInSeparateFile').on('click', { 'tableId': 'dtMarkers', 'selectAll' : $('#anchorAllSelections').attr('data-selectall'), 'checkId': 'spanSelectCheck' /*, 'currentAnchor': 'anchorEachTimeseriesInSeparateFile' */ }, zipSelections_2);
 
     //Avoid multiple registrations of the same handler...
-    //$('#btnManageSelections').off('click', copySelectionsToDataManager);
-    //$('#btnManageSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, copySelectionsToDataManager)
     $('#anchorAddSelectionsToWorkspace').off('click', copySelectionsToDataManager);
     $('#anchorAddSelectionsToWorkspace').on('click', { 'tableId': 'dtMarkers', 'selectAll' : $('#anchorAllSelections').attr('data-selectall'), 'checkId' : 'spanSelectCheck' /*, 'currentAnchor': 'anchorAddSelectionsToWorkspace' */ }, copySelectionsToDataManager)
 
     //Avoid multiple registrations of the same handler...
-    //$('#btnClearSelections').off('click', clearSelections);
-    //$('#btnClearSelections').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll', 'btnIds': ['btnZipSelections','btnManageSelections'], 'btnClearId': 'btnClearSelections' }, clearSelections);
     $('#anchorClearSelections').off('click', clearSelections);
     $('#anchorClearSelections').on('click', { 'tableId': 'dtMarkers', 'anchorId': 'anchorAllSelections', 'checkId': 'spanSelectCheck' }, clearSelections);
-
-    //Add DataTables event handlers...
-    //Search event...
-    $('#dtMarkers').off('search.dt', dtSearchOrOrder);
-    $('#dtMarkers').on('search.dt', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll', 'search': true, 'order': false, 'filterChkBxIds': ['chkbxApplyFilterToMapTS'] }, dtSearchOrOrder);
-
-    //Order event...
-    $('#dtMarkers').off('order.dt', dtSearchOrOrder);
-    $('#dtMarkers').on('order.dt', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll', 'search': false, 'order': true, 'filterChkBxIds': [] }, dtSearchOrOrder);
-
 
     //BC - TEST - Retrieve the colvis button control - assign a click handler for scrollx control...
     //var colvis = new $.fn.DataTable.ColVis(oTable);
@@ -3756,9 +3694,6 @@ function setupDataManagerTable() {
         'scrollCollapse': true,
         'initComplete': function () {
 
-            ////Set footer filters...
-            //setfooterFilters( tableName, [2, 3, 4, 5, 6, 7], null);
-
             ////Add filter placeholders...
             //var tempEvent = { 'data': { 'tableId': tableName, 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Data Type', 'Value Type', 'Sample Medium'] }};
             //addFilterPlaceholders(tempEvent);
@@ -3791,10 +3726,6 @@ function setupDataManagerTable() {
     //                                       'translate': 'Not Saved'
     //                                   }
     //                                  ]}];
-
-    //Set footer filters...
-//    $(tableId).off('draw.dt', setfooterFiltersEvent);
-//    $(tableId).on('draw.dt', { 'tableId': tableName, 'columnsArray': [2, 3, 4, 5, 6, 7], 'chkbxId': null, 'translates': null }, setfooterFiltersEvent);
 
     //Add filter placeholders...
 //    $(tableId).off('draw.dt', addFilterPlaceholders);
@@ -4241,9 +4172,6 @@ function requestTimeSeries(tableName, timeSeriesRequest, modalDialogName) {
 
             //    if ('tblDataManager' === tableName) {
                 
-            //        //Set footer filters...
-            //        setfooterFilters( tableName, [2, 3, 4, 5, 6, 7, 8], null);
-
             //        //Add filter placeholders...
             //        var tempEvent = { 'data': { 'tableId': tableName, 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Variable Units', 'Data Type', 'Value Type', 'Sample Medium'] }};
             //        addFilterPlaceholders(tempEvent);
@@ -4645,14 +4573,8 @@ function getDescriptionUrl(serviceCode) {
     return descriptionUrl;
 }
 
-//Event-based 'wrapper' for setfooterFilters...
-//function setfooterFiltersEvent(event) {
-
-//    return setfooterFilters(event.data.tableId, event.data.columnsArray, event.data.chkbxId, event.data.translates);
-//}
-
 //Create 'select'-based filters for the input tableId and columns array
-function setfooterFilters(tableId, columnsArray, chkbxId, translatesArray, chkbxApplyFilterToMapId) {
+function setfooterFilters(tableId, columnsArray, translatesArray, chkbxApplyFilterToMapId) {
 
     //Check for optional fourth parameter...
     var bTranslates = (('undefined' !== typeof translatesArray) && (null !== translatesArray));
@@ -4711,11 +4633,6 @@ function setfooterFilters(tableId, columnsArray, chkbxId, translatesArray, chkbx
                     //Re-draw the table to display the results of the search...
                     dt.draw();
 
-                    //If 'Select Top' checkbox is checked, trigger the associated handler(s)
-                    if (('undefined' !== typeof chkbxid) && (null !== chkbxid) && $('#' + chkbxId).prop('checked')) {
-                        $('#' + chkbxId).triggerHandler('click');
-                    }
-
                     //Scan each column containing a footer select...
                     var ii = 0;
                     var length = columnsArray.length;
@@ -4766,6 +4683,10 @@ function setfooterFilters(tableId, columnsArray, chkbxId, translatesArray, chkbx
                             mySelect3.find('option').filter(function() { return '999999' === $(this).val(); }).prop('selected', true);                                                        
                         }
                     }
+
+                    //Apply the change to the map...
+                    var chkbx = $('#' + mychkbxApplyFilter);
+                    chkbx.triggerHandler('click');
                 });
 
             setSelectOptions( select, colIndex, column, translatesArray);
@@ -5093,8 +5014,7 @@ function selectAll(event) {
     jqueryObjects.removeClass(className);
 
     //Apply 'selected' class to the 'top' <selectedTimeSeriesMax> rendered nodes, if indicated 
-    //if ( 'undefined' === typeof event.data.chkbxId || $('#' + event.data.chkbxId).prop("checked")) {
-    if ( 'undefined' === typeof event.data.chkbxId || $('#' + event.data.chkbxId).prop("checked")) {
+//    if ( 'undefined' === typeof event.data.chkbxId || $('#' + event.data.chkbxId).prop("checked")) {
         //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
         //Source: http://datatables.net/reference/api/rows().nodes()
         rows = table.rows({ 'order': 'current', 'search': 'applied' });    //Retrieve rows per current sort/search order...
@@ -5138,11 +5058,11 @@ function selectAll(event) {
         }
 
         selectedRowCounts[event.data.tableId].count = count;
-    }
-    else {
-        //Reset the selected row count...
-        selectedRowCounts[event.data.tableId].count = 0;
-    }
+    //}
+    //else {
+    //    //Reset the selected row count...
+    //    selectedRowCounts[event.data.tableId].count = 0;
+    //}
 
     //Check button(s) states...
     if ( 'undefined' !== typeof event.data.btnIds) {
@@ -5158,9 +5078,6 @@ function selectAll(event) {
 function clearSelections(event) {
 
     //Indicate a select is NOT in progress...
-    //if('undefined' !== typeof event.data.anchorId) {
-    //    $('#' + event.data.anchorId).attr('data-selection', false);
-    //}
     if (('undefined' !== typeof event.data.checkId) && $('#' + event.data.checkId).length ) {
         $('#' + event.data.checkId).addClass('hidden');
     }
@@ -5183,11 +5100,6 @@ function clearSelections(event) {
     //Reset the selected row count...
     selectedRowCounts[event.data.tableId].count = 0;
 
-    //Uncheck the 'top ...' checkbox
-    if ( 'undefined' !== typeof event.data.chkbxId) {
-        $('#' + event.data.chkbxId).prop("checked", false);
-    }
-
     //Check button(s) states...
     if ( 'undefined' !== typeof event.data.btnIds) {
         enableDisableButtons(event.data.tableId, event.data.btnIds);
@@ -5199,13 +5111,8 @@ function clearSelections(event) {
 }
 
 //Apply the current timeseries filter(s) to the map...
-//    $('#chkbxApplyFilterToMapTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxApplyFilterToMapTS'}, applyFilterToMap);
 function applyFilterToMap(event) {
 
-    //var chkbx = $('#' + event.data.chkbxId);
-    //if (chkbx.hasClass('disabled')) {
-    //    return;     //Check box disabled - return early...
-    //}
     var panelId = 'panelMapFilters2';
     var className = 'hidden';
     if ( (! $(this).prop('checked')) || $(this).hasClass('disabled')) {
@@ -5287,6 +5194,66 @@ function applyFilterToMap(event) {
         //No filtering criteria - hide the filters panel...
         $('#' + panelId).addClass(className);
     }
+}
+
+//Delayed application of changes in search and/or filter criteria to the map... 
+function applyFilterToMapDelayed(event) {
+
+    var value = $(this).val();
+    console.log('Current search value: ' + value);
+
+    //Clear current timeout, update current filters
+    clearTimeout(currentFilters.timeout);
+
+    var tableId = event.data.tableId;
+    currentFilters.filters = retrieveSearchAndFilterCriteria( tableId, false);
+
+    //Check input in one second...
+    currentFilters.timeout = setTimeout(function() {
+
+        var bMatch = true;
+        var filters = retrieveSearchAndFilterCriteria( tableId, false);
+
+        //Compare search strings...
+        if (filters.search !== currentFilters.filters.search) {
+            bMatch = false; //No match!!
+        }
+
+        if (bMatch) {
+            //Search strings match - compare filters...
+            var length = filters.filters.length;
+
+            bMatch = (length === currentFilters.filters.filters.length);
+
+            if (bMatch) {
+                //Filter array lengths match - compare elements...
+                for (var i = 0; i < length; ++i) {
+                        
+                    var filter = filters.filters[i];
+                    var index = currentFilters.filters.filters.findIndex(function(currentFilter) {
+                        return (filter.value === currentFilter.value && filter.title === currentFilter.title)
+                    });
+                        
+                    if ( 'undefined' === typeof index ) {
+                        bMatch = false; //No match!!
+                        break;
+                    }
+                }
+            }
+
+            if (bMatch) {
+                console.log('Filters match!!');
+
+                var chkbx = $('#' + event.data.chkbxId); 
+                //applyFilterToMap(event);
+                chkbx.triggerHandler('click');
+            }
+            else {
+                console.log('Filters DO NOT match!!');
+            }
+        }
+    }, 1000);
+
 }
 
 //Click event for a glyphicon 'span' on a filter list element - remove the associated list element...
@@ -5435,11 +5402,6 @@ function removeSelections(event) {
 
     //Reset the selected row count...
     selectedRowCounts[event.data.tableId].count = 0;
-
-    //Uncheck the 'top ...' checkbox
-    if ( 'undefined' !== typeof event.data.chkbxId) {
-    $('#' + event.data.chkbxId).prop("checked", false);
-    }
 
     //Check button(s) states...
     if ( 'undefined' !== typeof event.data.btnIds) {
@@ -6315,6 +6277,7 @@ function setUpTimeseriesDatatable() {
     // $('#example').DataTable().clear()
     // $('#demo').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example"></table>' );
     var oTable = $('#dtTimeseries').dataTable({
+        //"searchDelay":  1500,   //Delay global searches by 1500 milliseconds...
         "ajax": actionUrl,
 //        "dom": 'C<"clear">l<"toolbarTS">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
         "dom": 'C<"clear"><"toolbarTS">frtilp',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
@@ -6377,11 +6340,10 @@ function setUpTimeseriesDatatable() {
             //var servUrl = data.ServURL;
             //$('td', row).eq(16).html("<a href='" + servUrl + "' target='_Blank'>" + org + " </a>");
 
-            //If select in progress, call the 'click' handler
+            //If 'Select All' in progress, add the 'selected' class to the row...
             var selectCheck = $('#' + 'spanSelectCheckTS'); 
             if ( selectCheck.length && (! selectCheck.hasClass('hidden'))) {
-                //$(row).addClass('selected');  //Only correct if ALL the rows are being selected...
-                $('#' + 'anchorAllSelectionsTS').triggerHandler('click');
+                $(row).addClass('selected');  //Only correct if ALL the rows are being selected...
             }
 
 
@@ -6444,8 +6406,8 @@ function setUpTimeseriesDatatable() {
             //}
            
             //BCC - 10-Aug-2015 - GitHub Issue #35 - Add filter by Site Name
-            setfooterFilters('dtTimeseries', [0, 1, 2, 3, 4, 5], 'chkbxSelectAllTS', null, 'chkbxApplyFilterToMapTS');
-            //setfooterFilters('dtTimeseries', [0, 1, 2, 3, 4, 5], 'chkbxSelectAllTS', translatesArray, 'chkbxApplyFilterToMapTS');
+            setfooterFilters('dtTimeseries', [0, 1, 2, 3, 4, 5], null, 'chkbxApplyFilterToMapTS');
+            //setfooterFilters('dtTimeseries', [0, 1, 2, 3, 4, 5], translatesArray, 'chkbxApplyFilterToMapTS');
 
             //Set up tooltips
             setupToolTips();
@@ -6479,32 +6441,6 @@ function setUpTimeseriesDatatable() {
                             '<div class="inline-form">' +
                             '<div class="form-group" style="margin-left: 1em; float:left; display:inline-block;">' +
     
-                               // '<span id="spanSelectAllTS" style="float: left; margin-left: 1em;">' +
-                               //   '<label style="float:right;">' + 
-                               //   '<input type="checkbox" class="ColVis-Button" id="chkbxSelectAllTS" style="float:left;"/>&nbsp;Select Top ' +
-                               //   $('#dtTimeseries').attr('data-selectedtimeseriesmax') + '?' +
-                               //   '</label>' + 
-                               //'</span>' +
-
-                              // '<div id="divClearSelectionsTS" style="display: inline-block; margin-left: 2em; float:left;">' +
-                              //  '<button type="button" class="btn btn-warning" disabled id="btnClearSelectionsTS">' + 
-                              //   '<span class="glyphicon glyphicon-remove-sign" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +
-                              //   '<span id="spanClearSelectionsTS">Clear Selection(s)</span>' +
-                              //  '</button>' +
-                              //'</div>' +
-                              // '<div id="divZipSelectionsTS" style="display: inline-block; margin-left: 2em; float:left;">' +
-                              //  '<button type="button" class="ColVis-Button btn btn-primary" disabled id="btnZipSelectionsTS">' +
-                              //   '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +
-                              //   '<span id="spanZipSelectionsTS">Export Selection(s)</span>' +
-                              //  '</button>' +
-                              //'</div>' +
-                              //'<div id="divManageSelectionsTS" style="display: inline-block; margin-left: 2em; float:left;">' +
-                              //  '<button type="button" class="ColVis-Button btn btn-primary" disabled id="btnManageSelectionsTS">' +
-                              //  '<span class="glyphicon glyphicon-plus-sign" style="max-width: 100%; font-size: 1.0em;">&nbsp;</span>' +  
-                              //  '<span id="spanManageSelectionsTS">Add Selection(s) to Workspace</span>' +
-                              //  '</button>' +
-                              //'</div>' +
-
                               '<div class="dropdown" style="position: relative; display: inline-block; float: left; font-size: 1.00em;">' +
                                   '<button class="btn btn-primary dropdown-toggle" type="button" id="ddMenuSelectionsTS" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">' +
                                    '<span class="glyphicon glyphicon-list-alt" style="font-weight: bold; font-size: 1.00em;"></span>' +
@@ -6519,8 +6455,6 @@ function setUpTimeseriesDatatable() {
                                        '<span class="text-muted">&nbsp;Select All&nbsp;' +
                                        '<span id="spanSelectCheckTS" class="glyphicon glyphicon-ok-circle hidden"></span>'  +
                                        '</a></li>' : '') + 
-                                       //'<li><a href="#" id="anchorAllSelectionsTS" data-selectall="false" style="font-weight: bold;" ><span id="spanSelectCheckTS" class="glyphicon glyphicon-ok-circle hidden">&nbsp;</span><span class="text-muted">Select Top ' +
-                                       // $('#dtTimeseries').attr('data-selectedtimeseriesmax') + '?') +
 
                                    '<li><a href="#" id="anchorClearSelectionsTS" style="font-weight: bold;">' +
                                    '<span class="glyphicon glyphicon-minus-sign"></span>' +
@@ -6547,7 +6481,6 @@ function setUpTimeseriesDatatable() {
 
                                       '</button>' +
                                       '<ul class="dropdown-menu" style="width: 22em;">' +
-                                      //'<div>' +
                                        '<ul style="list-style: none; padding-left: 0em;">' +
 
                                        '<li data-toggle="tooltip" data-placement="top" title="Move all selected time series to the workspace">' +
@@ -6558,8 +6491,6 @@ function setUpTimeseriesDatatable() {
                                        '</li>' +
 
                                        (currentUser.authenticated ?
-                                       //'<li class="dropdown-submenu" data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV format">' :
-                                       //'<li data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV format">') +
                                        '<li class="dropdown-submenu" style="width: 90%" >' + 
                                         '<a href="#" tabindex="-1" id="anchorExportSelectionsTS" style="font-weight: bold;">' +                                    
                                         '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.5em;  margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +
@@ -6590,32 +6521,13 @@ function setUpTimeseriesDatatable() {
 
                                        '</li>' +
 
-                                       // '</ul>' +
-
-                                       // '<li role="separator" class="divider"></li>' +
-
-                                      //  'None' option...
-                                        //'<li><a id="idNoneTS" tabindex="-1" href="#" style=" font-size: 1.0em;">' +
-                                        //    '<span class="glyphicon glyphicon-remove-sign" style="max-width: 100%;  font-size: 1.5em;"></span>' +
-                                        //    ' <span style="font-weight: bold; display: inline-block; vertical-align: super;">' + 'None' + '</span>' +
-                                        //'</a></li>' +
-
-                                      //'</div>' + 
                                       '</ul>' +
                                       '</div>' +
                                   '</div>' +
                               '</div>' +
 
-
-                            //'<div id="divApplyActionTS" style="display: inline-block; position: relative; float: left">' +
-                            //'<input type="button" style="margin-left: 0.5em;" class="ColVis-Button btn btn-primary" disabled id="btnApplyActionTS" value="Apply Action" />' +
-                            //'</div>' +
-
-
                               '<div id="divApplyFilterToMapTS" style="display: inline-block; margin-left: 1em; float:left;">' +
                                 '<label style="float:right;">' +
-    //                            '<input type="checkbox" disabled id="chkbxApplyFilterToMapTS"/>&nbsp;Apply Filter to Map?' +
-    //                            '<input type="checkbox" checked class="disabled" id="chkbxApplyFilterToMapTS"/>&nbsp;Apply Filter to Map' +
                                 '<input type="checkbox" checked id="chkbxApplyFilterToMapTS"/>&nbsp;Apply Filter to Map' +
                                 '</label>' +
                               '</div>' +
@@ -6624,60 +6536,21 @@ function setUpTimeseriesDatatable() {
                             '</div>' + 
                             '</div>');
 
-    //Adjust table html per current user's authentication...
-    //var jqSpan = $('#' + 'spanSelectAllTS');
-    
-    //jqSpan.prop('checked', false);
-    //if (currentUser.authenticated) {
-    //    //Hide the 'select all' checkbox and label...
-    //    jqSpan.addClass('hidden');
-    //}
-    //else {
-    //    jqSpan.removeClass('hidden');
-    //}
-
-
     //Add click handlers...
 
     //Avoid multiple registrations of the same handler...
-    //$('#chkbxSelectAllTS').off('click', selectAll);
-    //$('#chkbxSelectAllTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS', 'btnIds': ['btnZipSelectionsTS', 'btnManageSelectionsTS'], 'btnClearId': 'btnClearSelectionsTS'}, selectAll);
     $('#anchorAllSelectionsTS').off('click', selectAll);
     $('#anchorAllSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'anchorId': 'anchorAllSelectionsTS', 'checkId': 'spanSelectCheckTS', 'clearId': 'anchorClearSelectionsTS', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall') }, selectAll);
 
     //Avoid multiple registrations of the same handler...
-    //$('#btnZipSelectionsTS').off('click', zipSelections_2);
-    //$('#btnZipSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS'}, zipSelections_2);
-
-    //Avoid multiple registrations of the same handler...
-    //$('#btnClearSelectionsTS').off('click', clearSelections);
-    //$('#btnClearSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS', 'btnIds': ['btnZipSelectionsTS', 'btnManageSelectionsTS'], 'btnClearId': 'btnClearSelectionsTS' }, clearSelections);
     $('#anchorClearSelectionsTS').off('click', clearSelections);
     $('#anchorClearSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'anchorId': 'anchorAllSelectionsTS', 'checkId': 'spanSelectCheckTS' }, clearSelections);
 
     //Avoid multiple registrations of the same handler...
-    //$('#btnManageSelectionsTS').off('click', copySelectionsToDataManager);
-    //$('#btnManageSelectionsTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS' }, copySelectionsToDataManager)
-    //$('#btnApplyActionTS').off('click', copySelectionsToDataManager);
-    //$('#btnApplyActionTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall'), 'currentAnchor': 'anchorAddSelectionsToWorkspaceTS' }, copySelectionsToDataManager)
     $('#anchorAddSelectionsToWorkspaceTS').off('click', copySelectionsToDataManager);
     $('#anchorAddSelectionsToWorkspaceTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall'), 'checkId' : 'spanSelectCheckTS' /*, 'currentAnchor': 'anchorAddSelectionsToWorkspaceTS' */ }, copySelectionsToDataManager)
 
-
-
-    //TO DO - Need to revise zipSelections_2...
-
-    //Non-authenticated user...
-//    $('#btnApplyActionTS').off('click', zipSelections_2);
-//    $('#btnApplyActionTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall'), 'currentAnchor': 'anchorExportSelectionsTS'}, zipSelections_2);
-
     //Authenticated user...
-//    $('#btnApplyActionTS').off('click', zipSelections_2);
-//    $('#btnApplyActionTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall'), 'currentAnchor': 'anchorAllTimeseriesInOneFileTS'}, zipSelections_2);
-
-    //Authenticated user...
-//    $('#btnApplyActionTS').off('click', zipSelections_2);
-//    $('#btnApplyActionTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall'), 'currentAnchor': 'anchorEachTimeseriesInSeparateFileTS'}, zipSelections_2);
     $('#anchorEachTimeseriesInSeparateFileTS').off('click', zipSelections_2);
     $('#anchorEachTimeseriesInSeparateFileTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall'), 'checkId': 'spanSelectCheckTS' /*, 'currentAnchor': 'anchorEachTimeseriesInSeparateFileTS' */ }, zipSelections_2);
 
@@ -6685,21 +6558,10 @@ function setUpTimeseriesDatatable() {
     $('#chkbxApplyFilterToMapTS').off('click', applyFilterToMap);
     $('#chkbxApplyFilterToMapTS').on('click', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxApplyFilterToMapTS'}, applyFilterToMap);
 
-    //Add DataTables event handlers...
-    //Search event...
-    $('#dtTimeseries').off('search.dt', dtSearchOrOrder);
-    $('#dtTimeseries').on('search.dt', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS', 'search': true, 'order': false, 'filterChkBxIds': ['chkbxApplyFilterToMapTS'] }, dtSearchOrOrder);
-
-    //Order event...
-    $('#dtTimeseries').off('order.dt', dtSearchOrOrder);
-    $('#dtTimeseries').on('order.dt', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxSelectAllTS', 'search': false, 'order': true, 'filterChkBxIds': [] }, dtSearchOrOrder);
-
-
-    //Actions dropdown handler...
-    //$('#ddActionsTS').off('click', 'li a', ddActionsTS);
-    //$('#ddActionsTS').on('click', 'li a', {'divId': 'ddActionTS', 'divIdOriginal': 'ddActionTSOriginal', 
-    //                                        'tableId': 'dtTimeseries', 'divLaunchId': 'divApplyActionTS' }, ddActionsTS);
-
+    //Apply search input changes to the map after a delay...
+    var searchInput = $('div' + '#' + 'dtTimeseries_filter > label > input');
+    searchInput.off('keyup', applyFilterToMapDelayed);  //NOTE: Must use 'keyup' here - 'change' event works only on forms!!
+    searchInput.on('keyup', { 'tableId': 'dtTimeseries', 'chkbxId': 'chkbxApplyFilterToMapTS'}, applyFilterToMapDelayed);       
 }
 
 //Handler for dtTimeseries 'Action' drop down...
@@ -6763,29 +6625,6 @@ function ddActionsTS(event) {
     //    $('#' + event.data.divId + ' img').css(imgStyle);
     //}
 
-}
-
-//DataTables search event handler...
-function dtSearchOrOrder(event, settings) {
-    //console.log( 'dtSearch called!!!')
-
-    if ( $('#' + event.data.chkbxId).prop('checked')) {
-        $('#' + event.data.chkbxId).triggerHandler('click');
-    }
-
-    if (event.data.search && 'dtTimeseries' === event.data.tableId) {
-        //Search event from 'Data' tab - apply search to map, if indicated
-        var cbLength = event.data.filterChkBxIds.length;
-
-        for (var cbi = 0; cbi < cbLength; ++cbi) {
-            var chkbx = $('#' + event.data.filterChkBxIds[cbi]);
-
-            if ( chkbx.prop('checked' )) {
-                chkbx.prop('checked', false);
-                chkbx.prop('checked', true).triggerHandler('click');
-            }
-        }
-    }
 }
 
 //Retrieve current search and filter criteria from input tableId...
@@ -7094,20 +6933,6 @@ function loadCurrentUser() {
                 $('input#imgSignOut').removeClass('hidden');
                 setupToolTip('liGoogleTab','Logout from HydroClient and Google when your session is complete.');
 
-                //TEST - clear the non-HTTP google cookies here....
-                //        NOTE: This code does not work with any cookies produced by Google!! 
-                //var cookieNames = ["SAPISID", "SID", "APISID"];
-                //var length = cookieNames.length;
-                //var domain = '.google.com';
-                //var path = '/';
-                //var date = new Date();
-
-                //date.setFullYear( date.getFullYear() - 1);
-
-                //for (var i = 0; i < length; ++i) {
-                //    eraseCookie(cookieNames[i]);
-                //}
-
             //Load saved time series for current user, if indicated
                 if (! currentUser.dataManagerLoaded) {
                 loadDataManager();
@@ -7121,32 +6946,6 @@ function loadCurrentUser() {
         }  
     });              
 }
-
-//Source: http://stackoverflow.com/questions/13883849/how-to-implement-function-createcookie-within-javascript
-//function createCookie(name,value,days) {
-//    if (days) {
-//        var date = new Date();
-//        date.setTime(date.getTime()+(days*24*60*60*1000));
-//        var expires = "; expires="+date.toGMTString();
-//    }
-//    else var expires = "";
-//    document.cookie = name+"="+value+expires+"; path=/; domain=.google.com";
-//}
-
-//function readCookie(name) {
-//    var nameEQ = name + "=";
-//    var ca = document.cookie.split(';');
-//    for(var i=0;i < ca.length;i++) {
-//        var c = ca[i];
-//        while (c.charAt(0)==' ') c = c.substring(1,c.length);
-//        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
-//    }
-//    return null;
-//}
-
-//function eraseCookie(name) {
-//    createCookie(name,"",-1);
-//}
 
 
 //Add a new row to the download manager table, per in the input values...

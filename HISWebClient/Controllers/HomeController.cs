@@ -717,6 +717,7 @@ namespace HISWebClient.Controllers
 			System.Linq.Expressions.Expression<Func<TimeSeriesViewModel, bool>> predicate;
 
 			//Apply search string (case-insensitive), if indicated...
+			//NOTE: The search string main contain space-delimited sub strings (e.g., 'SNOTEL 784' )
 			string search = filterAndSearchCriteria.search;
 			if (! String.IsNullOrWhiteSpace(search))
 			{
@@ -742,12 +743,12 @@ namespace HISWebClient.Controllers
 
 						//Add TimeSeriesViewModel property to LINQ predicate 
 						//NOTE: MUST specify a case-insensitive contains...
-						predicate = predicate.Or(item => item.GetType().GetProperty(source).GetValue(item, null).ToString().Contains(search, StringComparison.CurrentCultureIgnoreCase));
+						predicate = predicate.Or(item => item.GetType().GetProperty(source).GetValue(item, null).ToString().Contains(search, StringComparison.CurrentCultureIgnoreCase, new SearchStringComparer()));
 					}
 					else if (null != datasource.title)
 					{
 						//Lookup value from title...
-						predicate = predicate.Or(item => (LookupValueFromTitle(datasource, item)).ToString().Contains(search, StringComparison.CurrentCultureIgnoreCase));
+						predicate = predicate.Or(item => (LookupValueFromTitle(datasource, item)).ToString().Contains(search, StringComparison.CurrentCultureIgnoreCase, new SearchStringComparer()));
 
 					}
 				}
