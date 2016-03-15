@@ -302,6 +302,9 @@
     <Compile Include="Util\DbLogContext.cs" />
     <Compile Include="Util\httpUtil.cs" />
     <Compile Include="Util\LinqPredicateBuilder.cs" />
+    <Compile Include="Util\SearchStringComparer.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Util\StringContext.cs" />
     <Compile Include="Views\DiagnosticMonTraceListener.cs" />
     <Compile Include="Scripts\EnumExtensionMethods.cs" />
