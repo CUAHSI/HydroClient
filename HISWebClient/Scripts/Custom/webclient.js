@@ -562,8 +562,11 @@ function initialize() {
         var area = getMapAreaSize();
         var control = $("#MapAreaControl");
 
-        control.html( 'Area: ' + area.toLocaleString() + ' sq km' );
         control.attr('data-areasizeinsqkm', area);
+
+        control = $('#' + 'spanAreaValue');
+
+        control.text( area.toLocaleString());
 
         //Check current search parameters...
         enableSearch();
@@ -578,8 +581,8 @@ function initialize() {
         //$('#' + 'badgeLongitude').text(event.latLng.lng().toFixed(3));
 
         currentPosition.latLng = event.latLng;
-        $('#' + 'MapLatitudeControl').text('Latitude: ' + event.latLng.lat().toFixed(3));
-        $('#' + 'MapLongitudeControl').text('Longitude: ' + event.latLng.lng().toFixed(3));
+        $('#' + 'spanLatitudeValue').text(event.latLng.lat().toFixed(3).toString());
+        $('#' + 'spanLongitudeValue').text(event.latLng.lng().toFixed(3).toString());
 
         //Close current InfoBubble instance, if indicated
         //checkInfoBubble(event.latLng);
@@ -1201,9 +1204,12 @@ function enableSearch() {
     }
 
     //Add 'thumbs up' or 'thumbs down' to area display, as indicated...
-    var html = areaControl.html();
-    var newHtml = '<span class="glyphicon ' + (bSearchEnabled ? 'glyphicon-thumbs-up' : 'glyphicon-thumbs-down') + '" style="font-size: 1.5em; margin-right: 0.5em; vertical-align: middle;" ></span>' + html;
-    areaControl.html(newHtml);
+    var spanArea = $('#' + 'spanAreaGlyphicon');
+    spanArea.removeClass('glyphicon glyphicon-thumbs-up glyphicon-thumbs-down')
+    spanArea.addClass('glyphicon ' + (bSearchEnabled ? 'glyphicon-thumbs-up' : 'glyphicon-thumbs-down'));
+    spanArea.css( {'font-size': '1.5em',
+                   'margin-right': '0.5em',
+                   'vertical-align': 'middle'} );
 
     //Proceesing complete - return result
     return bSearchEnabled;
@@ -2110,43 +2116,57 @@ function AreaSizeControl(controlDiv, map) {
     controlText.style.borderRadius = '5px';
     controlText.style.backgroundColor = 'rgba(255,255,255,0.8)'/* slighly transparent white */
     controlText.style.border = '5px'
-    controlText.innerHTML = "Area in sq km";
     controlText.id = 'MapAreaControl';
+
+    var controlSpan = document.createElement('span');
+    controlSpan.id = 'spanAreaGlyphicon';
+    controlText.appendChild(controlSpan);
+
+    var controlLabel = document.createElement('label');
+    controlLabel.style.margin = "0 auto";
+    controlLabel.innerHTML = "Area:&nbsp;";
+    controlText.appendChild(controlLabel);
+
+    controlSpan = document.createElement('span');
+    controlSpan.id = 'spanAreaValue';
+    controlText.appendChild(controlSpan);
+
+    controlLabel = document.createElement('label');
+    controlLabel.style.margin = "0 auto";
+    controlLabel.innerHTML = "&nbsp;sq km";
+    controlText.appendChild(controlLabel);
+
     controlUI.appendChild(controlText);
 
     //Append divs for Latitude and Longitude...
     controlText = document.createElement('div');
-    //controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
-    //controlText.style.fontWeight = 'bold';
-    //controlText.style.fontSize = '12px';
-    //controlText.style.lineHeight = '25px';
-    //controlText.style.paddingTop = '0px';
-    //controlText.style.paddingLeft = '3px';
-    //controlText.style.paddingRight = '3px';
-    //controlText.style.paddingBottom = '0px';
-    //controlText.style.borderRadius = '5px';
-    //controlText.style.border = '5px'
-    //controlText.style.marginLeft = '3px';
-    controlText.innerHTML = "Latitude";
     controlText.id = 'MapLatitudeControl';
     controlText.classList.add('badge');
+
+    controlLabel = document.createElement('label');
+    controlLabel.style.margin = "0 auto";
+    controlLabel.innerHTML = "Latitude:&nbsp;";
+
+    controlSpan = document.createElement('span');
+    controlSpan.id = 'spanLatitudeValue';
+
+    controlLabel.appendChild(controlSpan);
+    controlText.appendChild(controlLabel);
     controlUI.appendChild(controlText);
     
     controlText = document.createElement('div');
-    //controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
-    //controlText.style.fontWeight = 'bold';
-    //controlText.style.fontSize = '12px';
-    //controlText.style.lineHeight = '25px';
-    //controlText.style.paddingTop = '0px';
-    //controlText.style.paddingLeft = '3px';
-    //controlText.style.paddingRight = '3px';
-    //controlText.style.paddingBottom = '0px';
-    //controlText.style.borderRadius = '5px';
-    //controlText.style.border = '5px'
-    //controlText.style.marginLeft = '3px';
-    controlText.innerHTML = "Longitude";
     controlText.id = 'MapLongitudeControl';
     controlText.classList.add('badge');
+  
+    controlLabel = document.createElement('label');
+    controlLabel.style.margin = "0 auto";
+    controlLabel.innerHTML = "Longitude:&nbsp;";
+
+    controlSpan = document.createElement('span');
+    controlSpan.id = 'spanLongitudeValue';
+
+    controlLabel.appendChild(controlSpan);
+    controlText.appendChild(controlLabel);
     controlUI.appendChild(controlText);
 
 }
