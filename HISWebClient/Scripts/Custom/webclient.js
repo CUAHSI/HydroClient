@@ -50,6 +50,7 @@ var byuAppsList = {};
 
 var currentUser = { 'authenticated' : false,
                     'dataManagerLoaded' : false,
+                    'exportsLoaded' : false,
                     'login' : null,
                     'userName' : null
                   };
@@ -2684,13 +2685,17 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
         var marker = new MarkerWithLabel({
             position: point,
             icon: new google.maps.MarkerImage(clusterMarkerPath + "m6.png", new google.maps.Size(53, 52), null, new google.maps.Point(icon_width / 2, icon_width / 2), new google.maps.Size(icon_width, icon_width)),
+//BCC            icon: clusterMarkerPath + "m3.png",
             draggable: false,
             raiseOnDrag: true,
             map: map,
             anchorPoint: new google.maps.Point(0, -13),
+//BCC            anchorPoint: new google.maps.Point(0, -13),
             labelContent: count,
             labelAnchor: new google.maps.Point(22, 30),
+//BCC            labelAnchor: new google.maps.Point(15, 38),
             labelClass: icons[icon_choice].cssClass, // the CSS class for the label
+//BCC            labelClass: 'labels',
             labelStyle: { opacity: 0.95 },
             tooltip: '',
             zIndex: 1500,
@@ -2791,11 +2796,13 @@ function createInfoWindow( map, marker, serviceCodeToTitle, markerTypeName) {
     iw.setMinHeight((listCount * fontsize).toString());
     iw.setMaxWidth((20 * fontsize).toString());
 
-    if ( 'google.maps.Marker' === markerTypeName) {
+    //if ( 'google.maps.Marker' === markerTypeName) {
 
         //Open on mouseover...
         google.maps.event.addListener(marker, 'mouseover', function openInfoBubble(event) {
+           if ( ! iw.isOpen()) {
                 iw.open(map, marker);
+            }
         });
     
         //Close on mouseout...
@@ -2803,40 +2810,40 @@ function createInfoWindow( map, marker, serviceCodeToTitle, markerTypeName) {
             iw.close();
         });
     
-    }
-    else if ( 'MarkerWithLabel' === markerTypeName) {
+    //}
+    //else if ( 'MarkerWithLabel' === markerTypeName) {
     
-    var currentInterval = setInterval(function() {
+    //var currentInterval = setInterval(function() {
 
-                if ( null !== currentPosition.latLng) {
+    //            if ( null !== currentPosition.latLng) {
             
-                    lat = currentPosition.latLng.lat().toFixed(2);
-                    lng = currentPosition.latLng.lng().toFixed(2);
+    //                lat = currentPosition.latLng.lat().toFixed(2);
+    //                lng = currentPosition.latLng.lng().toFixed(2);
 
-                    if ('undefined' !== typeof iw.anchor /*&& 'undefined' !== typeof iw.anchor.position */) {
-                        var ibLat = iw.anchor.position.lat().toFixed(2);
-                        var ibLng = iw.anchor.position.lng().toFixed(2)
-                        if ( lat === ibLat && lng === ibLng) {
-                            //Current mouse position matches InfoBubble position - open InfoBubble...
-                            if ( ! iw.isOpen()) {
-                                iw.open(map, marker);
-                            }
-                        }
-                        else {
-                            iw.close();
-                        }
-                    }
-                }
-            }, 500);
+    //                if ('undefined' !== typeof iw.anchor /*&& 'undefined' !== typeof iw.anchor.position */) {
+    //                    var ibLat = iw.anchor.position.lat().toFixed(2);
+    //                    var ibLng = iw.anchor.position.lng().toFixed(2)
+    //                    if ( lat === ibLat && lng === ibLng) {
+    //                        //Current mouse position matches InfoBubble position - open InfoBubble...
+    //                        if ( ! iw.isOpen()) {
+    //                            iw.open(map, marker);
+    //                        }
+    //                    }
+    //                    else {
+    //                        iw.close();
+    //                    }
+    //                }
+    //            }
+    //        }, 500);
 
-        currentIntervals.push( currentInterval);
+    //    currentIntervals.push( currentInterval);
 
-        //Initial open on mouseover...
-        google.maps.event.addListenerOnce(marker, 'mouseover', function openInfoBubble(event) {
-            iw.open(map, marker);
-        });
+    //    //Initial open on mouseover...
+    //    google.maps.event.addListenerOnce(marker, 'mouseover', function openInfoBubble(event) {
+    //        iw.open(map, marker);
+    //    });
     
-    }
+    //}
 
 
 
@@ -4369,6 +4376,9 @@ function startRequestTimeSeriesMonitor() {
                                     timeSeriesRequestStatus.RequestTimeSeriesError === requestStatus ||
                                     timeSeriesRequestStatus.EndTaskError === requestStatus ||
                                     timeSeriesRequestStatus.UnknownTask === requestStatus) {
+
+                                    var dataRequestId = timeSeriesResponse.RequestId; 
+
                                     //If task completed - re-assign 'Stop Task' button to 'Download'
                                     if (timeSeriesRequestStatus.Completed === requestStatus) {
                                         //Success - retrieve the base blob URI... 
@@ -4392,11 +4402,17 @@ function startRequestTimeSeriesMonitor() {
                                         //Create a download button...
                                         var button = tableRow.find('td:eq(4)');
 
-                                        button = $("<button class='zipBlobDownload btn btn-success' style='font-size: 1.5vmin' data-blobUri='" + blobUri +  "'>Download Archive</button>");
+                                        button = $('<button class="zipBlobDownload btn btn-success" style="font-size: 1.5vmin" data-blobUri="' + blobUri +
+                                                        '" data-requestId="' + dataRequestId + '">Download Archive</button>"');
 
                                         button.on('click', function (event) {
                                             var blobUri = $(this).attr('data-blobUri');
                                             location.href = blobUri;
+
+                                            if ( currentUser.authenticated) {
+                                                var requestId = $(this).attr('data-requestId');
+                                                deleteDownload(requestId);
+                                            }
 
                                             //Fade row and remove from table...
                                             tableRow.fadeTo(1500, 0.5, function() {
@@ -4434,6 +4450,11 @@ function startRequestTimeSeriesMonitor() {
                                             tableRow.fadeTo(1500, 0.5, function () {
                                                 $(this).remove();
                                             });
+
+                                            //Remove the entry from the database...
+                                            if ( currentUser.authenticated) {
+                                                deleteDownload(dataRequestId);
+                                            }
                                         }
                                         else {
                                             if (timeSeriesRequestStatus.RequestTimeSeriesError === requestStatus) {
@@ -4456,6 +4477,11 @@ function startRequestTimeSeriesMonitor() {
                                                 //Color table row as 'warning'
                                                 tableRow.removeClass('info');
                                                 tableRow.addClass('warning');
+
+                                                //Remove the entry from the database...
+                                                if ( currentUser.authenticated) {
+                                                    deleteDownload(dataRequestId);
+                                                }
                                             }
                                         }
                                     }
@@ -4547,6 +4573,37 @@ function startRequestTimeSeriesMonitor() {
         }, 1000);
     }
 
+}
+
+//Delete the server download record associated with the input request Id
+function deleteDownload(requestId) {
+
+    if ('undefined' === typeof requestId || null === requestId) {
+        return; //Invalid parameter - return early...
+    }
+
+    var url = '/DownloadManager/Delete/' + requestId;
+
+    var promise = $.ajax({
+                        url: url,
+                        type: 'DELETE',
+                        dataType: 'json',
+                        cache: false,           //Per IE...
+                        async: true,
+                        //data: utsString,
+                        contentType: 'application/json' //,
+                        //context: utsString,
+                    });
+
+    promise.done( function (data) {
+            console.log('/DownloadManager/Delete - successful!!')
+            //table.rows( '.selected' ).remove().draw();
+        });
+
+    promise.fail( function (jqXHR, textStatus, errorThrown) {
+            console.log('/DownloadManager/Delete - error - ' + textStatus + ' - ' + errorThrown);
+            //table.rows( '.selected' ).remove().draw();
+        });
 }
 
 //Retrieve the WaterOneFlow zip archive file name from a full Azure blob URI
@@ -6071,6 +6128,7 @@ function copySelectionsToDataManager(event) {
     retrieveWaterOneFlowForTimeSeries(event1);
 }
 
+//For the current authenticated user, load DataManager entries from the server...
 function loadDataManager() {
 
     //console.log('loadDataManager called!!');
@@ -6160,10 +6218,68 @@ function loadDataManager() {
                 //Failure - Log messsage received from server...
                 console.log('DataManager GET reports error: ' + xmlhttprequest.status + ' (' + message + ')');
             }                
-                                    });
-                                }
-
+        });
+    }
 }
+
+//For the current authenticated user, signal the server to restore Export entries.
+//  The client's status polling should report the restored export entries...
+function loadExports() {
+
+    //console.log('loadExports called!!');
+
+    //NOTE: IIS feature...
+	//To successfully transfer something like an e-mail address to the server - you MUST include a trailing forward slash 
+	// as explained here.  The trailing forward slash tells IIS that the string does not represent a file path!!!
+	// http://stackoverflow.com/questions/11728846/dots-in-url-causes-404-with-asp-net-mvc-and-iis
+
+    //Signal server to restore export entries, if any...
+    if ( (! currentUser.exportsLoaded ) && 
+            currentUser.authenticated && 
+            (null != currentUser.login)) {
+
+        var url = '/DownloadManager/Get/' + currentUser.login + '/';
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            async: true,
+            dataType: 'json',
+            cache: false,   //So IE does not cache when calling the same URL - source: http://stackoverflow.com/questions/7846707/ie9-jquery-ajax-call-first-time-doing-well-second-time-not
+            success: function (data, textStatus, jqXHR) {
+
+                //Success - update indicator
+                currentUser.exportsLoaded = true;
+
+                //Parse the received data...
+                var exportTaskData = JSON.parse(data);
+                var length = exportTaskData.length;
+
+                //Load download manager table...
+                for (var i = 0; i < length; ++i) {
+                    var serverRecord = exportTaskData[i];
+                
+                    clientRecord = {};
+                    clientRecord.RequestId = serverRecord.RequestId;
+                    clientRecord.RequestStatus = serverRecord.RequestStatus;
+                    clientRecord.Status = timeSeriesRequestStatus.properties[serverRecord.RequestStatus].description;
+                    clientRecord.BlobUri = serverRecord.BlobUri;
+                    clientRecord.BlobTimeStamp = serverRecord.BlobTimeStamp;
+                    clientRecord.SeriesIdsToVariableUnits = null;
+
+                    var taskId = getNextTaskId();
+                    addDownloadManagerRow(clientRecord, taskId);
+                    updateDownloadManagerRow(clientRecord);
+                }
+            },
+            error: function (xmlhttprequest, textStatus, message) {
+                //Failure - Log messsage received from server...
+                console.log('Export RestoreTasks reports error: ' + xmlhttprequest.status + ' (' + message + ')');
+            }                
+        });
+    }
+}
+
 
 //Retrieve all the selected rows per the input table name...
 function getSelectedRows(tableName, timeSeriesMaxOverride) {
@@ -6953,10 +7069,15 @@ function loadCurrentUser() {
                 $('input#imgSignOut').removeClass('hidden');
                 setupToolTip('liGoogleTab','Logout from HydroClient and Google when your session is complete.');
 
-            //Load saved time series for current user, if indicated
+                //Load saved time series for current user, if indicated
                 if (! currentUser.dataManagerLoaded) {
-                loadDataManager();
-    }
+                    loadDataManager();
+                }
+
+                //Load export tasks completed since last user logout, if indicated
+                if ( ! currentUser.exportsLoaded) {
+                    loadExports();
+                }
             }
         },
         error: function (xmlhttprequest, textStatus, message) {
@@ -6979,35 +7100,173 @@ function addDownloadManagerRow( response, taskId ) {
     var cols = [];
     var div = '';
 
-    //Column 0
-    cols.push(response.RequestId.toString());
+    //Limit additions to selected status values...
+    if (timeSeriesRequestStatus.Completed === response.RequestStatus              ||
+        timeSeriesRequestStatus.ProcessingTimeSeriesId === response.RequestStatus ||
+        timeSeriesRequestStatus.RequestTimeSeriesError === response.RequestStatus ||
+        timeSeriesRequestStatus.SavingZipArchive === response.RequestStatus       ||
+        timeSeriesRequestStatus.Started === response.RequestStatus                ||
+        timeSeriesRequestStatus.Starting === response.RequestStatus ) {
 
-    //Column 1
-    div = $('<div class="btn" style="font-size: 1em; font-weight: bold; margin: 0 auto;">' + taskId + '</div>');
-    cols.push(div);
+        //Column 0
+        cols.push(response.RequestId.toString());
 
-    //Column 2
-    div = $('<div class="btn" style="font-size: 1em; font-weight: bold; margin: 0 auto;">' + formatStatusMessage(response.Status) + '</div>');
-    cols.push(div);
+        //Column 1
+        div = $('<div class="btn" style="font-size: 1em; font-weight: bold; margin: 0 auto;">' + taskId + '</div>');
+        cols.push(div);
 
-    //Column 3
-    div = $('<div class="btn" id="blobUriText" style="font-size: 1em; font-weight: bold; margin: 0 auto; text-overflow: ellipsis;">' + response.BlobUri + '</div>');
-    cols.push(div);
+        //Column 2
+        div = $('<div class="btn" style="font-size: 1em; font-weight: bold; margin: 0 auto;">' + formatStatusMessage(response.Status) + '</div>');
+        cols.push(div);
 
-    //Button for Column 4
-    var button = $("<button class='stopTask btn btn-warning' style='font-size: 1.5vmin'>Stop Processing</button>");
-    addEndTaskClickHandler(button, response);
+        //Column 3
+        div = $('<div class="btn" id="blobUriText" style="font-size: 1em; font-weight: bold; margin: 0 auto; text-overflow: ellipsis;">' + response.BlobUri + '</div>');
+        cols.push(div);
 
-    //Column 4
-    cols.push(button);
+        if ( timeSeriesRequestStatus.RequestTimeSeriesError !== response.RequestStatus ) {
+            //Button for Column 4
+            var button = $("<button class='stopTask btn btn-warning' style='font-size: 1.5vmin'>Stop Processing</button>");
+            addEndTaskClickHandler(button, response);
 
-    //Column 5
-    cols.push(response.RequestStatus);
+            //Column 4
+            cols.push(button);
+        }
 
-    //Add the new row and hide the RequestStatus column...
-    var newrow = newRow($("#tblDownloadManager"), cols);
-    newrow.find('td:eq(5)').hide();
+        //Column 5
+        cols.push(response.RequestStatus);
 
-    //Add row styles
-    addRowStylesDM(newrow);
+        //Add the new row and hide the RequestStatus column...
+        var newrow = newRow($("#tblDownloadManager"), cols);
+        newrow.find('td:eq(5)').hide();
+
+        //Add row styles
+        addRowStylesDM(newrow);
+    }
+}
+
+//Update a previously added row in the download manager table, per in the input values...
+// For now, handle the case status === completed only...
+function updateDownloadManagerRow( response ) {
+
+    if ('undefined' === typeof response || null === response ) {
+        return; //Invalid input parameter(s) - return early
+    }
+
+    var requestId = response.RequestId;
+    var tableRow = $("#tblDownloadManager tr td").filter(function () {
+        return $(this).text() === requestId;
+    }).parent("tr");
+
+    if ( 0 >= tableRow.length) {
+        //table row not found - return early
+        return;
+    }
+
+    if ( timeSeriesRequestStatus.Completed === response.RequestStatus) {
+        //Task completed - retrieve the base blob URI...
+        var baseUri = (response.BlobUri).split('.zip');
+        var blobUri = baseUri[0] += '.zip';
+        var dataRequestId = requestId; 
+
+        //Retrieve the full file name from the base blob URI...
+        var uriComponents = baseUri[0].split('/');
+        var fileName = uriComponents[(uriComponents.length - 1)];
+
+        //Set base blob URI into text in column 3
+        //NOTE: Need to decode the string twice because:
+        //       If the string contains an encoded character like %27 ('),
+        //       the browser(?) separely encodes the (&) character as %25
+        //       resulting in %25%27 in the string.  Two string decodes 
+        //       are required to remove the two escape sequences...
+        var decoded = decodeURIComponent(fileName);
+        var decoded1 = decodeURIComponent(decoded);
+        tableRow.find('#blobUriText').html(decoded1);
+    
+        //Create a download button...
+        var button = tableRow.find('td:eq(4)');
+
+        button = $('<button class="zipBlobDownload btn btn-success" style="font-size: 1.5vmin" data-blobUri="' + blobUri +
+                        '" data-requestId="' + dataRequestId + '">Download Archive</button>"');
+
+        button.on('click', function (event) {
+            var blobUri = $(this).attr('data-blobUri');
+            location.href = blobUri;
+
+            if ( currentUser.authenticated) {
+                var requestId = $(this).attr('data-requestId');
+                deleteDownload(requestId);
+            }
+
+            //Fade row and remove from table...
+            tableRow.fadeTo(1500, 0.5, function() {
+                    $(this).remove();
+            });
+
+            event.stopPropagation();
+        });
+
+        tableRow.find('td:eq(4)').html(button);
+
+        //Change the glyphicon and stop the animation
+        var glyphiconSpan = tableRow.find('#glyphiconSpan');
+
+        glyphiconSpan.removeClass('glyphicon-refresh spin');
+        glyphiconSpan.addClass('glyphicon-thumbs-up');
+
+        tableRow.find('#statusMessageText').html(response.Status);
+
+        tableRow.addClass('success');   //Color row as 'successful'
+
+        if ($("#chkbxAutoDownload").prop("checked")) {
+                //Autodownload checkbox checked - click the newly created button...
+            button.click();
+        }
+    }
+    else {
+            if (timeSeriesRequestStatus.ProcessingTimeSeriesId === response.RequestStatus ||
+                timeSeriesRequestStatus.SavingZipArchive === response.RequestStatus       ||
+                timeSeriesRequestStatus.Started === response.RequestStatus                ||
+                timeSeriesRequestStatus.Starting === response.RequestStatus ) {
+                //Task NOT completed - create monitor record, start monitor...
+                //ASSUMPTION: - values other than requestId here should not make any difference to controller behaviour...
+                var timeSeriesRequest = {
+                    'RequestName': 'temp',
+                    'RequestId': response.RequestId,
+                    'TimeSeriesIds': null,
+                    'RequestFormat': timeSeriesFormat.CSV
+                };
+
+                downloadMonitor.timeSeriesMonitored[response.RequestId] = { 'tableName': 'tblDownloadManager',
+                                                                            'timeSeriesRequest': timeSeriesRequest,
+                                                                            'timeSeriesRequestStatus': response.RequestStatus 
+                                                                          };
+               startRequestTimeSeriesMonitor();    //Start monitoring all current requests, if indicated...
+            }
+            else {
+                    if (timeSeriesRequestStatus.RequestTimeSeriesError === response.RequestStatus) {
+                        //Task errored - decorate row, remove task from database - DO NOT remove the row!! 
+                                        
+                        //Reset blob URI
+                        tableRow.find('#blobUriText').html('');
+
+                        //Hide the 'Stop Processing' button
+                        tableRow.find('td:eq(4)').hide();
+
+                        //Change the glyphicon and stop the animation
+                        var glyphiconSpan = tableRow.find('#glyphiconSpan');
+
+                        glyphiconSpan.removeClass('glyphicon-refresh spin');
+                        glyphiconSpan.addClass('glyphicon-thumbs-down');
+                        glyphiconSpan.css('color', 'red');
+
+                        //Color table row as 'warning'
+                        tableRow.removeClass('info');
+                        tableRow.addClass('warning');
+
+                        if ( currentUser.authenticated) {
+                            deleteDownload(requestId);
+                        }
+                    }
+            }
+    }
 }

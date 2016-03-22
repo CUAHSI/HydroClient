@@ -5,17 +5,23 @@ using System.Web;
 
 using System.Data.Entity;
 
-namespace HISWebClient.Models.DataManager
+using HISWebClient.Models.DataManager;
+using HISWebClient.Models.DownloadManager;
+
+namespace HISWebClient.Models
 {
-	public class UserTimeSeriesDbContext : DbContext
+	public class HydroClientDbContext : DbContext
 	{
 
 		//Default constructor - pass connection string to base constructor
-		public UserTimeSeriesDbContext() : base("DefaultConnection")
+		public HydroClientDbContext() : base("DefaultConnection")
         {
         }
 
 		public DbSet<UserTimeSeries> UserTimeSeriesSet { get; set; }
 		public DbSet<DM_TimeSeries> DM_TimeSeriesSet { get; set; }
+
+		public DbSet<ExportTaskData> ExportTaskDataSet { get; set; }
+
 	}
 }

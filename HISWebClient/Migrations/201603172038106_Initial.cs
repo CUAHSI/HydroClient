@@ -3,7 +3,7 @@ namespace HISWebClient.Migrations
     using System;
     using System.Data.Entity.Migrations;
     
-    public partial class InitialCreate : DbMigration
+    public partial class Initial : DbMigration
     {
         public override void Up()
         {
@@ -15,8 +15,10 @@ namespace HISWebClient.Migrations
                         UserEmail = c.String(maxLength: 128),
                         Status = c.Int(nullable: false),
                         Organization = c.String(),
+                        ServiceCode = c.String(),
                         ServiceTitle = c.String(),
                         Keyword = c.String(),
+                        VariableUnits = c.String(),
                         DataType = c.String(),
                         ValueType = c.String(),
                         SampleMedium = c.String(),
@@ -29,6 +31,7 @@ namespace HISWebClient.Migrations
                         TimeUnit = c.String(),
                         SeriesId = c.Int(nullable: false),
                         WaterOneFlowURI = c.String(),
+                        WaterOneFlowTimeStamp = c.DateTime(nullable: false),
                         TimeSeriesRequestId = c.String(),
                     })
                 .PrimaryKey(t => t.TimeSeriesId)
@@ -43,12 +46,25 @@ namespace HISWebClient.Migrations
                     })
                 .PrimaryKey(t => t.UserEmail);
             
+            CreateTable(
+                "dbo.ExportTaskData",
+                c => new
+                    {
+                        RequestId = c.String(nullable: false, maxLength: 128),
+                        UserEmail = c.String(),
+                        RequestStatus = c.Int(nullable: false),
+                        BlobUri = c.String(),
+                        BlobTimeStamp = c.DateTime(nullable: false),
+                    })
+                .PrimaryKey(t => t.RequestId);
+            
         }
         
         public override void Down()
         {
             DropForeignKey("dbo.DM_TimeSeries", "UserEmail", "dbo.DM_UserTimeSeries");
             DropIndex("dbo.DM_TimeSeries", new[] { "UserEmail" });
+            DropTable("dbo.ExportTaskData");
             DropTable("dbo.DM_UserTimeSeries");
             DropTable("dbo.DM_TimeSeries");
         }

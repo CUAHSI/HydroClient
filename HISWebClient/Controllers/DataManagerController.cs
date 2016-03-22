@@ -4,8 +4,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 
-using System.Web.Script.Serialization;
-
+using HISWebClient.Models;
 using HISWebClient.Models.DataManager;
 
 using Newtonsoft.Json;
@@ -15,22 +14,16 @@ namespace HISWebClient.Controllers
     public class DataManagerController : Controller
     {
 
-		private UserTimeSeriesDbContext _utsDbContext;
+		private HydroClientDbContext _hcDbContext;
 
-		//Constructors - instantiate the AzureContext singleton for later reference...
-		public DataManagerController() : this( new UserTimeSeriesDbContext()) { }
+		//Constructors - instantiate the db context singleton for later reference...
+		public DataManagerController() : this(new HydroClientDbContext()) { }
 
-		public DataManagerController(UserTimeSeriesDbContext utsdc)
+		public DataManagerController(HydroClientDbContext hcdc)
 		{
-			_utsDbContext = utsdc;
+			_hcDbContext = hcdc;
 		}
 
-
-        // GET: DataManager
-		//public ActionResult Index()
-		//{
-		//	return View();
-		//}
 
 		//GET DataManager/{userEmail}
 		[HttpGet]
@@ -47,7 +40,7 @@ namespace HISWebClient.Controllers
 			}
 
 			//Lookup user time series, set found indicator...
-             var uts = _utsDbContext.DM_TimeSeriesSet.Where(u => (u.UserEmail.Equals(id))).ToList();
+			var uts = _hcDbContext.DM_TimeSeriesSet.Where(u => (u.UserEmail.Equals(userEmail))).ToList();
           
 			if (null == uts)
 			{
@@ -67,11 +60,6 @@ namespace HISWebClient.Controllers
 
 
 			//Success - convert retrieved data to JSON and return...
-			//NOTE: Use of NewtonSoft JsonCovert here results in a 'circular dependency' error given the definition of class: DM_TimeSeries
-			//		Happily, use of JavaScriptSerializer avoids this problem but does introduce a difference in date handling.  Specifically,
-			//		dates are rendered in 'JSON' format: '/Date(nnnnnnnnnnnnn)/'
-			//var javaScriptSerializer = new JavaScriptSerializer();
-			//var json = javaScriptSerializer.Serialize(uts);
 			var json = JsonConvert.SerializeObject(uts);
 
 			Response.StatusCode = (int)System.Net.HttpStatusCode.OK;
@@ -98,24 +86,22 @@ namespace HISWebClient.Controllers
 			}
 
 			//Load input values to database
-			UserTimeSeries uts = _utsDbContext.UserTimeSeriesSet.SingleOrDefault(u => u.UserEmail.Equals(userTimeSeries.UserEmail));
+			UserTimeSeries uts = _hcDbContext.UserTimeSeriesSet.SingleOrDefault(u => u.UserEmail.Equals(userTimeSeries.UserEmail));
 			if (null == uts)
 			{
 				//New entry - save
-				_utsDbContext.UserTimeSeriesSet.Add(userTimeSeries);
-				_utsDbContext.SaveChanges();
+				_hcDbContext.UserTimeSeriesSet.Add(userTimeSeries);
+				_hcDbContext.SaveChanges();
 			}
 			else
 			{
 				//Existing entry - save time series only...
-				_utsDbContext.DM_TimeSeriesSet.AddRange(userTimeSeries.TimeSeries);
-				_utsDbContext.SaveChanges();
+				_hcDbContext.DM_TimeSeriesSet.AddRange(userTimeSeries.TimeSeries);
+				_hcDbContext.SaveChanges();
 			}
 
 			//Success - convert input data to JSON and return (so to avoid a parsing error on the client...)
 			// Source: http://stackoverflow.com/questions/25173727/syntax-error-unexpected-end-of-input-parsejson
-			//var javaScriptSerializer = new JavaScriptSerializer();
-			//var json = javaScriptSerializer.Serialize(userTimeSeries);
 			var json = JsonConvert.SerializeObject(userTimeSeries);
 
 			Response.StatusCode = (int)System.Net.HttpStatusCode.OK;
@@ -133,7 +119,7 @@ namespace HISWebClient.Controllers
 			}
 
 			//Delete input values from database, if indicated...
-			UserTimeSeries uts = _utsDbContext.UserTimeSeriesSet.SingleOrDefault(u => u.UserEmail.Equals(userTimeSeries.UserEmail));
+			UserTimeSeries uts = _hcDbContext.UserTimeSeriesSet.SingleOrDefault(u => u.UserEmail.Equals(userTimeSeries.UserEmail));
 			if (null == uts)
 			{
 				//Not found - return error...
@@ -144,19 +130,17 @@ namespace HISWebClient.Controllers
 				//Found - delete time series only...
 				foreach (var timeseries in userTimeSeries.TimeSeries)
 				{
-					DM_TimeSeries timeseriesFound = _utsDbContext.DM_TimeSeriesSet.SingleOrDefault(d => d.TimeSeriesRequestId.Equals(timeseries.TimeSeriesRequestId));
+					DM_TimeSeries timeseriesFound = _hcDbContext.DM_TimeSeriesSet.SingleOrDefault(d => d.TimeSeriesRequestId.Equals(timeseries.TimeSeriesRequestId));
 					if (null != timeseriesFound)
 					{
-						_utsDbContext.DM_TimeSeriesSet.Remove(timeseriesFound);
+						_hcDbContext.DM_TimeSeriesSet.Remove(timeseriesFound);
 					}
 				}
-				_utsDbContext.SaveChanges();
-		}
+				_hcDbContext.SaveChanges();
+			}
 
 			//Success - convert input data to JSON and return (so to avoid a parsing error on the client...)
 			// Source: http://stackoverflow.com/questions/25173727/syntax-error-unexpected-end-of-input-parsejson
-			//var javaScriptSerializer = new JavaScriptSerializer();
-			//var json = javaScriptSerializer.Serialize(userTimeSeries);
 			var json = JsonConvert.SerializeObject(userTimeSeries);
 
 			Response.StatusCode = (int)System.Net.HttpStatusCode.OK;

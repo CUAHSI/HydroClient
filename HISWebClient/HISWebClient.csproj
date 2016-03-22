@@ -267,6 +267,7 @@
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\Class1.cs" />
     <Compile Include="Controllers\DataManagerController.cs" />
+    <Compile Include="Controllers\DownloadManagerController.cs" />
     <Compile Include="Controllers\ExportController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\IMetadataQuery.cs" />
@@ -274,6 +275,14 @@
     <Compile Include="Controllers\RESTfulInterfaceController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201603172038106_Initial.cs" />
+    <Compile Include="Migrations\201603172038106_Initial.Designer.cs">
+      <DependentUpon>201603172038106_Initial.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201603211641193_AddedStatusMessage.cs" />
+    <Compile Include="Migrations\201603211641193_AddedStatusMessage.Designer.cs">
+      <DependentUpon>201603211641193_AddedStatusMessage.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
@@ -284,7 +293,8 @@
     <Compile Include="Models\DataManager\CurrentUser.cs" />
     <Compile Include="Models\DataManager\DM_TimeSeries.cs" />
     <Compile Include="Models\DataManager\UserTimeSeries.cs" />
-    <Compile Include="Models\DataManager\UserTimeSeriesDbContext.cs" />
+    <Compile Include="Models\DownloadManager\ExportTaskData.cs" />
+    <Compile Include="Models\HydroClientDbContext.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
     <Compile Include="Models\OntologyHelper.cs" />
@@ -617,8 +627,8 @@
   <ItemGroup>
     <Folder Include="Content\yeti\" />
     <Folder Include="Files\" />
-    <Folder Include="NewFolder1\" />
     <Folder Include="Views\DataManager\" />
+    <Folder Include="Views\DownloadManager\" />
     <Folder Include="Views\Export\" />
   </ItemGroup>
   <ItemGroup>
@@ -660,6 +670,14 @@
       <Project>{5dba60f1-4292-4ea0-9a78-a03ac3511dc7}</Project>
       <Name>CUAHSI.ServerSideHydroDesktop</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201603172038106_Initial.resx">
+      <DependentUpon>201603172038106_Initial.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201603211641193_AddedStatusMessage.resx">
+      <DependentUpon>201603211641193_AddedStatusMessage.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

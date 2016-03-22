@@ -537,3 +537,16 @@ BCC - 14-Oct-2015 - Causes problems when displaying time series after zooming in
 }
 */
 
+
+
+.labels {
+    color: white;
+    background-color: red;
+    //background-color: blue;
+    font-family:"Lucida Grande", "Arial", sans-serif;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    width: 30px;
+    white-space: nowrap;
+}

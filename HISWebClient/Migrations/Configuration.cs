@@ -5,15 +5,14 @@ namespace HISWebClient.Migrations
     using System.Data.Entity.Migrations;
     using System.Linq;
 
-    internal sealed class Configuration : DbMigrationsConfiguration<HISWebClient.Models.DataManager.UserTimeSeriesDbContext>
+    internal sealed class Configuration : DbMigrationsConfiguration<HISWebClient.Models.HydroClientDbContext>
     {
         public Configuration()
         {
-            //AutomaticMigrationsEnabled = false;
-			AutomaticMigrationsEnabled = true;
+            AutomaticMigrationsEnabled = false;
         }
 
-        protected override void Seed(HISWebClient.Models.DataManager.UserTimeSeriesDbContext context)
+        protected override void Seed(HISWebClient.Models.HydroClientDbContext context)
         {
             //  This method will be called after migrating to the latest version.
 

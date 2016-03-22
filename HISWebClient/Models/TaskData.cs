@@ -19,7 +19,8 @@ namespace HISWebClient.Models
 						 CancellationTokenSource ctsIn, 
 						 String blobUriIn = "", 
 						 DateTime blobTimeStampIn = new DateTime(),
-						 Dictionary<int, string> SeriesIdsToVariableUnitsIn = null)
+						 Dictionary<int, string> SeriesIdsToVariableUnitsIn = null,
+						 string eMail = "" )
         {
             RequestStatus = tsrsIn;
             Status = statusIn;
@@ -33,6 +34,8 @@ namespace HISWebClient.Models
 			{
 				SeriesIdsToVariableUnits = SeriesIdsToVariableUnitsIn;
 			}
+
+			UserEmail = eMail;
         }
 
         /// <summary>
@@ -49,5 +52,7 @@ namespace HISWebClient.Models
 		public DateTime BlobTimeStamp { get; set; }
 
 		public Dictionary<int, string> SeriesIdsToVariableUnits { get; set; }
+
+		public string UserEmail { get; set; }
 	}
 }

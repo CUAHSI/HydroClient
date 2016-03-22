@@ -30,6 +30,8 @@ using Newtonsoft.Json;
 
 using log4net.Core;
 
+using HISWebClient.Models.DataManager;
+using HISWebClient.Models.DownloadManager;
 using HISWebClient.Util;
 
 //using ServerSideHydroDesktop.ObjectModel;
@@ -284,6 +286,8 @@ namespace HISWebClient.Controllers
 			bool bNewTask = false;  //Assume time series retrieval task already exists...
 
 			//Dictionary<int, string> dictSeriesIdsToVariableUnits = new Dictionary<int, string>();
+			var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
+			CurrentUser cu = httpContext.Session[httpContext.Session.SessionID] as CurrentUser;
 
 			//Thread-safe access to dictionary
 			lock (lockObject) 
@@ -305,6 +309,8 @@ namespace HISWebClient.Controllers
 					_dictTaskStatus.Add(requestId, taskData);
 					ct = taskData.CTS.Token;
 					bNewTask = true;
+
+					WriteTaskDataToDatabase(cu, requestId, requestStatus, "", blobUri, blobTimeStamp);	
 				}
 			}
 
@@ -312,7 +318,6 @@ namespace HISWebClient.Controllers
 			if (bNewTask)
 			{
 				//Copy the currently requested time series for use in the task...
-				var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
 				var retrievedSeries = (List<TimeSeriesViewModel>)httpContext.Session["Series"];
 
 				//Get user data...
@@ -409,10 +414,11 @@ namespace HISWebClient.Controllers
 									break;
 								}
 
-								UpdateTaskStatus(requestId, TimeSeriesRequestStatus.ProcessingTimeSeriesId,
-															TimeSeriesRequestStatus.ProcessingTimeSeriesId.GetEnumDescription() +
+								string statusMessage = TimeSeriesRequestStatus.ProcessingTimeSeriesId.GetEnumDescription() +
 																								timeSeriesId.ToString() +
-																								" (" + (++i).ToString() + " of " + count.ToString() + ")");
+																								" (" + (++i).ToString() + " of " + count.ToString() + ")";
+								UpdateTaskStatus(requestId, TimeSeriesRequestStatus.ProcessingTimeSeriesId, statusMessage);
+								WriteTaskDataToDatabase(cu, requestId, TimeSeriesRequestStatus.ProcessingTimeSeriesId, statusMessage, blobUri, blobTimeStamp);	
 
 								//Retrieve the time series data in the input format: CSV --OR-- XML 
 								FileStreamResult filestreamresult = await DownloadFile(timeSeriesId, currentSeries, tsrIn.RequestFormat);
@@ -473,6 +479,7 @@ namespace HISWebClient.Controllers
 							//Upload zip archive...
 							blobUri = await _ac.UploadFromMemoryStreamAsync(memoryStream, requestName, ct);
 							blobTimeStamp = DateTime.Now;
+							WriteTaskDataToDatabase(cu, requestId, TimeSeriesRequestStatus.SavingZipArchive, "", blobUri, blobTimeStamp);	
 
 							//Upload complete - check for cancellation...
 							if (!IsTaskCancelled(requestId, cancellationEnum, cancellationMessage))
@@ -486,6 +493,9 @@ namespace HISWebClient.Controllers
 									_dictTaskStatus[requestId].BlobUri = blobUri;
 									_dictTaskStatus[requestId].BlobTimeStamp = blobTimeStamp;
 								}
+
+								//Record the final status in the database, if indicated
+								WriteTaskDataToDatabase(cu, requestId, TimeSeriesRequestStatus.Completed, "", blobUri, blobTimeStamp);
 
 								dblogcontextRef.clearParameters();
 								dblogcontextRef.clearReturns();
@@ -516,7 +526,9 @@ namespace HISWebClient.Controllers
 														"RequestTimeSeries error for Id: " + requestId + " message: " + ex.Message);
 						
 						//Update request status
-						UpdateTaskStatus(requestId, TimeSeriesRequestStatus.RequestTimeSeriesError, TimeSeriesRequestStatus.RequestTimeSeriesError.GetEnumDescription() + ": " + ex.Message);
+						string errorMessage = TimeSeriesRequestStatus.RequestTimeSeriesError.GetEnumDescription() + ": " + ex.Message;
+						UpdateTaskStatus(requestId, TimeSeriesRequestStatus.RequestTimeSeriesError, errorMessage);
+						WriteTaskDataToDatabase(cu, requestId, TimeSeriesRequestStatus.RequestTimeSeriesError, errorMessage, blobUri, blobTimeStamp);	
 
 						//Set status variables...
 						requestStatus = TimeSeriesRequestStatus.RequestTimeSeriesError;
@@ -1085,7 +1097,6 @@ namespace HISWebClient.Controllers
 			return Json(json, "application/json", JsonRequestBehavior.AllowGet);
 		}
 
-
 		//Call the BYU API for a list of interfaced apps
 		[HttpGet]
 		public async Task<ActionResult> GetHydroshareAppsList()
@@ -1467,6 +1478,62 @@ namespace HISWebClient.Controllers
 
 			return string.Format("{0}{1}", fileName, extension);
 
+		}
+
+		private void WriteTaskDataToDatabase(CurrentUser cu, String requestId, TimeSeriesRequestStatus requestStatus, String status, String blobUri, DateTime blobTimeStamp)
+		{
+			//Verify/initialize input parameters
+			if ((null != cu) && cu.Authenticated && (!String.IsNullOrWhiteSpace(cu.UserEmail)) && (!String.IsNullOrWhiteSpace(requestId)))
+			{
+
+				if (String.IsNullOrWhiteSpace(status))
+				{
+					status = requestStatus.GetEnumDescription();
+				}
+
+				HydroClientDbContext hcdbc = new HydroClientDbContext();
+
+				//Check time stamp values - if DateTime.MinValue change to SQL Server minimum value to avoid a 'value out of range' error...
+				if (DateTime.MinValue == blobTimeStamp)
+				{
+					blobTimeStamp = new DateTime(1753, 1, 1);
+				}
+
+				//ExportTaskData etd = _hcdbc.ExportTaskDataSet.FirstOrDefault(e => e.RequestId.Equals(requestId) && e.UserEmail.Equals(cu.UserEmail));
+				ExportTaskData etd = hcdbc.ExportTaskDataSet.FirstOrDefault(e => e.RequestId.Equals(requestId) && e.UserEmail.Equals(cu.UserEmail));
+				if (null == etd)
+				{
+					//Record NOT found - add to database...
+					etd = new ExportTaskData();
+
+					etd.RequestId = requestId;
+					etd.RequestStatus = (int) requestStatus;
+					etd.Status = status;
+					etd.UserEmail = cu.UserEmail;
+					etd.BlobUri = blobUri;
+					etd.BlobTimeStamp = blobTimeStamp;
+
+					hcdbc.ExportTaskDataSet.Add(etd);
+				}
+				else
+				{
+					//Record found - update database...
+					etd.RequestStatus = (int)requestStatus;
+					etd.Status = status;
+					etd.BlobUri = blobUri;
+					etd.BlobTimeStamp = blobTimeStamp;
+				}
+
+				try
+				{
+					//hcdbc.SaveChanges();
+					hcdbc.SaveChangesAsync();
+				}
+				catch (Exception ex)
+				{
+					var msg = ex.Message;
+				}
+			}
 		}
 
 		public SeriesMetadata getSeriesMetadata(int SeriesId, List<TimeSeriesViewModel> currentSeries = null)
