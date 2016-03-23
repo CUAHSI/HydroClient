@@ -10,10 +10,12 @@
 
 function TimeSeriesFormat() {
 
-    //Enum values...
-    this.enumValues = { 'CSV': [1, 'CSV...'],
-                        'WaterOneFlow': [2, 'WaterOneFlow...']
-                        };
+    //Enum values...needs to be in multiples of 2 becaus of the [FLAGS] attribute of Model 
+    this.enumValues = {
+        'CSV': [1, 'CSV...'],
+        'WaterOneFlow': [2, 'WaterOneFlow...'],
+        'CSVMerged': [4, 'CSV Merged...']
+    };
 
     if ("function" !== typeof this.getEnum) {
         TimeSeriesFormat.prototype.getEnum = function () {

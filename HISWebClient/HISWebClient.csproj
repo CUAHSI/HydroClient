@@ -44,6 +44,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CsvHelper, Version=2.0.0.0, Culture=neutral, PublicKeyToken=8c4959082be5c823, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CsvHelper.2.13.5.0\lib\net40-client\CsvHelper.dll</HintPath>
+    </Reference>
     <Reference Include="Kent.Boogaart.HelperTrinity, Version=2.0.1.0, Culture=neutral, PublicKeyToken=cc96fa93a217f7a1, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Kent.Boogaart.HelperTrinity.2.0.1\lib\portable-win8+net403+sl40+wp+xbox40\Kent.Boogaart.HelperTrinity.dll</HintPath>
@@ -285,6 +289,7 @@
     <Compile Include="Models\DataManager\DM_TimeSeries.cs" />
     <Compile Include="Models\DataManager\UserTimeSeries.cs" />
     <Compile Include="Models\DataManager\UserTimeSeriesDbContext.cs" />
+    <Compile Include="Models\DataValueCsvViewModel.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
     <Compile Include="Models\OntologyHelper.cs" />
@@ -300,6 +305,7 @@
     <Compile Include="Util\DbBaseContext.cs" />
     <Compile Include="Util\DbErrorContext.cs" />
     <Compile Include="Util\DbLogContext.cs" />
+    <Compile Include="Util\ExportUtils.cs" />
     <Compile Include="Util\httpUtil.cs" />
     <Compile Include="Util\LinqPredicateBuilder.cs" />
     <Compile Include="Util\SearchStringComparer.cs">
@@ -680,8 +686,6 @@
           <DevelopmentServerPort>49330</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
           <IISUrl>http://localhost:49330/</IISUrl>
-          <OverrideIISAppRootUrl>True</OverrideIISAppRootUrl>
-          <IISAppRootUrl>http://localhostdev.org:49331</IISAppRootUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>

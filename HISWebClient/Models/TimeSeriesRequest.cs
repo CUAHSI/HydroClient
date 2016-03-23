@@ -8,14 +8,15 @@ using System.ComponentModel;
 namespace HISWebClient.Models
 {
 	[Flags]
-	public enum TimeSeriesFormat	//OR-able...
-	{
-		[Description("CSV...")]
-		CSV = 0x0001,
-
-		[Description("WaterOneFlow...")]
-		WaterOneFlow = 0x0002
-	}
+    public enum TimeSeriesFormat	//OR-able...
+    {
+        [Description("CSV...")]
+        CSV = 0x0001,
+        [Description("CSV Merged...")]
+        CSVMerged = 0x0004,
+        [Description("WaterOneFlow...")]
+        WaterOneFlow = 0x0002
+    }
 
     public class TimeSeriesRequest
     {

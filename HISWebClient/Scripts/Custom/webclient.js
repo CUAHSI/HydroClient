@@ -3451,9 +3451,12 @@ function setUpDatatables(clusterid) {
         $('#anchorAllSelections').off('click', selectAll);
         $('#anchorAllSelections').on('click', { 'tableId': 'dtMarkers', 'anchorId': 'anchorAllSelections', 'checkId': 'spanSelectCheck', 'clearId': 'anchorClearSelections', 'selectAll' : $('#anchorAllSelections').attr('data-selectall') }, selectAll);
     }
+
+  
+
     //Avoid multiple registrations of the same handler...
     $('#anchorEachTimeseriesInSeparateFile').off('click', zipSelections_2);
-    $('#anchorEachTimeseriesInSeparateFile').on('click', { 'tableId': 'dtMarkers', 'selectAll' : $('#anchorAllSelections').attr('data-selectall'), 'checkId': 'spanSelectCheck' /*, 'currentAnchor': 'anchorEachTimeseriesInSeparateFile' */ }, zipSelections_2);
+    $('#anchorEachTimeseriesInSeparateFile').on('click', { 'tableId': 'dtMarkers', 'selectAll': $('#anchorAllSelections').attr('data-selectall'), 'checkId': 'spanSelectCheck' /*, 'currentAnchor': 'anchorEachTimeseriesInSeparateFile' */ }, zipSelections_2);
 
     //Avoid multiple registrations of the same handler...
     $('#anchorAddSelectionsToWorkspace').off('click', copySelectionsToDataManager);
@@ -5748,6 +5751,10 @@ function displayAndFadeLabel(labelClass) {
     }, 5000);
 }
 
+//show dialog for export
+function openDownloadModal(event) {
+    $('#ExportModal').modal('show');
+}
 
 //Zip selections click handler...
 function zipSelections_2(event) {
@@ -5795,12 +5802,22 @@ function zipSelections_2(event) {
         var id = row.SeriesId;
         timeSeriesIds.push(id);
     }
+    //if user selected to combine data otherwie download individual data
+    var isMerged = false
+    if (event.target.id == "anchorAllTimeseriesInOneFileTS")// btnCombineAndDownloadFiles
+    {
+        isMerged = true
+        retrieveCSVTimeSeries(taskId, timeSeriesIds, isMerged)
+    }
+    else
+    {
+        retrieveCSVTimeSeries(taskId, timeSeriesIds, isMerged);
+    }
 
-    retrieveCSVTimeSeries(taskId, timeSeriesIds);
 }
 
 //Retrieve the time series per the input series ids...
-function retrieveCSVTimeSeries(taskId, timeSeriesIds) {
+function retrieveCSVTimeSeries(taskId, timeSeriesIds,isMerged) {
 
     //Create the request object...
     var requestId = randomId.generateId();
@@ -5822,13 +5839,15 @@ function retrieveCSVTimeSeries(taskId, timeSeriesIds) {
             }
         }
     }
+    
+     var tsf = (isMerged)?  timeSeriesFormat.CSVMerged : timeSeriesFormat.CSV;
+        var timeSeriesRequest = {
+            'RequestName': requestName,
+            'RequestId': requestId,
+            'TimeSeriesIds': timeSeriesIds,
+            'RequestFormat': tsf
 
-    var timeSeriesRequest = {
-        'RequestName': requestName,
-        'RequestId': requestId,
-        'TimeSeriesIds': timeSeriesIds,
-        'RequestFormat': timeSeriesFormat.CSV
-    };
+        };
 
     var timeSeriesRequestString = JSON.stringify(timeSeriesRequest);
 
@@ -6520,7 +6539,7 @@ function setUpTimeseriesDatatable() {
                                        '<li data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV format">' +
                                         '<a href="#" id="anchorEachTimeseriesInSeparateFileTS" style="font-weight: bold;">' +                                    
                                         '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.5em;  margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +
-                                        '<span id="spanZipSelectionsTS"  style="font-weight: bold; display: inline-block; vertical-align: super;">Export Selection(s)</span>' +
+                                        '<span   style="font-weight: bold; display: inline-block; vertical-align: super;">Export Selection(s)</span>' +
                                        '</a>') +
 
                                        (currentUser.authenticated ? 
@@ -6528,13 +6547,13 @@ function setUpTimeseriesDatatable() {
                                             '<li class="disabled">' +
                                              '<a href="#" id="anchorAllTimeseriesInOneFileTS" style="font-weight: bold; color: #337ab7;" >' +
                                                '<span class="glyphicon glyphicon-file" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
-                                               '<span style="font-weight: bold; display: inline-block; vertical-align: super;">All selections in one file</span>' +
+                                               '<span id="spanAllTimeseriesInOneFileTS" style="font-weight: bold; display: inline-block; vertical-align: super;">All selections in one file</span>' +
                                              '</a>' +
                                             '</li>' +
                                             '<li>' +
                                              '<a href="#" id="anchorEachTimeseriesInSeparateFileTS" style="font-weight: bold; color: #337ab7;" >' +
                                                '<span class="glyphicon glyphicon-duplicate" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
-                                               '<span style="font-weight: bold; display: inline-block; vertical-align: super;">Each selection in a separate file</span>' +
+                                               '<span id="spanZipSelectionsTS" style="font-weight: bold; display: inline-block; vertical-align: super;">Each selection in a separate file</span>' +
                                              '</a>' +
                                             '</li>' +
                                            '</ul>' : '' ) + 
@@ -6573,6 +6592,13 @@ function setUpTimeseriesDatatable() {
     //Authenticated user...
     $('#anchorEachTimeseriesInSeparateFileTS').off('click', zipSelections_2);
     $('#anchorEachTimeseriesInSeparateFileTS').on('click', { 'tableId': 'dtTimeseries', 'selectAll' : $('#anchorAllSelectionsTS').attr('data-selectall'), 'checkId': 'spanSelectCheckTS' /*, 'currentAnchor': 'anchorEachTimeseriesInSeparateFileTS' */ }, zipSelections_2);
+
+    //download click handler
+    $('#btnDownloadFiles').off('click', zipSelections_2);
+    $('#btnDownloadFiles').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, zipSelections_2);
+
+    $('#btnCombineAndDownloadFiles').off('click', zipSelections_2);
+    $('#btnCombineAndDownloadFiles').on('click', { 'tableId': 'dtMarkers', 'chkbxId': 'chkbxSelectAll' }, zipSelections_2);
 
 
     $('#chkbxApplyFilterToMapTS').off('click', applyFilterToMap);
