@@ -28,7 +28,7 @@ namespace HISWebClient.Models
 			TimeSeriesIds = new List<int>();
 		}
 
-        public TimeSeriesRequest(string requestNameIn, string requestIdIn, int[] timeSeriesIdsIn, TimeSeriesFormat timeSeriesFormatIn = TimeSeriesFormat.CSV )
+        public TimeSeriesRequest(string requestNameIn, string requestIdIn, int[] timeSeriesIdsIn, TimeSeriesFormat timeSeriesFormatIn = TimeSeriesFormat.CSV, string eMail = "" )
         {
             RequestName = requestNameIn;
 
@@ -37,6 +37,8 @@ namespace HISWebClient.Models
             TimeSeriesIds = new List<int>(timeSeriesIdsIn);
 
 			RequestFormat = timeSeriesFormatIn;
+
+			UserEmail = eMail;
         }
  
         /// <summary>
@@ -59,5 +61,10 @@ namespace HISWebClient.Models
 		/// RequestFormat
 		/// </summary>
 		public TimeSeriesFormat RequestFormat { get; set; }
+
+		/// <summary>
+		/// UserEmail - for authenticated users only...
+		/// </summary>
+		public string UserEmail { get; set; }
     }
 }

@@ -7,13 +7,13 @@ namespace HISWebClient.Migrations
     using System.Resources;
     
     [GeneratedCode("EntityFramework.Migrations", "6.1.1-30610")]
-    public sealed partial class InitialCreate : IMigrationMetadata
+    public sealed partial class AddedStatusMessage : IMigrationMetadata
     {
-        private readonly ResourceManager Resources = new ResourceManager(typeof(InitialCreate));
+        private readonly ResourceManager Resources = new ResourceManager(typeof(AddedStatusMessage));
         
         string IMigrationMetadata.Id
         {
-            get { return "201512020008146_InitialCreate"; }
+            get { return "201603211641193_AddedStatusMessage"; }
         }
         
         string IMigrationMetadata.Source
