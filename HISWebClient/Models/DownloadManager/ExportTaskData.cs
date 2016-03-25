@@ -36,5 +36,7 @@ namespace HISWebClient.Models.DownloadManager
 
 		//Reference to associated user in AspNetUsers
 		//public virtual ApplicationUser ApplicationUser { get; set; }
+
+		//BCC - Testing SmartGit setup - redux...
 	}
 }
