@@ -41,8 +41,8 @@ namespace HISWebClient
             //var l = log4net.Config.XmlConfigurator.Configure(fileinfo);  
 
             //BC - Test - write a trace message...
-            Trace.TraceInformation("{0} {1} Application started...", DateTime.UtcNow, "Application_Start");
-            Trace.Flush();
+//            Trace.TraceInformation("{0} {1} Application started...", DateTime.UtcNow, "Application_Start");
+//            Trace.Flush();
 
         }
     }

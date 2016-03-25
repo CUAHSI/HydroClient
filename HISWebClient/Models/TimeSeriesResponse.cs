@@ -46,7 +46,10 @@ namespace HISWebClient.Models
         CheckTaskError = 11,
 
         [Description("End Task Error")]
-        EndTaskError = 12    
+        EndTaskError = 12,
+    
+		[Description("Not Started")]
+		NotStarted = 13
    }
 
 
@@ -57,12 +60,16 @@ namespace HISWebClient.Models
         /// </summary>
         public TimeSeriesResponse() { }
 
-        public TimeSeriesResponse(string requestIdIn, TimeSeriesRequestStatus tsrsIn, string statusIn, string blobUriIn = "")
+		//C# 'feature' - new DateTime() same value as DateTIme.MinValue - but you can't use DateTime.MinValue as a default argument!!!
+        public TimeSeriesResponse(string requestIdIn, TimeSeriesRequestStatus tsrsIn, string statusIn, string blobUriIn = "", DateTime blobTimeStampIn = new DateTime())  
         {
             RequestId = requestIdIn;
             RequestStatus = tsrsIn;
             Status = statusIn;
             BlobUri = blobUriIn;
+			BlobTimeStamp = blobTimeStampIn;
+
+			SeriesIdsToVariableUnits = new Dictionary<int, string>();
         }
 
         /// <summary>
@@ -82,8 +89,15 @@ namespace HISWebClient.Models
         public String Status { get; set; }
 
         /// <summary>
-        /// BlobUri
+        /// BlobUri - for blob files...
         /// </summary>
         public String BlobUri {get; set; }
-    }
+
+		/// <summary>
+		/// BlobTimeStamp - for blob files...
+		/// </summary>
+		public DateTime BlobTimeStamp { get; set; }
+
+		public Dictionary<int, string> SeriesIdsToVariableUnits { get; set; }
+	}
 }

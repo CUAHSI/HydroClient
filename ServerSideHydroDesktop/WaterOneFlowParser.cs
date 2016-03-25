@@ -111,7 +111,17 @@ namespace ServerSideHydroDesktop
                         //Read the site information
                         site = ReadSite(reader);
                     }
-                    else if (site != null && readerName == "series")
+					//else if ("sourceinfo" == readerName)
+					//{
+					//	//BCC - 04-Jan-2016 - Add processing for 'sourceInfo' - see WaterOneFlowParser.ReadValues(...)
+					//	// Looks like this case contains only one 'series' - the 'values' list.
+					//	// Therefore, create one SeriesMetaData instance, add to list and return...
+					//	site = ReadSite(reader);
+					//	var newSeries = ReadSeriesFromSiteInfo(reader, site);
+					//	seriesList.Add(newSeries);
+					//	break;
+					//}
+                    else if (site != null && readerName == "series") 
                     {
                         var newSeries = ReadSeriesFromSiteInfo(reader, site);
                         seriesList.Add(newSeries);
@@ -189,6 +199,7 @@ namespace ServerSideHydroDesktop
         private IList<Series> ReadValues(XmlReader reader)
         {
             Site site = null;
+            Source source = null;
             Variable varInfo = null;
             IList<Series> seriesList = null;
             while (reader.Read())
@@ -203,9 +214,10 @@ namespace ServerSideHydroDesktop
                         //var qry = ReadQueryInfo(reader);
                         //xmlFileInfo.QueryInfo = qry;
                     }
-                    else if (readerName == "source" || readerName == "sourceinfo")
+                    
+                    else if (readerName == "sourceinfo")//sourceinfo does contains site information but does contain not source values. Source is separate tag in response 
                     {
-                        //Read the site information
+                        //Read the source information
                         site = ReadSite(reader);
                     }
                     else if (readerName == "variable")
@@ -222,6 +234,10 @@ namespace ServerSideHydroDesktop
                             if (varInfo != null)
                             {
                                 series.Variable = varInfo;
+                            }
+                            if (source != null)
+                            {
+                                series.Source = source;
                             }
                             if (site != null)
                             {

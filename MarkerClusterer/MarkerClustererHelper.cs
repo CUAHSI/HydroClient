@@ -72,13 +72,27 @@ namespace HISWebClient.MarkerClusterer
                         pinsString.Append("\"type\": \"Point\",");
                         pinsString.Append("\"coordinates\": [" + pin.Loc.Lon.ToString() + "," + pin.Loc.Lat.ToString() + "]},");
                         pinsString.Append("\"properties\": {");
-                        pinsString.Append("\"clusterid\":\"" + i.ToString() + "\" ");
+                        pinsString.Append("\"clusterid\":\"" + i.ToString() + "\", ");
                         //pinsString.Append("\"guid\":\"" + pin.AssessmentHeaderData["guid"].ToString() + "\", ");
                         //pinsString.Append("\"sector\":\"" + pin.AssessmentHeaderData["sector"].ToString() + "\", ");
                         //pinsString.Append("\"assessment\":\"" + pin.AssessmentHeaderData["assessment"].ToString() + "\", ");
                         //pinsString.Append("\"dateassessed\":\"" + pin.AssessmentHeaderData["dateassessed"].ToString() + "\", ");
                         //pinsString.Append("\"dateposted\":\"" + pin.AssessmentHeaderData["dateposted"].ToString() + "\", ");
                         //pinsString.Append("\"icontype\":\"" + pin.AssessmentHeaderData["icontype"].ToString() + "\" ");
+
+						//Add service code/title pairs to properties... 
+						pinsString.Append("\"serviceCodeToTitle\": {");
+						foreach (var serviceCode in pin.ServiceCodeToTitle)
+						{
+							pinsString.Append(String.Format("\"{0}\": \"{1}\",", serviceCode.Key, serviceCode.Value));
+						}
+						//Remove trailing ',', if indicated 
+						if ( ',' == pinsString[pinsString.Length - 1])
+						{
+							pinsString.Remove(pinsString.Length - 1, 1);
+						}
+						pinsString.Append("}");
+
                         pinsString.Append("}},");
                         ////if ((pins.Count > 1)) sb.Append(",");
                     }
@@ -94,9 +108,22 @@ namespace HISWebClient.MarkerClusterer
 
                         clusteredpinsString.Append("\"clusterid\":\"" + i.ToString() + "\", ");
                         clusteredpinsString.Append("\"count\":\"" + pin.Count + "\", ");
-                        clusteredpinsString.Append("\"icontype\":\"cluster\" ");
-                        clusteredpinsString.Append("}},");
+                        clusteredpinsString.Append("\"icontype\":\"cluster\", ");
 
+						//Add service code/title pairs to properties... 
+						clusteredpinsString.Append("\"serviceCodeToTitle\": {");
+						foreach (var serviceCode in pin.ServiceCodeToTitle)
+						{
+							clusteredpinsString.Append(String.Format("\"{0}\": \"{1}\",", serviceCode.Key, serviceCode.Value));
+						}
+						//Remove trailing ',', if indicated 
+						if (',' == clusteredpinsString[clusteredpinsString.Length - 1])
+						{
+							clusteredpinsString.Remove(clusteredpinsString.Length - 1, 1);
+						}
+						clusteredpinsString.Append("}");
+
+                        clusteredpinsString.Append("}},");
                     }
 
                 }

@@ -8,7 +8,17 @@ using System.Web.Mvc;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
+
+using System.Configuration;
+using System.Web.Script.Serialization;
+
+using Newtonsoft.Json;
+
 using HISWebClient.Models;
+
+using HISWebClient.Models.DataManager;
+
+using HISWebClient.Util;
 
 namespace HISWebClient.Controllers
 {
@@ -24,6 +34,8 @@ namespace HISWebClient.Controllers
         public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager )
         {
             UserManager = userManager;
+            UserManager.UserValidator = new UserValidator<ApplicationUser>(UserManager) { AllowOnlyAlphanumericUserNames = false };
+    
             SignInManager = signInManager;
         }
 
@@ -31,7 +43,7 @@ namespace HISWebClient.Controllers
         {
             get
             {
-                return _userManager ?? HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
+                return _userManager ?? Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
             }
             private set
             {
@@ -282,8 +294,90 @@ namespace HISWebClient.Controllers
         public ActionResult ExternalLogin(string provider, string returnUrl)
         {
             // Request a redirect to the external login provider
+
+			//Retrieve the absolure (complete) URI from the request...
+			string absoluteUri = Request.Url.AbsoluteUri;
+
+			if (absoluteUri.Contains("localhostdev.org", StringComparison.CurrentCultureIgnoreCase))
+			{
+				//Special case - running locally under IIS Express with host-file based domain...
+
+				//Retrieve port and scheme from request...
+				int port = Request.Url.Port;
+				string query = Request.Url.Query;
+
+				//Create an absolute (complete) URL...
+				string url = String.Format( "http://localhostdev.org:{0}/Account/ExternalLoginCallback{1}", port, query );  
+
+				//Return a ChallengeResult with a complete URL...
+				return new ChallengeResult( provider, url);
+			}
+
+			//No special case - return a ChallengeResult with a relative URL...
             return new ChallengeResult(provider, Url.Action("ExternalLoginCallback", "Account", new { ReturnUrl = returnUrl }));
         }
+
+        //
+		// POST: /Account/ExternalLogOut
+		//NOTE: Redirects reset the ViewBag (source: http://www.codeproject.com/Articles/476967/What-is-ViewData-ViewBag-and-TempData-MVC-Option) 
+		//		Added returnUrl parameter to the method signature to avoid this issue...
+		[HttpPost]
+		[AllowAnonymous]
+		[ValidateAntiForgeryToken]
+		public ActionResult ExternalLogOut(string provider, string returnUrl, string localLogout)
+		{
+			//Reset external login information for the current session
+			resetSessionExternalLogin();
+
+			//NOTE: The Authentication.SignOut() does a local sign-out of the user but does not invalidate the Google cookies.
+			//		 Thus the user is still logged in to Google...
+
+			//Replacing the original SignOut() call...
+			//Source: http://stackoverflow.com/questions/28999318/owin-authentication-signout-doesnt-seem-to-remove-the-cookie
+
+			//AuthenticationManager.SignOut(DefaultAuthenticationTypes.ApplicationCookie, DefaultAuthenticationTypes.ExternalCookie);
+			string[] authenticationTypes = { Microsoft.AspNet.Identity.DefaultAuthenticationTypes.ApplicationCookie, 
+										     Microsoft.AspNet.Identity.DefaultAuthenticationTypes.ExternalCookie
+										   };
+
+			Request.GetOwinContext().Authentication.SignOut(authenticationTypes);
+
+			//Expire miscellaneous Google cookies related to the external login...
+			//Source: https://msdn.microsoft.com/en-us/library/ms178195.aspx
+			//
+			//NOTE: Cannot expire cookies from a different domain.  
+			//		 So this attempt to log the user out from Google does not work...
+			//
+			//string[] cookieNames = {"APISID", "HSID", "SAPISID", "SID", "SSID"};
+
+			//foreach (string cookieName in cookieNames) {
+			//	HttpCookie cookie = new HttpCookie(cookieName);
+			//	cookie.Domain = ".google.com";
+			//	cookie.Expires = DateTime.Now.AddDays(-1);
+			//	Response.Cookies.Add(cookie);
+			//}
+
+			//To invalidate the user's Google credentials (and thereby log the user out of Google) redirect to the google/accounts web-site 
+			//	and supply a full return URL...
+			//Source: http://stackoverflow.com/questions/16238327/logging-out-from-google-external-service
+			//Google URL pattern: https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue=https://www.yourapp.com 
+
+			//string googleUrl = "https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue=";
+
+			string googleUrl = ConfigurationManager.AppSettings["GoogleExternalLogoutUrlBase"];
+			string scheme = Request.Url.Scheme;
+			string authority = Request.Url.Authority;
+
+			string redirectUrl = String.Format("{0}{1}://{2}/{3}", googleUrl, scheme, authority, returnUrl);
+
+			if (!String.IsNullOrWhiteSpace(localLogout) && "true" == localLogout)
+			{
+				//Local logout only - reset redirect URL...
+				redirectUrl = String.Format("{0}://{1}/{2}", scheme, authority, returnUrl);
+			}
+
+			return Redirect(redirectUrl);
+		}
 
         //
         // GET: /Account/SendCode
@@ -332,23 +426,202 @@ namespace HISWebClient.Controllers
             }
 
             // Sign in the user with this external login provider if the user already has a login
+            var externalIdentity = HttpContext.GetOwinContext().Authentication.GetExternalIdentityAsync(DefaultAuthenticationTypes.ExternalCookie);
+
+			//Retain external username and email values for later reference 
+			var emailClaim = externalIdentity.Result.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+            var email = emailClaim.Value;
+
+			var nameClaim = externalIdentity.Result.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name);
+			var userName = nameClaim.Value;  //Same as: externalIdentity.Result.GetUserName(); ??
+          
             var result = await SignInManager.ExternalSignInAsync(loginInfo, isPersistent: false);
-            switch (result)
+
+			var authResult = await SignInManager.AuthenticationManager.AuthenticateAsync(DefaultAuthenticationTypes.ExternalCookie);
+			
+			switch (result)
             {
                 case SignInStatus.Success:
-                    return RedirectToLocal(returnUrl);
+					//set external login values for session
+					setSessionExternalLogin(userName, email);
+
+					//Set return URL for later reference...
+					ViewBag.ReturnUrl = returnUrl;
+                   
+					return RedirectToLocal(returnUrl);
                 case SignInStatus.LockedOut:
                     return View("Lockout");
                 case SignInStatus.RequiresVerification:
                     return RedirectToAction("SendCode", new { ReturnUrl = returnUrl, RememberMe = false });
                 case SignInStatus.Failure:
                 default:
-                    // If the user does not have an account, then prompt the user to create an account
+                    // If the user does not have an account, then write a new entry into user database
                     ViewBag.ReturnUrl = returnUrl;
-                    ViewBag.LoginProvider = loginInfo.Login.LoginProvider;
-                    return View("ExternalLoginConfirmation", new ExternalLoginConfirmationViewModel { Email = loginInfo.Email });
+                    //ViewBag.LoginProvider = loginInfo.Login.LoginProvider;
+                    //return View("ExternalLoginConfirmation", new ExternalLoginConfirmationViewModel { Email = loginInfo.Email });
+
+                //var user = UserManager.FindByName(email);
+				var user = UserManager.FindByEmail(email);
+
+                if (user != null)
+                {
+                    await SignInManager.SignInAsync(user, false, false);
+
+					//set external login values for session
+					setSessionExternalLogin(userName, email);
+
+					//Set return URL for later reference...
+					ViewBag.ReturnUrl = returnUrl;
+
+					return RedirectToLocal(returnUrl);
+                }
+                else
+                {
+                    var info = await AuthenticationManager.GetExternalLoginInfoAsync();
+                    if (info == null)
+                    {
+                        return View("ExternalLoginFailure");
+                    }
+
+					//BCC - 30-Nov-2015 - Set email field to avoid error: 'Email cannot be null or empty...
+					//BCC - TEST - 03-Dec-2015 - r: UserName = email w: UserName = userName
+					var newUser = new ApplicationUser() { UserName = userName, Email = email, UserEmail = email };
+
+                    var rst = await UserManager.CreateAsync(newUser);
+					
+					if (rst.Succeeded)
+                    {
+                        var r = await UserManager.AddLoginAsync(newUser.Id, info.Login);
+						
+						if (r.Succeeded)
+                        {
+                            await SignInManager.SignInAsync(newUser, false, false);
+
+							//set external login values for session
+							setSessionExternalLogin(userName, email);
+
+							//Set return URL for later reference...
+							ViewBag.ReturnUrl = returnUrl;
+							
+							return RedirectToLocal(returnUrl);
+                        }
+                    }
+                    //AddErrors(result);
+                    return View("ExternalLoginFailure");
+                }
             }
         }
+
+
+		//Set information for the current external login in the current session...
+		private void setSessionExternalLogin( string userName, string eMail, bool authenticated = true)
+		{
+			//Validate/initialize input parameters...
+			if ( String.IsNullOrWhiteSpace(userName) || String.IsNullOrWhiteSpace(eMail))
+			{
+				return;		//Invalid parameter return early...
+			}
+
+			CurrentUser cu = new CurrentUser(userName, eMail, authenticated);
+
+			var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
+
+			httpContext.Session[httpContext.Session.SessionID] = cu;
+		}
+
+		//Reset external login information for the current session
+ 		private void resetSessionExternalLogin()
+		{
+			var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
+			httpContext.Session[httpContext.Session.SessionID] = null;
+		}
+
+
+		//Return the current user, if any
+		[HttpGet]
+		public ActionResult CurrentUser()
+		{
+
+			//Does the User object exist here?
+			//if (User.Identity.IsAuthenticated)
+			//{
+			//	string userId = User.Identity.GetUserId();
+			//	string userName = User.Identity.GetUserName();
+			//	string userName2 = User.Identity.Name;
+
+
+			//	var claims = UserManager.GetClaims(userId);
+
+			//	var emailClaim = claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+			//	var nameClaim = claims.FirstOrDefault(c => c.Type == ClaimTypes.Name);
+
+			//	var user = UserManager.Users.FirstOrDefault( u => u.Id.Equals(userId));
+
+			//	var email = user.UserEmail;
+			//	var userName3 = user.UserName;
+
+			//	//var externalIdentity = HttpContext.GetOwinContext().Authentication.GetExternalIdentityAsync(DefaultAuthenticationTypes.ExternalCookie);
+
+			//	////Retain external username and email values for later reference 
+			//	//var emailClaim = externalIdentity.Result.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+			//	//var email = emailClaim.Value;
+
+			//	//var nameClaim = externalIdentity.Result.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name);
+			//	//var userName3 = nameClaim.Value;  //Same as: externalIdentity.Result.GetUserName(); ??
+
+
+			//	int n = 5;
+
+			//	++n;
+			//}
+
+			//Check current session for current user
+			var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
+			CurrentUser cu = httpContext.Session[httpContext.Session.SessionID] as CurrentUser;
+			if ( null == cu )
+			{
+				//Not found - current session may have authenticated user per a previously established Google 'cookie'
+				bool bFound = false;	//Assume authenticated user does not exist...
+				if (User.Identity.IsAuthenticated)
+				{
+					//Authenticated user exists - retrieve User instance via current user Id...
+					string userId = User.Identity.GetUserId();
+					if (!String.IsNullOrWhiteSpace(userId))
+					{
+						var user = UserManager.Users.FirstOrDefault(u => u.Id.Equals(userId));
+						if (null != user)
+						{
+							//User found - attempt to retrieve user name and email...
+							string userEmail = user.UserEmail;
+							string userName = user.UserName;
+							if ((!String.IsNullOrWhiteSpace(userEmail)) && (!String.IsNullOrWhiteSpace(userName)))
+							{
+								//User name and email found - set current user for current session...
+								setSessionExternalLogin(userName, userEmail);
+								cu = httpContext.Session[httpContext.Session.SessionID] as CurrentUser;
+								bFound = (null != cu);
+							}
+
+						}
+					}
+				}
+								
+				if (! bFound)
+				{
+					//No authenticated user found - return 'Not Found'...
+				return new HttpStatusCodeResult(System.Net.HttpStatusCode.NotFound, "No current user!!");
+			}
+			}
+
+			//Sucess - convert retrieved data to JSON and return...
+			//var javaScriptSerializer = new JavaScriptSerializer();
+			//var json = javaScriptSerializer.Serialize(cu);
+			var json = JsonConvert.SerializeObject(cu);
+
+
+			Response.StatusCode = (int)System.Net.HttpStatusCode.OK;
+			return Json(json, "application/json", JsonRequestBehavior.AllowGet);
+		}
 
         //
         // POST: /Account/ExternalLoginConfirmation
@@ -391,11 +664,25 @@ namespace HISWebClient.Controllers
         //
         // POST: /Account/LogOff
         [HttpPost]
+		[AllowAnonymous]
         [ValidateAntiForgeryToken]
         public ActionResult LogOff()
         {
-            AuthenticationManager.SignOut();
-            return RedirectToAction("Index", "Home");
+
+			//Reset external login information for the current session
+			resetSessionExternalLogin();
+
+			//AuthenticationManager.SignOut();
+			AuthenticationManager.SignOut(DefaultAuthenticationTypes.ApplicationCookie, DefaultAuthenticationTypes.ExternalCookie);
+			//AuthenticationManager.SignOut(DefaultAuthenticationTypes.ExternalCookie);
+
+//          return RedirectToAction("Index", "Home");
+
+			var returnUrl = ViewBag.ReturnUrl;
+
+			ViewBag.ReturnUrl = null;
+			return RedirectToAction(returnUrl);
+		
         }
 
         //

@@ -23,7 +23,7 @@
     <ApplicationInsightsResourceId>/subscriptions/fbe9ed82-2c21-449e-b0d6-3093522e2459/resourcegroups/Default-ApplicationInsights-CentralUS/providers/microsoft.insights/components/HISWebClient</ApplicationInsightsResourceId>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
-    <NuGetPackageImportStamp>9a632de1</NuGetPackageImportStamp>
+    <NuGetPackageImportStamp>93852c3c</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -44,6 +44,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CsvHelper, Version=2.0.0.0, Culture=neutral, PublicKeyToken=8c4959082be5c823, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CsvHelper.2.13.5.0\lib\net40-client\CsvHelper.dll</HintPath>
+    </Reference>
     <Reference Include="Kent.Boogaart.HelperTrinity, Version=2.0.1.0, Culture=neutral, PublicKeyToken=cc96fa93a217f7a1, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Kent.Boogaart.HelperTrinity.2.0.1\lib\portable-win8+net403+sl40+wp+xbox40\Kent.Boogaart.HelperTrinity.dll</HintPath>
@@ -58,15 +62,6 @@
     <Reference Include="log4net.Appender.Azure">
       <HintPath>..\packages\log4net.Appender.Azure.1.1.1.0\lib\net45\log4net.Appender.Azure.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.ApplicationInsights">
-      <HintPath>..\packages\Microsoft.ApplicationInsights.0.10.0-build17704\lib\net40\Microsoft.ApplicationInsights.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.ApplicationInsights.RuntimeTelemetry">
-      <HintPath>..\packages\Microsoft.ApplicationInsights.RuntimeTelemetry.0.10.0-build17704\lib\net45\Microsoft.ApplicationInsights.RuntimeTelemetry.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.ApplicationInsights.Web">
-      <HintPath>..\packages\Microsoft.ApplicationInsights.Web.0.10.0-build17704\lib\net45\Microsoft.ApplicationInsights.Web.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Data.Edm, Version=5.6.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -79,18 +74,6 @@
     <Reference Include="Microsoft.Data.Services.Client, Version=5.6.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.Data.Services.Client.5.6.2\lib\net40\Microsoft.Data.Services.Client.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Diagnostics.Tracing.EventSource">
-      <HintPath>..\packages\Microsoft.Diagnostics.Tracing.EventSource.Redist.1.0.24\lib\net40\Microsoft.Diagnostics.Tracing.EventSource.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Threading.Tasks">
-      <HintPath>..\packages\Microsoft.Bcl.Async.1.0.168\lib\net40\Microsoft.Threading.Tasks.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Threading.Tasks.Extensions">
-      <HintPath>..\packages\Microsoft.Bcl.Async.1.0.168\lib\net40\Microsoft.Threading.Tasks.Extensions.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Threading.Tasks.Extensions.Desktop">
-      <HintPath>..\packages\Microsoft.Bcl.Async.1.0.168\lib\net40\Microsoft.Threading.Tasks.Extensions.Desktop.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Web.RedisSessionStateProvider">
       <HintPath>..\packages\Microsoft.Web.RedisSessionStateProvider.1.1.0\lib\net40\Microsoft.Web.RedisSessionStateProvider.dll</HintPath>
@@ -287,14 +270,36 @@
     <Compile Include="Common\FileDownloadAttribute.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\Class1.cs" />
+    <Compile Include="Controllers\DataManagerController.cs" />
+    <Compile Include="Controllers\DownloadManagerController.cs" />
     <Compile Include="Controllers\ExportController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\IMetadataQuery.cs" />
     <Compile Include="Controllers\ManageController.cs" />
+    <Compile Include="Controllers\RESTfulInterfaceController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201603172038106_Initial.cs" />
+    <Compile Include="Migrations\201603172038106_Initial.Designer.cs">
+      <DependentUpon>201603172038106_Initial.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201603211641193_AddedStatusMessage.cs" />
+    <Compile Include="Migrations\201603211641193_AddedStatusMessage.Designer.cs">
+      <DependentUpon>201603211641193_AddedStatusMessage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
+    <Compile Include="Models\ClientFilterAndSearchCriteria\clientDataSource.cs" />
+    <Compile Include="Models\ClientFilterAndSearchCriteria\clientFilter.cs" />
+    <Compile Include="Models\ClientFilterAndSearchCriteria\clientFilterAndSearchCriteria.cs" />
+    <Compile Include="Models\ConvertWofToCsvRequest.cs" />
+    <Compile Include="Models\DataManager\CurrentUser.cs" />
+    <Compile Include="Models\DataManager\DM_TimeSeries.cs" />
+    <Compile Include="Models\DataManager\UserTimeSeries.cs" />
+    <Compile Include="Models\DataValueCsvViewModel.cs" />
+    <Compile Include="Models\DownloadManager\ExportTaskData.cs" />
+    <Compile Include="Models\HydroClientDbContext.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
     <Compile Include="Models\OntologyHelper.cs" />
@@ -310,7 +315,13 @@
     <Compile Include="Util\DbBaseContext.cs" />
     <Compile Include="Util\DbErrorContext.cs" />
     <Compile Include="Util\DbLogContext.cs" />
+    <Compile Include="Util\ExportUtils.cs" />
     <Compile Include="Util\httpUtil.cs" />
+    <Compile Include="Util\LinqPredicateBuilder.cs" />
+    <Compile Include="Util\SearchStringComparer.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Util\StringContext.cs" />
     <Compile Include="Views\DiagnosticMonTraceListener.cs" />
     <Compile Include="Scripts\EnumExtensionMethods.cs" />
   </ItemGroup>
@@ -319,6 +330,8 @@
     <Content Include="Content\bootstrap-datepicker3.css" />
     <Content Include="Content\bootstrap-modal-bs3patch.css" />
     <Content Include="Content\bootstrap-modal.css" />
+    <Content Include="Content\bootstrap-theme.css" />
+    <Content Include="Content\bootstrap-theme.min.css" />
     <Content Include="Content\dataTables.colVis.css" />
     <Content Include="Content\datatablescdn\jquery.dataTables.min.css" />
     <Content Include="Content\Images\ajax-loader-green.gif">
@@ -331,40 +344,97 @@
     <Content Include="Content\Images\cart_add.png" />
     <Content Include="Content\Images\closetop.png" />
     <Content Include="Content\Images\cuahsi_logo.png" />
+    <Content Include="Content\Images\cuahsi_logo_no_text_transparent.png" />
     <Content Include="Content\Images\download-icon-25.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Images\download-icon.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Images\Google+\btn_google+_signin_dark_disabled_web%402x.png" />
+    <Content Include="Content\Images\Google+\btn_google+_signin_dark_disabled_web.png" />
+    <Content Include="Content\Images\Google+\btn_google+_signin_dark_focus_web%402x.png" />
+    <Content Include="Content\Images\Google+\btn_google+_signin_dark_focus_web.png" />
+    <Content Include="Content\Images\Google+\btn_google+_signin_dark_normal_web%402x.png" />
+    <Content Include="Content\Images\Google+\btn_google+_signin_dark_normal_web.png" />
+    <Content Include="Content\Images\Google+\btn_google+_signin_dark_pressed_web%402x.png" />
+    <Content Include="Content\Images\Google+\btn_google+_signin_dark_pressed_web.png" />
+    <Content Include="Content\Images\Google+\btn_google+_signin_light_disabled_web%402x.png" />
+    <Content Include="Content\Images\Google+\btn_google+_signin_light_disabled_web.png" />
+    <Content Include="Content\Images\Google+\btn_google+_signin_light_focus_web%402x.png" />
+    <Content Include="Content\Images\Google+\btn_google+_signin_light_focus_web.png" />
+    <Content Include="Content\Images\Google+\btn_google+_signin_light_normal_web%402x.png" />
+    <Content Include="Content\Images\Google+\btn_google+_signin_light_normal_web.png" />
+    <Content Include="Content\Images\Google+\btn_google+_signin_light_pressed_web%402x.png" />
+    <Content Include="Content\Images\Google+\btn_google+_signin_light_pressed_web.png" />
+    <Content Include="Content\Images\Google+\btn_google+_signout_custom.png" />
     <Content Include="Content\Images\HydroserverLogo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Images\Markers\ClusterIcons\blue-20.png" />
-    <Content Include="Content\Images\Markers\ClusterIcons\blue-22.png" />
-    <Content Include="Content\Images\Markers\ClusterIcons\blue-24.png" />
-    <Content Include="Content\Images\Markers\ClusterIcons\blue-28.png" />
-    <Content Include="Content\Images\Markers\ClusterIcons\blue-32.png" />
-    <Content Include="Content\Images\Markers\ClusterIcons\blue-36.png" />
-    <Content Include="Content\Images\Markers\ClusterIcons\blue-40.png" />
-    <Content Include="Content\Images\Markers\ClusterIcons\blue-44.png" />
-    <Content Include="Content\Images\Markers\ClusterIcons\blue-48.png" />
-    <Content Include="Content\Images\Markers\ClusterIcons\m1.png" />
-    <Content Include="Content\Images\Markers\ClusterIcons\m2.png" />
-    <Content Include="Content\Images\Markers\ClusterIcons\m3.png" />
-    <Content Include="Content\Images\Markers\ClusterIcons\m4.png" />
-    <Content Include="Content\Images\Markers\ClusterIcons\m5.png" />
-    <Content Include="Content\Images\Markers\ClusterIcons\m6.png" />
-    <Content Include="Content\Images\Markers\ClusterIcons\m6_single.png" />
+    <Content Include="Content\Images\hydroshare-logo-sm.png" />
+    <Content Include="Content\Images\Markers\ClusterIcons\blue-20.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Images\Markers\ClusterIcons\blue-22.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Images\Markers\ClusterIcons\blue-24.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Images\Markers\ClusterIcons\blue-28.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Images\Markers\ClusterIcons\blue-32.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Images\Markers\ClusterIcons\blue-36.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Images\Markers\ClusterIcons\blue-40.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Images\Markers\ClusterIcons\blue-44.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Images\Markers\ClusterIcons\blue-48.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Images\Markers\ClusterIcons\m1.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Images\Markers\ClusterIcons\m2.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Images\Markers\ClusterIcons\m3.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Images\Markers\ClusterIcons\m4.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Images\Markers\ClusterIcons\m5.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Images\Markers\ClusterIcons\m6.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Images\Markers\ClusterIcons\m6_single.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Images\Markers\ClusterIcons\m6_single_36.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Images\Markers\Services\blue-20.png" />
     <Content Include="Content\Images\pageloader.gif" />
     <Content Include="Content\Images\cuahsi_logo_small.png" />
+    <Content Include="Content\Images\QuickStart\quickstart-guide-slide-1.png" />
+    <Content Include="Content\Images\QuickStart\quickstart-guide-slide-2.png" />
+    <Content Include="Content\Images\QuickStart\quickstart-guide-slide-3.png" />
     <Content Include="Content\Images\sort_asc.png" />
     <Content Include="Content\Images\sort_asc_disabled.png" />
     <Content Include="Content\Images\sort_both.png" />
     <Content Include="Content\Images\sort_desc.png" />
     <Content Include="Content\Images\sort_desc_disabled.png" />
-    <Content Include="fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="modal_ajax_test.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -410,16 +480,10 @@
     <Content Include="Content\themes\base\theme.css" />
     <Content Include="Content\themes\base\tooltip.css" />
     <Content Include="favicon.ico" />
-    <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
-    <Content Include="Scripts\ai.js" />
-    <Content Include="Scripts\ai.min.js" />
     <Content Include="Scripts\bootstrap-modal.js" />
     <Content Include="Scripts\bootstrap-modalmanager.js" />
-    <Content Include="Scripts\bootstrap.js" />
-    <Content Include="Scripts\bootstrap.min.js" />
-    <Content Include="ApplicationInsights.config" />
     <Content Include="Areas\HelpPage\Views\Web.config" />
     <Content Include="Areas\HelpPage\Views\Shared\_Layout.cshtml" />
     <Content Include="Areas\HelpPage\Views\Help\ResourceModel.cshtml" />
@@ -445,21 +509,38 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="Content\Test.zip" />
+    <Content Include="App_Data\Test.zip" />
+    <Content Include="fonts\glyphicons-halflings-regular.woff2" />
+    <Content Include="fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="fonts\glyphicons-halflings-regular.ttf" />
+    <Content Include="fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="Content\bootstrap-theme.min.css.map" />
+    <Content Include="Content\bootstrap-theme.css.map" />
+    <Content Include="Content\bootstrap.min.css.map" />
+    <Content Include="Content\bootstrap.css.map" />
+    <Content Include="Content\documents\QuickStartGuide\HydroClient Quick Start Guide.1.pdf" />
+    <Content Include="Content\documents\QuickStartGuide\HydroClient Quick Start Guide.2.pdf" />
+    <Content Include="Content\documents\QuickStartGuide\HydroClient Quick Start Guide.3.pdf" />
+    <None Include="Properties\PublishProfiles\bcc-hiswebclient - FTP %282%29.pubxml" />
     <None Include="Properties\PublishProfiles\bcc-hiswebclient - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\bcc-hiswebclient - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\dev-hiswebclient - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\dev-hiswebclient - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\hiswebclient.pubxml" />
     <Content Include="Content\FancyTree\skin-xp\ui.fancytree.less" />
+    <Content Include="Properties\webjobs-list.json" />
     <None Include="Properties\PublishProfiles\qa-hiswebclient - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\qa-hiswebclient - Web Deploy.pubxml" />
-    <Content Include="Properties\webjobs-list.json" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
+    <Content Include="Scripts\bootstrap.js" />
+    <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="Scripts\Custom\DownloadHelper.js" />
     <Content Include="Scripts\Custom\freezeEnum.js" />
     <Content Include="Scripts\Custom\jquery-filedownload.js" />
     <Content Include="Scripts\Custom\RandomId.js" />
     <Content Include="Scripts\Custom\test1.js" />
+    <Content Include="Scripts\Custom\TimeSeriesFormat.js" />
     <Content Include="Scripts\Custom\TimeSeriesRequestStatus.js" />
     <Content Include="Scripts\Custom\webclient.js" />
     <Content Include="Scripts\Fancytree\jquery-ui.custom.js" />
@@ -473,6 +554,7 @@
     <Content Include="Content\FancyTree\skin-xp\vline-rtl.gif" />
     <Content Include="Content\FancyTree\skin-xp\vline.gif" />
     <Content Include="Scripts\Fancytree\sample.js" />
+    <Content Include="Scripts\GoogleMapsGithubLibraries\infobubble.js" />
     <Content Include="Scripts\Google\keydragzoom.js" />
     <Content Include="Scripts\Google\keydragzoom_packed.js" />
     <Content Include="Scripts\Google\markerwithlabel.js" />
@@ -546,17 +628,16 @@
     <Content Include="Views\Home\viztest.cshtml" />
     <Content Include="Views\Home\_DatatableTimeseriesColumns.cshtml" />
     <Content Include="Views\Home\_DatatableDataservicesColumns.cshtml" />
+    <Content Include="Views\Home\_DataManagerTimeseriesColumns.cshtml" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="App_Data\" />
     <Folder Include="Content\yeti\" />
     <Folder Include="Files\" />
-    <Folder Include="NewFolder1\" />
+    <Folder Include="Views\DataManager\" />
+    <Folder Include="Views\DownloadManager\" />
     <Folder Include="Views\Export\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="fonts\glyphicons-halflings-regular.ttf" />
-    <Content Include="fonts\glyphicons-halflings-regular.eot" />
     <Content Include="packages.config">
       <SubType>Designer</SubType>
     </Content>
@@ -596,6 +677,14 @@
       <Name>CUAHSI.ServerSideHydroDesktop</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201603172038106_Initial.resx">
+      <DependentUpon>201603172038106_Initial.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201603211641193_AddedStatusMessage.resx">
+      <DependentUpon>201603211641193_AddedStatusMessage.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
@@ -624,20 +713,13 @@
       </FlavorProperties>
     </VisualStudio>
   </ProjectExtensions>
-  <Import Project="..\packages\Microsoft.ApplicationInsights.0.10.0-build17704\tools\net40\Microsoft.ApplicationInsights.targets" Condition="Exists('..\packages\Microsoft.ApplicationInsights.0.10.0-build17704\tools\net40\Microsoft.ApplicationInsights.targets')" />
-  <Target Name="EnsureApplicationInsightsImported" BeforeTargets="BeforeBuild" Condition="'$(ApplicationInsightsImported)' == ''">
-    <Error Condition="!Exists('..\packages\Microsoft.ApplicationInsights.0.10.0-build17704\tools\net40\Microsoft.ApplicationInsights.targets')" Text="This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=317567." />
-    <Error Condition="Exists('..\packages\Microsoft.ApplicationInsights.0.10.0-build17704\tools\net40\Microsoft.ApplicationInsights.targets')" Text="The build restored NuGet packages. Build the project again to include these packages in the build. For more information, see http://go.microsoft.com/fwlink/?LinkID=317567." />
-  </Target>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets'))" />
   </Target>
-  <Import Project="..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets')" />
   <Import Project="..\packages\Microsoft.Web.WebJobs.Publish.1.0.3\tools\webjobs.targets" Condition="Exists('..\packages\Microsoft.Web.WebJobs.Publish.1.0.3\tools\webjobs.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.

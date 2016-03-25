@@ -11,6 +11,9 @@ namespace HISWebClient
 			bundles.Add(new ScriptBundle("~/bundles/Google").Include(
 						"~/Scripts/Google/markerwithlabel.js"));
 
+			bundles.Add(new ScriptBundle("~/bundles/GoogleMapsGithubLibraries").Include(
+						"~/Scripts/GoogleMapsGithubLibraries/infobubble.js"));
+
 			bundles.UseCdn = true;   //enable CDN support
 
 			//NO bundle for the Google Map API!!
@@ -54,8 +57,9 @@ namespace HISWebClient
 					  //"~/Scripts/Custom/randomId.min.js",
 					  "~/Scripts/Custom/freezeEnum.js",
 					  //"~/Scripts/Custom/freezeEnum.min.js",
-					  "~/Scripts/Custom/TimeSeriesRequestStatus.js",
+					  "~/Scripts/Custom/TimeSeriesFormat.js",
 					  //"~/Scripts/Custom/TimeSeriesRequestStatus.min.js",
+					  "~/Scripts/Custom/TimeSeriesRequestStatus.js",
 					  "~/Scripts/Custom/jquery-filedownload.js"
                       ));
 
