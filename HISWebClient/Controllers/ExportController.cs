@@ -189,7 +189,7 @@ namespace HISWebClient.Controllers
 			//cloudStorageAccount = CloudStorageAccount.Parse("DefaultEndpointsProtocol=https;AccountName=cuahsidataexport;AccountKey=yydsRROjUZa9+ShUCS0hIxZqU98vojWbBqAPI22SgGrXGjomphIWxG0cujYrSiyfNU86YeVIXICPAP8IIPuT4Q==");
 
 			var seriesMetaData = getSeriesMetadata(id);
-			var filename = GenerateFileName(seriesMetaData);
+			var filename = FileContext.GenerateFileName(seriesMetaData);
 			var fileType = "text/csv";
 
 			try
@@ -226,7 +226,7 @@ namespace HISWebClient.Controllers
 		{
 
 			var seriesMetaData = getSeriesMetadata(id, currentSeries);
-			var filename = GenerateFileName(seriesMetaData, timeSeriesFormat);
+			var filename = FileContext.GenerateFileName(seriesMetaData, timeSeriesFormat);
 			var fileType = TimeSeriesFormat.CSV == timeSeriesFormat ? "text/csv" : "application/xml";
 
 			try
@@ -240,13 +240,6 @@ namespace HISWebClient.Controllers
 				{
 					var result = await this.getWOFStream(id, currentSeries);
 
-					//BCC - TEST - Commenting out seek calls to avoid exception: This stream does not support seek operations...
-					//using (System.IO.FileStream outfile = new System.IO.FileStream(@"c:\CUAHSI\DownloadFile.xml", FileMode.Create))
-					//{
-					//	result.Seek(0, SeekOrigin.Begin);
-					//	result.CopyTo(outfile);
-					//}
-					
 					result.Seek(0, SeekOrigin.Begin);
 
 					FileStreamResult fsr = new FileStreamResult(result, fileType) { FileDownloadName = filename };
@@ -490,13 +483,16 @@ namespace HISWebClient.Controllers
 
                             if (tsrIn.RequestFormat == TimeSeriesFormat.CSVMerged)
                             {
-                                var filestreamresult = WriteCsvToMemory(listOfValuesWithMetadata);
+								var filestreamresult = WriteCsvToFileStream(listOfValuesWithMetadata, cu);
 
-                                var zipArchiveEntry = zipArchive.CreateEntry(filestreamresult.FileDownloadName);
-                                using (var zaeStream = zipArchiveEntry.Open())
-                                {
-                                    await filestreamresult.FileStream.CopyToAsync(zaeStream, bufSize);
-                                }
+								using (filestreamresult.FileStream) 
+								{
+									var zipArchiveEntry = zipArchive.CreateEntry(filestreamresult.FileDownloadName);
+									using (var zaeStream = zipArchiveEntry.Open())
+									{
+										await filestreamresult.FileStream.CopyToAsync(zaeStream, bufSize);
+									}
+								}
 							}
 						}
 #if NEVER_DEFINED
@@ -793,7 +789,7 @@ namespace HISWebClient.Controllers
 														await WriteDataToMemoryStreamAsCsv(sd, ms1);
 														ms1.Seek(0, SeekOrigin.Begin);
 
-														var filename = GenerateFileName(smd, TimeSeriesFormat.CSV);
+														var filename = FileContext.GenerateFileName(smd, TimeSeriesFormat.CSV);
 														var zipArchiveEntry = zipArchive.CreateEntry(filename);
 														using (var zaeStream = zipArchiveEntry.Open())
 														{
@@ -1441,7 +1437,7 @@ namespace HISWebClient.Controllers
 		{
 			CloudBlobClient bClient = csa.CreateCloudBlobClient();
 			CloudBlobContainer container = bClient.GetContainerReference(DiscoveryStorageTableNames.SeriesDownloads);
-			string fileName = GenerateBlobName(data);
+			string fileName = FileContext.GenerateBlobName(data);
 			CloudBlockBlob blob = container.GetDirectoryReference(new Guid().ToString()).GetBlockBlobReference(fileName);
 			blob.Properties.ContentType = "text/csv; utf-8";
 			blob.Properties.ContentDisposition = string.Format("attachment; filename = {0}", fileName);
@@ -1568,50 +1564,20 @@ namespace HISWebClient.Controllers
 			}
 		}
 
-        public FileStreamResult WriteCsvToMemory<T>(List<T> records)
+        public FileStreamResult WriteCsvToFileStream<T>(List<T> records, CurrentUser cu = null)
         {
-			//BCC - try a file stream here...
-             //var memoryStream = new MemoryStream();
-
-			 string fileName = "BCC_testcombine.csv";
+			 string fileExtension = "csv";
+			 string fileName = null != cu ? FileContext.GenerateFileName(cu.UserEmail, fileExtension) : FileContext.GenerateFileName(null, fileExtension);
 			 string filePathAndName = Server.MapPath("~/Files/" + fileName.ToString());
 
-			 //FileStream memoryStream = new FileStream( filePathAndName, FileMode.Create);
 			 //Use a large buffer here...
-			 FileStream memoryStream = new FileStream(filePathAndName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite, 512000 );
+			 FileStream fileStream = new FileStream(filePathAndName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite, 512000, FileOptions.DeleteOnClose );
 
-             var streamWriter = new StreamWriter(memoryStream, Encoding.GetEncoding("iso-8859-1"));
+             var streamWriter = new StreamWriter(fileStream, Encoding.GetEncoding("iso-8859-1"));
              var csvWriter = new CsvHelper.CsvWriter(streamWriter);
             
                 //Get the properties for type T for the headers
                 PropertyInfo[] propInfos = typeof(T).GetProperties();
-                //var sb = new StringBuilder();
-
-                //var propInfo =
-                //    (from property in typeof(T).GetProperties()
-                //     let attributes = property
-                //         .GetCustomAttributes(typeof(DisplayAttribute), false)
-                //         .OfType<DisplayAttribute>()
-                //     where attributes.Any(a => a.Name == "LatLongDatumSRSName")
-                //     select property).FirstOrDefault();
-
-                //for (int i = 0; i <= propInfos.Length - 1; i++)
-                //{
-                //    sb.Append(propInfos[i].Name);
-                //    //csvWriter.WriteHeader(typeof(T));
-                //    if (i < propInfos.Length - 1)
-                //    {
-                //        //sb.Append(",");
-                //        var displayAttributes = propInfos.GetType().GetCustomAttributes(typeof(DisplayAttribute), true);
-                //        if (displayAttributes != null && displayAttributes.Length == 1)
-                //        {
-                //            var d = ((DisplayAttribute)displayAttributes[0]).Name;
-                //        }
-                //        //var d = !Attribute.IsDefined(propInfos, typeof(DataAnnotations.DisplayAttribute));
-                //        csvWriter.WriteField(propInfos[i].Name);
-                //    }
-
-                //}
 
                 foreach (var prop in propInfos)
                 {
@@ -1663,74 +1629,12 @@ namespace HISWebClient.Controllers
                     }
                 }
 
-                //foreach (var item in records)
-                //{
-                //    foreach (var prop in props)
-                //    {
-                //        if (prop.DisplayName !="NotVisible")
-                //        {
-                //            csvWriter.WriteField((prop.Name));
-                //        }
-                //    }
-                //}            
-                //csvWriter.WriteRecords(records);
-                //streamWriter.Position = 0;
                 streamWriter.Flush();
 
-                 var fileType =  "text/csv" ;
-
-				//BCC - 23-Mar-2016 - attempt to use the original memory stream here...
-                // return new FileStreamResult(new MemoryStream(memoryStream.ToArray()), "text/plain") { FileDownloadName = "testcombine.csv" };
-
-				 memoryStream.Seek(0, SeekOrigin.Begin);
-				 return new FileStreamResult(memoryStream, "text/plain") { FileDownloadName = "testcombine.csv" };
-			//var d =  new FileStreamResult(memoryStream, fileType) { FileDownloadName = "test" };
-                //return d;
+				 fileStream.Seek(0, SeekOrigin.Begin);
+				 return new FileStreamResult(fileStream, "text/plain") { FileDownloadName = fileName };
             
         }
-
-        //private async Task WriteDataToMemoryStreamAsCsv(List<DataValueCsvViewModel>data, MemoryStream ms)
-        //{
-        //    using (var csv = new CsvReader(ms, Encoding.UTF8, true))
-        //    {
-        //        var records = csv.ReadDataRecordsAsync<DataValueCsvViewModel>()
-                    
-        //        }
-        //        await csv.FlushAsync();
-        //    }
-        //}
-            
-
-
-		private string GenerateBlobName(SeriesData data)
-		{
-			return string.Format("series-{0}-{1}.csv", data.myMetadata.SiteName.SanitizeForFilename(), data.myMetadata.VariableName.SanitizeForFilename());
-		}
-		private string GenerateFileName(SeriesMetadata meta, TimeSeriesFormat timeSeriesFormat = TimeSeriesFormat.CSV)
-		{
-
-			string fileName = string.Format("{0}-{1}-{2}", meta.ServCode.SanitizeForFilename(), meta.SiteName.SanitizeForFilename(), meta.VariableName.SanitizeForFilename());
-			string extension = String.Empty;
-
-			if (TimeSeriesFormat.WaterOneFlow == timeSeriesFormat)
-			{
-				extension = ".xml";
-			}
-			else if (TimeSeriesFormat.CSV == timeSeriesFormat)
-		{
-			//NOTE: Microsoft Excel restricts file path + name + extension to 218 characters max.  Truncate file name if indicated...
-
-				extension = ".csv";
-
-			while (218 < (fileName.Length + extension.Length))
-			{
-				fileName = fileName.Substring(0, (fileName.Length - 1));
-				}				
-			}
-
-			return string.Format("{0}{1}", fileName, extension);
-
-		}
 
 		private void WriteTaskDataToDatabase(CurrentUser cu, String requestId, TimeSeriesRequestStatus requestStatus, String status, String blobUri, DateTime blobTimeStamp)
 		{
@@ -1828,7 +1732,7 @@ namespace HISWebClient.Controllers
         {
 
             var seriesMetaData = getSeriesMetadata(timeSeriesId, currentSeries);
-            var filename = GenerateFileName(seriesMetaData, timeSeriesFormat);
+            var filename = FileContext.GenerateFileName(seriesMetaData, timeSeriesFormat);
             var fileType = TimeSeriesFormat.CSV == timeSeriesFormat || TimeSeriesFormat.CSVMerged == timeSeriesFormat ? "text/csv" : "application/xml";
             var dataValuewithMetadaListForId = new List<DataValueCsvViewModel>();
             try

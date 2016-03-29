@@ -67,21 +67,7 @@ namespace HISWebClient.Util
             }
 
 			//Format the file name...
-			DateTime now = DateTime.Now;
-			TimeSpan ts = new TimeSpan(0, now.Hour, now.Minute, now.Second, now.Millisecond);
-
-			//string strFileDateAndExtension = String.Format("{0}-{1:n0}.zip", now.ToString("yyyy-MM-dd"), ts.TotalMilliseconds);
-			string strFileDateAndExtension = String.Format("{0}-{1}.zip", now.ToString("yyyy-MM-dd"), ts.TotalMilliseconds);  
-				
-            if (String.IsNullOrWhiteSpace(requestName))
-            {
-                requestName = strFileDateAndExtension;
-            }
-            else
-            {
-				requestName = requestName.SanitizeAndUrlEscapeForFilename() + "-" + strFileDateAndExtension;
-
-			}
+			requestName = FileContext.GenerateFileName(requestName, ".zip");
 
             if( null == ct)
             {
