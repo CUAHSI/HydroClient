@@ -176,24 +176,41 @@ namespace HISWebClient.DataLayer
 		{
 			// Update BeginDate/EndDate/ValueCount to the user-specified range
 			var seriesStartDate = series.BeginDate < startDate ? startDate : series.BeginDate;
-			// Fix http://hydrodesktop.codeplex.com/workitem/8468
+           // Fix http://hydrodesktop.codeplex.com/workitem/8468
 			// HIS Central sometimes doesn't contains actual end dates for datasets,
 			// so always set end date of series to user-specified endDate.
 			//var seriesEndDate = endDate; //
             var seriesEndDate = series.EndDate > endDate ? endDate : series.EndDate;
-			var serverDateRange = series.EndDate.Subtract(series.BeginDate);
-			var userDateRange = seriesEndDate.Subtract(seriesStartDate);
+			
+             //MS addedcheck to prevent estimated values of 0, if nuber of values > number of days don't estimate
+            // Difference in days, hours, and minutes.
+            TimeSpan ts =  endDate - startDate;
+            // Difference in days.
+            int differenceInDays = ts.Days;
 
-			var userFromServerPercentage = serverDateRange.TotalDays > 0
-											   ? userDateRange.TotalDays / serverDateRange.TotalDays
-											   : 1.0;
-			if (userFromServerPercentage > 1.0)
-				userFromServerPercentage = 1.0;
-			var esimatedValueCount = (int)(series.ValueCount * userFromServerPercentage);
+            if (series.ValueCount > differenceInDays)
+            {
 
-			series.ValueCount = esimatedValueCount;
-			series.BeginDate = seriesStartDate;
-			series.EndDate = seriesEndDate;
+               
+                var serverDateRange = series.EndDate.Subtract(series.BeginDate);
+                var userDateRange = seriesEndDate.Subtract(seriesStartDate);
+
+                var userFromServerPercentage = serverDateRange.TotalDays > 0
+                                                   ? userDateRange.TotalDays / serverDateRange.TotalDays
+                                                   : 1.0;
+                if (userFromServerPercentage > 1.0)
+                    userFromServerPercentage = 1.0;
+
+
+
+                var esimatedValueCount = (int)(series.ValueCount * userFromServerPercentage);
+
+
+                series.ValueCount = esimatedValueCount;
+            }
+            //MS removed to reflect actual values
+			//series.BeginDate = seriesStartDate;
+			//series.EndDate = seriesEndDate;
 		}
 
 		/// <summary>
