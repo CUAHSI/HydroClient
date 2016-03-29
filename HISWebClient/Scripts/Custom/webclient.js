@@ -6765,19 +6765,19 @@ function ddActionsTS(event) {
     $('#' + event.data.divLaunchId).attr('data-currentanchor', id);
 
 
-    if ('anchorAddSelectionsToWorkspaceTS' === id ) {
-        console.log('Add Selection(s) to Workspace clicked!!');
-    } 
-    else if ('anchorAllTimeseriesInOneFileTS' === id ) {
-        console.log('All selections in one file clicked!!');
-    } 
-    else if ('anchorEachTimeseriesInSeparateFileTS' === id ) {
-        console.log('Each selection in a separate file clicked!!');
-    } 
-    else if ('anchorExportSelectionsTS' === id ) {
-        //User is NOT authenticated...
-        console.log('Export Selection(s) - non-authenticated user - clicked!!');
-    } 
+    //if ('anchorAddSelectionsToWorkspaceTS' === id ) {
+    //    console.log('Add Selection(s) to Workspace clicked!!');
+    //} 
+    //else if ('anchorAllTimeseriesInOneFileTS' === id ) {
+    //    console.log('All selections in one file clicked!!');
+    //} 
+    //else if ('anchorEachTimeseriesInSeparateFileTS' === id ) {
+    //    console.log('Each selection in a separate file clicked!!');
+    //} 
+    //else if ('anchorExportSelectionsTS' === id ) {
+    //    //User is NOT authenticated...
+    //    console.log('Export Selection(s) - non-authenticated user - clicked!!');
+    //} 
 
     //Set the selected option...
     $('#' + event.data.divId + ' img').removeAttr( 'style');

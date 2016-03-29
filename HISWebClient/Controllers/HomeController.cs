@@ -372,31 +372,37 @@ namespace HISWebClient.Controllers
 					//Sources:	http://stackoverflow.com/questions/22071211/when-performing-post-via-ajax-bad-request-is-returned-instead-of-the-json-resul
 					//			http://stackoverflow.com/questions/3993941/in-iis7-5-what-module-removes-the-body-of-a-400-bad-request/4029197#4029197
 					//			http://weblog.west-wind.com/posts/2009/Apr/29/IIS-7-Error-Pages-taking-over-500-Errors
-					if (ex.InnerException.ToString().ToLower().Contains("operationcanceledexception"))
+
+					//Find the 'inner-most' exception...
+					while (null != ex.InnerException)
 					{
-						string maxAllowedTimeseries = ConfigurationManager.AppSettings["maxAllowedTimeseriesReturn"].ToString();
-						string message = "Search returned more than " + maxAllowedTimeseries + " timeseries and was canceled. Please limit search area and/or Keywords.";
+						ex = ex.InnerException;
+					}
+
+					if ( typeof (System.InvalidOperationException) == ex.GetType() )
+					{
+						//Recover the returned error message...
 						Response.StatusCode = (int)HttpStatusCode.RequestEntityTooLarge;
+						Response.StatusDescription = ex.Message;
+						Response.TrySkipIisCustomErrors = true;	//Tell IIS to use your error text not the 'standard' error text!!
+																//ALSO clues jQuery to add the parsed responseJSON object to the jqXHR object!!
+						dberrorcontext.createLogEntry(System.Web.HttpContext.Current, DateTime.UtcNow, "updateMarkers(...)", ex, ex.Message);
+
+						return Json(new { Message = ex.Message }, "application/json");
+					}
+					else
+					{
+						//Assume a timeout has occurred...
+						string message = "The execution of the search took too long. Please limit search area and/or Keywords.";
+						Response.StatusCode = (int)HttpStatusCode.RequestTimeout;
 						Response.StatusDescription = message;
 						Response.TrySkipIisCustomErrors = true;	//Tell IIS to use your error text not the 'standard' error text!!
 																//ALSO clues jQuery to add the parsed responseJSON object to the jqXHR object!!
-
 						dberrorcontext.createLogEntry(System.Web.HttpContext.Current, DateTime.UtcNow, "updateMarkers(...)", ex, message);
 
 						return Json(new { Message = message }, "application/json");
 					}
-					else{
-						 string message = "The execution of the search took too long. Please limit search area and/or Keywords.";
-						 Response.StatusCode = (int)HttpStatusCode.RequestTimeout;
-						 Response.StatusDescription = message;
-						 Response.TrySkipIisCustomErrors = true;	//Tell IIS to use your error text not the 'standard' error text!!
-
-						 dberrorcontext.createLogEntry(System.Web.HttpContext.Current, DateTime.UtcNow, "updateMarkers(...)", ex, message);
-
-						 return Json(new { Message = message }, "application/json");
-					}
 				}
-
 
 				//var session2 =(List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>) Session["Series"];
 			}

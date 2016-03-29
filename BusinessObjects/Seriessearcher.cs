@@ -288,6 +288,13 @@ namespace HISWebClient.DataLayer
 							var currentFinished = Interlocked.Add(ref tilesFinished, 1);
 							if (totalSeriesCount > maxAllowedTimeseriesReturn)
 							{
+								//Maximum time series exceeded - register a delegate to add an exception to the aggregate exception returned by the task cancellation processing... 
+								cts.Token.Register(() => {
+									string errorMessage = String.Format("Search returned more than {0:#,###0} timeseries and was canceled. Please limit search area and/or Keywords.", maxAllowedTimeseriesReturn);
+									InvalidOperationException exp = new InvalidOperationException(errorMessage);
+									throw exp;
+								});
+
 								cts.Cancel();
 							}
 							var message = string.Format("{0} Series found", totalSeriesCount);
@@ -309,7 +316,7 @@ namespace HISWebClient.DataLayer
 			}
 			catch (OperationCanceledException e)
 			{
-				throw;
+				throw e;
 			}
 		}
 

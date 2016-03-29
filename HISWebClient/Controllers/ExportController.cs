@@ -332,7 +332,7 @@ namespace HISWebClient.Controllers
 
 				List<TimeSeriesViewModel> currentSeries = new List<TimeSeriesViewModel>();
 				//int total = tsrIn.TimeSeriesIds.Count;
-				LogRequestIds(tsrIn.RequestId, tsrIn.RequestName, retrievedSeries, currentSeries, tsrIn.TimeSeriesIds);
+				int selectedValues = LogRequestIds(tsrIn.RequestId, tsrIn.RequestName, retrievedSeries, currentSeries, tsrIn.TimeSeriesIds);
 
 				//Retrieve values for use in async task...
 				string sessionId = String.Empty;
@@ -346,29 +346,6 @@ namespace HISWebClient.Controllers
 				var sessionIdRef = sessionId;
 				var userIpAddressRef = userIpAddress;
 				var domainNameRef = domainName;
-
-				//Retrieve the variable units for the requested time series...
-				//if (TimeSeriesFormat.WaterOneFlow == tsrIn.RequestFormat)
-				//{
-				//	foreach (int timeSeriesId in tsrIn.TimeSeriesIds)
-				//	{
-				//		SeriesData sd = null;
-
-				//		try
-				//		{
-				//			dictSeriesIdsToVariableUnits[timeSeriesId] = "unknown";
-				//			sd = await GetSeriesDataFromSeriesID(timeSeriesId, retrievedSeries);
-
-				//			dictSeriesIdsToVariableUnits[timeSeriesId] = sd.myVariable.VariableUnit.Name;
-				//		}
-				//		catch (Exception ex)
-				//		{
-				//			//For now take no action...
-				//			sd = null;
-				//			continue;
-				//		}
-				//	}
-				//}
 
 				Task.Run(async () =>
 				{
@@ -402,11 +379,9 @@ namespace HISWebClient.Controllers
 
                 Task.Run(async () =>
                 {
-
 					try
 					{
 						DateTime startDtUtc = DateTime.UtcNow;
-                        int maxCombinedExportValues = Convert.ToInt32(ConfigurationManager.AppSettings["maxCombinedExportValues"]);
 						//Allocate a memory stream for later use...
 						var memoryStream = new MemoryStream();  //ASSUMPTION: IDispose called during FileStreamResult de-allocation
 						TimeSeriesRequestStatus cancellationEnum = TimeSeriesRequestStatus.CanceledPerClientRequest;
@@ -418,6 +393,12 @@ namespace HISWebClient.Controllers
 							int bufSize = 4096;
 							int i = 0;
                             var listOfValuesWithMetadata = new List<DataValueCsvViewModel>();
+
+							int maxCombinedExportValues = Convert.ToInt32(ConfigurationManager.AppSettings["maxCombinedExportValues"]);
+							if (TimeSeriesFormat.CSVMerged == tsrIn.RequestFormat && selectedValues > maxCombinedExportValues)
+							{
+								throw new ValidationException( String.Format("The number of values in the export exceeds the allowed maximum of {0:#,###0}.", maxCombinedExportValues));
+							}
 
 							//For each time series id...
 							int count = tsrIn.TimeSeriesIds.Count;
@@ -433,102 +414,91 @@ namespace HISWebClient.Controllers
 																								timeSeriesId.ToString() +
 																								" (" + (++i).ToString() + " of " + count.ToString() + ")";
 								UpdateTaskStatus(requestId, TimeSeriesRequestStatus.ProcessingTimeSeriesId, statusMessage);
-								WriteTaskDataToDatabase(cu, requestId, TimeSeriesRequestStatus.ProcessingTimeSeriesId, statusMessage, blobUri, blobTimeStamp);	
+								WriteTaskDataToDatabase(cu, requestId, TimeSeriesRequestStatus.ProcessingTimeSeriesId, statusMessage, blobUri, blobTimeStamp);
 
-                                if (tsrIn.RequestFormat == TimeSeriesFormat.CSV)
-                                {
-
-								//Retrieve the time series data in the input format: CSV --OR-- XML 
-								FileStreamResult filestreamresult = await DownloadFile(timeSeriesId, currentSeries, tsrIn.RequestFormat);
-
-								//Check for failed/empty downloads.
-								if (filestreamresult.FileDownloadName.Contains("ERROR", StringComparison.CurrentCultureIgnoreCase) || 0 >= filestreamresult.FileStream.Length)
+								if (tsrIn.RequestFormat == TimeSeriesFormat.CSV)
 								{
-									//BCC - 25-Jan-2016 - set task status error here - log error message - throw...
-									//BCC - 08-Mar-2016 - Revised logic to log the error only - do not want to throw (i.e., stop the entire task) for problem(s) with a single file...
 
-									Exception ex;
+									//Retrieve the time series data in the input format: CSV --OR-- XML 
+									FileStreamResult filestreamresult = await DownloadFile(timeSeriesId, currentSeries, tsrIn.RequestFormat);
 
-                                        if (filestreamresult.FileDownloadName.Contains("ERROR", StringComparison.CurrentCultureIgnoreCase))
+									//Check for failed/empty downloads.
+									if (filestreamresult.FileDownloadName.Contains("ERROR", StringComparison.CurrentCultureIgnoreCase) || 0 >= filestreamresult.FileStream.Length)
 									{
-										ex = new Exception("Error in time series generation...");
+										//BCC - 25-Jan-2016 - set task status error here - log error message - throw...
+										//BCC - 08-Mar-2016 - Revised logic to log the error only - do not want to throw (i.e., stop the entire task) for problem(s) with a single file...
+
+										Exception ex;
+
+										if (filestreamresult.FileDownloadName.Contains("ERROR", StringComparison.CurrentCultureIgnoreCase))
+										{
+											ex = new Exception("Error in time series generation...");
+										}
+										else
+										{
+											ex = new Exception("Empty time series...");
+										}
+
+										dberrorcontextRef.clearParameters();
+										dberrorcontextRef.createLogEntry(sessionIdRef,
+																			userIpAddressRef,
+																			domainNameRef,
+																			DateTime.UtcNow,
+																			"RequestTimeSeries(TimeSeriesRequest tsrIn)",
+																			ex,
+																			"RequestTimeSeries error for Id: " + requestId + " message: " + ex.Message);
 									}
 									else
 									{
-										ex = new Exception("Empty time series...");
+										//Copy file contents to zip archive...
+										//ASSUMPTION: FileStreamResult instance properly disposes of FileStream member!!
+										var zipArchiveEntry = zipArchive.CreateEntry(filestreamresult.FileDownloadName);
+										using (var zaeStream = zipArchiveEntry.Open())
+										{
+											await filestreamresult.FileStream.CopyToAsync(zaeStream, bufSize);
+										}
 									}
-
-
-									dberrorcontextRef.clearParameters();
-									dberrorcontextRef.createLogEntry(sessionIdRef,
-																		userIpAddressRef,
-																		domainNameRef,
-																		DateTime.UtcNow,
-																		"RequestTimeSeries(TimeSeriesRequest tsrIn)",
-																		ex,
-																		"RequestTimeSeries error for Id: " + requestId + " message: " + ex.Message);
 								}
-                                    else
-                                    {
-
-                                //Copy file contents to zip archive...
-                                //ASSUMPTION: FileStreamResult instance properly disposes of FileStream member!!
-                                var zipArchiveEntry = zipArchive.CreateEntry(filestreamresult.FileDownloadName);
-                                using (var zaeStream = zipArchiveEntry.Open())
-                                {
-                                    await filestreamresult.FileStream.CopyToAsync(zaeStream, bufSize);
-                                }
-                                        //add
-                                    }
-                                }
-
-                                if (tsrIn.RequestFormat == TimeSeriesFormat.CSVMerged)
-                                {
-                                    try
-                                    {
-                                        //Retrieve data as list of objects taht we can serialize to CSV
-                                        //get objects an serialze to CSV once all series have returned
-                                        //var list = new List<TimeSeriesViewModel>();
-                                        var list = await DownloadFileInList(timeSeriesId, currentSeries, tsrIn.RequestFormat);
-                                        ;
-                                        if (list.Count < maxCombinedExportValues)
-                                        {
-                                            listOfValuesWithMetadata.AddRange(list);
-                                        }
-                                        else
-                                        {
-                                            throw new ValidationException("the amount of values in the download exceeded the allowed maximum of " + maxCombinedExportValues + "values.");
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        throw;
-                                    }
-                                    //FileStreamResult filestreamresult = await DownloadFile(timeSeriesId, currentSeries, tsrIn.RequestFormat);
-
-                                }
+								else
+								{
+									if (tsrIn.RequestFormat == TimeSeriesFormat.CSVMerged)
+									{
+										try
+										{
+											//Retrieve data as list of objects that we can serialize to CSV
+											//get objects an serialze to CSV once all series have returned
+											//var list = new List<TimeSeriesViewModel>();
+											var list = await DownloadFileInList(timeSeriesId, currentSeries, tsrIn.RequestFormat);
+											;
+											if (list.Count < maxCombinedExportValues)
+											{
+												listOfValuesWithMetadata.AddRange(list);
+												list.Clear();
+											}
+											else
+											{
+												throw new ValidationException( String.Format("The number of values in the export exceeds the allowed maximum of {0:#,###0}.", maxCombinedExportValues));
+											}
+										}
+										catch (Exception ex)
+										{
+											throw ex;
+										}
+									}
+								}
                             }
-
 
                             if (tsrIn.RequestFormat == TimeSeriesFormat.CSVMerged)
                             {
                                 var filestreamresult = WriteCsvToMemory(listOfValuesWithMetadata);
 
-                                //  var fileType = TimeSeriesFormat.CSV == timeSeriesFormat || TimeSeriesFormat.CSVMerged == timeSeriesFormat ? "text/csv" : "application/xml";
-
                                 var zipArchiveEntry = zipArchive.CreateEntry(filestreamresult.FileDownloadName);
                                 using (var zaeStream = zipArchiveEntry.Open())
                                 {
                                     await filestreamresult.FileStream.CopyToAsync(zaeStream, bufSize);
                                 }
-
-
-
-
-                                //var bFormatter = new BinaryFormatter()
 							}
 						}
-
 #if NEVER_DEFINED
 						//Simulate a server error... divide by zero
 						int zero = 0;
@@ -623,13 +593,6 @@ namespace HISWebClient.Controllers
 			//Return a TimeSeriesResponse in JSON format...
 			var result = new TimeSeriesResponse(tsrIn.RequestId, requestStatus, status, blobUri, blobTimeStamp);
 
-			//if ( 0 < dictSeriesIdsToVariableUnits.Count)
-			//{
-			//	result.SeriesIdsToVariableUnits = dictSeriesIdsToVariableUnits;
-			//}
-
-			//var javaScriptSerializer = new JavaScriptSerializer();
-			//var json = javaScriptSerializer.Serialize(result);
 			var json = JsonConvert.SerializeObject(result);
 
 #if NEVER_DEFINED
@@ -978,10 +941,11 @@ namespace HISWebClient.Controllers
 		}
 
 		//Log the input request ids and related information
-		private void LogRequestIds(string requestId, string requestName, List<TimeSeriesViewModel> retrievedSeries, List<TimeSeriesViewModel> currentSeries, List<int> timeSeriesIds ) 
+		private int LogRequestIds(string requestId, string requestName, List<TimeSeriesViewModel> retrievedSeries, List<TimeSeriesViewModel> currentSeries, List<int> timeSeriesIds ) 
 		{
 			int current = 0;
 			int total = timeSeriesIds.Count;
+			int selectedValues = 0;
 
 			foreach (TimeSeriesViewModel tsvm in retrievedSeries)
 			{
@@ -991,7 +955,10 @@ namespace HISWebClient.Controllers
 				{
 					if (tsvm.SeriesId == id)
 					{
-						//Requested time series found - log identifiers...
+						//Requested time series found - increment selected values count...
+						selectedValues += tsvm.ValueCount;
+						
+						//Log identifiers...
 						dblogcontext.clearParameters();
 						dblogcontext.clearReturns();
 
@@ -1013,6 +980,9 @@ namespace HISWebClient.Controllers
 					}
 				}
 			}
+
+			//Processing complete - return selected values count...
+			return selectedValues;
 		}
 
 		private void LogRequestIds(string requestId, string requestName, List<string> wofIds)
@@ -1603,10 +1573,12 @@ namespace HISWebClient.Controllers
 			//BCC - try a file stream here...
              //var memoryStream = new MemoryStream();
 
-			string fileName = "BCC_testcombine.csv";
+			 string fileName = "BCC_testcombine.csv";
 			 string filePathAndName = Server.MapPath("~/Files/" + fileName.ToString());
 
-             FileStream memoryStream = new FileStream( filePathAndName, FileMode.Create);
+			 //FileStream memoryStream = new FileStream( filePathAndName, FileMode.Create);
+			 //Use a large buffer here...
+			 FileStream memoryStream = new FileStream(filePathAndName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite, 512000 );
 
              var streamWriter = new StreamWriter(memoryStream, Encoding.GetEncoding("iso-8859-1"));
              var csvWriter = new CsvHelper.CsvWriter(streamWriter);
@@ -1654,6 +1626,7 @@ namespace HISWebClient.Controllers
                 {
 
                     //Loop through the collection, then the properties and add the values
+					int nFlushCount = 0;
                     for (int i = 0; i <= records.Count - 1; i++)
                     {
 
@@ -1680,6 +1653,13 @@ namespace HISWebClient.Controllers
                             }
                         }
                         csvWriter.NextRecord();
+
+						if (10000 <= ++nFlushCount)
+						{
+							//Flush every 10,000 records...
+							nFlushCount = 0;
+							streamWriter.Flush();
+						}
                     }
                 }
 
