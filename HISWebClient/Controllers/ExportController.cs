@@ -547,7 +547,7 @@ namespace HISWebClient.Controllers
 								dblogcontextRef.createLogEntry(sessionIdRef, userIpAddressRef, domainNameRef, startDtUtc, DateTime.UtcNow, "RequestTimeSeries(...)", "zip archive creation complete.", Level.Info);
 							}
 
-                            sendEmail(blobUri);
+                            sendEmail(cu, blobUri);
 						}
 					}
 					catch (Exception ex)
@@ -1146,11 +1146,7 @@ namespace HISWebClient.Controllers
 				ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 
 				HttpClient httpClient = new HttpClient();
-                //Prod
-				//httpClient.BaseAddress = new Uri(ConfigurationManager.AppSettings["ByuUrlProd"]);
-				
-                //dev
-				httpClient.BaseAddress = new Uri(ConfigurationManager.AppSettings["ByuUrlDev"]);
+				httpClient.BaseAddress = new Uri(ConfigurationManager.AppSettings["ByuUrl"]);
 
 				HttpResponseMessage httpResponseMessage = await httpClient.GetAsync("apps/timeseries-viewer/api/list_apps/");
 
@@ -1773,12 +1769,18 @@ namespace HISWebClient.Controllers
 		
         }
 
-        public async void sendEmail(string zipURL)
+        public async void sendEmail(CurrentUser cu, string zipURL)
         {
+			//Validate/initialize input parameters...
+			if ( null == cu || String.IsNullOrWhiteSpace(cu.UserEmail) || String.IsNullOrWhiteSpace(zipURL))
+			{
+				//Invalid input parameter(s) - return early
+				return;
+			}
             
             var body = "<p>Email From: {0} ({1})</p><p>the data can be downloaded from here:</p><p>{2}</p>";
             var message = new MailMessage();
-            message.To.Add(new MailAddress("mseul@cuahsi.org")); //replace with valid value
+			message.To.Add(new MailAddress(cu.UserEmail));
             message.Subject = "Your email subject";
 
             message.Body = string.Format(body, "WD", "test", zipURL);
