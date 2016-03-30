@@ -1095,7 +1095,8 @@ function googleFormSubmit(event) {
                                        'CANCEL': 'Remain on Google',
                                        'CONFIRM': 'Log out from Google' });
         bootbox.setLocale(localeName);
-        bootbox.confirm('You are logging out from the HydroClient.  Do you want to log out from Google?', function(result) {
+        bootbox.confirm({ 'closeButton': false,
+                          'message': 'You are logging out from the HydroClient.  Do you want to log out from Google?', 'callback': function(result) {
         
             if (result) {
                 //Google logout confirmed - submit...
@@ -1106,7 +1107,8 @@ function googleFormSubmit(event) {
                 event.currentTarget.action += '&localLogout=true';
                 event.target.submit();
             }
-        });
+          }});
+
         bootbox.removeLocale(localeName);
     }
 

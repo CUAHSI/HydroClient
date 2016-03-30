@@ -340,34 +340,6 @@ namespace HISWebClient.Controllers
 				var userIpAddressRef = userIpAddress;
 				var domainNameRef = domainName;
 
-				Task.Run(async () =>
-				{
-
-					//Retrieve the variable units for the requested time series...
-					if (TimeSeriesFormat.WaterOneFlow == tsrIn.RequestFormat)
-					{
-						foreach (int timeSeriesId in tsrIn.TimeSeriesIds)
-						{
-							SeriesData sd = null;
-
-							try
-							{
-								//UpdateTaskStatus(tsrIn.RequestId, timeSeriesId, "unknown");
-
-								sd = await GetSeriesDataFromSeriesID(timeSeriesId, retrievedSeries);
-								UpdateTaskStatus(tsrIn.RequestId, timeSeriesId, sd.myVariable.VariableUnit.Name);
-							}
-							catch (Exception ex)
-							{
-								//For now take no action...
-								sd = null;
-								continue;
-							}
-						}
-					}
-				});
-
-
                 #region MyRegion run task
 
                 Task.Run(async () =>
@@ -401,6 +373,25 @@ namespace HISWebClient.Controllers
 								if (IsTaskCancelled(requestId, cancellationEnum, cancellationMessage))
 								{
 									break;
+								}
+
+								if (TimeSeriesFormat.WaterOneFlow == tsrIn.RequestFormat)
+								{
+									SeriesData sd = null;
+
+									try
+									{
+										sd = await GetSeriesDataFromSeriesID(timeSeriesId, retrievedSeries);
+
+										string varUnit = String.IsNullOrWhiteSpace(sd.myVariable.VariableUnit.Name) ? "unknown" : sd.myVariable.VariableUnit.Name;
+										UpdateTaskStatus(tsrIn.RequestId, timeSeriesId, varUnit);
+									}
+									catch (Exception ex)
+									{
+										//Exception - log 'Unknown' for variable name and continue... 
+										UpdateTaskStatus(tsrIn.RequestId, timeSeriesId, "unknown");
+									}
+
 								}
 
 								string statusMessage = TimeSeriesRequestStatus.ProcessingTimeSeriesId.GetEnumDescription() +
@@ -1777,20 +1768,32 @@ namespace HISWebClient.Controllers
 				//Invalid input parameter(s) - return early
 				return;
 			}
-            
-            var body = "<p>Email From: {0} ({1})</p><p>the data can be downloaded from here:</p><p>{2}</p>";
+
+			var body = "<p>Your download from the Water Data Center is now available...</p>" +
+						"<br/>" +
+						"<a href=\"{0}\">Please click here to retrieve the file.<a/>";     
+			
+			//"> <a/> <p>the data can be downloaded from here:</p><p>{2}</p>";
             var message = new MailMessage();
 			message.To.Add(new MailAddress(cu.UserEmail));
-            message.Subject = "Your email subject";
+            message.Subject = "Your Water Data Center download is now available";
 
-            message.Body = string.Format(body, "WD", "test", zipURL);
+            message.Body = string.Format(body, zipURL);
             message.IsBodyHtml = true;
-            using (var smtp = new SmtpClient())
-            {
-                await smtp.SendMailAsync(message);
-                return;
-            }
 
+			try
+			{
+				using (var smtp = new SmtpClient())
+				{
+					await smtp.SendMailAsync(message);
+					return;
+				}
+			}
+			catch (Exception ex)
+			{
+				//Exception - for now take no action...
+				var errMessage = ex.Message;
+			}
         }
 	}
 }
