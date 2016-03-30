@@ -1074,8 +1074,8 @@ function initialize() {
     });
 
     //Add click handlers for Google SignIn/SignOut...
-    $('#' + 'imgSignIn').on('click', clearMonitors);
-    $('#' + 'imgSignOut').on('click', clearMonitors);
+    $('#' + 'btnSignIn').on('click', clearMonitors);
+    $('#' + 'btnSignOut').on('click', clearMonitors);
     
 }
 
@@ -1288,7 +1288,7 @@ function initializeKeywordList(type) {
 
     if ('Common' === type) {
         //'Most Common' keywords...
-        $("input[name='keywords']:checked").attr('checked', false);
+        $("input[name='keywords']:checked").prop('checked', false);
         $("input[name='keywords']").prop("disabled", false);
     }
     else {
@@ -1313,7 +1313,8 @@ function initializeKeywordList(type) {
 function initializeDataServices() {
 
     //Uncheck gridded data services checkbox
-    $('#checkOnlyObservedValues').attr('checked', false);
+    bObservedValuesOnly = false;
+    $('#checkOnlyObservedValues').prop('checked', bObservedValuesOnly);
 
     //Unselect all table rows
     if ($.fn.DataTable.isDataTable('#dtServices')) {
@@ -1361,6 +1362,7 @@ function validateDateString(event) {
         jqueryLabelObj.hide();
         jqueryGrpObj.removeClass('has-error');
         jqueryObj.removeClass('has-error');
+        jqueryObj.removeClass('invalid-date');
     }
     else {
         //Date string invalid - stop propagation of the event to ensure error message displays...
@@ -1371,6 +1373,7 @@ function validateDateString(event) {
         jqueryLabelObj.show();
         jqueryGrpObj.addClass('has-error');
         jqueryObj.addClass('has-error');
+        jqueryObj.addClass('invalid-date');
         //jqueryObj.focus();    //Allow change of focus for bootstrap datepicker!!
     }
 }
@@ -1413,7 +1416,7 @@ function compareFromDateAndToDate(event) {
     var jqueryEndDate = $(('#' + event.data.inputIdEndDate));
 
     //Check for an existing error...
-    if (jqueryStartDate.hasClass('has-error') || jqueryEndDate.hasClass('has-error')) {
+    if (jqueryStartDate.hasClass('invalid-date') || jqueryEndDate.hasClass('invalid-date')) {
         return false;
     }
 
@@ -1681,7 +1684,7 @@ function clickSelectKeywords(event) {
     //Clear selections from 'Most Common' and 'Full List' tabs...
 
     //'Most Common' tab checkboxes
-    $("input[name='keywords']:checked").attr('checked', false);
+    $("input[name='keywords']:checked").prop('checked', false);
 
     //'Full List' tab nodes
     $("#tree").fancytree("getTree").visit(function (node) {
@@ -2956,10 +2959,13 @@ function addFilterPlaceholders(event) {
 
         if ('' === select.val()) {
             //No selection made - prepend 'placeholder' to selections
+            //select.prepend('<option value="999999" selected disabled style="color: grey;">Filter by: ' + placeHolders[i] + '</option>');
+            
+            //BCC - TEST - 30-Mar-2016 - Explicitly set the elements selected index to make selected/disabled element visible in IE 11
+            //Source: http://stackoverflow.com/questions/27283887/adding-selected-and-disabled-attributes-to-an-option-tag-in-ie-11
             select.prepend('<option value="999999" selected disabled style="color: grey;">Filter by: ' + placeHolders[i] + '</option>');
+            select.prop( "selectedIndex", 0 );
         }
-
-
     }
 }
 
@@ -3058,7 +3064,8 @@ function setupServices()
     myServicesDatatable = $('#dtServices').dataTable({
         "ajax": actionUrl,
         "order": [2, 'asc'],
-        "dom": 'l<"toolbarDS">frtip', //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+        //"dom": 'l<"toolbarDS">frtip', //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+        "dom": '<"toolbarDS">frtilp', //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
         "autoWidth": false,
          "columns": [
 
@@ -3092,6 +3099,20 @@ function setupServices()
          //"scrollX": true,
          initComplete: function () {
              $('#dtServices').dataTable().fnAdjustColumnSizing();
+
+             //Revise layout for table's info, length and pagination controls...
+             var tableName = 'dtServices';
+             $('#' + tableName + '_info').css({'width': '25%'});
+
+             $('#' + tableName + '_length').css({'width': '50%', 
+                                             'height': '2.5em'});
+
+             $('#' + tableName + '_length' + ' > label').css({'text-align': 'center',
+                                                         'display': 'block',
+                                                         'margin-top': '1.0em'});
+
+             $('#' + tableName + '_paginate').css({'width': '25%'});
+
          }
     });
     //$('a.toggle-vis').on('click', function (e) {
@@ -3124,7 +3145,7 @@ function setupServices()
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-    $("div.toolbarDS").html('<input type="button" style="margin-left: 2em; float:left;" class="btn btn-warning" disabled id="btnClearSelectionsDS" value="Clear Selection(s)"/>');
+    $("div.toolbarDS").html('<input type="button" style="margin-left: 1em; float:left;" class="btn btn-warning" disabled id="btnClearSelectionsDS" value="Clear Selection(s)"/>');
 
 
     //Avoid multiple registrations of the same handler...
@@ -3632,7 +3653,8 @@ function setupDataManagerTable() {
     //       when the table displays in the browser...
     var oTable = $(tableId).dataTable({
         'deferRender': false,
-        'dom': 'C<"clear">l<"toolbarDataMgr">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+        //'dom': 'C<"clear">l<"toolbarDataMgr">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+        'dom': 'C<"clear"><"toolbarDataMgr">frtilp',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
         //"autoWidth": false,
         "autoWidth": true,
         'columns': [
@@ -3736,6 +3758,19 @@ function setupDataManagerTable() {
 
             //Adjust column sizing...
             $(tableId).dataTable().fnAdjustColumnSizing();
+
+            //Revise layout for table's info, length and pagination controls...
+            $('#' + tableName + '_info').css({'width': '25%'});
+
+            $('#' + tableName + '_length').css({'width': '50%', 
+                                             'height': '2.5em'});
+
+           $('#' + tableName + '_length' + ' > label').css({'text-align': 'center',
+                                                         'display': 'block',
+                                                         'margin-top': '1.0em'});
+
+            $('#' + tableName + '_paginate').css({'width': '25%'});
+
         }
     });
 
@@ -3778,7 +3813,7 @@ function setupDataManagerTable() {
     $('div.toolbarDataMgr').addClass('container');
     $('div.toolbarDataMgr').html(
                                   '<div class="inline-form">' +
-                                  '<div class="form-group" style="margin-left: 1em; float:left; display:inline-block;">' +
+                                  '<div class="form-group" style="float:left; display:inline-block;">' +
 
                                     '<div class="dropdown" style="position: relative; display: inline-block; float: left; font-size: 1.00em;">' +
                                       '<button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">' +
@@ -5378,7 +5413,7 @@ function handleFilterClick(event) {
 
         //No search or filter values - uncheck the 'apply filters to map' button,
         //  call the click handler once more to redraw the map...
-        $('#' + event.data.buttonId).attr('checked', false);
+        $('#' + event.data.buttonId).prop('checked', false);
         $('#' + event.data.buttonId).triggerHandler('click');
     }
     else {
@@ -5452,6 +5487,7 @@ function copyDmRecordToServerRecord( userEmail, dmRecord) {
 
     serverRecord.Organization = dmRecord.Organization;
     serverRecord.ServiceTitle = dmRecord.ServTitle;
+    serverRecord.ServiceCode = dmRecord.ServiceCode;
     serverRecord.Keyword = dmRecord.ConceptKeyword;
     serverRecord.VariableUnits = dmRecord.VariableUnits;
     serverRecord.DataType = dmRecord.DataType;
@@ -5763,7 +5799,8 @@ function clearServicesSelections(event) {
     mySelectedServices.length = 0;
 
     //Uncheck the 'Select all non-gridded...' checkbox
-    $("input[name='checkOnlyObservedValues']").attr('checked', false);
+    bObservedValuesOnly = false;
+    $("input[name='checkOnlyObservedValues']").prop('checked', bObservedValuesOnly);
 
     //Check button state...
     enableDisableButton(event.data.tableId, event.data.btnId);
@@ -6604,7 +6641,7 @@ function setUpTimeseriesDatatable() {
                               '<div class="dropdown" style="position: relative; display: inline-block; float: left; font-size: 1.00em;">' +
                                   '<button class="btn btn-primary dropdown-toggle" type="button" id="ddMenuSelectionsTS" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">' +
                                    '<span class="glyphicon glyphicon-list-alt" style="font-weight: bold; font-size: 1.00em;"></span>' +
-                                   '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Selection&nbsp;</span>' +
+                                   '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Selections&nbsp;</span>' +
                                    '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
                                   '</button>' +
                                   '<ul class="dropdown-menu" aria-labelledby="ddMenuSelectionsTS">' +
@@ -7102,8 +7139,8 @@ function loadCurrentUser() {
             if (currentUser.authenticated) {
                 //Current user authenticated - set up for user logout...
                 $('form#formGoogleLogin').attr('action', '/Account/ExternalLogOut?ReturnUrl=%2FHome%2FIndex');
-                $('input#imgSignIn').addClass('hidden');
-                $('input#imgSignOut').removeClass('hidden');
+                $('button#btnSignIn').addClass('hidden');
+                $('button#btnSignOut').removeClass('hidden');
                 setupToolTip('liGoogleTab','Logout from HydroClient and Google when your session is complete.');
 
                 //Load saved time series for current user, if indicated
