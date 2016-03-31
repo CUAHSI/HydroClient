@@ -463,9 +463,6 @@ function initialize() {
 
     slider = addSlider();
 
-    slider.slideReveal("show");
-    sidepanelVisible = true;
-
     addLocationSearch();
 
     //trigger update of map on these events
@@ -1033,7 +1030,15 @@ function initialize() {
     //Add click handlers for Google SignIn/SignOut...
     $('#' + 'btnSignIn').on('click', clearMonitors);
     $('#' + 'btnSignOut').on('click', clearMonitors);
-    
+ 
+    //For Apple Safari, ensure the side panel is displayed after a page refresh...
+    slider.slideReveal("hide")
+    sidepanelVisible = false
+
+    setTimeout( function() {
+        slider.slideReveal("show");
+        sidepanelVisible = true;    
+    }, 2000);
 }
 
 //Event handler for Google form submit...
