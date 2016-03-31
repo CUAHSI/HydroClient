@@ -25,7 +25,7 @@ var sidepanelVisible = false;
 var conceptsType = '';
 
 var selectedRowCounts = {
-    'dtMarkers': {'targetIds': ['spanClearSelections', 'spanZipSelections','spanManageSelections'], 'count': 0},
+    'dtMarkers': {'targetIds': ['spanClearSelections', 'spanZipSelections','spanManageSelections'], 'count': 0, 'customCounter': customCounter},
     'dtTimeseries': { 'targetIds': ['spanClearSelectionsTS', 'spanZipSelectionsTS', 'spanManageSelectionsTS'], 'count': 0, 'customCounter': customCounter },
     'tblDataManager': { 'targetIds': ['spanClearSelectionsDM', 'spanRemoveSelectionsDM'], 'count': 0, 'customCounter': customCounter }
 };
@@ -300,41 +300,13 @@ function customCounter(tableName) {
             }
         }
     }
-    else if ('dtTimeseries' === tableName) {
+    else if ('dtTimeseries' === tableName || 'dtMarkers' === tableName) {
         //Initialize counts...
         countClear = 0;
-        countLaunch = 0;
         countSelectable = 0;
 
         //Retrieve data for all table rows... 
         var table = $('#' + tableName).DataTable();
-        //var rows = table.rows();
-        var rows1 = table.rows({ 'order': 'current', 'search': 'applied' });    //Retrieve rows per current sort/search order...
-        var nodes = rows1.nodes();
-
-        //var nodes = rows.nodes();
-        //var data = rows.data();
-
-        ////For each instance...
-        //$.each(nodes, function (i, obj) {
-        //    //Retrieve node, check for class: selected
-        //    var jqueryObj = $(obj);
-
-        //    if (jqueryObj.hasClass('selected')) {
-        //        //Row is selected...
-
-        //        //Update counts...
-        //        ++countClear;
-
-        //        if ('true' !== $('#ddActionTS').attr('data-noneselected')) {
-        //            ++countLaunch;
-        //        }
-        //    }
-        //    else {
-        //        //Row is NOT selected...
-        //        ++countSelectable;
-        //    }
-        //});
 
         //Since table: dtTimeseries is configured as 'deferRender': true, the table loads data
         // one displayed page at a time.  Thus, if the user has viewed only three pages of a 
@@ -345,10 +317,6 @@ function customCounter(tableName) {
 
         countClear = selectedRows;
 
-        if ('true' !== $('#ddActionTS').attr('data-noneselected')) {
-            countLaunch = selectedRows;
-        }
-
         //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
         //Source: http://datatables.net/reference/api/rows().nodes()
         var rows = table.rows({ 'order': 'current', 'search': 'applied' });    //Retrieve rows per current sort/search order...
@@ -356,36 +324,23 @@ function customCounter(tableName) {
 
         countSelectable = totalRows - selectedRows;
 
-        //Update button text with counts...
-        var buttons = [{ 'name': 'btnApplyActionTS', 'count': countLaunch, 'disableCheck': btnDisableCheck }];
-        var bLength = buttons.length;
+        //Update dropdown items per counts...
+        var anchors = [];
 
-        for (var i = 0; i < bLength; ++i) {
-            var button = $('#' + buttons[i].name); 
-            var value = button.val();
-
-            if ('undefined' === typeof value || null === value) {
-                //Button value not yet available - continue...
-                continue;
-            }
-
-            var count = buttons[i].count;
-            //var values = value.split(' ');
-            var values = value.split(':');
-
-            if (0 >= count) {
-                button.val(values[0]);
-                button.prop('disabled', true);
-            }
-            else {
-                button.val(values[0] + ': (' + count.toString() + ')');
-                button.prop('disabled', null !== buttons[i].disableCheck ? buttons[i].disableCheck(buttons[i].name)  : false); 
-            }
+        if ('dtTimeseries' === tableName) { 
+            anchors = [{ 'name': 'anchorAllSelectionsTS', 'count': countSelectable},
+                       { 'name': 'anchorClearSelectionsTS', 'count': countClear},
+                       { 'name': 'anchorAddSelectionsToWorkspaceTS', 'count': countClear},
+                       { 'name': 'anchorAllTimeseriesInOneFileTS', 'count': countClear},
+                       { 'name': 'anchorEachTimeseriesInSeparateFileTS', 'count': countClear}];
+        } else if ('dtMarkers' === tableName) {
+            anchors = [{ 'name': 'anchorAllSelections', 'count': countSelectable},
+                       { 'name': 'anchorClearSelections', 'count': countClear},
+                       { 'name': 'anchorAddSelectionsToWorkspace', 'count': countClear},
+                       { 'name': 'anchorAllTimeseriesInOneFile', 'count': countClear},
+                       { 'name': 'anchorEachTimeseriesInSeparateFile', 'count': countClear}];        
         }
 
-        //Update dropdown items per counts...
-        var anchors = [{'name': 'anchorAllSelectionsTS', 'count': countSelectable},
-                       { 'name': 'anchorClearSelectionsTS', 'count': countClear} ];
         var aLength = anchors.length;
 
         for (var ii = 0; ii < aLength; ++ii) {
@@ -499,6 +454,8 @@ function initialize() {
     //get reference to map sizing of window happens later to prevent gap   
     map = new google.maps.Map(document.getElementById("map-canvas"), mapProp);
 
+    //set map zoom limits...
+    map.setOptions({minZoom: 5, maxZoom: 15});
 
     //UI
 
@@ -3420,7 +3377,7 @@ function setUpDatatables(clusterid) {
 
                                     '</button>' +
                                     '<ul class="dropdown-menu" style="width: 22em;">' +
-                                    '<ul style="list-style: none; padding-left: 0em;">' +
+                                    //'<ul style="list-style: none; padding-left: 0em;">' +
 
                                     '<li data-toggle="tooltip" data-placement="top" title="Move all selected time series to the workspace">' +
                                     '<a href="#" id="anchorAddSelectionsToWorkspace" style="font-weight: bold;" >' + 
@@ -3445,13 +3402,13 @@ function setUpDatatables(clusterid) {
                                     (currentUser.authenticated ? 
                                         '<ul class="dropdown-menu">' + 
                                         '<li>' +
-                                            '<a href="#" id="anchorAllTimeseriesInOneFile" style="font-weight: bold; color: #337ab7;" >' +
+                                            '<a href="#" id="anchorAllTimeseriesInOneFile" style="font-weight: bold;" >' +
                                             '<span class="glyphicon glyphicon-file" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
                                             '<span style="font-weight: bold; display: inline-block; vertical-align: super;">All selections in one file</span>' +
                                             '</a>' +
                                         '</li>' +
                                         '<li>' +
-                                            '<a href="#" id="anchorEachTimeseriesInSeparateFile" style="font-weight: bold; color: #337ab7;" >' +
+                                            '<a href="#" id="anchorEachTimeseriesInSeparateFile" style="font-weight: bold;" >' +
                                             '<span class="glyphicon glyphicon-duplicate" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
                                             '<span style="font-weight: bold; display: inline-block; vertical-align: super;">Each selection in a separate file</span>' +
                                             '</a>' +
@@ -4107,15 +4064,15 @@ function btnDisableCheck(buttonId) {
             }
         }
     }
-    else if ('btnApplyActionTS' === buttonId) {
-        var table = $('#' + 'dtTimeseries').DataTable();
-        var selectedRows = table.rows('.selected').data();
-        var rowsLength = selectedRows.length;
+    //else if ('btnApplyActionTS' === buttonId) {
+    //    var table = $('#' + 'dtTimeseries').DataTable();
+    //    var selectedRows = table.rows('.selected').data();
+    //    var rowsLength = selectedRows.length;
     
-        if ( 0 >= rowsLength) {
-            result = true;  //NO rows selected - disable launch button...
-        }
-    }
+    //    if ( 0 >= rowsLength) {
+    //        result = true;  //NO rows selected - disable launch button...
+    //    }
+    //}
 
     return result;
 }
@@ -6678,7 +6635,7 @@ function setUpTimeseriesDatatable() {
 
                                       '</button>' +
                                       '<ul class="dropdown-menu" style="width: 22em;">' +
-                                       '<ul style="list-style: none; padding-left: 0em;">' +
+                                       //'<ul style="list-style: none; padding-left: 0em;">' +
 
                                        '<li data-toggle="tooltip" data-placement="top" title="Move all selected time series to the workspace">' +
                                         '<a href="#" id="anchorAddSelectionsToWorkspaceTS" style="font-weight: bold;" >' + 
@@ -6703,13 +6660,13 @@ function setUpTimeseriesDatatable() {
                                        (currentUser.authenticated ? 
                                            '<ul class="dropdown-menu">' + 
                                             '<li>' +
-                                             '<a href="#" id="anchorAllTimeseriesInOneFileTS" style="font-weight: bold; color: #337ab7;" >' +
+                                             '<a href="#" id="anchorAllTimeseriesInOneFileTS" style="font-weight: bold;" >' +
                                                '<span class="glyphicon glyphicon-file" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
                                                '<span style="font-weight: bold; display: inline-block; vertical-align: super;">All selections in one file</span>' +
                                              '</a>' +
                                             '</li>' +
                                             '<li>' +
-                                             '<a href="#" id="anchorEachTimeseriesInSeparateFileTS" style="font-weight: bold; color: #337ab7;" >' +
+                                             '<a href="#" id="anchorEachTimeseriesInSeparateFileTS" style="font-weight: bold;" >' +
                                                '<span class="glyphicon glyphicon-duplicate" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
                                                '<span style="font-weight: bold; display: inline-block; vertical-align: super;">Each selection in a separate file</span>' +
                                              '</a>' +
