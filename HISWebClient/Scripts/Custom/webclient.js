@@ -923,9 +923,9 @@ function initialize() {
 
             //BCC - 09-Jul-2015 -  - QA Issue #25 - Data tab: table column titles stay in wrong order after sorting table
             //Remove/add column adjustment event handler...
-            $('#dtTimeSeriesModal').off('shown.bs.modal', adjustColumns);
-            $('#dtTimeSeriesModal').on('shown.bs.modal', {
-                'tableId': 'dtTimeSeries', 'containerId': 'dtTimeSeriesModal'
+            $('#tableModal').off('shown.bs.modal', adjustColumns);
+            $('#tableModal').on('shown.bs.modal', {
+                'tableId': 'dtTimeseries', 'containerId': 'dtTimeSeriesModal'
             }, adjustColumns);
 
             table.order([0, 'asc']).draw();
@@ -1039,6 +1039,18 @@ function initialize() {
         slider.slideReveal("show");
         sidepanelVisible = true;    
     }, 2000);
+
+    //Click handlers for 'Workspace' buttons...
+    var wsButtonIds = ['tabbedDataMgrTab', 'tableModal-DataMgrTS', 'tableModal-DataMgr'];
+    var wsbidsLength = wsButtonIds.length;
+
+    for (var wsbidsI = 0; wsbidsI < wsbidsLength; ++wsbidsI) {
+    
+        var wsButton = $('#' + wsButtonIds[wsbidsI]);
+        wsButton.off('click', adjustColumns);
+        wsButton.on('click', {'tableId': 'tblDataManager'}, adjustColumns);
+    }
+
 }
 
 //Event handler for Google form submit...
@@ -2939,9 +2951,18 @@ function adjustColumns(event) {
 
     var tableId = event.data.tableId;
     var containerId = event.data.containerId;
+    
+    //Validate/initialize input parameters...
+    if ( 'undefined' === typeof tableId || null === tableId) {
+        return; //Invalid parameter(s) - return early...
+    }
+    
+    if ( 'undefined' !== typeof containerId && null !== containterId) {
+        $(('#' + containerId)).css('display', 'block');
+    }
+
     var table = $(('#' + tableId)).DataTable();
 
-    $(('#' + containerId)).css('display', 'block');
     table.columns.adjust().draw();
 }
 
