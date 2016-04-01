@@ -2663,30 +2663,21 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             icon_width = 60;
             //count=""
         }
-        //icon = new google.maps.MarkerImage(clusterMarkerPath + "all_sprite.png", new google.maps.Size(44, 44), new google.maps.Point(icon_choice, 0), new google.maps.Point(22, 22));
-
-        //icon = new google.maps.MarkerImage(clusterMarkerPath + icons[icon_choice].file, null, null, new google.maps.Point(22, 22));
 
         var marker = new MarkerWithLabel({
             position: point,
-            icon: new google.maps.MarkerImage(clusterMarkerPath + "m6.png", new google.maps.Size(53, 52), null, new google.maps.Point(icon_width / 2, icon_width / 2), new google.maps.Size(icon_width, icon_width)),
-//BCC            icon: clusterMarkerPath + "m3.png",
+            icon: new google.maps.MarkerImage(clusterMarkerPath + "m6.png", new google.maps.Size(53, 52), null, new google.maps.Point(icon_width / 2, icon_height / 2), new google.maps.Size(icon_width, icon_height)),
             draggable: false,
             raiseOnDrag: true,
             map: map,
-            anchorPoint: new google.maps.Point(0, -13),
-//BCC            anchorPoint: new google.maps.Point(0, -13),
             labelContent: count,
-            labelAnchor: new google.maps.Point(22, 30),
-//BCC            labelAnchor: new google.maps.Point(15, 38),
+            labelAnchor: new google.maps.Point(21, 7),
             labelClass: icons[icon_choice].cssClass, // the CSS class for the label
-//BCC            labelClass: 'labels',
             labelStyle: { opacity: 0.95 },
             tooltip: '',
             zIndex: 1500,
             flat: true,
             visible: true
-
         });
 
         //Create infowindow for marker, if indicated
@@ -2781,139 +2772,20 @@ function createInfoWindow( map, marker, serviceCodeToTitle, markerTypeName) {
     iw.setMinHeight((listCount * fontsize).toString());
     iw.setMaxWidth((20 * fontsize).toString());
 
-    //if ( 'google.maps.Marker' === markerTypeName) {
-
-        //Open on mouseover...
-        google.maps.event.addListener(marker, 'mouseover', function openInfoBubble(event) {
-           if ( ! iw.isOpen()) {
-                iw.open(map, marker);
-            }
-        });
+    //Open on mouseover...
+    google.maps.event.addListener(marker, 'mouseover', function openInfoBubble(event) {
+        if ( ! iw.isOpen()) {
+            iw.open(map, marker);
+        }
+    });
     
-        //Close on mouseout...
-        google.maps.event.addListener(marker, 'mouseout', function () {
-            iw.close();
-        });
+    //Close on mouseout...
+    google.maps.event.addListener(marker, 'mouseout', function () {
+        iw.close();
+    });
     
-    //}
-    //else if ( 'MarkerWithLabel' === markerTypeName) {
-    
-    //var currentInterval = setInterval(function() {
-
-    //            if ( null !== currentPosition.latLng) {
-            
-    //                lat = currentPosition.latLng.lat().toFixed(2);
-    //                lng = currentPosition.latLng.lng().toFixed(2);
-
-    //                if ('undefined' !== typeof iw.anchor /*&& 'undefined' !== typeof iw.anchor.position */) {
-    //                    var ibLat = iw.anchor.position.lat().toFixed(2);
-    //                    var ibLng = iw.anchor.position.lng().toFixed(2)
-    //                    if ( lat === ibLat && lng === ibLng) {
-    //                        //Current mouse position matches InfoBubble position - open InfoBubble...
-    //                        if ( ! iw.isOpen()) {
-    //                            iw.open(map, marker);
-    //                        }
-    //                    }
-    //                    else {
-    //                        iw.close();
-    //                    }
-    //                }
-    //            }
-    //        }, 500);
-
-    //    currentIntervals.push( currentInterval);
-
-    //    //Initial open on mouseover...
-    //    google.maps.event.addListenerOnce(marker, 'mouseover', function openInfoBubble(event) {
-    //        iw.open(map, marker);
-    //    });
-    
-    //}
-
-
-
-//    Close on mouseout...
-//    google.maps.event.addListener(marker, 'mouseout', function () {
-
-        //Close currently open window(s) , if indicated...
-        //closeInfoWindows();
-//        removeMarkerPosition(marker.position);
-//        iw.close();
-//    });
 }
 
-//Check the position of the open InfoBubble instance against the input position
-//function checkInfoBubble(currentPosition) { 
-
-//    if (null !== openInfoBubble ) {
-//        lat = currentPosition.lat().toFixed(1);
-//        lng = currentPosition.lng().toFixed(1);
-
-//        if ('undefined' !== typeof openInfoBubble.anchor /*&& 'undefined' !== typeof openInfoBubble.anchor.position */) {
-//            var ibLat = openInfoBubble.anchor.position.lat().toFixed(1);
-//            var ibLng = openInfoBubble.anchor.position.lng().toFixed(1)
-//            if ( lat !== ibLat || lng !== ibLng) {
-//                //Input position does not match InfoBubble position - close InfoBubble...
-//                //console.log('????????? MISS ?????????');                
-//                openInfoBubble.close();
-//            }
-//        }
-//    }
-//}
-
-//Check if the input position matches that of the open InfoBubble instance
-//function checkMarkerPosition(position) {
-
-//    var result = false; //Assume no match...
-//    //var length = openInfoBubbles.length;
-//    //for (var i = 0; i < length; ++i) {
-
-//    //    if (position.equals(openInfoBubbles[i])) {
-//    //        result = true;  //Match!!
-//    //        break;
-//    //    }
-//    //}
-//    if (null !== openInfoBubble ) {
-//        lat = position.lat().toFixed(1);
-//        lng = position.lng().toFixed(1);
-
-//        if ('undefined' !== typeof openInfoBubble.anchor /*&& 'undefined' !== typeof openInfoBubble.anchor.position */) {
-//            var ibLat = openInfoBubble.anchor.position.lat().toFixed(1);
-//            var ibLng = openInfoBubble.anchor.position.lng().toFixed(1)
-//            if ( lat === ibLat && lng === ibLng) {
-//                result = true;  //Match!!
-//            }
-//        }
-//    }
-
-//    return result;
-//}
-
-//function removeMarkerPosition(position) {
-
-//    var length = openInfoBubbles.length;
-//    for (var i = 0; i < length; ++i) {
-
-//        if (position.equals(openInfoBubbles[i])) {
-//            openInfoBubbles.splice(i,1);    //Match - remove array element
-//            break;            
-//        }
-//    }
-//}
-
-
-
-
-//Close currently open window(s) , if indicated...
-//function closeInfoWindows() {
-
-//    var ib = null;
-//    while (0 < openInfoBubbles.length) {
-//        ib = openInfoBubbles.shift();
-//        ib.close();
-//        //ib = null;
-//    }
-//}
 
 //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
 //Prepend disabled options as 'placeholders' to filtering selects... 
