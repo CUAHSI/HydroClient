@@ -950,16 +950,6 @@ function initialize() {
             jQueryDataTable.columns.adjust().draw();
         }
 
-        if (e.target.id == "mapTab") {
-            //Show the zendesk iframe...
-            $('#launcher').show();
-
-            google.maps.event.trigger(map, "resize");
-            if (!sidepanelVisible) {
-                slider.slideReveal("show")
-            }
-
-        }
         // activated tab
     })
 
@@ -1051,6 +1041,22 @@ function initialize() {
         wsButton.on('click', {'tableId': 'tblDataManager'}, adjustColumns);
     }
 
+    //Click handler for 'Search' button
+    $('#' + 'mapTab').on('click', function(event) {    
+        //Show the zendesk iframe...
+        //$('#launcher').show();
+
+        setTimeout(function() {
+            $("#map-canvas").height(getMapHeight()) //setMapHeight
+            $("#map-canvas").width(getMapWidth()) //setMapWidth
+
+            google.maps.event.trigger(map, "resize");
+            //if (!sidepanelVisible) {
+            if (sidepanelVisible) {
+                slider.slideReveal("show")
+            }        
+        }, 500);
+    })
 }
 
 //Event handler for Google form submit...
