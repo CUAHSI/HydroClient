@@ -3,18 +3,18 @@
 <!-- Start of cuahsi Zendesk Widget script -->
 <script>
     /*<![CDATA[*/window.zEmbed || function (e, t) {
-    var n, o, d, i, s, a = [],
-        r = document.createElement("iframe"); window.zEmbed = function ()
-        { a.push(arguments) }, window.zE = window.zE || window.zEmbed, r.src = "javascript:false",
-        r.title = "", r.role = "presentation", (r.frameElement || r).style.cssText = "display: none",
-        d = document.getElementsByTagName("script"), d = d[d.length - 1], d.parentNode.insertBefore(r, d),
-        i = r.contentWindow, s = i.document; try { o = s } catch (c) {
-            n = document.domain,
-                r.src = 'javascript:var d=document.open();d.domain="' + n + '";void(0);', o = s
-        } o.open()._l = function () {
-            var o = this.createElement("script"); n && (this.domain = n),
-                o.id = "js-iframe-async", o.src = e, this.t = +new Date, this.zendeskHost = t, this.zEQueue = a, this.body.appendChild(o)
-        }, o.write('<body onload="document._l();">'), o.close()
+        var n, o, d, i, s, a = [],
+            r = document.createElement("iframe"); window.zEmbed = function ()
+            { a.push(arguments) }, window.zE = window.zE || window.zEmbed, r.src = "javascript:false",
+            r.title = "", r.role = "presentation", (r.frameElement || r).style.cssText = "display: none",
+            d = document.getElementsByTagName("script"), d = d[d.length - 1], d.parentNode.insertBefore(r, d),
+            i = r.contentWindow, s = i.document; try { o = s } catch (c) {
+                n = document.domain,
+                    r.src = 'javascript:var d=document.open();d.domain="' + n + '";void(0);', o = s
+            } o.open()._l = function () {
+                var o = this.createElement("script"); n && (this.domain = n),
+                    o.id = "js-iframe-async", o.src = e, this.t = +new Date, this.zendeskHost = t, this.zEQueue = a, this.body.appendChild(o)
+            }, o.write('<body onload="document._l();">'), o.close()
     }("//assets.zendesk.com/embeddable_framework/main.js", "cuahsi.zendesk.com");/*]]>*/</script>
 <!-- End of cuahsi Zendesk Widget script -->
 
@@ -47,7 +47,7 @@
                         }
                     }
                 </script>
-             }
+            }
             <ul class="nav nav-tabs pull-right" @*id="myTab"*@ @*style="display: inline-block; position: relative; float:right;"*@>
                 <li id="liMapTab" class="active navbar-custom hidden" style="margin-right: 1.0em; padding: 0;"> <button class="btn btn-primary" href="#map" id="mapTab" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> Search</button></li>
                 @*   <li class="navbar-custom disabled"><a href="#graph" id="graphTab" data-toggle="tab"><span class="glyphicon glyphicon-home"></span> Graph</a></li>*@
@@ -56,14 +56,14 @@
                 <li id="liTabbedDataMgrTab" class="navbar-custom" style="margin-right: 1.0em; padding: 0;"><button class="btn btn-primary" href="#tabbedDataMgr" id="tabbedDataMgrTab" data-toggle="tab"><span class="glyphicon glyphicon-tasks"></span> Workspace</button></li>
                 @*<li class="btn-separator"></li>*@
                 @*<li class="navbar-custom"><a href="" id="datamanagerTab" data-toggle="modal" data-target="#datamgrModal"><span class="glyphicon glyphicon-record"></span> Data Manager</a></li>
-            <li class="btn-separator"></li>*@
+                    <li class="btn-separator"></li>*@
                 @*<li class="navbar-custom"><a href="" id="downloadmanagerTab" data-toggle="modal" data-target="#dmModal"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</a></li>
-            <li class="btn-separator"></li>*@
+                    <li class="btn-separator"></li>*@
 
                 @*<li id="liContactTab" class="navbar-custom"><a href="" id="contactTab" data-toggle="modal" data-target="#contactModal"><span class="glyphicon glyphicon-earphone"></span> Contact</a></li>
-            <li class="btn-separator"></li>
-            <li id="liAboutTab" class="navbar-custom" style="margin-right: 1em;"><a href="" id="aboutTab" data-toggle="modal" data-target="#aboutModal"><span class="glyphicon glyphicon-info-sign"></span> About</a></li>
-            <li id="liQuickStartTab" class="navbar-custom"> <a href="" id="quickStartTab" data-toggle="modal" data-target="#quickStartModal"><span class="glyphicon glyphicon-flash"></span> QuickStart</a></li>*@
+                    <li class="btn-separator"></li>
+                    <li id="liAboutTab" class="navbar-custom" style="margin-right: 1em;"><a href="" id="aboutTab" data-toggle="modal" data-target="#aboutModal"><span class="glyphicon glyphicon-info-sign"></span> About</a></li>
+                    <li id="liQuickStartTab" class="navbar-custom"> <a href="" id="quickStartTab" data-toggle="modal" data-target="#quickStartModal"><span class="glyphicon glyphicon-flash"></span> QuickStart</a></li>*@
 
                 <li id="liAboutTab" class="navbar-custom" style="margin-right: 1.0em; padding: 0;">
 
@@ -103,10 +103,10 @@
                             @Html.AntiForgeryToken()
 
                             @*@{
-                                //Need to encode the '+' sign in the file name so that it is not converted to a space (' ') ...
-                                string url = "/home/getgoogleicon?id=" + Server.UrlEncode("btn_google+_signin_dark_normal_web.png");
-                                string url1 = "/home/getgoogleicon?id=" + Server.UrlEncode("btn_google+_signout_custom.png");
-                            }*@
+                                    //Need to encode the '+' sign in the file name so that it is not converted to a space (' ') ...
+                                    string url = "/home/getgoogleicon?id=" + Server.UrlEncode("btn_google+_signin_dark_normal_web.png");
+                                    string url1 = "/home/getgoogleicon?id=" + Server.UrlEncode("btn_google+_signout_custom.png");
+                                }*@
                             <!-- Need a 'hidden' input here.  The 'image' input cannot send any values to the server... -->
                             <input type="hidden" id="Google" name="provider" value="Google" />
                             <button class="btn btn-danger" id="btnSignIn"><span class="glyphicon glyphicon-log-in"></span>&nbsp;Sign in with Google</button>
@@ -122,7 +122,7 @@
                         <ul class="dropdown-menu">
                             <li>@Html.ActionLink("Roles", "Index", "Roles", new { area = "Admin" }, null)</li>
                             @*<li>@Html.ActionLink("Add Connection", "Index", "ConnectionParameters", new { area = "Admin" }, null)</li>
-                        <li>@Html.ActionLink("Link Connections", "Index", "ConnectionParametersUsers", new { area = "Admin" }, null)</li>*@
+                                <li>@Html.ActionLink("Link Connections", "Index", "ConnectionParametersUsers", new { area = "Admin" }, null)</li>*@
                             <li>@Html.ActionLink("Register as a new user", "Register", "Account", new { area = "" }, null)</li>
                         </ul>
                     </li>
@@ -142,22 +142,22 @@
                 @* BCC- 23-Jul-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set max-width: none on the table element!!
                     NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
                     Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
-                *@
-                @*<table id="dtTimeseries" class="display" cellspacing="0" style="max-width: none;" data-selectedtimeseriesmax="25">
-                    <thead>
-                        <tr>
-                            @Html.Partial("_DatatableTimeseriesColumns")
-                        </tr>
-                    </thead>
+        *@
+        @*<table id="dtTimeseries" class="display" cellspacing="0" style="max-width: none;" data-selectedtimeseriesmax="25">
+                        <thead>
+                            <tr>
+                                @Html.Partial("_DatatableTimeseriesColumns")
+                            </tr>
+                        </thead>
 
-                    <tfoot>
-                        <tr>
-                            @Html.Partial("_DatatableTimeseriesColumns")
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-        </div>*@
+                        <tfoot>
+                            <tr>
+                                @Html.Partial("_DatatableTimeseriesColumns")
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>*@
 
         <div class="tab-pane padded-tab-pane" id="tabbedDataMgr" style="margin-left: 1.0em; margin-right: 1.0em;">
 
@@ -199,9 +199,16 @@
                 </div>
 
                 <div role="tabpanel" class="tab-pane fade" id="downloadMgrPane">
-                    <div class="checkbox modal-header" > <!-- Need modal-header class here or checkbox does not work!! -->
-                        @*<label style="float:right; margin-right: 6em;"><input type="checkbox" id="chkbxAutoDownload" checked />&nbsp;Auto Download Archives?</label>*@
-                        <label style="float:right; margin-right: 6em;"><input type="checkbox" id="chkbxAutoDownload" />&nbsp;Auto Download Archives?</label>
+                    <div class="checkbox modal-header">
+                        <!-- Need modal-header class here or checkbox does not work!! -->
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <label style="float:right; margin-right: 6em;"><input type="checkbox" id="chkbxAutoDownload" />&nbsp;Auto Download Archives?</label>
+                        }
+                        else
+                        {
+                            <label style="float:right; margin-right: 6em;"><input type="checkbox" id="chkbxAutoDownload" checked />&nbsp;Auto Download Archives?</label>
+                        }
                     </div>
                     <div class="modal-body modal-body-full row">
                         <table id="tblDownloadManagerHeaders" class="table">
@@ -235,10 +242,10 @@
                                     <tr>
                                         @*<td>Footer text goes here</td>*@
                                     </tr>
-                    </tfoot>
-                </table>
-            </div>
-        </div>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
                     <div class="modal-footer">
                         @*<p>This is the modal footer!!</p>*@
                     </div>
@@ -321,8 +328,8 @@
                                     <button type="submit" class="btn btn-success form-control" style="margin: 0 auto;">Search Map</button><br />
                                     <button id="btnSetDefaults" type="button" class="btn btn-warning form-control" style="margin: 0 auto; margin-top: 0.5em;">Reset</button>
                                     @*<div style="text-align: center; margin-top: 1em; ">
-                                    <a href="http://www.github.com/cuahsi" target="_blank">Version 1.0</a>
-                                    </div>*@
+                                        <a href="http://www.github.com/cuahsi" target="_blank">Version 1.0</a>
+                                        </div>*@
                                 </div>
                             </div>
 
@@ -369,10 +376,10 @@
                     <div id="panelMapFilters" class="searchbarcontrols panel-heading" style="padding: 0.5em; height: auto; width: auto; display: inline-block;">
 
                         @*<div class="badge" style="text-align: left; display: inline;">
-                            <span id="badgeLatitude" style="font-size: medium; text-align: left;"></span>
-                            <span>/</span>
-                            <span id="badgeLongitude" style="font-size: medium; text-align: left;"></span>
-                        </div>*@
+                                <span id="badgeLatitude" style="font-size: medium; text-align: left;"></span>
+                                <span>/</span>
+                                <span id="badgeLongitude" style="font-size: medium; text-align: left;"></span>
+                            </div>*@
                         <div id="panelMapFilters2" class="hidden" style="margin-top: 0.5em;">
                             <span class="badge" style="text-align: left;">
                                 <span style="display: inline; font-weight: bold; text-align: left;" class="panel-title">Filters...</span>
@@ -477,7 +484,7 @@
                     <p>
                         Appliation  code integrated into this application was originally developed for HydroDesktop. For more information about this open source GIS software visit www.hydrodesktop.org and see:
                         Ames, D.P., Horsburgh, J.S., Cao, Y., Kadlec, J., Whiteaker, T., and Valentine, D., 2012. HydroDesktop: Web Services-Based Software for Hydrologic Data Discovery, Download, Visualization, and Analysis. Environmental Modelling & Software. Vol 37, pp 146-156. http://dx.doi.org/10.1016/j.envsoft.2012.03.013.
-                     </p>
+                    </p>
                     <p>
                         It also relies on  DotSpatial developed by Dan Ames (https://dotspatial.codeplex.com)
                     </p>
@@ -525,10 +532,10 @@
                                     width="800"
                                     height="600"></object>
 
-                                @*<p>With HydroClient, you can discover, export, and analyze environmental data.</p>*@
+                            @*<p>With HydroClient, you can discover, export, and analyze environmental data.</p>*@
                         </div>
 
-                        <div class ="tab-pane" id="searchTab">
+                        <div class="tab-pane" id="searchTab">
                             <object data="~/Content/documents/QuickStartGuide/HydroClient Quick Start Guide.2.pdf"
                                     type="application/pdf"
                                     width="800"
@@ -545,14 +552,14 @@
 
                             @*<p>Once you have discovered data, save it to your workspace in the cloud. This enables you to bookmark interesting data sets or use data tools to view and analyze the data sets that have been saved to your workspace.</p>*@
                         </div>
-                   </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <!--p>This is the modal footer!!</p-->
                 @*<address style="text-align: left;">
-                    <a href="https://cuahsi.zendesk.com/hc/en-us/articles/205419147-Overview-of-the-HydroClient-Homepage" target="_blank">Need additional help<span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></a>
-                </address>*@
+                        <a href="https://cuahsi.zendesk.com/hc/en-us/articles/205419147-Overview-of-the-HydroClient-Homepage" target="_blank">Need additional help<span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></a>
+                    </address>*@
             </div>
         </div>
     </div>
@@ -842,7 +849,17 @@
         <div class="modal-content modal-content-full">
             <div class="modal-header modal-header-full">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
-                <button class="btn btn-default" href="#tabbedDataMgrTab" id="tableModal-DataMgr" data-dismiss="modal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-tasks"></span> Open Workspace</button>
+                @*<button class="btn btn-default" href="#tabbedDataMgrTab" id="tableModal-DataMgr" data-dismiss="modal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-tasks"></span> Open Workspace</button>*@
+
+                <div style="float: right; margin-right: 2em;" class="btn btn-default">
+                    <span class="glyphicon glyphicon-tasks"></span>
+                    <label style="font-weight: bold;">&nbsp;Workspace Pane:</label>
+                    <span>
+                        <button id="tableModal-DataMgr" data-dismiss="modal">Data</button>
+                        <button id="tableModal-DownloadMgr" data-dismiss="modal">Exports</button>
+                    </span>
+                </div>
+
                 <h3 class="modal-title" id="myModalLabel">Search Results in area</h3>
                 @*<h5 style="margin-bottom: 1em;">To zip one or more data files, please click the associated table row(s) and then click the 'Export Selections' button. You can check the status by opening the workspace and selecting the "Exports" tab.</h5>*@
             </div>
@@ -884,14 +901,24 @@
         <div class="modal-content modal-content-full">
             <div class="modal-header modal-header-full">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
-                <button class="btn btn-default" href="#tabbedDataMgrTab" id="tableModal-DataMgrTS" data-dismiss="modal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-tasks"></span> Open Workspace</button>
+                @*<button class="btn btn-default" href="#tabbedDataMgrTab" id="tableModal-DataMgrTS" data-dismiss="modal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-tasks"></span> Open Workspace</button>*@
+
+                <div style="float: right; margin-right: 2em;" class="btn btn-default">
+                    <span class="glyphicon glyphicon-tasks"></span>
+                    <label style="font-weight: bold;">&nbsp;Workspace Pane:</label>
+                    <span>
+                        <button id="tableModal-DataMgrTS" data-dismiss="modal">Data</button>
+                        <button id="tableModal-DownloadMgrTS" data-dismiss="modal">Exports</button>
+                    </span>
+                </div>
+
                 <h3 class="modal-title" id="myModalLabel">Timeseries in Current Map Area</h3>
                 @*<h5 style="margin-bottom: 1em;">To zip one or more data files, please click the associated table row(s) and then click the 'Export Selections' button. You can check the status by opening the workspace and selecting the "Exports" tab.</h5>*@
             </div>
             <div class="modal-body modal-body-full" id="dtTimeSeriesModal">
                 @* BCC- 23-Jul-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set 'max-width: none' on the table element!!
-            NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
-            Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
+                    NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
+                    Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
                 *@
                 <table id="dtTimeseries" class="display disable-selection" cellspacing="0" style="max-width: none;" data-selectedtimeseriesmax="25">
                     <thead>
@@ -933,7 +960,7 @@
                 <div style="margin-left: 2.0em;">
                     <button type="button" id="btnDownloadFiles" class="btn btn-default btn-primary" data-dismiss="modal">Download</button>
                     <button type="button" id="btnCombineAndDownloadFiles" class="btn btn-default btn-primary" data-dismiss="modal">Combine & download</button>
-                   
+
                 </div>
             </div>
             <div class="modal-footer">
