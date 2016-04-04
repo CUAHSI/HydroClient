@@ -217,7 +217,7 @@ namespace HISWebClient.Controllers
 				try
 				{
 					searchSettings.DateSettings.StartDate = Convert.ToDateTime(collection["startDate"]);
-					searchSettings.DateSettings.EndDate = Convert.ToDateTime(collection["endDate"]);
+					searchSettings.DateSettings.EndDate = Convert.ToDateTime(collection["endDate"]).AddDays(1);//add a day to allow one day searches
 					//Convert to int Array
 					if (collection["services"].Length > 0)
 					{

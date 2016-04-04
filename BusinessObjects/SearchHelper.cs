@@ -208,9 +208,9 @@ namespace HISWebClient.DataLayer
 
                 series.ValueCount = esimatedValueCount;
             }
-            //MS removed to reflect actual values
-			//series.BeginDate = seriesStartDate;
-			//series.EndDate = seriesEndDate;
+            
+			series.BeginDate = seriesStartDate;
+			series.EndDate = seriesEndDate;
 		}
 
 		/// <summary>
