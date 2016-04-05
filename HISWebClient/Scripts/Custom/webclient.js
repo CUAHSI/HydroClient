@@ -1929,6 +1929,14 @@ function addCustomMapControls()
     toggleSidePanel.index = 1;
     map.controls[google.maps.ControlPosition.RIGHT_TOP].push(toggleSidePanelDiv);
 
+    //Allow Google Maps to finish with control positioning before attempting to reposition the toggle...
+    setTimeout(function() {
+        var jqToggleSidePanel = $(toggleSidePanelDiv);
+        jqToggleSidePanel.parent().css({'position': 'relative'});
+        jqToggleSidePanel.css({'top': 0, 'position': 'absolute'});
+        jqToggleSidePanel.addClass('searchbarcontrols');
+    }, 3000);
+
     var AreaSizeDiv = document.createElement('div');
     var AreaSize = new AreaSizeControl(AreaSizeDiv, map);
 
@@ -2066,6 +2074,8 @@ function toggleSidePanelControl(controlDiv, map)
         //} else { // Hide
         //    self.slideReveal("hide");
         //}
+
+        return controlUI;
 }
 
 function AreaSizeControl(controlDiv, map) {
