@@ -1003,20 +1003,28 @@ function initialize() {
     });
 
     //Set event handler for 'Open Workspace' button(s)...
-    $('#' + 'tableModal-DataMgr').on('click', function(event) {
+    var owsBtns = ['tableModal-DataMgr', 'tableModal-DownloadMgr', 'tableModal-DataMgrTS', 'tableModal-DownloadMgrTS'];
+    var owsBtnsLength = owsBtns.length;
 
-        //console.log('Workspace button clicked!!')
-        $('#tabbedDataMgrTab').tab('show');  //Show the tab...
-        $('#' + 'liTabbedDataMgrTab').triggerHandler('click');  //Toggle the Workspace button on the top bar...
-    });
+    for (var owsBtnsI = 0; owsBtnsI < owsBtnsLength; ++owsBtnsI) {
+    
+        $('#' + owsBtns[owsBtnsI]).on('click', function(event) {
+    
+            $('#tabbedDataMgrTab').tab('show');  //Show the tab...
+        
+            //Source: http://stackoverflow.com/questions/7862233/twitter-bootstrap-tabs-go-to-specific-tab-on-page-reload-or-hyperlink
+            if ( -1 !== (event.target.id).indexOf('DataMgr')) { 
+                $('.nav-tabs a[href="#dataMgrPane"]').tab('show');  //Show the pane...
+            }
+            else {
+                $('.nav-tabs a[href="#downloadMgrPane"]').tab('show');  //Show the pane...            
+            }
 
-    $('#' + 'tableModal-DataMgrTS').on('click', function(event) {
-
-        //console.log('Workspace button clicked!!')
-        $('#tabbedDataMgrTab').tab('show');  //Show the tab...
-        $('#' + 'liTabbedDataMgrTab').triggerHandler('click');  //Toggle the Workspace button on the top bar...
-    });
-
+            $('#' + 'liTabbedDataMgrTab').triggerHandler('click');  //Toggle the Workspace button on the top bar...
+        });
+    
+    }
+    
     //Add click handlers for Google SignIn/SignOut...
     $('#' + 'btnSignIn').on('click', clearMonitors);
     $('#' + 'btnSignOut').on('click', clearMonitors);
@@ -1921,6 +1929,14 @@ function addCustomMapControls()
     toggleSidePanel.index = 1;
     map.controls[google.maps.ControlPosition.RIGHT_TOP].push(toggleSidePanelDiv);
 
+    //Allow Google Maps to finish with control positioning before attempting to reposition the toggle...
+    setTimeout(function() {
+        var jqToggleSidePanel = $(toggleSidePanelDiv);
+        jqToggleSidePanel.parent().css({'position': 'relative'});
+        jqToggleSidePanel.css({'top': 0, 'position': 'absolute'});
+        jqToggleSidePanel.addClass('searchbarcontrols');
+    }, 3000);
+
     var AreaSizeDiv = document.createElement('div');
     var AreaSize = new AreaSizeControl(AreaSizeDiv, map);
 
@@ -2058,6 +2074,8 @@ function toggleSidePanelControl(controlDiv, map)
         //} else { // Hide
         //    self.slideReveal("hide");
         //}
+
+        return controlUI;
 }
 
 function AreaSizeControl(controlDiv, map) {
@@ -2835,7 +2853,7 @@ function adjustColumns(event) {
         return; //Invalid parameter(s) - return early...
     }
     
-    if ( 'undefined' !== typeof containerId && null !== containterId) {
+    if ( 'undefined' !== typeof containerId && null !== containerId) {
         $(('#' + containerId)).css('display', 'block');
     }
 
