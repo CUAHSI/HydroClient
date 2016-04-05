@@ -524,7 +524,9 @@
     <Content Include="Content\documents\QuickStartGuide\HydroClient Quick Start Guide.2.pdf" />
     <Content Include="Content\documents\QuickStartGuide\HydroClient Quick Start Guide.3.pdf" />
     <None Include="Properties\PublishProfiles\bcc-hiswebclient - FTP %282%29.pubxml" />
+    <None Include="Properties\PublishProfiles\bcc-hiswebclient - FTP %283%29.pubxml" />
     <None Include="Properties\PublishProfiles\bcc-hiswebclient - FTP.pubxml" />
+    <None Include="Properties\PublishProfiles\bcc-hiswebclient - Web Deploy %282%29.pubxml" />
     <None Include="Properties\PublishProfiles\bcc-hiswebclient - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\dev-hiswebclient - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\dev-hiswebclient - Web Deploy.pubxml" />
@@ -722,7 +724,9 @@
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>49330</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost:49330/</IISUrl>
+          <IISUrl>http://localhost:49331/</IISUrl>
+          <OverrideIISAppRootUrl>True</OverrideIISAppRootUrl>
+          <IISAppRootUrl>http://localhost:49331</IISAppRootUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>

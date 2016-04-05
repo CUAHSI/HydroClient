@@ -25,7 +25,7 @@ var sidepanelVisible = false;
 var conceptsType = '';
 
 var selectedRowCounts = {
-    'dtMarkers': {'targetIds': ['spanClearSelections', 'spanZipSelections','spanManageSelections'], 'count': 0},
+    'dtMarkers': {'targetIds': ['spanClearSelections', 'spanZipSelections','spanManageSelections'], 'count': 0, 'customCounter': customCounter},
     'dtTimeseries': { 'targetIds': ['spanClearSelectionsTS', 'spanZipSelectionsTS', 'spanManageSelectionsTS'], 'count': 0, 'customCounter': customCounter },
     'tblDataManager': { 'targetIds': ['spanClearSelectionsDM', 'spanRemoveSelectionsDM'], 'count': 0, 'customCounter': customCounter }
 };
@@ -300,41 +300,13 @@ function customCounter(tableName) {
             }
         }
     }
-    else if ('dtTimeseries' === tableName) {
+    else if ('dtTimeseries' === tableName || 'dtMarkers' === tableName) {
         //Initialize counts...
         countClear = 0;
-        countLaunch = 0;
         countSelectable = 0;
 
         //Retrieve data for all table rows... 
         var table = $('#' + tableName).DataTable();
-        //var rows = table.rows();
-        var rows1 = table.rows({ 'order': 'current', 'search': 'applied' });    //Retrieve rows per current sort/search order...
-        var nodes = rows1.nodes();
-
-        //var nodes = rows.nodes();
-        //var data = rows.data();
-
-        ////For each instance...
-        //$.each(nodes, function (i, obj) {
-        //    //Retrieve node, check for class: selected
-        //    var jqueryObj = $(obj);
-
-        //    if (jqueryObj.hasClass('selected')) {
-        //        //Row is selected...
-
-        //        //Update counts...
-        //        ++countClear;
-
-        //        if ('true' !== $('#ddActionTS').attr('data-noneselected')) {
-        //            ++countLaunch;
-        //        }
-        //    }
-        //    else {
-        //        //Row is NOT selected...
-        //        ++countSelectable;
-        //    }
-        //});
 
         //Since table: dtTimeseries is configured as 'deferRender': true, the table loads data
         // one displayed page at a time.  Thus, if the user has viewed only three pages of a 
@@ -345,10 +317,6 @@ function customCounter(tableName) {
 
         countClear = selectedRows;
 
-        if ('true' !== $('#ddActionTS').attr('data-noneselected')) {
-            countLaunch = selectedRows;
-        }
-
         //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
         //Source: http://datatables.net/reference/api/rows().nodes()
         var rows = table.rows({ 'order': 'current', 'search': 'applied' });    //Retrieve rows per current sort/search order...
@@ -356,36 +324,23 @@ function customCounter(tableName) {
 
         countSelectable = totalRows - selectedRows;
 
-        //Update button text with counts...
-        var buttons = [{ 'name': 'btnApplyActionTS', 'count': countLaunch, 'disableCheck': btnDisableCheck }];
-        var bLength = buttons.length;
+        //Update dropdown items per counts...
+        var anchors = [];
 
-        for (var i = 0; i < bLength; ++i) {
-            var button = $('#' + buttons[i].name); 
-            var value = button.val();
-
-            if ('undefined' === typeof value || null === value) {
-                //Button value not yet available - continue...
-                continue;
-            }
-
-            var count = buttons[i].count;
-            //var values = value.split(' ');
-            var values = value.split(':');
-
-            if (0 >= count) {
-                button.val(values[0]);
-                button.prop('disabled', true);
-            }
-            else {
-                button.val(values[0] + ': (' + count.toString() + ')');
-                button.prop('disabled', null !== buttons[i].disableCheck ? buttons[i].disableCheck(buttons[i].name)  : false); 
-            }
+        if ('dtTimeseries' === tableName) { 
+            anchors = [{ 'name': 'anchorAllSelectionsTS', 'count': countSelectable},
+                       { 'name': 'anchorClearSelectionsTS', 'count': countClear},
+                       { 'name': 'anchorAddSelectionsToWorkspaceTS', 'count': countClear},
+                       { 'name': 'anchorAllTimeseriesInOneFileTS', 'count': countClear},
+                       { 'name': 'anchorEachTimeseriesInSeparateFileTS', 'count': countClear}];
+        } else if ('dtMarkers' === tableName) {
+            anchors = [{ 'name': 'anchorAllSelections', 'count': countSelectable},
+                       { 'name': 'anchorClearSelections', 'count': countClear},
+                       { 'name': 'anchorAddSelectionsToWorkspace', 'count': countClear},
+                       { 'name': 'anchorAllTimeseriesInOneFile', 'count': countClear},
+                       { 'name': 'anchorEachTimeseriesInSeparateFile', 'count': countClear}];        
         }
 
-        //Update dropdown items per counts...
-        var anchors = [{'name': 'anchorAllSelectionsTS', 'count': countSelectable},
-                       { 'name': 'anchorClearSelectionsTS', 'count': countClear} ];
         var aLength = anchors.length;
 
         for (var ii = 0; ii < aLength; ++ii) {
@@ -499,15 +454,14 @@ function initialize() {
     //get reference to map sizing of window happens later to prevent gap   
     map = new google.maps.Map(document.getElementById("map-canvas"), mapProp);
 
+    //set map zoom limits...
+    map.setOptions({minZoom: 5, maxZoom: 15});
 
     //UI
 
     addCustomMapControls();
 
     slider = addSlider();
-
-    slider.slideReveal("show");
-    sidepanelVisible = true;
 
     addLocationSearch();
 
@@ -969,9 +923,9 @@ function initialize() {
 
             //BCC - 09-Jul-2015 -  - QA Issue #25 - Data tab: table column titles stay in wrong order after sorting table
             //Remove/add column adjustment event handler...
-            $('#dtTimeSeriesModal').off('shown.bs.modal', adjustColumns);
-            $('#dtTimeSeriesModal').on('shown.bs.modal', {
-                'tableId': 'dtTimeSeries', 'containerId': 'dtTimeSeriesModal'
+            $('#tableModal').off('shown.bs.modal', adjustColumns);
+            $('#tableModal').on('shown.bs.modal', {
+                'tableId': 'dtTimeseries', 'containerId': 'dtTimeSeriesModal'
             }, adjustColumns);
 
             table.order([0, 'asc']).draw();
@@ -996,16 +950,6 @@ function initialize() {
             jQueryDataTable.columns.adjust().draw();
         }
 
-        if (e.target.id == "mapTab") {
-            //Show the zendesk iframe...
-            $('#launcher').show();
-
-            google.maps.event.trigger(map, "resize");
-            if (!sidepanelVisible) {
-                slider.slideReveal("show")
-            }
-
-        }
         // activated tab
     })
 
@@ -1074,9 +1018,45 @@ function initialize() {
     });
 
     //Add click handlers for Google SignIn/SignOut...
-    $('#' + 'imgSignIn').on('click', clearMonitors);
-    $('#' + 'imgSignOut').on('click', clearMonitors);
+    $('#' + 'btnSignIn').on('click', clearMonitors);
+    $('#' + 'btnSignOut').on('click', clearMonitors);
+ 
+    //For Apple Safari, ensure the side panel is displayed after a page refresh...
+    slider.slideReveal("hide")
+    sidepanelVisible = false
+
+    setTimeout( function() {
+        slider.slideReveal("show");
+        sidepanelVisible = true;    
+    }, 2000);
+
+    //Click handlers for 'Workspace' buttons...
+    var wsButtonIds = ['tabbedDataMgrTab', 'tableModal-DataMgrTS', 'tableModal-DataMgr'];
+    var wsbidsLength = wsButtonIds.length;
+
+    for (var wsbidsI = 0; wsbidsI < wsbidsLength; ++wsbidsI) {
     
+        var wsButton = $('#' + wsButtonIds[wsbidsI]);
+        wsButton.off('click', adjustColumns);
+        wsButton.on('click', {'tableId': 'tblDataManager'}, adjustColumns);
+    }
+
+    //Click handler for 'Search' button
+    $('#' + 'mapTab').on('click', function(event) {    
+        //Show the zendesk iframe...
+        //$('#launcher').show();
+
+        setTimeout(function() {
+            $("#map-canvas").height(getMapHeight()) //setMapHeight
+            $("#map-canvas").width(getMapWidth()) //setMapWidth
+
+            google.maps.event.trigger(map, "resize");
+            //if (!sidepanelVisible) {
+            if (sidepanelVisible) {
+                slider.slideReveal("show")
+            }        
+        }, 500);
+    })
 }
 
 //Event handler for Google form submit...
@@ -1095,7 +1075,8 @@ function googleFormSubmit(event) {
                                        'CANCEL': 'Remain on Google',
                                        'CONFIRM': 'Log out from Google' });
         bootbox.setLocale(localeName);
-        bootbox.confirm('You are logging out from the HydroClient.  Do you want to log out from Google?', function(result) {
+        bootbox.confirm({ 'closeButton': false,
+                          'message': 'You are logging out from the HydroClient.  Do you want to log out from Google?', 'callback': function(result) {
         
             if (result) {
                 //Google logout confirmed - submit...
@@ -1106,7 +1087,8 @@ function googleFormSubmit(event) {
                 event.currentTarget.action += '&localLogout=true';
                 event.target.submit();
             }
-        });
+          }});
+
         bootbox.removeLocale(localeName);
     }
 
@@ -1286,7 +1268,7 @@ function initializeKeywordList(type) {
 
     if ('Common' === type) {
         //'Most Common' keywords...
-        $("input[name='keywords']:checked").attr('checked', false);
+        $("input[name='keywords']:checked").prop('checked', false);
         $("input[name='keywords']").prop("disabled", false);
     }
     else {
@@ -1311,7 +1293,8 @@ function initializeKeywordList(type) {
 function initializeDataServices() {
 
     //Uncheck gridded data services checkbox
-    $('#checkOnlyObservedValues').attr('checked', false);
+    bObservedValuesOnly = false;
+    $('#checkOnlyObservedValues').prop('checked', bObservedValuesOnly);
 
     //Unselect all table rows
     if ($.fn.DataTable.isDataTable('#dtServices')) {
@@ -1359,6 +1342,7 @@ function validateDateString(event) {
         jqueryLabelObj.hide();
         jqueryGrpObj.removeClass('has-error');
         jqueryObj.removeClass('has-error');
+        jqueryObj.removeClass('invalid-date');
     }
     else {
         //Date string invalid - stop propagation of the event to ensure error message displays...
@@ -1369,6 +1353,7 @@ function validateDateString(event) {
         jqueryLabelObj.show();
         jqueryGrpObj.addClass('has-error');
         jqueryObj.addClass('has-error');
+        jqueryObj.addClass('invalid-date');
         //jqueryObj.focus();    //Allow change of focus for bootstrap datepicker!!
     }
 }
@@ -1411,7 +1396,7 @@ function compareFromDateAndToDate(event) {
     var jqueryEndDate = $(('#' + event.data.inputIdEndDate));
 
     //Check for an existing error...
-    if (jqueryStartDate.hasClass('has-error') || jqueryEndDate.hasClass('has-error')) {
+    if (jqueryStartDate.hasClass('invalid-date') || jqueryEndDate.hasClass('invalid-date')) {
         return false;
     }
 
@@ -1679,7 +1664,7 @@ function clickSelectKeywords(event) {
     //Clear selections from 'Most Common' and 'Full List' tabs...
 
     //'Most Common' tab checkboxes
-    $("input[name='keywords']:checked").attr('checked', false);
+    $("input[name='keywords']:checked").prop('checked', false);
 
     //'Full List' tab nodes
     $("#tree").fancytree("getTree").visit(function (node) {
@@ -2678,30 +2663,21 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             icon_width = 60;
             //count=""
         }
-        //icon = new google.maps.MarkerImage(clusterMarkerPath + "all_sprite.png", new google.maps.Size(44, 44), new google.maps.Point(icon_choice, 0), new google.maps.Point(22, 22));
-
-        //icon = new google.maps.MarkerImage(clusterMarkerPath + icons[icon_choice].file, null, null, new google.maps.Point(22, 22));
 
         var marker = new MarkerWithLabel({
             position: point,
-            icon: new google.maps.MarkerImage(clusterMarkerPath + "m6.png", new google.maps.Size(53, 52), null, new google.maps.Point(icon_width / 2, icon_width / 2), new google.maps.Size(icon_width, icon_width)),
-//BCC            icon: clusterMarkerPath + "m3.png",
+            icon: new google.maps.MarkerImage(clusterMarkerPath + "m6.png", new google.maps.Size(53, 52), null, new google.maps.Point(icon_width / 2, icon_height / 2), new google.maps.Size(icon_width, icon_height)),
             draggable: false,
             raiseOnDrag: true,
             map: map,
-            anchorPoint: new google.maps.Point(0, -13),
-//BCC            anchorPoint: new google.maps.Point(0, -13),
             labelContent: count,
-            labelAnchor: new google.maps.Point(22, 30),
-//BCC            labelAnchor: new google.maps.Point(15, 38),
+            labelAnchor: new google.maps.Point(21, 7),
             labelClass: icons[icon_choice].cssClass, // the CSS class for the label
-//BCC            labelClass: 'labels',
             labelStyle: { opacity: 0.95 },
             tooltip: '',
             zIndex: 1500,
             flat: true,
             visible: true
-
         });
 
         //Create infowindow for marker, if indicated
@@ -2796,139 +2772,20 @@ function createInfoWindow( map, marker, serviceCodeToTitle, markerTypeName) {
     iw.setMinHeight((listCount * fontsize).toString());
     iw.setMaxWidth((20 * fontsize).toString());
 
-    //if ( 'google.maps.Marker' === markerTypeName) {
-
-        //Open on mouseover...
-        google.maps.event.addListener(marker, 'mouseover', function openInfoBubble(event) {
-           if ( ! iw.isOpen()) {
-                iw.open(map, marker);
-            }
-        });
+    //Open on mouseover...
+    google.maps.event.addListener(marker, 'mouseover', function openInfoBubble(event) {
+        if ( ! iw.isOpen()) {
+            iw.open(map, marker);
+        }
+    });
     
-        //Close on mouseout...
-        google.maps.event.addListener(marker, 'mouseout', function () {
-            iw.close();
-        });
+    //Close on mouseout...
+    google.maps.event.addListener(marker, 'mouseout', function () {
+        iw.close();
+    });
     
-    //}
-    //else if ( 'MarkerWithLabel' === markerTypeName) {
-    
-    //var currentInterval = setInterval(function() {
-
-    //            if ( null !== currentPosition.latLng) {
-            
-    //                lat = currentPosition.latLng.lat().toFixed(2);
-    //                lng = currentPosition.latLng.lng().toFixed(2);
-
-    //                if ('undefined' !== typeof iw.anchor /*&& 'undefined' !== typeof iw.anchor.position */) {
-    //                    var ibLat = iw.anchor.position.lat().toFixed(2);
-    //                    var ibLng = iw.anchor.position.lng().toFixed(2)
-    //                    if ( lat === ibLat && lng === ibLng) {
-    //                        //Current mouse position matches InfoBubble position - open InfoBubble...
-    //                        if ( ! iw.isOpen()) {
-    //                            iw.open(map, marker);
-    //                        }
-    //                    }
-    //                    else {
-    //                        iw.close();
-    //                    }
-    //                }
-    //            }
-    //        }, 500);
-
-    //    currentIntervals.push( currentInterval);
-
-    //    //Initial open on mouseover...
-    //    google.maps.event.addListenerOnce(marker, 'mouseover', function openInfoBubble(event) {
-    //        iw.open(map, marker);
-    //    });
-    
-    //}
-
-
-
-//    Close on mouseout...
-//    google.maps.event.addListener(marker, 'mouseout', function () {
-
-        //Close currently open window(s) , if indicated...
-        //closeInfoWindows();
-//        removeMarkerPosition(marker.position);
-//        iw.close();
-//    });
 }
 
-//Check the position of the open InfoBubble instance against the input position
-//function checkInfoBubble(currentPosition) { 
-
-//    if (null !== openInfoBubble ) {
-//        lat = currentPosition.lat().toFixed(1);
-//        lng = currentPosition.lng().toFixed(1);
-
-//        if ('undefined' !== typeof openInfoBubble.anchor /*&& 'undefined' !== typeof openInfoBubble.anchor.position */) {
-//            var ibLat = openInfoBubble.anchor.position.lat().toFixed(1);
-//            var ibLng = openInfoBubble.anchor.position.lng().toFixed(1)
-//            if ( lat !== ibLat || lng !== ibLng) {
-//                //Input position does not match InfoBubble position - close InfoBubble...
-//                //console.log('????????? MISS ?????????');                
-//                openInfoBubble.close();
-//            }
-//        }
-//    }
-//}
-
-//Check if the input position matches that of the open InfoBubble instance
-//function checkMarkerPosition(position) {
-
-//    var result = false; //Assume no match...
-//    //var length = openInfoBubbles.length;
-//    //for (var i = 0; i < length; ++i) {
-
-//    //    if (position.equals(openInfoBubbles[i])) {
-//    //        result = true;  //Match!!
-//    //        break;
-//    //    }
-//    //}
-//    if (null !== openInfoBubble ) {
-//        lat = position.lat().toFixed(1);
-//        lng = position.lng().toFixed(1);
-
-//        if ('undefined' !== typeof openInfoBubble.anchor /*&& 'undefined' !== typeof openInfoBubble.anchor.position */) {
-//            var ibLat = openInfoBubble.anchor.position.lat().toFixed(1);
-//            var ibLng = openInfoBubble.anchor.position.lng().toFixed(1)
-//            if ( lat === ibLat && lng === ibLng) {
-//                result = true;  //Match!!
-//            }
-//        }
-//    }
-
-//    return result;
-//}
-
-//function removeMarkerPosition(position) {
-
-//    var length = openInfoBubbles.length;
-//    for (var i = 0; i < length; ++i) {
-
-//        if (position.equals(openInfoBubbles[i])) {
-//            openInfoBubbles.splice(i,1);    //Match - remove array element
-//            break;            
-//        }
-//    }
-//}
-
-
-
-
-//Close currently open window(s) , if indicated...
-//function closeInfoWindows() {
-
-//    var ib = null;
-//    while (0 < openInfoBubbles.length) {
-//        ib = openInfoBubbles.shift();
-//        ib.close();
-//        //ib = null;
-//    }
-//}
 
 //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
 //Prepend disabled options as 'placeholders' to filtering selects... 
@@ -2954,10 +2811,13 @@ function addFilterPlaceholders(event) {
 
         if ('' === select.val()) {
             //No selection made - prepend 'placeholder' to selections
+            //select.prepend('<option value="999999" selected disabled style="color: grey;">Filter by: ' + placeHolders[i] + '</option>');
+            
+            //BCC - TEST - 30-Mar-2016 - Explicitly set the elements selected index to make selected/disabled element visible in IE 11
+            //Source: http://stackoverflow.com/questions/27283887/adding-selected-and-disabled-attributes-to-an-option-tag-in-ie-11
             select.prepend('<option value="999999" selected disabled style="color: grey;">Filter by: ' + placeHolders[i] + '</option>');
+            select.prop( "selectedIndex", 0 );
         }
-
-
     }
 }
 
@@ -2969,9 +2829,18 @@ function adjustColumns(event) {
 
     var tableId = event.data.tableId;
     var containerId = event.data.containerId;
+    
+    //Validate/initialize input parameters...
+    if ( 'undefined' === typeof tableId || null === tableId) {
+        return; //Invalid parameter(s) - return early...
+    }
+    
+    if ( 'undefined' !== typeof containerId && null !== containterId) {
+        $(('#' + containerId)).css('display', 'block');
+    }
+
     var table = $(('#' + tableId)).DataTable();
 
-    $(('#' + containerId)).css('display', 'block');
     table.columns.adjust().draw();
 }
 
@@ -3056,7 +2925,8 @@ function setupServices()
     myServicesDatatable = $('#dtServices').dataTable({
         "ajax": actionUrl,
         "order": [2, 'asc'],
-        "dom": 'l<"toolbarDS">frtip', //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+        //"dom": 'l<"toolbarDS">frtip', //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+        "dom": '<"toolbarDS">frtilp', //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
         "autoWidth": false,
          "columns": [
 
@@ -3090,6 +2960,20 @@ function setupServices()
          //"scrollX": true,
          initComplete: function () {
              $('#dtServices').dataTable().fnAdjustColumnSizing();
+
+             //Revise layout for table's info, length and pagination controls...
+             var tableName = 'dtServices';
+             $('#' + tableName + '_info').css({'width': '25%'});
+
+             $('#' + tableName + '_length').css({'width': '50%', 
+                                             'height': '2.5em'});
+
+             $('#' + tableName + '_length' + ' > label').css({'text-align': 'center',
+                                                         'display': 'block',
+                                                         'margin-top': '1.0em'});
+
+             $('#' + tableName + '_paginate').css({'width': '25%'});
+
          }
     });
     //$('a.toggle-vis').on('click', function (e) {
@@ -3122,7 +3006,7 @@ function setupServices()
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-    $("div.toolbarDS").html('<input type="button" style="margin-left: 2em; float:left;" class="btn btn-warning" disabled id="btnClearSelectionsDS" value="Clear Selection(s)"/>');
+    $("div.toolbarDS").html('<input type="button" style="margin-left: 1em; float:left;" class="btn btn-warning" disabled id="btnClearSelectionsDS" value="Clear Selection(s)"/>');
 
 
     //Avoid multiple registrations of the same handler...
@@ -3397,7 +3281,7 @@ function setUpDatatables(clusterid) {
 
                                     '</button>' +
                                     '<ul class="dropdown-menu" style="width: 22em;">' +
-                                    '<ul style="list-style: none; padding-left: 0em;">' +
+                                    //'<ul style="list-style: none; padding-left: 0em;">' +
 
                                     '<li data-toggle="tooltip" data-placement="top" title="Move all selected time series to the workspace">' +
                                     '<a href="#" id="anchorAddSelectionsToWorkspace" style="font-weight: bold;" >' + 
@@ -3422,13 +3306,13 @@ function setUpDatatables(clusterid) {
                                     (currentUser.authenticated ? 
                                         '<ul class="dropdown-menu">' + 
                                         '<li>' +
-                                            '<a href="#" id="anchorAllTimeseriesInOneFile" style="font-weight: bold; color: #337ab7;" >' +
+                                            '<a href="#" id="anchorAllTimeseriesInOneFile" style="font-weight: bold;" >' +
                                             '<span class="glyphicon glyphicon-file" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
                                             '<span style="font-weight: bold; display: inline-block; vertical-align: super;">All selections in one file</span>' +
                                             '</a>' +
                                         '</li>' +
                                         '<li>' +
-                                            '<a href="#" id="anchorEachTimeseriesInSeparateFile" style="font-weight: bold; color: #337ab7;" >' +
+                                            '<a href="#" id="anchorEachTimeseriesInSeparateFile" style="font-weight: bold;" >' +
                                             '<span class="glyphicon glyphicon-duplicate" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
                                             '<span style="font-weight: bold; display: inline-block; vertical-align: super;">Each selection in a separate file</span>' +
                                             '</a>' +
@@ -3630,7 +3514,8 @@ function setupDataManagerTable() {
     //       when the table displays in the browser...
     var oTable = $(tableId).dataTable({
         'deferRender': false,
-        'dom': 'C<"clear">l<"toolbarDataMgr">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+        //'dom': 'C<"clear">l<"toolbarDataMgr">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+        'dom': 'C<"clear"><"toolbarDataMgr">frtilp',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
         //"autoWidth": false,
         "autoWidth": true,
         'columns': [
@@ -3734,6 +3619,19 @@ function setupDataManagerTable() {
 
             //Adjust column sizing...
             $(tableId).dataTable().fnAdjustColumnSizing();
+
+            //Revise layout for table's info, length and pagination controls...
+            $('#' + tableName + '_info').css({'width': '25%'});
+
+            $('#' + tableName + '_length').css({'width': '50%', 
+                                             'height': '2.5em'});
+
+           $('#' + tableName + '_length' + ' > label').css({'text-align': 'center',
+                                                         'display': 'block',
+                                                         'margin-top': '1.0em'});
+
+            $('#' + tableName + '_paginate').css({'width': '25%'});
+
         }
     });
 
@@ -3776,7 +3674,7 @@ function setupDataManagerTable() {
     $('div.toolbarDataMgr').addClass('container');
     $('div.toolbarDataMgr').html(
                                   '<div class="inline-form">' +
-                                  '<div class="form-group" style="margin-left: 1em; float:left; display:inline-block;">' +
+                                  '<div class="form-group" style="float:left; display:inline-block;">' +
 
                                     '<div class="dropdown" style="position: relative; display: inline-block; float: left; font-size: 1.00em;">' +
                                       '<button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">' +
@@ -4070,15 +3968,15 @@ function btnDisableCheck(buttonId) {
             }
         }
     }
-    else if ('btnApplyActionTS' === buttonId) {
-        var table = $('#' + 'dtTimeseries').DataTable();
-        var selectedRows = table.rows('.selected').data();
-        var rowsLength = selectedRows.length;
+    //else if ('btnApplyActionTS' === buttonId) {
+    //    var table = $('#' + 'dtTimeseries').DataTable();
+    //    var selectedRows = table.rows('.selected').data();
+    //    var rowsLength = selectedRows.length;
     
-        if ( 0 >= rowsLength) {
-            result = true;  //NO rows selected - disable launch button...
-        }
-    }
+    //    if ( 0 >= rowsLength) {
+    //        result = true;  //NO rows selected - disable launch button...
+    //    }
+    //}
 
     return result;
 }
@@ -5376,7 +5274,7 @@ function handleFilterClick(event) {
 
         //No search or filter values - uncheck the 'apply filters to map' button,
         //  call the click handler once more to redraw the map...
-        $('#' + event.data.buttonId).attr('checked', false);
+        $('#' + event.data.buttonId).prop('checked', false);
         $('#' + event.data.buttonId).triggerHandler('click');
     }
     else {
@@ -5450,6 +5348,7 @@ function copyDmRecordToServerRecord( userEmail, dmRecord) {
 
     serverRecord.Organization = dmRecord.Organization;
     serverRecord.ServiceTitle = dmRecord.ServTitle;
+    serverRecord.ServiceCode = dmRecord.ServiceCode;
     serverRecord.Keyword = dmRecord.ConceptKeyword;
     serverRecord.VariableUnits = dmRecord.VariableUnits;
     serverRecord.DataType = dmRecord.DataType;
@@ -5761,7 +5660,8 @@ function clearServicesSelections(event) {
     mySelectedServices.length = 0;
 
     //Uncheck the 'Select all non-gridded...' checkbox
-    $("input[name='checkOnlyObservedValues']").attr('checked', false);
+    bObservedValuesOnly = false;
+    $("input[name='checkOnlyObservedValues']").prop('checked', bObservedValuesOnly);
 
     //Check button state...
     enableDisableButton(event.data.tableId, event.data.btnId);
@@ -6602,7 +6502,7 @@ function setUpTimeseriesDatatable() {
                               '<div class="dropdown" style="position: relative; display: inline-block; float: left; font-size: 1.00em;">' +
                                   '<button class="btn btn-primary dropdown-toggle" type="button" id="ddMenuSelectionsTS" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">' +
                                    '<span class="glyphicon glyphicon-list-alt" style="font-weight: bold; font-size: 1.00em;"></span>' +
-                                   '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Selection&nbsp;</span>' +
+                                   '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Selections&nbsp;</span>' +
                                    '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
                                   '</button>' +
                                   '<ul class="dropdown-menu" aria-labelledby="ddMenuSelectionsTS">' +
@@ -6639,7 +6539,7 @@ function setUpTimeseriesDatatable() {
 
                                       '</button>' +
                                       '<ul class="dropdown-menu" style="width: 22em;">' +
-                                       '<ul style="list-style: none; padding-left: 0em;">' +
+                                       //'<ul style="list-style: none; padding-left: 0em;">' +
 
                                        '<li data-toggle="tooltip" data-placement="top" title="Move all selected time series to the workspace">' +
                                         '<a href="#" id="anchorAddSelectionsToWorkspaceTS" style="font-weight: bold;" >' + 
@@ -6664,13 +6564,13 @@ function setUpTimeseriesDatatable() {
                                        (currentUser.authenticated ? 
                                            '<ul class="dropdown-menu">' + 
                                             '<li>' +
-                                             '<a href="#" id="anchorAllTimeseriesInOneFileTS" style="font-weight: bold; color: #337ab7;" >' +
+                                             '<a href="#" id="anchorAllTimeseriesInOneFileTS" style="font-weight: bold;" >' +
                                                '<span class="glyphicon glyphicon-file" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
                                                '<span style="font-weight: bold; display: inline-block; vertical-align: super;">All selections in one file</span>' +
                                              '</a>' +
                                             '</li>' +
                                             '<li>' +
-                                             '<a href="#" id="anchorEachTimeseriesInSeparateFileTS" style="font-weight: bold; color: #337ab7;" >' +
+                                             '<a href="#" id="anchorEachTimeseriesInSeparateFileTS" style="font-weight: bold;" >' +
                                                '<span class="glyphicon glyphicon-duplicate" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
                                                '<span style="font-weight: bold; display: inline-block; vertical-align: super;">Each selection in a separate file</span>' +
                                              '</a>' +
@@ -7100,8 +7000,8 @@ function loadCurrentUser() {
             if (currentUser.authenticated) {
                 //Current user authenticated - set up for user logout...
                 $('form#formGoogleLogin').attr('action', '/Account/ExternalLogOut?ReturnUrl=%2FHome%2FIndex');
-                $('input#imgSignIn').addClass('hidden');
-                $('input#imgSignOut').removeClass('hidden');
+                $('button#btnSignIn').addClass('hidden');
+                $('button#btnSignOut').removeClass('hidden');
                 setupToolTip('liGoogleTab','Logout from HydroClient and Google when your session is complete.');
 
                 //Load saved time series for current user, if indicated

@@ -78,7 +78,7 @@
                     <ul id="ddAboutList" class="dropdown-menu">
                         <li id="liLicenseTab">
                             <span>
-                                <a href="" id="licenseTab" data-toggle="modal" data-target="#licenseModal"><span class="glyphicon glyphicon-info-sign"></span> LicenseAgreement</a>
+                                <a href="" id="licenseTab" data-toggle="modal" data-target="#licenseModal"><span class="glyphicon glyphicon-info-sign"></span> License Agreement</a>
                             </span>
                         </li>
                         <li id="liContactTab">
@@ -95,23 +95,22 @@
                 </li>
 
                 @*<li class="btn-separator"></li>*@
-                <li id="liGoogleTab" class="navbar-custom" style="margin-right: 1em;">
+                <li id="liGoogleTab" class="navbar-custom" style="margin-right: 1em; padding: 0;">
                     <div style="height: 2em;">
                         @*<form id="formGoogleLogin" action="/Account/ExternalLogin?ReturnUrl=%2F" method="post">*@
                         <form id="formGoogleLogin" action="/Account/ExternalLogin?ReturnUrl=%2FHome%2FIndex" method="post">
                             <!-- Source: http://forums.asp.net/t/1901949.aspx?The+required+anti+forgery+cookie+__RequestVerificationToken+is+not+present+ -->
                             @Html.AntiForgeryToken()
 
-                            @{
+                            @*@{
                                 //Need to encode the '+' sign in the file name so that it is not converted to a space (' ') ...
                                 string url = "/home/getgoogleicon?id=" + Server.UrlEncode("btn_google+_signin_dark_normal_web.png");
                                 string url1 = "/home/getgoogleicon?id=" + Server.UrlEncode("btn_google+_signout_custom.png");
-                            }
+                            }*@
                             <!-- Need a 'hidden' input here.  The 'image' input cannot send any values to the server... -->
                             <input type="hidden" id="Google" name="provider" value="Google" />
-                            <input type="image" id="imgSignIn" src="@url" style="height: 2.5em; width: 10em; margin-top: -0.25em;" />
-                            <input type="image" id="imgSignOut" src="@url1" class="hidden" style="height: 2.5em; width: 10em; margin-top: -0.25em;" />
-
+                            <button class="btn btn-danger" id="btnSignIn"><span class="glyphicon glyphicon-log-in"></span>&nbsp;Sign in with Google</button>
+                            <button class="btn btn-danger hidden" id="btnSignOut"><span class="glyphicon glyphicon-log-out"></span>&nbsp;Sign Out</button>
                         </form>
                     </div>
 
@@ -289,8 +288,8 @@
                             </div>
 
                             <div class="form-group">
-                                <div class="col-sm-10">
-                                    <div style="overflow-y: scroll; max-height: 10em;">
+                                <div class="col-sm-8">
+                                    <div style="overflow-y: scroll; max-height: 10em; margin-left: -1em;">
                                         <ol id="olConcepts" style="list-style: circle;">
                                             <li>All</li>
                                         </ol>
@@ -299,7 +298,7 @@
                             </div>
 
                             <div class="form-group">
-                                <div class="col-sm-8">
+                                <div class="col-sm-9">
                                     <button class="btn btn-primary form-control" type="button" id="btnSelectDataServices" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectServicesModal">
                                         Select Data Service(s)...
                                     </button>
@@ -439,7 +438,8 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
-                <h3 class="modal-title" id="myModalLabel">License Information  <a href="http://www.github.com/cuahsi" target="_blank">(Version n.n)</a></h3>
+                @*<h3 class="modal-title" id="myModalLabel">License Information  <a href="http://www.github.com/cuahsi" target="_blank">(Version n.n)</a></h3>*@
+                <h3 class="modal-title" id="myModalLabel">License Information  <a href="http://www.github.com/cuahsi" target="_blank">(Version @System.Web.Configuration.WebConfigurationManager.AppSettings["currentVersion"])</a></h3>
             </div>
             <div class="modal-body">
 
