@@ -57,10 +57,7 @@ var currentUser = { 'authenticated' : false,
 
 var currentPosition = {
                         'latLng': null
-//                        'infoBubble': null
                       };
-
-var currentIntervals = [];
 
 var bResetMap = false;
 
@@ -73,11 +70,12 @@ var currentFilters = {
                                    }
                      };
 
-//Currently open InfoBubble instance...
-//var openInfoBubble = null;
+//Array of open InfoBubbles...
+var openInfoBubbles = [];
 
-//Array of open InfoBubble positions...
-//var openInfoBubbles = [];
+var bUpdateMapInProgress = false;
+
+var infoWindowSetup = [];
 
 //Number.isInteger 'polyfill' for use with browsers (like IE) which do not support the 'native' function
 //Sources: http://stackoverflow.com/questions/31720269/internet-explorer-11-object-doesnt-support-property-or-method-isinteger
@@ -496,6 +494,7 @@ function initialize() {
     });
 
     google.maps.event.addListener(map, 'zoom_changed', function () {
+
         if ((clusteredMarkersArray.length > 0)) {
             //If a filter applied to the map, include the filter in the updateMap(...) call
             var criteria = retrieveSearchAndFilterCriteria('dtTimeseries', false);
@@ -538,10 +537,6 @@ function initialize() {
         currentPosition.latLng = event.latLng;
         $('#' + 'spanLatitudeValue').text(event.latLng.lat().toFixed(3).toString());
         $('#' + 'spanLongitudeValue').text(event.latLng.lng().toFixed(3).toString());
-
-        //Close current InfoBubble instance, if indicated
-        //checkInfoBubble(event.latLng);
-
     });
 
     //Trigger mousemove to initialize latitude/longitude display...
@@ -857,8 +852,6 @@ function initialize() {
             $('#' + 'MapLatitudeControl').text('Latitude: ' + lat);
             $('#' + 'MapLongitudeControl').text('Longitude: ' + lng);
 
-            //Close current InfoBubble instance, if indicated
-            //checkInfoBubble(event.latLng);
         });
 
         //NOTE: BCC - 21-Sep-2015 - Per review meeting, the following current place name logic is not used.
@@ -2252,6 +2245,9 @@ function getMapAreaSize() {
 
 function resetMap() {
     deleteClusteredMarkersOverlays();
+
+    removeInfoWindows();
+
     //$('.data').addClass('disabled');
     $('.enableWhenDataReceived').addClass('disabled');
     //resetUserSelection()
@@ -2446,10 +2442,15 @@ function checkReg2(date) {
 //upddate map wit new clusters
 function updateMap(isNewRequest, filterAndSearchCriteria) {
     
+    if (bUpdateMapInProgress) {
+        return;     //Already in process - return early...
+    }
   
     if (clusteredMarkersArray.length == 0 && isNewRequest == false) return;//only map navigation
     var formData = getFormData();
     if (typeof formData == "undefined") return; //error in formdata retrieval
+
+    bUpdateMapInProgress = true;    //Mark as 'in process'  
 
     $("#pageloaddiv").show();
 
@@ -2471,7 +2472,8 @@ function updateMap(isNewRequest, filterAndSearchCriteria) {
     }
 
    //Clean up
-        deleteClusteredMarkersOverlays()
+        deleteClusteredMarkersOverlays();
+        removeInfoWindows();
    // }
    //get Markers
    var actionurl = '/home/updateMarkers';
@@ -2482,12 +2484,14 @@ function updateMap(isNewRequest, filterAndSearchCriteria) {
         type: 'POST',
         dataType: 'json',
         timeout: 60000,
-        //processData: false,
-                        data: formData
-                    });
+        data: formData
+    });
     
     promise.done( function (data) {
-            processMarkers(data)
+        
+            bUpdateMapInProgress = false;    //Processing complete - reset indicator
+
+            processMarkers(data);
             //setUpTimeseriesDatatable();
             //BCC - 26-Jun-2015 - Conditionally enable 'Data' button... 
             //QA Issue #13 - Data tab (usability): if search doesn't return any results, data tab should be disabled
@@ -2496,7 +2500,10 @@ function updateMap(isNewRequest, filterAndSearchCriteria) {
         });
         
     promise.fail( function (jqXHR, textstatus, errorThrown) {
-            serviceFailed(jqXHR, textstatus, errorThrown)
+        
+            bUpdateMapInProgress = false;    //Processing complete - reset indicator
+
+            serviceFailed(jqXHR, textstatus, errorThrown);
             $("#pageloaddiv").hide();
     });
 
@@ -2507,14 +2514,6 @@ function updateMap(isNewRequest, filterAndSearchCriteria) {
 function deleteClusteredMarkersOverlays() {
     clearOverlays();
     clusteredMarkersArray.length = 0;
-
-    //Clear all InfoBubble intervals...
-    while (0 < currentIntervals.length) {
-    
-        var currentInterval = currentIntervals.pop();
-        clearInterval(currentInterval);
-        currentInterval = null;
-    }
 }
 // Removes the overlays from the map, but keeps them in the array.
 function clearOverlays() {
@@ -2608,7 +2607,7 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
         //Create infowindow for marker, if indicated
         if ('undefined' !== typeof serviceCodeToTitle && null !== serviceCodeToTitle) {
-            createInfoWindow( map, marker, serviceCodeToTitle, 'google.maps.Marker');        
+            setupInfoWindow( map, marker, serviceCodeToTitle, 'google.maps.Marker');        
         }
 
         google.maps.event.addListener(marker, 'click', function () {
@@ -2700,7 +2699,7 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
 
         //Create infowindow for marker, if indicated
         if ('undefined' !== typeof serviceCodeToTitle && null !== serviceCodeToTitle) {
-            createInfoWindow( map, marker, serviceCodeToTitle, 'MarkerWithLabel');        
+            setupInfoWindow( map, marker, serviceCodeToTitle, 'MarkerWithLabel');        
         }
 
 
@@ -2716,10 +2715,6 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             setUpDatatables(clusterid);
                 
             $('#SeriesModal').modal('show');
-
-            //var details = getDetailsForMarker(clusterid)
-            //createInfoWindowContent()
-           
         });
         //        google.maps.event.addListener(marker, "click", function (e) {
         //            var infoBox = new InfoBox({ latlng: marker.getPosition(), map: map });
@@ -2731,6 +2726,39 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
     }
     return marker
 }
+
+function setupInfoWindow( map, marker, serviceCodeToTitle, markerTypeName) {
+    
+    //Validate/initialize input parameters...
+    if ('undefined' === typeof map || null === map ||
+        'undefined' === typeof marker || null === marker ||
+        'undefined' === typeof serviceCodeToTitle || null === serviceCodeToTitle) {
+        return; //Invalid parameter(s) - return early...
+    }
+
+    //Record setup information...
+    infoWindowSetup.push({ 'map': map,
+                           'marker': marker,
+                           'serviceCodeToTitle': serviceCodeToTitle,
+                           'markerTypeName': markerTypeName
+    });
+
+    //Record the array index for later reference...
+    marker.setupIndex = infoWindowSetup.length - 1;
+
+    //Add a temporary listener...
+    marker.tempListener = google.maps.event.addListener(marker, 'mouseover', function(event) {
+
+        var setupIndex = marker.setupIndex;
+        var setup = infoWindowSetup[setupIndex];
+
+        createInfoWindow( setup.map, setup.marker, setup.serviceCodeToTitle, setup.markerTypeName);
+
+        marker.tempListener.remove();
+    });
+
+}
+
 
 function createInfoWindow( map, marker, serviceCodeToTitle, markerTypeName) {
 
@@ -2781,6 +2809,7 @@ function createInfoWindow( map, marker, serviceCodeToTitle, markerTypeName) {
                              'disableAnimation': true,
                              'disableAutoPan': true,
                              'hideCloseButton': true });
+    openInfoBubbles.push(iw);
 
     //Calculate minimum height and width in 'px' units...
     //Convert from ems: (size on ems) * (parent font size in px)
@@ -2802,6 +2831,29 @@ function createInfoWindow( map, marker, serviceCodeToTitle, markerTypeName) {
         iw.close();
     });
     
+}
+
+//Remove all InfoBubble instances...
+function removeInfoWindows() {
+
+    if ( 'undefined' !== typeof openInfoBubbles && null !== openInfoBubbles) {
+    
+        while ( 0 < openInfoBubbles.length) {
+            var infoBubble = openInfoBubbles.shift();
+
+            infoBubble.close();
+            infoBubble = null;
+        }
+    }
+
+    if ('undefined' !== typeof infoWindowSetup && null != infoWindowSetup) {
+
+        while ( 0 < infoWindowSetup.length) {
+            var setup = infoWindowSetup.shift();
+
+            setup = null;
+        }
+    }
 }
 
 
@@ -2889,8 +2941,8 @@ function getDetailsForMarker(clusterid)
 
 }
 
-function createInfoWindowContent()
-{
+//function createInfoWindowContent()
+//{
     //$('#example').DataTable();
    
     //var $modal = $('#ajax-modal');
@@ -2906,7 +2958,7 @@ function createInfoWindowContent()
     //          '</div>');
     //    }, 1000);
     //});
-}
+//}
 
 //BC - disable mouse event listening for now...
 /*
