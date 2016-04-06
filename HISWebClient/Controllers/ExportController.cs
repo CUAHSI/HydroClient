@@ -1556,6 +1556,12 @@ namespace HISWebClient.Controllers
 			 string fileName = null != cu ? FileContext.GenerateFileName(cu.UserEmail, fileExtension) : FileContext.GenerateFileName(null, fileExtension);
 			 string filePathAndName = Server.MapPath("~/Files/" + fileName.ToString());
 
+			 //Create 'Files' sub-directory, if indicated...
+			if ( ! Directory.Exists(Server.MapPath("~/Files/")))
+			{
+				Directory.CreateDirectory(Server.MapPath("~/Files/"));
+			}
+
 			 //Use a large buffer here...
 			 FileStream fileStream = new FileStream(filePathAndName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite, 512000, FileOptions.DeleteOnClose );
 
