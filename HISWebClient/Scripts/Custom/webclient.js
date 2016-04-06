@@ -73,10 +73,6 @@ var currentFilters = {
 //Array of open InfoBubbles...
 var openInfoBubbles = [];
 
-//var bUpdateMapInProgress = false;
-
-var infoWindowSetup = [];
-
 //Number.isInteger 'polyfill' for use with browsers (like IE) which do not support the 'native' function
 //Sources: http://stackoverflow.com/questions/31720269/internet-explorer-11-object-doesnt-support-property-or-method-isinteger
 //         https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isInteger 
@@ -2442,15 +2438,9 @@ function checkReg2(date) {
 //upddate map wit new clusters
 function updateMap(isNewRequest, filterAndSearchCriteria) {
     
-    //if (bUpdateMapInProgress) {
-    //    return;     //Already in process - return early...
-    //}
-  
     if (clusteredMarkersArray.length == 0 && isNewRequest == false) return;//only map navigation
     var formData = getFormData();
     if (typeof formData == "undefined") return; //error in formdata retrieval
-
-    //bUpdateMapInProgress = true;    //Mark as 'in process'  
 
     $("#pageloaddiv").show();
 
@@ -2489,8 +2479,6 @@ function updateMap(isNewRequest, filterAndSearchCriteria) {
     
     promise.done( function (data) {
         
-            //bUpdateMapInProgress = false;    //Processing complete - reset indicator
-
             processMarkers(data);
             //setUpTimeseriesDatatable();
             //BCC - 26-Jun-2015 - Conditionally enable 'Data' button... 
@@ -2501,8 +2489,6 @@ function updateMap(isNewRequest, filterAndSearchCriteria) {
         
     promise.fail( function (jqXHR, textstatus, errorThrown) {
         
-            //bUpdateMapInProgress = false;    //Processing complete - reset indicator
-
             serviceFailed(jqXHR, textstatus, errorThrown);
             $("#pageloaddiv").hide();
     });
@@ -2605,9 +2591,13 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             zIndex: 1500
         });
 
-        //Create infowindow for marker, if indicated
+        //Add a 'once' map event to create an infowindow for marker, if indicated
         if ('undefined' !== typeof serviceCodeToTitle && null !== serviceCodeToTitle) {
-            setupInfoWindow( map, marker, serviceCodeToTitle, 'google.maps.Marker');        
+
+            google.maps.event.addListenerOnce(marker, 'mouseover', function(event) {
+
+                createInfoWindow( map, marker, serviceCodeToTitle, 'google.maps.Marker');
+            });
         }
 
         google.maps.event.addListener(marker, 'click', function () {
@@ -2706,9 +2696,13 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             visible: true
         });
 
-        //Create infowindow for marker, if indicated
+        //Add a 'once' map event to create an infowindow for marker, if indicated
         if ('undefined' !== typeof serviceCodeToTitle && null !== serviceCodeToTitle) {
-            setupInfoWindow( map, marker, serviceCodeToTitle, 'MarkerWithLabel');        
+
+            google.maps.event.addListenerOnce(marker, 'mouseover', function(event) {
+
+                createInfoWindow( map, marker, serviceCodeToTitle, 'MarkerWithLabel');
+            });
         }
 
 
@@ -2735,39 +2729,6 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
     }
     return marker
 }
-
-function setupInfoWindow( map, marker, serviceCodeToTitle, markerTypeName) {
-    
-    //Validate/initialize input parameters...
-    if ('undefined' === typeof map || null === map ||
-        'undefined' === typeof marker || null === marker ||
-        'undefined' === typeof serviceCodeToTitle || null === serviceCodeToTitle) {
-        return; //Invalid parameter(s) - return early...
-    }
-
-    //Record setup information...
-    infoWindowSetup.push({ 'map': map,
-                           'marker': marker,
-                           'serviceCodeToTitle': serviceCodeToTitle,
-                           'markerTypeName': markerTypeName
-    });
-
-    //Record the array index for later reference...
-    marker.setupIndex = infoWindowSetup.length - 1;
-
-    //Add a temporary listener...
-    marker.tempListener = google.maps.event.addListener(marker, 'mouseover', function(event) {
-
-        var setupIndex = marker.setupIndex;
-        var setup = infoWindowSetup[setupIndex];
-
-        createInfoWindow( setup.map, setup.marker, setup.serviceCodeToTitle, setup.markerTypeName);
-
-        marker.tempListener.remove();
-    });
-
-}
-
 
 function createInfoWindow( map, marker, serviceCodeToTitle, markerTypeName) {
 
@@ -2845,10 +2806,18 @@ function createInfoWindow( map, marker, serviceCodeToTitle, markerTypeName) {
 //Remove all InfoBubble instances...
 function removeInfoWindows() {
 
-    openInfoBubbles = [];
+    if ( 'undefined' !== typeof openInfoBubbles && null !== openInfoBubbles) {
+    
+        while ( 0 < openInfoBubbles.length) {
+            var infoBubble = openInfoBubbles.shift();
 
-    infoWindowSetup = [];
+            infoBubble.close();
+            infoBubble = null;
+        }
+    }
 }
+
+
 
 
 //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
