@@ -2681,9 +2681,18 @@ function updateClusteredMarker(map, point, count, icontype, id, clusterid, label
             //count=""
         }
 
+        var image = {
+            url: clusterMarkerPath + "m6.png",
+            size: new google.maps.Size(icon_width, icon_height),
+            origin: new google.maps.Point(0, 0),
+            anchor: new google.maps.Point(icon_width / 2, icon_height / 2),
+            scaledSize: new google.maps.Size(icon_width, icon_height)
+        };
+
         var marker = new MarkerWithLabel({
             position: point,
-            icon: new google.maps.MarkerImage(clusterMarkerPath + "m6.png", new google.maps.Size(53, 52), null, new google.maps.Point(icon_width / 2, icon_height / 2), new google.maps.Size(icon_width, icon_height)),
+            //icon: new google.maps.MarkerImage(clusterMarkerPath + "m6.png", new google.maps.Size(53, 52), null, new google.maps.Point(icon_width / 2, icon_height / 2), new google.maps.Size(icon_width, icon_height)),
+            icon:image,
             draggable: false,
             raiseOnDrag: true,
             map: map,
