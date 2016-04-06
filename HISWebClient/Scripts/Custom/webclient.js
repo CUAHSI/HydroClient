@@ -569,8 +569,8 @@ function initialize() {
     //$('.modal-inputs').datepicker({ 'inputs': $('.modal-date-range').toArray(), 'todayHighlight': true });
 
     //Assign click handlers to panel date inputs
-    $('#startDate').on('click', {'clicked': 'startDate'}, function (event) { $('#btnDateRange').click(); });
-    $('#endDate').on('click', {'clicked': 'endDate'}, function (event) { $('#btnDateRange').click(); });
+    $('#startDate').on('click', function () { $('#btnDateRange').trigger('click', {'clicked': 'startDate'}); });
+    $('#endDate').on('click', function () { $('#btnDateRange').trigger( 'click', {'clicked': 'endDate'}); });
 
 
     //Initialize multiple datepicker instances on different input ids...
@@ -604,7 +604,7 @@ function initialize() {
     $('#startDateModal, #endDateModal').on('blur', { 'groupId': 'grpStartDateModal', 'errorLabelId': 'lblStartDateErrorModal', 'inputIdStartDate': 'startDateModal', 'inputIdEndDate': 'endDateModal' }, compareFromDateAndToDate);
 
     //Button click handler for Select Date Range...
-    $('#btnDateRange').on('click', function (event) {
+    $('#btnDateRange').on('click', function (event, clicked) {
         //Assign current start and end date values to their modal counterparts...
         var startDate = $('#startDate').val();
         var endDate = $('#endDate').val();
@@ -620,6 +620,18 @@ function initialize() {
         //Assign current start and end date values to the associated datepicker instances
         $('#startDateModal').datepicker('setDate', startDate);
         $('#endDateModal').datepicker('setDate', endDate);
+
+        setTimeout(function() {
+            //Set focus to input control, as indicated
+            if ( 'undefined' === typeof clicked || 'startDate' === clicked.clicked) {
+                $('#startDateModal').focus();
+            }
+            else {
+                if ('endDate' === clicked.clicked) {
+                    $('#endDateModal').focus();
+                }
+            }
+        }, 500);
     });
 
     //Button click handler for Date Range Modal Save 
@@ -3319,7 +3331,7 @@ function setUpDatatables(clusterid) {
                                     '<li data-toggle="tooltip" data-placement="top" title="Move all selected time series to the workspace">' +
                                     '<a href="#" id="anchorAddSelectionsToWorkspace" style="font-weight: bold;" >' + 
                                     '<span class="glyphicon glyphicon-plus-sign" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
-                                    '<span id="spanManageSelections" style="font-weight: bold; display: inline-block; vertical-align: super;">Add Selection(s) to Workspace</span>' +
+                                    '<span id="spanManageSelections" style="font-weight: bold; display: inline-block; vertical-align: super;">Save Selection(s) to Workspace</span>' +
                                     '</a>' +
                                     '</li>' +
 
@@ -5605,7 +5617,7 @@ function downloadSelections(event) {
     var txtClass = '.clsMessageArea';
 
     //Update the text...
-    var txt = 'Task: @@taskId@@ started.  To check the download status, please open the Exports tab';
+    var txt = 'Task: @@taskId@@ started.  To check the download status, please open the Exports tab in the Workspace';
     var txts = txt.split('@@taskId@@');
 
     $(txtClass).text( txts[0] + taskId.toString() + txts[1]);
@@ -5758,7 +5770,7 @@ function zipSelections_2(event) {
     var txtClass = '.clsMessageArea';
 
     //Update the text...
-    var txt = 'Task: @@taskId@@ started.  To check the download status, please open the Exports tab';
+    var txt = 'Task: @@taskId@@ started.  To check the download status, please open the Exports tab in the Workspace';
     var txts = txt.split('@@taskId@@');
 
     $(txtClass).text( txts[0] + taskId.toString() + txts[1]);
@@ -6577,7 +6589,7 @@ function setUpTimeseriesDatatable() {
                                        '<li data-toggle="tooltip" data-placement="top" title="Move all selected time series to the workspace">' +
                                         '<a href="#" id="anchorAddSelectionsToWorkspaceTS" style="font-weight: bold;" >' + 
                                         '<span class="glyphicon glyphicon-plus-sign" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
-                                        '<span id="spanManageSelectionsTS" style="font-weight: bold; display: inline-block; vertical-align: super;">Add Selection(s) to Workspace</span>' +
+                                        '<span id="spanManageSelectionsTS" style="font-weight: bold; display: inline-block; vertical-align: super;">Save Selection(s) to Workspace</span>' +
                                        '</a>' +
                                        '</li>' +
 
@@ -6617,7 +6629,7 @@ function setUpTimeseriesDatatable() {
                                   '</div>' +
                               '</div>' +
 
-                              '<div id="divApplyFilterToMapTS" style="display: inline-block; margin-left: 1em; float:left;">' +
+                              '<div id="divApplyFilterToMapTS" style="display: inline-block; margin-left: 1em; float:left;" class="hidden">' +
                                 '<label style="float:right;">' +
                                 '<input type="checkbox" checked id="chkbxApplyFilterToMapTS"/>&nbsp;Apply Filter to Map' +
                                 '</label>' +
