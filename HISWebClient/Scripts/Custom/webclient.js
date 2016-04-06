@@ -73,7 +73,7 @@ var currentFilters = {
 //Array of open InfoBubbles...
 var openInfoBubbles = [];
 
-var bUpdateMapInProgress = false;
+//var bUpdateMapInProgress = false;
 
 var infoWindowSetup = [];
 
@@ -573,8 +573,8 @@ function initialize() {
     //$('.modal-inputs').datepicker({ 'inputs': $('.modal-date-range').toArray(), 'todayHighlight': true });
 
     //Assign click handlers to panel date inputs
-    $('#startDate').on('click', function () { $('#btnDateRange').click() });
-    $('#endDate').on('click', function () { $('#btnDateRange').click() });
+    $('#startDate').on('click', {'clicked': 'startDate'}, function (event) { $('#btnDateRange').click(); });
+    $('#endDate').on('click', {'clicked': 'endDate'}, function (event) { $('#btnDateRange').click(); });
 
 
     //Initialize multiple datepicker instances on different input ids...
@@ -2442,15 +2442,15 @@ function checkReg2(date) {
 //upddate map wit new clusters
 function updateMap(isNewRequest, filterAndSearchCriteria) {
     
-    if (bUpdateMapInProgress) {
-        return;     //Already in process - return early...
-    }
+    //if (bUpdateMapInProgress) {
+    //    return;     //Already in process - return early...
+    //}
   
     if (clusteredMarkersArray.length == 0 && isNewRequest == false) return;//only map navigation
     var formData = getFormData();
     if (typeof formData == "undefined") return; //error in formdata retrieval
 
-    bUpdateMapInProgress = true;    //Mark as 'in process'  
+    //bUpdateMapInProgress = true;    //Mark as 'in process'  
 
     $("#pageloaddiv").show();
 
@@ -2489,7 +2489,7 @@ function updateMap(isNewRequest, filterAndSearchCriteria) {
     
     promise.done( function (data) {
         
-            bUpdateMapInProgress = false;    //Processing complete - reset indicator
+            //bUpdateMapInProgress = false;    //Processing complete - reset indicator
 
             processMarkers(data);
             //setUpTimeseriesDatatable();
@@ -2501,7 +2501,7 @@ function updateMap(isNewRequest, filterAndSearchCriteria) {
         
     promise.fail( function (jqXHR, textstatus, errorThrown) {
         
-            bUpdateMapInProgress = false;    //Processing complete - reset indicator
+            //bUpdateMapInProgress = false;    //Processing complete - reset indicator
 
             serviceFailed(jqXHR, textstatus, errorThrown);
             $("#pageloaddiv").hide();
@@ -2836,24 +2836,9 @@ function createInfoWindow( map, marker, serviceCodeToTitle, markerTypeName) {
 //Remove all InfoBubble instances...
 function removeInfoWindows() {
 
-    if ( 'undefined' !== typeof openInfoBubbles && null !== openInfoBubbles) {
-    
-        while ( 0 < openInfoBubbles.length) {
-            var infoBubble = openInfoBubbles.shift();
+    openInfoBubbles = [];
 
-            infoBubble.close();
-            infoBubble = null;
-        }
-    }
-
-    if ('undefined' !== typeof infoWindowSetup && null != infoWindowSetup) {
-
-        while ( 0 < infoWindowSetup.length) {
-            var setup = infoWindowSetup.shift();
-
-            setup = null;
-        }
-    }
+    infoWindowSetup = [];
 }
 
 
