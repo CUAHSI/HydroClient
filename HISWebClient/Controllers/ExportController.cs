@@ -400,9 +400,8 @@ namespace HISWebClient.Controllers
 								UpdateTaskStatus(requestId, TimeSeriesRequestStatus.ProcessingTimeSeriesId, statusMessage);
 								WriteTaskDataToDatabase(cu, requestId, TimeSeriesRequestStatus.ProcessingTimeSeriesId, statusMessage, blobUri, blobTimeStamp);
 
-								if (tsrIn.RequestFormat == TimeSeriesFormat.CSV)
+								if (TimeSeriesFormat.CSV == tsrIn.RequestFormat || TimeSeriesFormat.WaterOneFlow == tsrIn.RequestFormat)
 								{
-
 									//Retrieve the time series data in the input format: CSV --OR-- XML 
 									FileStreamResult filestreamresult = await DownloadFile(timeSeriesId, currentSeries, tsrIn.RequestFormat);
 
