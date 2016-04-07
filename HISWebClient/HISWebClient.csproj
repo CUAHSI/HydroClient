@@ -427,9 +427,14 @@
     <Content Include="Content\Images\Markers\Services\blue-20.png" />
     <Content Include="Content\Images\pageloader.gif" />
     <Content Include="Content\Images\cuahsi_logo_small.png" />
+    <Content Include="Content\Images\QuickStart\Groundwater.jpg" />
+    <Content Include="Content\Images\QuickStart\meteo.jpg" />
+    <Content Include="Content\Images\QuickStart\QaterQuality.jpg" />
     <Content Include="Content\Images\QuickStart\quickstart-guide-slide-1.png" />
     <Content Include="Content\Images\QuickStart\quickstart-guide-slide-2.png" />
     <Content Include="Content\Images\QuickStart\quickstart-guide-slide-3.png" />
+    <Content Include="Content\Images\QuickStart\soil.jpg" />
+    <Content Include="Content\Images\QuickStart\WQ.jpg" />
     <Content Include="Content\Images\sort_asc.png" />
     <Content Include="Content\Images\sort_asc_disabled.png" />
     <Content Include="Content\Images\sort_both.png" />
@@ -632,6 +637,7 @@
     <Content Include="Views\Home\_DatatableTimeseriesColumns.cshtml" />
     <Content Include="Views\Home\_DatatableDataservicesColumns.cshtml" />
     <Content Include="Views\Home\_DataManagerTimeseriesColumns.cshtml" />
+    <Content Include="Views\Home\Quickstart.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\yeti\" />
@@ -724,9 +730,9 @@
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>49330</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhostdev.org:49331/</IISUrl>
+          <IISUrl>http://localhost:49331/</IISUrl>
           <OverrideIISAppRootUrl>True</OverrideIISAppRootUrl>
-          <IISAppRootUrl>http://localhostdev.org:49331</IISAppRootUrl>
+          <IISAppRootUrl>http://localhost:49331</IISAppRootUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>

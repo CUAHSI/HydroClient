@@ -1,0 +1,128 @@
+﻿@{
+    ViewBag.Title = "CUAHSI HydroClient ";
+}
+<script>
+    /*<![CDATA[*/window.zEmbed || function (e, t) {
+        var n, o, d, i, s, a = [],
+            r = document.createElement("iframe"); window.zEmbed = function ()
+            { a.push(arguments) }, window.zE = window.zE || window.zEmbed, r.src = "javascript:false",
+            r.title = "", r.role = "presentation", (r.frameElement || r).style.cssText = "display: none",
+            d = document.getElementsByTagName("script"), d = d[d.length - 1], d.parentNode.insertBefore(r, d),
+            i = r.contentWindow, s = i.document; try { o = s } catch (c) {
+                n = document.domain,
+                    r.src = 'javascript:var d=document.open();d.domain="' + n + '";void(0);', o = s
+            } o.open()._l = function () {
+                var o = this.createElement("script"); n && (this.domain = n),
+                    o.id = "js-iframe-async", o.src = e, this.t = +new Date, this.zendeskHost = t, this.zEQueue = a, this.body.appendChild(o)
+            }, o.write('<body onload="document._l();">'), o.close()
+    }("//assets.zendesk.com/embeddable_framework/main.js", "cuahsi.zendesk.com");/*]]>*/</script>
+<!-- End of cuahsi Zendesk Widget script -->
+<style>
+    p {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 20px;
+}  
+</style>
+<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+    <div class="panel panel-default">
+        <div class="panel-heading" role="tab" id="headingOne">
+            <h4 class="panel-title">
+                <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    OverView
+                </a>
+            </h4>
+        </div>
+        <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+            <div class="panel-body">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-sm-4">
+                            Meteorology
+                            <img src="~/Content/Images/QuickStart/meteo.jpg" />
+                        </div>
+                        <div class="col-sm-4">
+                            Ground Water<img src="~/Content/Images/QuickStart/Groundwater.jpg" />
+                        </div>
+                        <div class="col-sm-4">
+                            Water Quality
+                            <img src="~/Content/Images/QuickStart/QaterQuality.jpg" />
+                        </div>
+                    </div>
+                </div>
+
+                <br />
+                <h4>
+                    HydroClient helps you discover, download, and analyze environmental data from many different sources including U.S. Federal Agencies, International governments, non-profit organizations, and academic projects.
+                </h4>
+                    <br />
+                    <p><a target="_blank" href="https://cuahsi.zendesk.com/hc/en-us/articles/205419147-Overview-of-the-HydroClient-Homepage">For more info please check our User Guide</a></p>
+
+                    <p>
+                        Tutorials:
+                        <ul>
+                            <li> <a target="_blank" href="https://cuahsi.zendesk.com/hc/en-us/articles/217205098-Tutorial-Examining-Discharge-and-Precipitation-Data-near-Lake-Tahoe-California"> Tutorial-Examining-Discharge-and-Precipitation-Data-near-Lake-Tahoe-California</a></li>
+                            <li><a target="_blank" href="https://cuahsi.zendesk.com/hc/en-us/articles/212036357-Tutorial-Investigating-Air-Temperature-with-HydroClient-and-RStudio"> Tutorial-Investigating-Air-Temperature-with-HydroClient-and-RStudio</a></li>
+                        </ul>
+                    <p>
+               
+
+            </div>
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-heading" role="tab" id="headingTwo">
+            <h4 class="panel-title">
+                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                   Searching for data 
+                </a>
+            </h4>
+        </div>
+        <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+            <div class="panel-body">
+            Discover data by specifying the :
+                <ul>
+                    
+                    <li>Time range you are interested in by selecting start and end dates</li>
+                    <li>Parameter you want to observe by using the Keyword selector (leaving this blank will return all parameters)</li>
+                    <li>Your area of interest by navigating to a place on the map</li>
+                </ul>
+                You can also select one or more data sources if you would like to filter which organizations are returned in your search. Search results are displayed as map markers. Click on a marker to View All Search Results to see detailed information about the data you’ve found.      </div>
+            <a href="https://cuahsi.zendesk.com/hc/en-us/articles/214972448-View-a-Time-Series-in-Your-Workspace" target="_blank">Click for more information on the Google map interface?</a>
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-heading" role="tab" id="headingThree">
+            <h4 class="panel-title">
+                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                    Using the workspace
+                </a>
+            </h4>
+        </div>
+        <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+            <div class="panel-body">
+                Once you have discovered data, download it to your computer or save it to your HydroClient Workspace. The HydroClient Workspace contains tools like the Data Viewer that you can use to analyze the data. Login to HydroClient with a Google account to save the contents of your Workspace. 
+                <br />
+                <a href="https://cuahsi.zendesk.com/hc/en-us/articles/214972448-View-a-Time-Series-in-Your-Workspace" target="_blank">Click for more information on the workspace?</a>
+  </div>
+        </div>
+    </div>
+</div>
+<p>
+<a href="emailto:help@cuahsi.org?Subject=Hydroclient" target="_top">For addtition questions or feedback email support</a>   
+</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -107,6 +107,11 @@ namespace HISWebClient.Controllers
 
 			return View();
 		}
+
+        public ActionResult Quickstart()
+        {
+            return View();
+        }
 		public ActionResult About()
 		{
 			ViewBag.Message = "About";
