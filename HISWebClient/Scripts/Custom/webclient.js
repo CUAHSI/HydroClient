@@ -621,9 +621,13 @@ function initialize() {
         $('#startDateModal').datepicker('setDate', startDate);
         $('#endDateModal').datepicker('setDate', endDate);
 
+        if ('undefined' === typeof clicked || null === clicked ) {
+            return;     //No 'clicked' indicator - return early... 
+        } 
+
         setTimeout(function() {
             //Set focus to input control, as indicated
-            if ( 'undefined' === typeof clicked || 'startDate' === clicked.clicked) {
+            if ( 'startDate' === clicked.clicked) {
                 $('#startDateModal').focus();
             }
             else {
@@ -1928,15 +1932,7 @@ function addCustomMapControls()
     var toggleSidePanel = new toggleSidePanelControl(toggleSidePanelDiv, map);
 
     toggleSidePanel.index = 1;
-    map.controls[google.maps.ControlPosition.RIGHT_TOP].push(toggleSidePanelDiv);
-
-    //Allow Google Maps to finish with control positioning before attempting to reposition the toggle...
-    setTimeout(function() {
-        var jqToggleSidePanel = $(toggleSidePanelDiv);
-        jqToggleSidePanel.parent().css({'position': 'relative'});
-        jqToggleSidePanel.css({'top': 0, 'position': 'absolute'});
-        jqToggleSidePanel.addClass('searchbarcontrols');
-    }, 3000);
+    map.controls[google.maps.ControlPosition.RIGHT_CENTER].push(toggleSidePanelDiv);
 
     var AreaSizeDiv = document.createElement('div');
     var AreaSize = new AreaSizeControl(AreaSizeDiv, map);
@@ -2048,7 +2044,6 @@ function toggleSidePanelControl(controlDiv, map)
         controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
         controlText.style.fontSize = '16px';
         controlText.style.lineHeight = '25px';
-        controlText.style.paddingTop = '15px';
         controlText.style.paddingLeft = '3px';
         controlText.style.paddingRight = '3px';
         controlText.style.border = '5px'
@@ -2460,8 +2455,6 @@ function updateMap(isNewRequest, filterAndSearchCriteria) {
     //var actionurl = '/home/updateMarkers';
     
     if (clusteredMarkersArray.length == 0) {
-
-
         formData.push({ name: "isNewRequest", value: true });
     }
     else {
@@ -3261,6 +3254,7 @@ function setUpDatatables(clusterid) {
         //Close current dialog - open 'Server Error' dialog
         $('#SeriesModal').modal('hide');
 
+        $('#serverMessageText').text(message);
         $('#serverErrorModal').modal('show');
 
         //Log messsage received from server...
@@ -3341,12 +3335,11 @@ function setUpDatatables(clusterid) {
                                     '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.5em;  margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +
                                     '<span id="spanZipSelections"  style="font-weight: bold; display: inline-block; vertical-align: super;">Export Selection(s)</span>' +
                                     '</a>' :
-
                                     '<li data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV format">' +
-                                    '<a href="#" id="anchorEachTimeseriesInSeparateFile" style="font-weight: bold;">' +                                    
-                                    '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.5em;  margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +
-                                    '<span id="spanZipSelections"  style="font-weight: bold; display: inline-block; vertical-align: super;">Export Selection(s)</span>' +
-                                    '</a>') +
+                                        '<a href="#" id="anchorEachTimeseriesInSeparateFile" style="font-weight: bold;">' +                                    
+                                        '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.5em;  margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +
+                                        '<span id="spanZipSelections"  style="font-weight: bold; display: inline-block; vertical-align: super;">Export Selection(s)</span>' +
+                                        '</a>') +
 
                                     (currentUser.authenticated ? 
                                         '<ul class="dropdown-menu">' + 
@@ -3501,7 +3494,7 @@ function setupToolTips() {
                  'liTableTab': {'text': texts[3]},
                  'liTabbedDataMgrTab': {'text': texts[4]},
                  'liContactTab': {'text': texts[5], 'placement': 'right'},
-                 'liAboutTab': {'text': texts[6], 'placement': 'right'},
+                 'liHelpTab': {'text': texts[6], 'placement': 'right'},
                  'liQuickStartTab': {'text': texts[7], 'placement': 'right'},
                  'liGoogleTab': {'text': texts[8]},
                  'liLicenseTab': {'text': texts[9], 'placement': 'right'}
@@ -3687,6 +3680,7 @@ function setupDataManagerTable() {
     $(tableId).on('error.dt', function (event, settings, techNote, message) {
 
         //open 'Server Error' dialog
+        $('#serverMessageText').text(message);
         $('#serverErrorModal').modal('show');
 
         //Log messsage received from server...
@@ -4165,6 +4159,7 @@ function requestTimeSeries(tableName, timeSeriesRequest, modalDialogName) {
                 $('#' + modalDialogName).modal('hide');
             }
 
+            $('#serverMessageText').text(message);
             $('#serverErrorModal').modal('show');
 
             //Log messsage received from server...
@@ -5617,7 +5612,7 @@ function downloadSelections(event) {
     var txtClass = '.clsMessageArea';
 
     //Update the text...
-    var txt = 'Task: @@taskId@@ started.  To check the download status, please open the Exports tab in the Workspace';
+    var txt = getDownloadTaskMessage();
     var txts = txt.split('@@taskId@@');
 
     $(txtClass).text( txts[0] + taskId.toString() + txts[1]);
@@ -5675,6 +5670,7 @@ function downloadSelections(event) {
         },
         error: function (xmlhttprequest, textstatus, message) {
             //Server error: open 'Server Error' dialog
+            $('#serverMessageText').text(message);
             $('#serverErrorModal').modal('show');
 
             //Log messsage received from server...
@@ -5754,7 +5750,7 @@ function displayAndFadeLabel(labelClass) {
 
     setTimeout(function () {
         $(labelClass).fadeOut({ 'duration': 1500 });
-    }, 5000);
+    }, 10000);
 }
 
 //show dialog for export
@@ -5770,7 +5766,7 @@ function zipSelections_2(event) {
     var txtClass = '.clsMessageArea';
 
     //Update the text...
-    var txt = 'Task: @@taskId@@ started.  To check the download status, please open the Exports tab in the Workspace';
+    var txt = getDownloadTaskMessage();
     var txts = txt.split('@@taskId@@');
 
     $(txtClass).text( txts[0] + taskId.toString() + txts[1]);
@@ -5891,6 +5887,7 @@ function retrieveCSVTimeSeries(taskId, timeSeriesIds,isMerged) {
                 $('#SeriesModal').modal('hide');
             }
 
+            $('#serverMessageText').text(message);
             $('#serverErrorModal').modal('show');
 
             //Log messsage received from server...
@@ -6537,6 +6534,20 @@ function setUpTimeseriesDatatable() {
     //Avoid multiple registrations of the same handler...
     $('#dtTimeseries tbody').off('click', 'tr', toggleSelected);
     $('#dtTimeseries tbody').on('click', 'tr', { 'tableId': 'dtTimeseries', 'btnIds': ['btnZipSelectionsTS', 'btnManageSelectionsTS'], 'btnClearId': 'btnClearSelectionsTS' }, toggleSelected);
+
+    //Server-error handler for dtMarkers...
+    $('#dtTimeseries').on('error.dt', function (event, settings, techNote, message) {
+
+        //Close current dialog - open 'Server Error' dialog
+        $('#dtTimeSeriesModal').modal('hide');
+
+        $('#serverMessageText').text(message);
+        $('#serverErrorModal').modal('show');
+
+        //Log messsage received from server...
+        console.log('dtTimeseries reports error: ' + message);
+    });
+
 
     //BC - Test - add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
@@ -7248,5 +7259,20 @@ function updateDownloadManagerRow( response ) {
                         }
                     }
             }
+    }
+}
+
+//Return a download task message for use in further processing
+// Expected format: 'Task: @@taskId@@ started.  <messasge text>
+function getDownloadTaskMessage() {
+
+    var msgBase = 'Task: @@taskId@@ started.  ';
+    if ($("#chkbxAutoDownload").prop("checked")) {
+            //Autodownload checkbox checked - check status message...
+        return msgBase + 'To check the download status, please open the Exports tab in the Workspace';
+    }
+    else {
+            //Autodownload checkbox NOT checked - complete download... 
+        return msgBase + 'To complete the download, please open the Exports tab in the Workspace';
     }
 }

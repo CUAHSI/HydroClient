@@ -285,7 +285,6 @@ namespace HISWebClient.Controllers
 			CancellationToken ct;
 			bool bNewTask = false;  //Assume time series retrieval task already exists...
 
-			//Dictionary<int, string> dictSeriesIdsToVariableUnits = new Dictionary<int, string>();
 			var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
 			CurrentUser cu = httpContext.Session[httpContext.Session.SessionID] as CurrentUser;
 
@@ -333,6 +332,9 @@ namespace HISWebClient.Controllers
 				string domainName = string.Empty;
 
 				dblogcontext.getIds(System.Web.HttpContext.Current, ref sessionId, ref userIpAddress, ref domainName);
+
+				//If user authenticated, retrieve the e-mail address..
+				var userEMailAddressRef = (null != cu && cu.Authenticated) ? cu.UserEmail : "unknown";
 
 				var dblogcontextRef = dblogcontext;
 				var dberrorcontextRef = dberrorcontext;
@@ -502,7 +504,8 @@ namespace HISWebClient.Controllers
 							memoryStream.Seek(0, SeekOrigin.Begin);
 
 							//Upload zip archive...
-							blobUri = await _ac.UploadFromMemoryStreamAsync(memoryStream, requestName, ct);
+							string archiveRequestName = (TimeSeriesFormat.CSVMerged == tsrIn.RequestFormat) ? "combined_" + requestName : requestName;
+							blobUri = await _ac.UploadFromMemoryStreamAsync(memoryStream, archiveRequestName, ct);
 							blobTimeStamp = DateTime.Now;
 							WriteTaskDataToDatabase(cu, requestId, TimeSeriesRequestStatus.SavingZipArchive, "", blobUri, blobTimeStamp);	
 
@@ -534,10 +537,12 @@ namespace HISWebClient.Controllers
 								dblogcontext.addReturn("blobUri", blobUri);
 								dblogcontext.addReturn("blobTimeStamp", blobTimeStamp);
 
-								dblogcontextRef.createLogEntry(sessionIdRef, userIpAddressRef, domainNameRef, startDtUtc, DateTime.UtcNow, "RequestTimeSeries(...)", "zip archive creation complete.", Level.Info);
+								dblogcontextRef.createLogEntry(sessionIdRef, userIpAddressRef, domainNameRef, userEMailAddressRef, startDtUtc, DateTime.UtcNow, "RequestTimeSeries(...)", "zip archive creation complete.", Level.Info);
 							}
-
+#if NEVER_DEFINED
+		//BCC - 07-Apr-2016 - Group decision - DO NOT include e-mail messages in Release 1.2
                             sendEmail(cu, blobUri);
+#endif
 						}
 					}
 					catch (Exception ex)
@@ -561,6 +566,11 @@ namespace HISWebClient.Controllers
 						requestStatus = TimeSeriesRequestStatus.RequestTimeSeriesError;
 						status = requestStatus.GetEnumDescription();
 
+						//Set the response status...
+						//Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+						//Response.StatusDescription = ex.Message;
+						//Response.TrySkipIisCustomErrors = true;	//Tell IIS to use your error text not the 'standard' error text!!
+						//										//ALSO clues jQuery to add the parsed responseJSON object to the jqXHR object!!
 					}
 					finally
 					{
@@ -632,6 +642,7 @@ namespace HISWebClient.Controllers
 			if (bNewTask)
 			{
 				var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
+				CurrentUser cu = httpContext.Session[httpContext.Session.SessionID] as CurrentUser;
 
 				//Get user data...
 				DateTime requestTimeStamp = httpContext.Timestamp;
@@ -644,6 +655,9 @@ namespace HISWebClient.Controllers
 				string domainName = string.Empty;
 
 				dblogcontext.getIds(System.Web.HttpContext.Current, ref sessionId, ref userIpAddress, ref domainName);
+
+				//If user authenticated, retrieve the e-mail address..
+				var userEMailAddressRef = (null != cu && cu.Authenticated) ? cu.UserEmail : "unknown";
 
 				var dblogcontextRef = dblogcontext;
 				var dberrorcontextRef = dberrorcontext;
@@ -832,7 +846,7 @@ namespace HISWebClient.Controllers
 								dblogcontext.addReturn("blobUri", blobUri);
 								dblogcontext.addReturn("blobTimeStamp", blobTimeStamp);
 
-								dblogcontextRef.createLogEntry(sessionIdRef, userIpAddressRef, domainNameRef, startDtUtc, DateTime.UtcNow, "ConvertWaterMlToCsv(...)", "zip archive creation complete.", Level.Info);
+								dblogcontextRef.createLogEntry(sessionIdRef, userIpAddressRef, domainNameRef, userEMailAddressRef, startDtUtc, DateTime.UtcNow, "ConvertWaterMlToCsv(...)", "zip archive creation complete.", Level.Info);
 							}
 						}
 					}
@@ -1765,6 +1779,8 @@ namespace HISWebClient.Controllers
 		
         }
 
+#if NEVER_DEFINED
+		//BCC - 07-Apr-2016 - Group decision - DO NOT include e-mail messages in Release 1.2
         public async void sendEmail(CurrentUser cu, string zipURL)
         {
 			//Validate/initialize input parameters...
@@ -1800,6 +1816,7 @@ namespace HISWebClient.Controllers
 				var errMessage = ex.Message;
 			}
         }
+#endif
 	}
 }
 

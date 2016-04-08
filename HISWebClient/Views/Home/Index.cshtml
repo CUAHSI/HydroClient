@@ -1,23 +1,5 @@
 ﻿@model HISWebClient.Models.LoginViewModel
 
-<!-- Start of cuahsi Zendesk Widget script -->
-<script>
-    /*<![CDATA[*/window.zEmbed || function (e, t) {
-        var n, o, d, i, s, a = [],
-            r = document.createElement("iframe"); window.zEmbed = function ()
-            { a.push(arguments) }, window.zE = window.zE || window.zEmbed, r.src = "javascript:false",
-            r.title = "", r.role = "presentation", (r.frameElement || r).style.cssText = "display: none",
-            d = document.getElementsByTagName("script"), d = d[d.length - 1], d.parentNode.insertBefore(r, d),
-            i = r.contentWindow, s = i.document; try { o = s } catch (c) {
-                n = document.domain,
-                    r.src = 'javascript:var d=document.open();d.domain="' + n + '";void(0);', o = s
-            } o.open()._l = function () {
-                var o = this.createElement("script"); n && (this.domain = n),
-                    o.id = "js-iframe-async", o.src = e, this.t = +new Date, this.zendeskHost = t, this.zEQueue = a, this.body.appendChild(o)
-            }, o.write('<body onload="document._l();">'), o.close()
-    }("//assets.zendesk.com/embeddable_framework/main.js", "cuahsi.zendesk.com");/*]]>*/</script>
-<!-- End of cuahsi Zendesk Widget script -->
-
 <div class="_container">
     <div class="row">
         <div id="pageloaddiv"></div>
@@ -65,12 +47,12 @@
                     <li id="liAboutTab" class="navbar-custom" style="margin-right: 1em;"><a href="" id="aboutTab" data-toggle="modal" data-target="#aboutModal"><span class="glyphicon glyphicon-info-sign"></span> About</a></li>
                     <li id="liQuickStartTab" class="navbar-custom"> <a href="" id="quickStartTab" data-toggle="modal" data-target="#quickStartModal"><span class="glyphicon glyphicon-flash"></span> QuickStart</a></li>*@
 
-                <li id="liAboutTab" class="navbar-custom" style="margin-right: 1.0em; padding: 0;">
+                <li id="liHelpTab" class="navbar-custom" style="margin-right: 1.0em; padding: 0;">
 
                     <button class="btn btn-primary" data-toggle="dropdown" style="font-size: 1.00em;">
                         <div id="ddAbout" data-noneselected="true">
-                            <span class="glyphicon glyphicon-info-sign" style="font-weight: bold; max-width: 100%; font-size: 1.0em;"></span>
-                            <span style="font-weight: bold; font-size: 1.00em;">&nbsp;About&nbsp;</span>
+                            <span class="glyphicon glyphicon-question-sign" style="font-weight: bold; max-width: 100%; font-size: 1.0em;"></span>
+                            <span style="font-weight: bold; font-size: 1.00em;">&nbsp;Help&nbsp;</span>
                             <span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>
                         </div>
                     </button>
@@ -161,12 +143,9 @@
 
         <div class="tab-pane padded-tab-pane" id="tabbedDataMgr" style="margin-left: 1.0em; margin-right: 1.0em;">
 
-            <div class="modal-header-full">
-                <h3 class="modal-title" id="myModalLabel">Workspace</h3>
-            </div>
             <!-- Nav tabs for tabbed panes - Data Manager and Download Manager -->
             <ul class="nav nav-tabs" role="tablist" style="margin-top: 0.5em; font-size: 1.5em;">
-                <li role="presentation" id="liDataMgrPane" class="active"><a href="#dataMgrPane" aria-controls="dataMgrPane" role="tab" data-toggle="tab" style="font-weight: bold; padding-left:0.2em; padding-right:0.2em">Data</a></li>
+                <li role="presentation" id="liDataMgrPane" class="active"><a href="#dataMgrPane" aria-controls="dataMgrPane" role="tab" data-toggle="tab" style="font-weight: bold; padding-left:0.2em; padding-right:0.2em">Workspace</a></li>
                 <li role="presentation" id="liDownloadMgrPane"><a href="#downloadMgrPane" aria-controls="downloadMgrPane" role="tab" data-toggle="tab" style="font-weight: bold;padding-left:0.2em; padding-right:0.2em">Exports</a></li>
             </ul>
 
@@ -180,7 +159,7 @@
                             NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
                             Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
                         *@
-                        <table id="tblDataManager" class="display disable-selection" cellspacing="0" style="max-width: none;" data-timeseriesmax="50">
+                        <table id="tblDataManager" class="display disable-selection" cellspacing="0" style="max-width: none;" data-timeseriesmax="100">
                             <thead>
                                 <tr>
                                     @Html.Partial("_DataManagerTimeseriesColumns")
@@ -263,7 +242,7 @@
                         <form id="Search" class="searchForm form-horizontal pull-left">
                             <div class="form-group">
                                 <div class="col-sm-8">
-                                    <button class="btn btn-primary form-control" id="btnDateRange" type="button" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectDateModal">Select Date Range...</button>
+                                    <button class="btn btn-primary btn-block form-control" id="btnDateRange" type="button" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectDateModal">Select Date Range</button>
                                 </div>
                             </div>
 
@@ -285,11 +264,11 @@
 
                             <div class="form-group">
                                 <div class="col-sm-8">
-                                    <button class="btn btn-primary" type="button" id="btnSelectKeywords" disabled style="margin: 0 auto;">
+                                    <button class="btn btn-primary btn-block" type="button" id="btnSelectKeywords" disabled style="margin: 0 auto;">
                                         <h4 class="text-center" style="display: inline; vertical-align: middle;">
                                             <span id="glyphiconSpanSK" class="glyphicon glyphicon-refresh spin" style="color: #32cd32;"></span>
                                         </h4>
-                                        Loading Keyword(s)...
+                                        Loading Keyword(s)
                                     </button>
                                 </div>
                             </div>
@@ -305,9 +284,9 @@
                             </div>
 
                             <div class="form-group">
-                                <div class="col-sm-9">
-                                    <button class="btn btn-primary form-control" type="button" id="btnSelectDataServices" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectServicesModal">
-                                        Select Data Service(s)...
+                                <div class="col-sm-8">
+                                    <button class="btn btn-primary btn-block form-control" type="button" id="btnSelectDataServices" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectServicesModal">
+                                        Select Data Service(s)
                                     </button>
                                 </div>
                             </div>
@@ -323,30 +302,25 @@
                             </div>
 
                             <div class="form-group" id="searchBtnDiv">
-                                <div class="col-sm-7">
+                                <div class="col-sm-8">
                                     <!-- For click handler see webclient.js $("#Search").submit(function (e) -->
-                                    <button type="submit" class="btn btn-success form-control" style="margin: 0 auto;">Search Map</button><br />
-                                    <button id="btnSetDefaults" type="button" class="btn btn-warning form-control" style="margin: 0 auto; margin-top: 0.5em;">Reset</button>
+                                    <button type="submit" class="btn btn-success btn-block form-control" style="margin: 0 auto;">Search Map</button><br />
+                                    <button id="btnSetDefaults" type="button" class="btn btn-warning btn-block form-control" style="margin: 0 auto; margin-top: 0.5em;">Reset</button>
                                     @*<div style="text-align: center; margin-top: 1em; ">
                                         <a href="http://www.github.com/cuahsi" target="_blank">Version 1.0</a>
                                         </div>*@
                                 </div>
                             </div>
 
-                        </form>
-                    </div>
-                    <div class="container" style="margin-top: 2em;">
-                        <form class="form-horizontal pull-left">
-                            <div class="form-group">
-                                <div class="col-sm-12">
-                                    @*<a href="#dataview" id="tableTab" data-toggle="tab"><span class="glyphicon glyphicon-list"></span>Search Results</a>*@
-                                    <!-- NOTE: The ill-named 'data' class is used to enable/disable the control...
-                                                Let's use a more descriptive name... -->
-                                    <button class="btn btn-primary form-control enableWhenDataReceived" id="btnSearchResults" type="button" style="margin: 0 auto;" data-toggle="modal" data-target="#tableModal">Show Search Results...</button>
+                            <div class="form-group" style="margin-top: 2em;">
+                                <div class="col-sm-8">
+                                    <button class="btn btn-primary btn-block form-control enableWhenDataReceived" id="btnSearchResults" type="button" style="margin: 0 auto;" data-toggle="modal" data-target="#tableModal">Show Search Results</button>
                                 </div>
                             </div>
+
                         </form>
                     </div>
+
                 </div>
             </div>
 
@@ -515,58 +489,24 @@
                 <h3 class="modal-title" id="myQuickStartLabel">Quick Start </h3>
             </div>
             <div class="modal-body">
-
                 <div style="margin-left: 2.0em;">
-
-                    <ul class="nav nav-tabs" role="tablist" data-tabs="tabs">
-                        <li class="active"><a href="#featuresTab" role="tab" data-toggle="tab">Overview</a></li>
-                        <li><a href="#searchTab" role="tab" data-toggle="tab">Search</a></li>
-                        <li><a href="#analysisTab" role="tab" data-toggle="tab">Workspace</a></li>
-                    </ul>
-
-                    <div class="tab-content">
-                        <!-- NOTE: HAVE to use object tags here to get the browsers to open the pdf in the (built-in??) viewer... -->
-                        <div class="active tab-pane" id="featuresTab">
-                            <object data="~/Content/documents/QuickStartGuide/HydroClient Quick Start Guide.1.pdf"
-                                    type="application/pdf"
-                                    width="800"
-                                    height="600"></object>
-
-                            @*<p>With HydroClient, you can discover, export, and analyze environmental data.</p>*@
-                        </div>
-
-                        <div class="tab-pane" id="searchTab">
-                            <object data="~/Content/documents/QuickStartGuide/HydroClient Quick Start Guide.2.pdf"
-                                    type="application/pdf"
-                                    width="800"
-                                    height="600"></object>
-
-                            @*<p>To begin, search for data based on location, what is being measured, and the time period you are interested in.</p>*@
-                        </div>
-
-                        <div class="tab-pane" id="analysisTab">
-                            <object data="~/Content/documents/QuickStartGuide/HydroClient Quick Start Guide.3.pdf"
-                                    type="application/pdf"
-                                    width="800"
-                                    height="600"></object>
-
-                            @*<p>Once you have discovered data, save it to your workspace in the cloud. This enables you to bookmark interesting data sets or use data tools to view and analyze the data sets that have been saved to your workspace.</p>*@
-                        </div>
+                    <div>
+                        <object data="~/Home/Quickstart"
+                                type="text/html"
+                                width="800"
+                                height="700"></object>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <!--p>This is the modal footer!!</p-->
-                @*<address style="text-align: left;">
-                        <a href="https://cuahsi.zendesk.com/hc/en-us/articles/205419147-Overview-of-the-HydroClient-Homepage" target="_blank">Need additional help<span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></a>
-                    </address>*@
             </div>
         </div>
     </div>
 </div>
 
 <!-- Modal dialog for Server Error... -->
-<div class="modal fade" id="serverErrorModal" tabindex="-1" role="dialog" aria-labelledby="serverErrorModalLabel" aria-hidden="true">
+<div class="modal fade" id="serverErrorModal" style="z-index: 1000000;" tabindex="-1" role="dialog" aria-labelledby="serverErrorModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -577,9 +517,13 @@
 
                 <div style="margin-left: 2.0em;">
                     <p>
-                        An error has occured on the server - please re-submit your search criteria...
+                        An error has occurred on the server - please re-submit your search criteria...
                     </p>
 
+                    <h4>
+                        Server Message: 
+                    </h4>
+                    <p id="serverMessageText"></p>
                 </div>
             </div>
             <div class="modal-footer">
@@ -852,10 +796,9 @@
                 @*<button class="btn btn-default" href="#tabbedDataMgrTab" id="tableModal-DataMgr" data-dismiss="modal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-tasks"></span> Open Workspace</button>*@
 
                 <div style="float: right; margin-right: 2em;" class="btn btn-default">
-                    <span class="glyphicon glyphicon-tasks"></span>
-                    <label style="font-weight: bold;">&nbsp;Workspace Pane:</label>
+                    <span class="glyphicon glyphicon-tasks">&nbsp;</span>
                     <span>
-                        <button id="tableModal-DataMgr" data-dismiss="modal">Data</button>
+                        <button id="tableModal-DataMgr" data-dismiss="modal">Workspace</button>
                         <button id="tableModal-DownloadMgr" data-dismiss="modal">Exports</button>
                     </span>
                 </div>
@@ -904,10 +847,9 @@
                 @*<button class="btn btn-default" href="#tabbedDataMgrTab" id="tableModal-DataMgrTS" data-dismiss="modal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-tasks"></span> Open Workspace</button>*@
 
                 <div style="float: right; margin-right: 2em;" class="btn btn-default">
-                    <span class="glyphicon glyphicon-tasks"></span>
-                    <label style="font-weight: bold;">&nbsp;Workspace Pane:</label>
+                    <span class="glyphicon glyphicon-tasks">&nbsp;</span>
                     <span>
-                        <button id="tableModal-DataMgrTS" data-dismiss="modal">Data</button>
+                        <button id="tableModal-DataMgrTS" data-dismiss="modal">Workspace</button>
                         <button id="tableModal-DownloadMgrTS" data-dismiss="modal">Exports</button>
                     </span>
                 </div>
