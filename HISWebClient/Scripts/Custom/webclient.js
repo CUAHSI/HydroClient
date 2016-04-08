@@ -25,13 +25,64 @@ var sidepanelVisible = false;
 var conceptsType = '';
 
 var selectedRowCounts = {
-    'dtMarkers': {'targetIds': ['spanClearSelections', 'spanZipSelections','spanManageSelections'], 'count': 0, 'customCounter': customCounter},
-    'dtTimeseries': { 'targetIds': ['spanClearSelectionsTS', 'spanZipSelectionsTS', 'spanManageSelectionsTS'], 'count': 0, 'customCounter': customCounter },
+    'dtMarkers': {'targetIds': ['spanClearSelections', 'spanZipSelections','spanManageSelections', 'spanCombinedFiles', 'spanSeparateFiles'], 'count': 0, 'customCounter': customCounter},
+    'dtTimeseries': { 'targetIds': ['spanClearSelectionsTS', 'spanZipSelectionsTS', 'spanManageSelectionsTS', 'spanCombinedFilesTS', 'spanSeparateFilesTS'], 'count': 0, 'customCounter': customCounter },
     'tblDataManager': { 'targetIds': ['spanClearSelectionsDM', 'spanRemoveSelectionsDM'], 'count': 0, 'customCounter': customCounter }
 };
 
 //BC - 19-Jun-2015 - Disable concept counting - possible later use...
 //var selectedConceptsMax = 4;
+
+var targetIdTexts = {
+    'spanClearSelections' : { 'none': ' Clear Selection(s)',
+                              'one': ' Clear Selection',
+                              'many': ' Clear @@count@@ Selections'
+                            },
+    'spanClearSelectionsDM' : { 'none': ' Clear Selection(s)',
+                                'one': ' Clear Selection',
+                                'many': ' Clear @@count@@ Selections'
+                            },
+    'spanClearSelectionsTS' : { 'none': ' Clear Selection(s)',
+                                'one': ' Clear Selection',
+                                'many': ' Clear @@count@@ Selections'
+                            },
+    'spanCombinedFiles' : { 'none': ' All Selections in One File',
+                            'one': ' All Selections in One File - (1 selection)',
+                            'many': ' All Selections in One File - (@@count@@ selections)'
+                          },
+    'spanCombinedFilesTS' : { 'none': ' All Selections in One File',
+                              'one': ' All Selections in One File - (1 selection)',
+                              'many': ' All Selections in One File - (@@count@@ selections)'
+                          },
+    'spanManageSelections' : { 'none': ' Save Selection(s) to Workspace',
+                               'one': ' Save Selection to Workspace',
+                               'many': ' Save @@count@@ Selections to Workspace'
+                             },
+    'spanManageSelectionsTS' : { 'none': ' Save Selection(s) to Workspace',
+                                 'one': ' Save Selection to Workspace',
+                                 'many': ' Save @@count@@ Selections to Workspace'
+                             },
+    'spanRemoveSelectionsDM' : { 'none': ' Delete Selection(s)',
+                                 'one': ' Delete Selection',
+                                 'many': ' Delete @@count@@ Selections'
+                            },
+    'spanSeparateFiles' : { 'none': ' Each Selection in a Separate File',
+                            'one': ' Each Selection in a Separate File - (1 selection)',
+                            'many': ' Each Selection in a Separate File - (@@count@@ selections)'
+                          },
+    'spanSeparateFilesTS' : { 'none': ' Each Selection in a Separate File',
+                              'one': ' Each Selection in a Separate File - (1 selection)',
+                              'many': ' Each Selection in a Separate File - (@@count@@ selections)'
+                          },
+    'spanZipSelections' : { 'none': ' Export Selection(s)',
+                            'one': ' Export Selection',
+                            'many': ' Export @@count@@ Selections'
+                          },
+    'spanZipSelectionsTS' : { 'none': ' Export Selection(s)',
+                              'one': ' Export Selection',
+                              'many': ' Export @@count@@ Selections'
+                          }
+};
 
 var downloadMonitor = { 'intervalId' : null,
                         'timeSeriesMonitored': {}
@@ -125,10 +176,7 @@ $(document).ready(function () {
             chkbx.removeClass(className);            
         }
 
-        var firstPart = '';
-        var secondPart = ['Selection(s)', 'Selection', ' Selections'];        //For each tableId in selected row counts...
-        var lastPart = '';
-
+        //For each tableId in selected row counts...
         for (var tableId in selectedRowCounts) {
             if ($('#' + tableId).is(":visible")) {
                 //table visible - evaluate count
@@ -148,7 +196,6 @@ $(document).ready(function () {
                     else {
                         if (control.is('label') || control.is('span')) {
                             method = control.text;
-                            //method = control.html;
                         }
                     }
 
@@ -156,40 +203,35 @@ $(document).ready(function () {
                         continue;
                     }
 
-                    //Retrieve control text... 
-                    var value = method.call(control);
-                    var values = value.split(' ');
-                    //if ('spanZipSelectionsTS' === targetId ) {
-                    //    console.log(value);
-                    //    console.log(values);
-                    //}
+                    //Retrieve texts for the current targetId
+                    var texts = targetIdTexts[targetId];
 
-                    //Evaluate text - set insert indicator...
-                    firstPart = values[0] + ' ';
-                    var bInsert = -1 === firstPart.indexOf('Select') ? true : false;
-
-                    //Determine trailing text, if any
-                    var length = values.length;
-                    lastPart = '';
-                    var bFound = false;
-
-                    for (var li = 0; li < length; ++li) {
-                        if (!bFound) {
-                            bFound = (-1 !== values[li].indexOf('Selection')) ? true: false;
-                            continue;
-                        }
-                        
-                        lastPart += ' ' + values[li];
+                    //Retrieve text per the count value
+                    var text = '';
+                    switch (count) {
+                        case 0:
+                            text = texts.none;
+                            break;
+                        case 1: 
+                            text = texts.one;
+                            break;
+                        default:
+                            text = texts.many;
+                            break;
                     }
 
-
-                if (0 < count) {
-                    //Selections found - update targetId text...
-                            method.call(control, firstPart + (bInsert ? (1 < count ? count + secondPart[2] : secondPart[1]) : count) + lastPart );
-                } else {
-                    //Nothing selected - reset targetId text...                    
-                            method.call(control, firstPart + ( bInsert ? secondPart[0] : '') + lastPart);
+                    if ('' !== text) {
+                        //Text retrieved - substitute count in text, if indicated
+                        var outText = text;
+                        if ( -1 !== text.indexOf('@@count@@')) {
+                    
+                            var txts = text.split('@@count@@');
+                            outText = txts[0] + count.toString() + txts[1];
                         }
+                        
+                        //Update targetId text...
+                        method.call(control, outText);
+                    }
                 }
 
                 if ('undefined' !== typeof selectedRowCounts[tableId].customCounter) {
@@ -3319,7 +3361,7 @@ function setUpDatatables(clusterid) {
                                     '</div>' +
 
                                     '</button>' +
-                                    '<ul class="dropdown-menu" style="width: 22em;">' +
+                                    '<ul class="dropdown-menu" style="width: 32em;">' +
                                     //'<ul style="list-style: none; padding-left: 0em;">' +
 
                                     '<li data-toggle="tooltip" data-placement="top" title="Move all selected time series to the workspace">' +
@@ -3330,32 +3372,23 @@ function setUpDatatables(clusterid) {
                                     '</li>' +
 
                                     (currentUser.authenticated ?
-                                    '<li class="dropdown-submenu" style="width: 90%" >' +
-                                   '<a href="#" tabindex="-1" id="anchorExportSelections" style="font-weight: bold;">' +                                    
-                                    '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.5em;  margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +
-                                    '<span id="spanZipSelections"  style="font-weight: bold; display: inline-block; vertical-align: super;">Export Selection(s)</span>' +
-                                    '</a>' :
+                                    '<li>' +
+                                        '<a href="#" id="anchorAllTimeseriesInOneFile" style="font-weight: bold;" >' +
+                                        '<span class="glyphicon glyphicon-file" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
+                                        '<span id="spanCombinedFiles" style="font-weight: bold; display: inline-block; vertical-align: super;">All selections in one file</span>' +
+                                        '</a>' +
+                                    '</li>' +
+                                    '<li>' +
+                                        '<a href="#" id="anchorEachTimeseriesInSeparateFile" style="font-weight: bold;" >' +
+                                        '<span class="glyphicon glyphicon-duplicate" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
+                                        '<span id="spanSeparateFiles" style="font-weight: bold; display: inline-block; vertical-align: super;">Each selection in a separate file</span>' +
+                                        '</a>'
+                                    :
                                     '<li data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV format">' +
                                         '<a href="#" id="anchorEachTimeseriesInSeparateFile" style="font-weight: bold;">' +                                    
                                         '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.5em;  margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +
                                         '<span id="spanZipSelections"  style="font-weight: bold; display: inline-block; vertical-align: super;">Export Selection(s)</span>' +
                                         '</a>') +
-
-                                    (currentUser.authenticated ? 
-                                        '<ul class="dropdown-menu">' + 
-                                        '<li>' +
-                                            '<a href="#" id="anchorAllTimeseriesInOneFile" style="font-weight: bold;" >' +
-                                            '<span class="glyphicon glyphicon-file" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
-                                            '<span style="font-weight: bold; display: inline-block; vertical-align: super;">All selections in one file</span>' +
-                                            '</a>' +
-                                        '</li>' +
-                                        '<li>' +
-                                            '<a href="#" id="anchorEachTimeseriesInSeparateFile" style="font-weight: bold;" >' +
-                                            '<span class="glyphicon glyphicon-duplicate" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
-                                            '<span style="font-weight: bold; display: inline-block; vertical-align: super;">Each selection in a separate file</span>' +
-                                            '</a>' +
-                                        '</li>' +
-                                        '</ul>' : '' ) + 
 
                                     '</li>' +
 
@@ -6594,7 +6627,7 @@ function setUpTimeseriesDatatable() {
                                         '</div>' +
 
                                       '</button>' +
-                                      '<ul class="dropdown-menu" style="width: 22em;">' +
+                                      '<ul class="dropdown-menu" style="width: 32em;">' +
                                        //'<ul style="list-style: none; padding-left: 0em;">' +
 
                                        '<li data-toggle="tooltip" data-placement="top" title="Move all selected time series to the workspace">' +
@@ -6605,33 +6638,23 @@ function setUpTimeseriesDatatable() {
                                        '</li>' +
 
                                        (currentUser.authenticated ?
-                                       '<li class="dropdown-submenu" style="width: 90%" >' + 
-                                        '<a href="#" tabindex="-1" id="anchorExportSelectionsTS" style="font-weight: bold;">' +                                    
-                                        '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.5em;  margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +
-                                        '<span id="spanZipSelectionsTS"  style="font-weight: bold; display: inline-block; vertical-align: super;">Export Selection(s)</span>' +
-                                       '</a>' :
-
+                                        '<li>' +
+                                            '<a href="#" id="anchorAllTimeseriesInOneFileTS" style="font-weight: bold;" >' +
+                                            '<span class="glyphicon glyphicon-file" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
+                                            '<span id="spanCombinedFilesTS" style="font-weight: bold; display: inline-block; vertical-align: super;">All selections in one file</span>' +
+                                            '</a>' +
+                                        '</li>' +
+                                        '<li>' +
+                                            '<a href="#" id="anchorEachTimeseriesInSeparateFileTS" style="font-weight: bold;" >' +
+                                            '<span class="glyphicon glyphicon-duplicate" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
+                                            '<span id="spanSeparateFilesTS" style="font-weight: bold; display: inline-block; vertical-align: super;">Each selection in a separate file</span>' +
+                                            '</a>'
+                                        :
                                        '<li data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV format">' +
                                         '<a href="#" id="anchorEachTimeseriesInSeparateFileTS" style="font-weight: bold;">' +                                    
                                         '<span class="glyphicon glyphicon-export" style="max-width: 100%; font-size: 1.5em;  margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +
                                         '<span id="spanZipSelectionsTS"  style="font-weight: bold; display: inline-block; vertical-align: super;">Export Selection(s)</span>' +
                                        '</a>') +
-
-                                       (currentUser.authenticated ? 
-                                           '<ul class="dropdown-menu">' + 
-                                            '<li>' +
-                                             '<a href="#" id="anchorAllTimeseriesInOneFileTS" style="font-weight: bold;" >' +
-                                               '<span class="glyphicon glyphicon-file" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
-                                               '<span style="font-weight: bold; display: inline-block; vertical-align: super;">All selections in one file</span>' +
-                                             '</a>' +
-                                            '</li>' +
-                                            '<li>' +
-                                             '<a href="#" id="anchorEachTimeseriesInSeparateFileTS" style="font-weight: bold;" >' +
-                                               '<span class="glyphicon glyphicon-duplicate" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
-                                               '<span style="font-weight: bold; display: inline-block; vertical-align: super;">Each selection in a separate file</span>' +
-                                             '</a>' +
-                                            '</li>' +
-                                           '</ul>' : '' ) + 
 
                                        '</li>' +
 

@@ -470,7 +470,8 @@ namespace HISWebClient.Controllers
 			Uri uriDefaultIcon = new Uri(ConfigurationManager.AppSettings["uriDefaultIcon"], UriKind.Absolute);
 			Uri uriCuahsiLogo = new Uri(ConfigurationManager.AppSettings["uriCuahsiLogo"], UriKind.Relative);
 
-			string uriIcon = String.Format("{0}{1}", "http://hiscentral.cuahsi.org/getIcon.aspx?name=", id);
+			//string uriIcon = String.Format("{0}{1}", "http://hiscentral.cuahsi.org/getIcon.aspx?name=", id);
+			string uriIcon = String.Format("{0}{1}", ConfigurationManager.AppSettings["GetIconUrl"], id);
 
 			//Download the icon to determine the final URI...
 			HttpResponseMessage response = await DownloadIcon(uriIcon);
