@@ -34,53 +34,54 @@ var selectedRowCounts = {
 //var selectedConceptsMax = 4;
 
 var targetIdTexts = {
-    'spanClearSelections' : { 'none': ' Clear Selection(s)',
-                              'one': ' Clear Selection',
-                              'many': ' Clear @@count@@ Selections'
+    'spanClearSelections' : { 'none': ' Clear selection(s)',
+                              'one': ' Clear selection',
+                              'many': ' Clear @@count@@ selections'
                             },
-    'spanClearSelectionsDM' : { 'none': ' Clear Selection(s)',
-                                'one': ' Clear Selection',
-                                'many': ' Clear @@count@@ Selections'
+    'spanClearSelectionsDM' : { 'none': ' Clear selection(s)',
+                                'one': ' Clear selection',
+                                'many': ' Clear @@count@@ selections'
                             },
-    'spanClearSelectionsTS' : { 'none': ' Clear Selection(s)',
-                                'one': ' Clear Selection',
-                                'many': ' Clear @@count@@ Selections'
+    'spanClearSelectionsTS' : { 'none': ' Clear selection(s)',
+                                'one': ' Clear selection',
+                                'many': ' Clear @@count@@ selections'
                             },
-    'spanCombinedFiles' : { 'none': ' All Selections in One File',
-                            'one': ' All Selections in One File - (1 selection)',
-                            'many': ' All Selections in One File - (@@count@@ selections)'
+    'spanCombinedFiles' : { 'none': ' Export selections in combined File',
+                            'one': ' Export selections in combined File - (1 selection)',
+                            'many': ' Export selections in combined File - (@@count@@ selections)'
                           },
-    'spanCombinedFilesTS' : { 'none': ' All Selections in One File',
-                              'one': ' All Selections in One File - (1 selection)',
-                              'many': ' All Selections in One File - (@@count@@ selections)'
-                          },
+    'spanCombinedFilesTS': {
+                             'none': ' Export Selection(s) in combined File',
+                             'one': ' Export Selections in combined File - (1 selection)',
+                             'many': ' Export Selections in combined File - (@@count@@ selections)'
+                            },
     'spanManageSelections' : { 'none': ' Save Selection(s) to Workspace',
                                'one': ' Save Selection to Workspace',
                                'many': ' Save @@count@@ Selections to Workspace'
                              },
-    'spanManageSelectionsTS' : { 'none': ' Save Selection(s) to Workspace',
-                                 'one': ' Save Selection to Workspace',
-                                 'many': ' Save @@count@@ Selections to Workspace'
+    'spanManageSelectionsTS' : { 'none': ' Save selection(s) to Workspace',
+                                 'one': ' Save selection to Workspace',
+                                 'many': ' Save @@count@@ selections to Workspace'
                              },
-    'spanRemoveSelectionsDM' : { 'none': ' Delete Selection(s)',
-                                 'one': ' Delete Selection',
-                                 'many': ' Delete @@count@@ Selections'
+    'spanRemoveSelectionsDM' : { 'none': ' Delete selection(s)',
+                                 'one': ' Delete selection',
+                                 'many': ' Delete @@count@@ selections'
                             },
-    'spanSeparateFiles' : { 'none': ' Each Selection in a Separate File',
-                            'one': ' Each Selection in a Separate File - (1 selection)',
-                            'many': ' Each Selection in a Separate File - (@@count@@ selections)'
+    'spanSeparateFiles' : { 'none': ' Export each selection in a separate file',
+                            'one':  ' Export each selection in a separate file - (1 selection)',
+                            'many': ' Export each selection in a separate file - (@@count@@ selections)'
                           },
-    'spanSeparateFilesTS' : { 'none': ' Each Selection in a Separate File',
-                              'one': ' Each Selection in a Separate File - (1 selection)',
-                              'many': ' Each Selection in a Separate File - (@@count@@ selections)'
+    'spanSeparateFilesTS' : { 'none': ' Export each selection in a separate file',
+                              'one':  ' Export each selection in a separate file - (1 selection)',
+                              'many': ' Export each selection in a separate file - (@@count@@ selections)'
                           },
-    'spanZipSelections' : { 'none': ' Export Selection(s)',
-                            'one': ' Export Selection',
-                            'many': ' Export @@count@@ Selections'
+    'spanZipSelections' : { 'none': ' Export selection(s)',
+                            'one': ' Export selection',
+                            'many': ' Export @@count@@ selections'
                           },
-    'spanZipSelectionsTS' : { 'none': ' Export Selection(s)',
-                              'one': ' Export Selection',
-                              'many': ' Export @@count@@ Selections'
+    'spanZipSelectionsTS' : { 'none': ' Export selection(s)',
+                              'one': ' Export selection',
+                              'many': ' Export @@count@@ selections'
                           }
 };
 
@@ -3375,13 +3376,13 @@ function setUpDatatables(clusterid) {
                                     '<li>' +
                                         '<a href="#" id="anchorAllTimeseriesInOneFile" style="font-weight: bold;" >' +
                                         '<span class="glyphicon glyphicon-file" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
-                                        '<span id="spanCombinedFiles" style="font-weight: bold; display: inline-block; vertical-align: super;">All selections in one file</span>' +
+                                        '<span id="spanCombinedFiles" style="font-weight: bold; display: inline-block; vertical-align: super;">Download in combined file</span>' +
                                         '</a>' +
                                     '</li>' +
                                     '<li>' +
                                         '<a href="#" id="anchorEachTimeseriesInSeparateFile" style="font-weight: bold;" >' +
                                         '<span class="glyphicon glyphicon-duplicate" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
-                                        '<span id="spanSeparateFiles" style="font-weight: bold; display: inline-block; vertical-align: super;">Each selection in a separate file</span>' +
+                                        '<span id="spanSeparateFiles" style="font-weight: bold; display: inline-block; vertical-align: super;">Download in separate file(s)</span>' +
                                         '</a>'
                                     :
                                     '<li data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV format">' +
@@ -6641,13 +6642,13 @@ function setUpTimeseriesDatatable() {
                                         '<li>' +
                                             '<a href="#" id="anchorAllTimeseriesInOneFileTS" style="font-weight: bold;" >' +
                                             '<span class="glyphicon glyphicon-file" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
-                                            '<span id="spanCombinedFilesTS" style="font-weight: bold; display: inline-block; vertical-align: super;">All selections in one file</span>' +
+                                            '<span id="spanCombinedFilesTS" style="font-weight: bold; display: inline-block; vertical-align: super;">Download selections in one combined file</span>' +
                                             '</a>' +
                                         '</li>' +
                                         '<li>' +
                                             '<a href="#" id="anchorEachTimeseriesInSeparateFileTS" style="font-weight: bold;" >' +
                                             '<span class="glyphicon glyphicon-duplicate" style="max-width: 100%; font-size: 1.5em; margin-left: 1.0em; margin-right: -0.5em;">&nbsp;</span>' +  
-                                            '<span id="spanSeparateFilesTS" style="font-weight: bold; display: inline-block; vertical-align: super;">Each selection in a separate file</span>' +
+                                            '<span id="spanSeparateFilesTS" style="font-weight: bold; display: inline-block; vertical-align: super;">Download in separate file(s)</span>' +
                                             '</a>'
                                         :
                                        '<li data-toggle="tooltip" data-placement="top" title="Export all selected time series to the client in CSV format">' +
