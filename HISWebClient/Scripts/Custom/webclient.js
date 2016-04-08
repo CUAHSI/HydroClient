@@ -2309,14 +2309,14 @@ function resetMap() {
     bResetMap = true;
 }
 
-function processMarkers(geoJson) {
+function processMarkers(geoJson, isNewRequest) {
     //map.data.loadGeoJson('https://storage.googleapis.com/maps-devrel/google.json');
 
     var json = JSON.parse(geoJson);
     //map.data.addGeoJson(geojson);
     //zoom(map);
     if (json != null) {
-        if (json.features.length === 0)
+        if (json.features.length === 0 && isNewRequest)
         {
             //BCC - 29-Jun-2015 - QA Issue #29 - GUI: "No timeseries for specified parameters found" have different font size. 
             bootbox.alert("<h4>No timeseries for specified parameters found.</h4>")
@@ -2488,7 +2488,7 @@ function checkReg2(date) {
 //upddate map wit new clusters
 function updateMap(isNewRequest, filterAndSearchCriteria) {
     
-    if (clusteredMarkersArray.length == 0 && isNewRequest == false) return;//only map navigation
+    if (clusteredMarkersArray.length == 0 && isNewRequest == false && typeof filterAndSearchCriteria == "undefined" ) return;//only map navigation
     var formData = getFormData();
     if (typeof formData == "undefined") return; //error in formdata retrieval
 
@@ -2527,7 +2527,7 @@ function updateMap(isNewRequest, filterAndSearchCriteria) {
     
     promise.done( function (data) {
         
-            processMarkers(data);
+            processMarkers(data, isNewRequest);
             //setUpTimeseriesDatatable();
             //BCC - 26-Jun-2015 - Conditionally enable 'Data' button... 
             //QA Issue #13 - Data tab (usability): if search doesn't return any results, data tab should be disabled
@@ -5168,20 +5168,21 @@ function clearSelections(event) {
 
 //Apply the current timeseries filter(s) to the map...
 function applyFilterToMap(event) {
+    //Retrieve the table's current search/filter criteria
+    var criteria = retrieveSearchAndFilterCriteria(event.data.tableId, true);
 
     var panelId = 'panelMapFilters2';
     var className = 'hidden';
     if ( (! $(this).prop('checked')) || $(this).hasClass('disabled')) {
         //'Apply to Map' NOT engaged - remove filter from map, hide filter panel on map...
-        updateMap(false);
+        updateMap(false,criteria);
         $('#' + panelId).addClass(className);
         return;
     }
 
     //'Apply to Map' engaged - apply filter to the map...
 
-    //Retrieve the table's current search/filter criteria
-    var criteria = retrieveSearchAndFilterCriteria(event.data.tableId, true);
+    
     //if ( 'dtTimeseries' === event.data.tableId && (! jQuery.isEmptyObject(criteria ))) {
     //    Set data source for service code when original value is null...
     //    if ( null === criteria.dataSources[13].dataSource) {
