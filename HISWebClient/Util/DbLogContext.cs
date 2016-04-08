@@ -10,6 +10,8 @@ using log4net;
 using log4net.Appender;
 using log4net.Core;
 
+using HISWebClient.Models.DataManager;
+
 namespace HISWebClient.Util
 {
 	/// <summary>
@@ -40,12 +42,13 @@ namespace HISWebClient.Util
 
 
 		//Write and entry to the log table (for use when an HttpContext is not available...)
-		public void createLogEntry(string sessionId, string userIpAddress, string domainName, DateTime startDtUtc, DateTime endDtUtc, string methodName, string message, Level logLevel)
+		public void createLogEntry(string sessionId, string userIpAddress, string domainName, string userEMailAddress, DateTime startDtUtc, DateTime endDtUtc, string methodName, string message, Level logLevel)
 		{
 			//Validate/initialize input parameters...
 			if ( String.IsNullOrWhiteSpace(sessionId) ||
 				 String.IsNullOrWhiteSpace(userIpAddress) ||
 				 String.IsNullOrWhiteSpace(domainName) ||
+				 String.IsNullOrWhiteSpace(userEMailAddress) ||
 				 null == startDtUtc ||
 				 null == endDtUtc ||
 				 String.IsNullOrWhiteSpace(methodName) ||
@@ -61,11 +64,7 @@ namespace HISWebClient.Util
 			MDC.Set("SessionId", sessionId);
 			MDC.Set("IPAddress", userIpAddress);
 			MDC.Set("Domain", domainName);
-
-			//TO DO - Attempt to retrieve user's e-mail.  If successful, write to MDC
-			//string emailAddress;
-
-			//MDC.Set("EmailAddress", emailAddress);
+			MDC.Set("EmailAddress", userEMailAddress);
 
 			MDC.Set("StartDateTime", startDtUtc.ToString());
 			MDC.Set("EndDateTime", endDtUtc.ToString());
@@ -143,7 +142,13 @@ namespace HISWebClient.Util
 
 			getIds(httpcontextCurrent, ref sessionId, ref userIpAddress, ref domainName);
 
-			createLogEntry(sessionId, userIpAddress, domainName, startDtUtc, endDtUtc, methodName, message, logLevel);
+			//If current user authenticated, retrieve user's e-mail address...
+			var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
+			CurrentUser cu = httpContext.Session[httpContext.Session.SessionID] as CurrentUser;
+
+			string eMailAddress = (null != cu && cu.Authenticated) ? cu.UserEmail : "unknown";
+
+			createLogEntry(sessionId, userIpAddress, domainName, eMailAddress, startDtUtc, endDtUtc, methodName, message, logLevel);
 
 			return;
 		}
