@@ -2497,7 +2497,7 @@ function updateMap(isNewRequest, filterAndSearchCriteria) {
     //get the action-url of the form
     //var actionurl = '/home/updateMarkers';
     
-    if (clusteredMarkersArray.length == 0) {
+    if (clusteredMarkersArray.length == 0 &&  typeof filterAndSearchCriteria == "undefined" ) {
         formData.push({ name: "isNewRequest", value: true });
     }
     else {
@@ -5198,7 +5198,7 @@ function applyFilterToMap(event) {
       if ('' !== criteria.Search || 0 < criteria.filters.length) {
         //Filter criteria exists - build filter pane markup...
 
-        var filters = '<ul class ="list-unstyled">';
+        var filters = '<ul  class ="list-unstyled">';
         var length = 0;
 
         for( var prop in criteria) {
@@ -5260,7 +5260,7 @@ function applyFilterToMapDelayed(event) {
     console.log('Current search value: ' + value);
 
     //Clear current timeout, update current filters
-    clearTimeout(currentFilters.timeout);
+   clearTimeout(currentFilters.timeout);
 
     var tableId = event.data.tableId;
     currentFilters.filters = retrieveSearchAndFilterCriteria( tableId, false);
@@ -5272,7 +5272,7 @@ function applyFilterToMapDelayed(event) {
         var filters = retrieveSearchAndFilterCriteria( tableId, false);
 
         //Compare search strings...
-        if (filters.search !== currentFilters.filters.search) {
+        if (filters.Search !== currentFilters.filters.Search) {
             bMatch = false; //No match!!
         }
 
@@ -5287,13 +5287,19 @@ function applyFilterToMapDelayed(event) {
                 for (var i = 0; i < length; ++i) {
                         
                     var filter = filters.filters[i];
-                    var index = currentFilters.filters.filters.findIndex(function(currentFilter) {
-                        return (filter.value === currentFilter.value && filter.title === currentFilter.title)
-                    });
-                        
-                    if ( 'undefined' === typeof index ) {
-                        bMatch = false; //No match!!
-                        break;
+                    //var index = currentFilters.filters.filters.findIndex(function(currentFilter) {
+                    //    return (filter.value === currentFilter.value && filter.title === currentFilter.title)
+                    //});
+                    //if ( 'undefined' === typeof index ) {
+                    //    bMatch = false; //No match!!
+                    //    break;
+                    //}
+                    var fLength = currentFilters.filters.filters.length;
+                    for (var fi = 0; fi < fLength; ++fi) {
+                        if (filter.value !== currentFilters.filters.filters[fi].value || filter.title !== currentFilters.filters.filters[fi].title) {
+                            bMatch = false; //No match!!
+                            break;
+                        }
                     }
                 }
             }
