@@ -492,7 +492,7 @@ function initialize() {
     map = new google.maps.Map(document.getElementById("map-canvas"), mapProp);
 
     //set map zoom limits...
-    map.setOptions({minZoom: 5, maxZoom: 15});
+    //map.setOptions({minZoom: 5, maxZoom: 1});
 
     //UI
 
