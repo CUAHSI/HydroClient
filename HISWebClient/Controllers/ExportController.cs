@@ -1567,7 +1567,7 @@ namespace HISWebClient.Controllers
         public FileStreamResult WriteCsvToFileStream<T>(List<T> records, CurrentUser cu = null)
         {
 			 string fileExtension = "csv";
-			 string fileName = null != cu ? FileContext.GenerateFileName(cu.UserEmail, fileExtension) : FileContext.GenerateFileName(null, fileExtension);
+			 string fileName = null != cu ? FileContext.GenerateFileName( cu.UserEmail.Replace("@", "_"), fileExtension) : FileContext.GenerateFileName(null, fileExtension);
 			 string filePathAndName = Server.MapPath("~/Files/" + fileName.ToString());
 
 			 //Create 'Files' sub-directory, if indicated...

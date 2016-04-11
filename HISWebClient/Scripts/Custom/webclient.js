@@ -46,34 +46,34 @@ var targetIdTexts = {
                                 'one': ' Clear selection',
                                 'many': ' Clear @@count@@ selections'
                             },
-    'spanCombinedFiles' : { 'none': ' Export selections in combined File',
-                            'one': ' Export selections in combined File - (1 selection)',
-                            'many': ' Export selections in combined File - (@@count@@ selections)'
+    'spanCombinedFiles' : { 'none': ' Export selections in a combined file',
+                            'one': ' Export selection in a combined file',
+                            'many': ' Export @@count@@ selections in a combined file'
                           },
     'spanCombinedFilesTS': {
-                             'none': ' Export Selection(s) in combined File',
-                             'one': ' Export Selections in combined File - (1 selection)',
-                             'many': ' Export Selections in combined File - (@@count@@ selections)'
+                             'none': ' Export selection(s) in a combined file',
+                             'one': ' Export selection in a combined file',
+                             'many': ' Export @@count@@ selections in a combined file'
                             },
-    'spanManageSelections' : { 'none': ' Save Selection(s) to Workspace',
-                               'one': ' Save Selection to Workspace',
-                               'many': ' Save @@count@@ Selections to Workspace'
+    'spanManageSelections' : { 'none': ' Save selection(s) to workspace',
+                               'one': ' Save selection to workspace',
+                               'many': ' Save @@count@@ selections to workspace'
                              },
-    'spanManageSelectionsTS' : { 'none': ' Save selection(s) to Workspace',
-                                 'one': ' Save selection to Workspace',
-                                 'many': ' Save @@count@@ selections to Workspace'
+    'spanManageSelectionsTS' : { 'none': ' Save selection(s) to workspace',
+                                 'one': ' Save selection to workspace',
+                                 'many': ' Save @@count@@ selections to workspace'
                              },
     'spanRemoveSelectionsDM' : { 'none': ' Delete selection(s)',
                                  'one': ' Delete selection',
                                  'many': ' Delete @@count@@ selections'
                             },
     'spanSeparateFiles' : { 'none': ' Export each selection in a separate file',
-                            'one':  ' Export each selection in a separate file - (1 selection)',
-                            'many': ' Export each selection in a separate file - (@@count@@ selections)'
+                            'one':  ' Export selection in a separate file',
+                            'many': ' Export each (of @@count@@) selections in a separate file'
                           },
     'spanSeparateFilesTS' : { 'none': ' Export each selection in a separate file',
-                              'one':  ' Export each selection in a separate file - (1 selection)',
-                              'many': ' Export each selection in a separate file - (@@count@@ selections)'
+                              'one':  ' Export selection in a separate file',
+                              'many': ' Export each (of @@count@@) selections in a separate file'
                           },
     'spanZipSelections' : { 'none': ' Export selection(s)',
                             'one': ' Export selection',
