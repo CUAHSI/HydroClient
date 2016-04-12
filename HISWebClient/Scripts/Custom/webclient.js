@@ -1112,7 +1112,7 @@ function initialize() {
                 slider.slideReveal("show")
             }        
         }, 500);
-    })
+    });
 }
 
 //Event handler for Google form submit...
