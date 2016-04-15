@@ -6054,22 +6054,33 @@ function copySelectionsToDataManager(event) {
 
         //Check for duplicate entry...
         var bFound = false;
-        var seriesId = selectedRows[rI].SeriesId;
+        var currentRow = selectedRows[rI];
 
-        //jQuery selector used to select the column!!
-        datamgrTable.column(':contains(SeriesId)').data().each(function(value, index) {
+        //For each Data Manager entry...
+        datamgrTable.rows().data().each(function(dmRow, index) {
             if (bFound) {
-                return;
+                return; //Duplicate found - return early...
             }
 
-            if (value === seriesId ) {
-                bFound = true;
+            if ( dmRow.Organization === currentRow.Organization &&
+                 dmRow.ServTitle === currentRow.ServTitle &&
+                 dmRow.ServiceCode === currentRow.ServCode &&
+                 dmRow.ConceptKeyword === currentRow.ConceptKeyword &&
+                 dmRow.DataType === currentRow.DataType &&
+                 dmRow.ValueType === currentRow.ValueType &&
+                 dmRow.SampleMedium === currentRow.SampleMedium &&
+                 dmRow.BeginDate.split('T', 1)[0] === currentRow.BeginDate.split('T', 1)[0] &&
+                 dmRow.EndDate.split('T', 1)[0] === currentRow.EndDate.split('T', 1)[0] &&
+                 dmRow.ValueCount === currentRow.ValueCount &&
+                 dmRow.SiteName === currentRow.SiteName &&
+                 dmRow.VariableName === currentRow.VariableName ) {
+                    bFound = true;  //Duplicate found - set indicator
             }
         });
 
         if (bFound) {
             ++dupsFound;
-            continue;   //Duplicate found - continue...
+            continue;   //Duplicate found - increment count, continue...
         }
 
         //Create a 'Data Manager' record
