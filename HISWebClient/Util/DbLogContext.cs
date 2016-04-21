@@ -125,8 +125,7 @@ namespace HISWebClient.Util
 		public void createLogEntry(HttpContext httpcontextCurrent, DateTime startDtUtc, DateTime endDtUtc, string methodName, string message, Level logLevel)
 		{
 			//Validate/initialize input parameters...
-			if ( null == httpcontextCurrent || 
-				 null == startDtUtc ||
+			if ( null == startDtUtc ||
 				 null == endDtUtc ||
 				 String.IsNullOrWhiteSpace(methodName) ||
 				 String.IsNullOrWhiteSpace(message) ||
