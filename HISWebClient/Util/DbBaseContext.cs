@@ -145,7 +145,7 @@ namespace HISWebClient.Util
 		{
 			if ( null == httpcontextCurrent)
 			{
-				//If no http context (running in an async task??) check the dictionary for the 'Call Context' unique id...
+				//If no http context (running in an async task) check the dictionary for the 'Call Context' unique id...
 				if ( null != CallContext.LogicalGetData("uniqueId"))
 				{
 					//'Call Context' unique id found - retrieve associated values...
@@ -188,6 +188,7 @@ namespace HISWebClient.Util
 			return;
 		}
 
+		//Save input ids (used in logging) under a unique Id...
 		public void saveIds( int uniqueId, string sessionId, string userIpAddress, string domainName)
 		{
 			ids myIds = new ids();
@@ -204,6 +205,7 @@ namespace HISWebClient.Util
 			}
 		}
 
+		//Remove ids previously associated with a unique Id...
 		public void removeIds(int uniqueId)
 		{
 			lock (lockObject)

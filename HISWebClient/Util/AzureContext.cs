@@ -151,9 +151,6 @@ namespace HISWebClient.Util
 
 						DateTimeOffset? dto = ccb.Properties.LastModified;
 
-						//Console.WriteLine(name);
-						//Console.WriteLine(dto);
-
 						if (null != dto)
 						{
 							if ( ts <= (dtoUtcNow - dto))
