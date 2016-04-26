@@ -1735,7 +1735,7 @@ function clickSelectKeywords(event) {
 
 //Load fancytree nodes, if indicated.  Conditionally display modal 'loading keywords' dialog until fancytree is completely loaded 
 //NOTE: While this implementation works OK, it does rely on the called data URL to detemine the 
-//      type of keyword data recieved: Physical, Chemical or Biological.  
+//      type of keyword data received: Physical, Chemical or Biological.  
 //      If re-factoring is required later, please refer to the following article for a better
 //      designed approach:  Roel van Lisdonk - How to pass extra / additional parameters to the deferred.then() function in jQuery, $q (AngularJS) or Q. 
 //      http://www.roelvanlisdonk.nl/?p=3952 - 
@@ -1901,23 +1901,71 @@ function populateKeywordTabs() {
     }
 }
 
-
 //Click handler for 'Common' keyword checkboxes
 function clickCommonKeyword(event) {
 
     //Retrieve the checkbox value and state...
     var checked = $(event.target).is(':checked');
     var value = $(event.target).prop('value');
-
     //console.log('Value: ' + value + ' checked? ' + checked);
 
-    //Update the associated value on the 'Full' tab, if indicated...
-    $("#tree").fancytree("getTree").visit(function (node) {
-        if (value.toLowerCase() === node.title.toLowerCase() && checked !== node.isSelected()) {
-            node.setSelected(checked);
-        }
-    });
+    //Retrieve the topCategory value...
+    var topCategories = ['Physical', 'Chemical', 'Biological'];
+    var topCategory = '';
+    var tcLength = topCategories.length;
 
+    for (var tcI = 0; tcI < tcLength; ++tcI) {
+        if ($(event.target).hasClass(topCategories[tcI])) {
+            topCategory = topCategories[tcI];
+            break
+        }
+    }
+
+    //Find the topCategory value in the keyword tree...
+    var tree = $("#tree").fancytree("getTree");
+    var rootNode = tree.rootNode;
+    var children = rootNode.children;
+    var child = null;
+
+    var cLength = children.length;
+    for (var cI = 0; cI < cLength; ++cI) {
+        if ( (! children[cI].isLoaded()) && topCategory === children[cI].title) {
+            //topCategory value found, tree node not yet loaded - retain the child node...
+            child = children[cI];
+            break;
+        }
+    }
+
+    if (null !== child) {
+        //Load the child node...
+        var buttonSave = $('#' + 'btnTopSelect');
+        var buttonSaveClass = 'disabled';
+
+        buttonSave.addClass(buttonSaveClass);   //Disable save button until processing completes...
+        child.load().done(function (data, textStatus, jqXHR) {
+                        //Success - update the associated value on the 'Full' tab, if indicated...
+                        $("#tree").fancytree("getTree").visit(function (node) {
+                            if (value.toLowerCase() === node.title.toLowerCase() && checked !== node.isSelected()) {
+                                node.setSelected(checked);
+                            }
+                        });
+                
+                        buttonSave.removeClass(buttonSaveClass);         
+                    }).fail(function (data, textStatus, jqXHR) {
+                        //For now - just display an alert...
+                        bootbox.alert('Keyword retrieval error - please try again...');
+                        buttonSave.removeClass(buttonSaveClass);         
+                    });
+    
+    }
+    else {
+        //Child node already loaded - update the associated value on the 'Full' tab, if indicated...
+        $("#tree").fancytree("getTree").visit(function (node) {
+            if (value.toLowerCase() === node.title.toLowerCase() && checked !== node.isSelected()) {
+                node.setSelected(checked);
+            }
+        });
+    }
 }
 
 //Click handler for 'Select Data Service(s)' button
