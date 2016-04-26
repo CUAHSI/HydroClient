@@ -1543,12 +1543,14 @@ function compareFromDateAndToDate(event) {
 //}
 
 //Fancy tree click handler...
+var keywordClicks = 0;
 function keywordClickHandler(event, data) {
 
     var node = data.node;
 
     if (( 'undefined' !== typeof node) && (null !== node)) {
 
+        console.log( 'Click: ' + ++keywordClicks);
         if (node.isSelected()) {
             console.log( node.title + ' is selected!!');
         }
@@ -1562,7 +1564,7 @@ function keywordClickHandler(event, data) {
         else {
             console.log(node.title + ' is NOT active!!');
         }
-
+        console.log('----------------------------------------------------');
     }
 }
 
@@ -1595,20 +1597,36 @@ function keywordSelectHandler(event, data) {
 
     var node = data.node;
 
-    //if (('undefined' !== typeof node) && (null !== node)) {
+    if (('undefined' !== typeof node) && (null !== node)) {
+        //console.log('Node: ' + node.title + ' selected?  ' + node.isSelected() );
+        //console.log('Node: ' + node.title + ' active?  ' + node.isActive());
 
-    //    console.log('Node: ' + node.title + ' selected?  ' + node.isSelected() );
-    //    //console.log('Node: ' + node.title + ' active?  ' + node.isActive());
-    //}
+        //if ( null !== node.parent) {        
+        //    console.log('     Parent Node: ' + node.parent.title + ' selected?  ' + node.parent.isSelected() );
+        //    console.log('     Parent Node: ' + node.parent.title + ' active?  ' + node.parent.isActive());
+        //}
 
-    //Scan the checkboxes on the 'Common' tab for a matching value...
-    $("input[name='keywords']").each(function (index, element) {
-        var checkbox = $(this);
-        if( node.title.toLowerCase() === checkbox.prop('value').toLowerCase() && node.isSelected() !== checkbox.is(':checked')) {
-                //Matching value found but non-matching states, update checkbox state
-                checkbox.prop('checked', node.isSelected());
-        }
-    });
+        //return;
+
+        //Start with the input node's parent, if any, --OR-- the input node
+        //  REASON:      The name of the parent node may appear on the 'Common' tab
+        //  ASSUMPTION:  If all child nodes are selected, the parent node is selected
+        //               If any one child node is not selected, the parent node is not selected
+        var startingNode = null !== node.parent ? node.parent : node;
+        var includeSelf = true; //ALWAYS include the starting node
+
+        //Visit each descendant node...
+        startingNode.visit( function(node) {
+            //Scan the checkboxes on the 'Common' tab for a matching value...
+            $("input[name='keywords']").each(function (index, element) {
+                var checkbox = $(this);
+                if( node.title.toLowerCase() === checkbox.prop('value').toLowerCase() && node.isSelected() !== checkbox.is(':checked')) {
+                        //Matching value found but non-matching states, update checkbox state
+                        checkbox.prop('checked', node.isSelected());
+                }
+            });
+        }, includeSelf);
+    }
 }
 
 //Update the keyword list from the keyword tab entries
