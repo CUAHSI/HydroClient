@@ -1339,8 +1339,12 @@ namespace HISWebClient.Controllers
                         dvm.IsRegular = seriesData.myVariable.IsRegular.ToString();
                         dvm.NoDataValue = seriesData.myVariable.NoDataValue.ToString();
                         dvm.UTCOffset = seriesData.values[i].UTCOffset.ToString();
-                        dvm.DateTimeUTC = seriesData.values[i].TimeStampUTC.ToString("yyyy-MM-dd HH:mm:ss");
-                        dvm.Latitude = seriesData.myMetadata.Latitude.ToString();
+						//BCC - 27-Apr-2016 - values[i].UTCTimeStamp holds a valid date 
+						//					  values[i].TimeStampUTC holds the minimum date
+						//
+ 						//	I know these facts should be obvious but they somehow escape me...
+						dvm.DateTimeUTC = seriesData.values[i].UTCTimeStamp.ToString("yyyy-MM-dd HH:mm:ss");
+						dvm.Latitude = seriesData.myMetadata.Latitude.ToString();
                         dvm.Longitude = seriesData.myMetadata.Longitude.ToString();
                         dvm.ValueAccuracy = seriesData.values[i].ValueAccuracy.ToString();
                         dvm.CensorCode = seriesData.values[i].CensorCode.ToString();
