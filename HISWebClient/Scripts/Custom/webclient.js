@@ -568,15 +568,7 @@ function initialize() {
     });
 
     //Add mousemove listener for latitude/longitude reporting...
-    google.maps.event.addListener(map, 'mousemove', function (event) {
-
-        //$('#' + 'badgeLatitude').text(event.latLng.lat().toFixed(3));
-        //$('#' + 'badgeLongitude').text(event.latLng.lng().toFixed(3));
-
-        currentPosition.latLng = event.latLng;
-        $('#' + 'spanLatitudeValue').text(event.latLng.lat().toFixed(3).toString());
-        $('#' + 'spanLongitudeValue').text(event.latLng.lng().toFixed(3).toString());
-    });
+    google.maps.event.addListener(map, 'mousemove', updateLatLng);
 
     //Trigger mousemove to initialize latitude/longitude display...
     var mouseEvent = {};
@@ -896,18 +888,7 @@ function initialize() {
         var areaLeft = google.maps.geometry.spherical.computeArea(areaRect.getPath());
 
         //Add mousemove listener for latitude/longitude reporting...
-        google.maps.event.addListener(areaRect, 'mousemove', function (event) {
-
-            //$('#' + 'badgeLatitude').text(event.latLng.lat().toFixed(3));
-            //$('#' + 'badgeLongitude').text(event.latLng.lng().toFixed(3));
-
-            currentPosition.latLng = event.latLng;
-            var lat = event.latLng.lat().toFixed(3);
-            var lng = event.latLng.lng().toFixed(3);
-            $('#' + 'MapLatitudeControl').text('Latitude: ' + lat);
-            $('#' + 'MapLongitudeControl').text('Longitude: ' + lng);
-
-        });
+        google.maps.event.addListener(areaRect, 'mousemove', updateLatLng);
 
         //NOTE: BCC - 21-Sep-2015 - Per review meeting, the following current place name logic is not used.
         //                          However, the logic is retained for possible future use...
@@ -1113,6 +1094,15 @@ function initialize() {
             }        
         }, 500);
     });
+}
+
+//Update the displayed latitude and longitude values per the updated currentPosition value...
+function updateLatLng(event) {
+
+    currentPosition.latLng = event.latLng;
+    $('#' + 'spanLatitudeValue').text(event.latLng.lat().toFixed(3).toString());
+    $('#' + 'spanLongitudeValue').text(event.latLng.lng().toFixed(3).toString());
+
 }
 
 //Event handler for Google form submit...
