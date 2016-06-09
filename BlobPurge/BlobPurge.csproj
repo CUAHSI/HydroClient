@@ -114,9 +114,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\HISWebClient\Util\AzureContext.cs">
-      <Link>AzureContext.cs</Link>
-    </Compile>
+    <Compile Include="AzureContext.cs" />
     <Compile Include="FileContext.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Functions.cs" />
