@@ -24,8 +24,6 @@
             @*<img class="img-responsive pull-left" src="~/Content/Images/beta.png" />*@
             <a href="http://www.cuahsi.org" target="_blank"> <img class="img-responsive pull-left" src="~/Content/Images/cuahsi_logo_small.png" /></a>
 
-            <span>@System.Web.Configuration.WebConfigurationManager.AppSettings["buildType"]</span>
-
             @if (User.Identity.IsAuthenticated)
             {
                 <div class="panel panel-default col-md-offset-2" style="display: inline-block;">
@@ -641,28 +639,28 @@
                                 <div class="row" style="margin-left: 0px;">
                                     <div class="controls col-lg-5">
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Evaporation, actual" id="inlineCheckbox1" class="topCategories Physical" />Actual Evaporation
+                                            <input type="checkbox" name="keywords" value="Evaporation, actual" id="inlineCheckbox1" class="topCategories" />Actual Evaporation
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Temperature, Air" id="inlineCheckbox7" class="topCategories Physical" />Air Temperature
+                                            <input type="checkbox" name="keywords" value="Temperature, Air" id="inlineCheckbox7" class="topCategories" />Air Temperature
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Discharge, stream" id="inlineCheckbox2" class="topCategories Physical" />Discharge
+                                            <input type="checkbox" name="keywords" value="Discharge, stream" id="inlineCheckbox2" class="topCategories" />Discharge
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Oxygen, dissolved" id="inlineCheckbox10" class="topCategories Chemical" />Dissolved Oxygen
+                                            <input type="checkbox" name="keywords" value="Oxygen, dissolved" id="inlineCheckbox10" class="topCategories" />Dissolved Oxygen
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Groundwater Level" id="inlineCheckbox4" class="topCategories Physical" />Groundwater Level
+                                            <input type="checkbox" name="keywords" value="Groundwater Level" id="inlineCheckbox4" class="topCategories" />Groundwater Level
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Methane" id="inlineCheckbox17" class="topCategories Chemical" />Methane
+                                            <input type="checkbox" name="keywords" value="Methane" id="inlineCheckbox17" class="topCategories" />Methane
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Nutrient" id="inlineCheckbox9" class="topCategories Chemical" />Nutrient
+                                            <input type="checkbox" name="keywords" value="Nutrient" id="inlineCheckbox9" class="topCategories" />Nutrient
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="pH" id="inlineCheckbox11" class="topCategories Chemical" />pH
+                                            <input type="checkbox" name="keywords" value="pH" id="inlineCheckbox11" class="topCategories" />pH
                                         </label>
                                         @*<label class="checkbox">
                                                     <input type="checkbox" name="keywords" value="dissolved solids, total" id="inlineCheckbox5" class="topCategories"/> Total Dissolved Solids
@@ -673,29 +671,29 @@
                                     </div>
                                     <div class="controls col-lg-5">
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Precipitation" id="inlineCheckbox12" class="topCategories Physical" />Precipitation
+                                            <input type="checkbox" name="keywords" value="Precipitation" id="inlineCheckbox12" class="topCategories" />Precipitation
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Snow Water Equivalent" id="inlineCheckbox14" class="topCategories Physical" />Snow Water Equivalent
+                                            <input type="checkbox" name="keywords" value="Snow Water Equivalent" id="inlineCheckbox14" class="topCategories" />Snow Water Equivalent
                                         </label>
                                         <label class="checkbox">
                                             @*<input type="checkbox" name="keywords" value="Soil Moisture" id="inlineCheckbox15" class="topCategories"/>Soil Moisture*@
-                                            <input type="checkbox" name="keywords" value="Water Content, Soil" id="inlineCheckbox15" class="topCategories Physical" />Soil Moisture
+                                            <input type="checkbox" name="keywords" value="Water Content, Soil" id="inlineCheckbox15" class="topCategories" />Soil Moisture
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Specific Conductance" id="inlineCheckbox13" class="topCategories Chemical" />Specific Conductance
+                                            <input type="checkbox" name="keywords" value="Specific Conductance" id="inlineCheckbox13" class="topCategories" />Specific Conductance
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Solids, total suspended" id="inlineCheckbox16" class="topCategories Physical" />Total Suspended Solids
+                                            <input type="checkbox" name="keywords" value="Solids, total suspended" id="inlineCheckbox16" class="topCategories" />Total Suspended Solids
                                         </label>
                                         @*<label class="checkbox">
                                                 <input type="checkbox" name="keywords" value="Water Level" id="inlineCheckbox3" class="topCategories" />Water Level
                                             </label>*@
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Turbidity" id="inlineCheckbox18" class="topCategories Physical" />Turbidity
+                                            <input type="checkbox" name="keywords" value="Turbidity" id="inlineCheckbox18" class="topCategories" />Turbidity
                                         </label>
                                         <label class="checkbox">
-                                            <input type="checkbox" name="keywords" value="Temperature, water" id="inlineCheckbox8" class="topCategories Physical" />Water Temperature
+                                            <input type="checkbox" name="keywords" value="Temperature, water" id="inlineCheckbox8" class="topCategories" />Water Temperature
                                         </label>
                                     </div>
                                 </div>

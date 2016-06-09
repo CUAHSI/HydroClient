@@ -539,8 +539,6 @@
     <Content Include="Properties\webjobs-list.json" />
     <None Include="Properties\PublishProfiles\hiswebclient - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\hiswebclient - Web Deploy.pubxml" />
-    <None Include="Properties\PublishProfiles\hiswebclient-Stage - FTP.pubxml" />
-    <None Include="Properties\PublishProfiles\hiswebclient-Stage - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\qa-hiswebclient - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\qa-hiswebclient - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
@@ -597,7 +595,6 @@
     </Content>
     <Content Include="Web.Release.config">
       <DependentUpon>Web.config</DependentUpon>
-      <SubType>Designer</SubType>
     </Content>
     <Content Include="Views\Web.config" />
     <Content Include="Views\_ViewStart.cshtml" />
@@ -642,9 +639,6 @@
     <Content Include="Views\Home\_DatatableDataservicesColumns.cshtml" />
     <Content Include="Views\Home\_DataManagerTimeseriesColumns.cshtml" />
     <Content Include="Views\Home\Quickstart.cshtml" />
-    <Content Include="Web.Staging.config">
-      <DependentUpon>Web.config</DependentUpon>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\yeti\" />
@@ -715,24 +709,6 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>bin\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Staging|AnyCPU'">
-    <OutputPath>bin\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Staging|x64'">
     <OutputPath>bin\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
