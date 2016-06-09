@@ -295,7 +295,7 @@ namespace HISWebClient.Controllers
         {
             // Request a redirect to the external login provider
 
-			//Retrieve the absolure (complete) URI from the request...
+			//Retrieve the absolute (complete) URI from the request...
 			string absoluteUri = Request.Url.AbsoluteUri;
 
 			if (absoluteUri.Contains("localhostdev.org", StringComparison.CurrentCultureIgnoreCase))
@@ -668,7 +668,6 @@ namespace HISWebClient.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult LogOff()
         {
-
 			//Reset external login information for the current session
 			resetSessionExternalLogin();
 

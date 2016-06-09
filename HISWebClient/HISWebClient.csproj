@@ -539,6 +539,7 @@
     <Content Include="Properties\webjobs-list.json" />
     <None Include="Properties\PublishProfiles\hiswebclient - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\hiswebclient - Web Deploy.pubxml" />
+    <None Include="Properties\PublishProfiles\qa-hiswebclient - FTP %282%29.pubxml" />
     <None Include="Properties\PublishProfiles\qa-hiswebclient - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\qa-hiswebclient - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />

@@ -550,3 +550,12 @@ BCC - 14-Oct-2015 - Causes problems when displaying time series after zooming in
     width: 30px;
     white-space: nowrap;
 }
+
+/* Restrict the height of the fancy tree container... 
+
+    Source: http://stackoverflow.com/questions/25620633/is-it-possible-to-set-the-height-of-a-fancytree-when-using-the-column-view-ext
+*/
+ul.fancytree-container {
+  max-height: 30em;
+  width: 100%;
+}

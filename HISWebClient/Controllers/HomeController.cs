@@ -971,16 +971,19 @@ namespace HISWebClient.Controllers
 		//    return dl.Result.Uri;
 		//}
 
-		public async Task<Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>>> SeriesAndStreamOfSeriesID(SeriesMetadata meta)
-		{
-			WaterOneFlowClient client = new WaterOneFlowClient(meta.ServURL);
-			return await client.GetValuesAndRawStreamAsync(
-					meta.SiteCode,
-					meta.VarCode,
-					meta.StartDate,
-					DateTime.UtcNow,
-					Convert.ToInt32(30000));
-		}
+
+		//BCC - 06-Jun-2016 - NEVER CALLED...
+		//public async Task<Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>>> SeriesAndStreamOfSeriesID(SeriesMetadata meta)
+		//{
+		//	WaterOneFlowClient client = new WaterOneFlowClient(meta.ServURL);
+		//	return await client.GetValuesAndRawStreamAsync(
+		//			meta.SiteCode,
+		//			meta.VarCode,
+		//			meta.StartDate,
+		//			DateTime.UtcNow,
+		//			//Convert.ToInt32(30000));
+		//			Convert.ToInt32(60000));	//BCC - 06-Jun-2016 - Increase timeout interval...
+		//}
 
 	}
 }

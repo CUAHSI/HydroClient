@@ -30,7 +30,7 @@ namespace CUAHSIDataStorage
         public static CloudStorageAccount GetCUAHSIDataStorage()
         { 
 #if (DEBUG)
-            return CloudStorageAccount.Parse(RoleEnvironment.GetConfigurationSettingValue(cuahsiApplicationDataStore));
+            //return CloudStorageAccount.Parse(RoleEnvironment.GetConfigurationSettingValue(cuahsiApplicationDataStore));
             return CloudStorageAccount.DevelopmentStorageAccount;
             
 #else 
@@ -41,7 +41,7 @@ namespace CUAHSIDataStorage
         public static CloudStorageAccount GetCUAHSILogsStorageAccount()
         {
 #if (DEBUG)
-            return CloudStorageAccount.Parse(RoleEnvironment.GetConfigurationSettingValue(cuahsiLogStore));
+            //return CloudStorageAccount.Parse(RoleEnvironment.GetConfigurationSettingValue(cuahsiLogStore));
             return CloudStorageAccount.DevelopmentStorageAccount;
 
 #else 
