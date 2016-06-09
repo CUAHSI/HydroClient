@@ -5,9 +5,6 @@ using System.Web;
 
 using System.Configuration;
 using System.Net;
-using System.Threading.Tasks;
-
-using System.Runtime.Remoting.Messaging;
 
 using log4net;
 using log4net.Appender;
@@ -21,12 +18,6 @@ namespace HISWebClient.Util
 	/// </summary>
 	public abstract class DbBaseContext
 	{
-		protected class ids
-		{
-			public string sessionId { get; set; }
-			public string userIpAddress { get; set; }
-			public string domainName { get; set; }
-		}
 
 		//members...
 		protected Dictionary<string, string> m_dictParams = new Dictionary<string, string>();
@@ -38,10 +29,6 @@ namespace HISWebClient.Util
 		protected string m_localConnectionString;
 
 		protected string m_deployConnectionString;
-
-		protected static Object lockObject = new Object();
-
-		protected Dictionary<int, ids> m_dictUniqueIdsToIds = new Dictionary<int, ids>();
 
 		//Initializing constructor
 		protected DbBaseContext(string loggerName, string adoNetAppenderName, string localConnectionStringKey, string deployConnectionStringKey)
@@ -145,26 +132,7 @@ namespace HISWebClient.Util
 		{
 			if ( null == httpcontextCurrent)
 			{
-				//If no http context (running in an async task??) check the dictionary for the 'Call Context' unique id...
-				if ( null != CallContext.LogicalGetData("uniqueId"))
-				{
-					//'Call Context' unique id found - retrieve associated values...
-					int uniqueId = (int) CallContext.LogicalGetData("uniqueId");
-
-					lock (lockObject)
-					{
-						if (m_dictUniqueIdsToIds.ContainsKey(uniqueId))
-						{
-							ids myIds = m_dictUniqueIdsToIds[uniqueId];
-
-							sessionId = myIds.sessionId;
-							userIpAddress = myIds.userIpAddress;
-							domainName = myIds.domainName;
-						}
-					}
-				}
-
-				return;	//Retun early...
+				return;	//Invalid parameter - return early...
 			}
 
 			//Retrieve Session Id
@@ -186,33 +154,6 @@ namespace HISWebClient.Util
 
 			//Processing complete - return
 			return;
-		}
-
-		public void saveIds( int uniqueId, string sessionId, string userIpAddress, string domainName)
-		{
-			ids myIds = new ids();
-			myIds.sessionId = sessionId;
-			myIds.userIpAddress = userIpAddress;
-			myIds.domainName = domainName;
-
-			lock (lockObject)
-			{
-				if (!m_dictUniqueIdsToIds.ContainsKey(uniqueId))
-				{
-					m_dictUniqueIdsToIds.Add(uniqueId, myIds);
-				}
-			}
-		}
-
-		public void removeIds(int uniqueId)
-		{
-			lock (lockObject)
-			{
-				if (m_dictUniqueIdsToIds.ContainsKey(uniqueId))
-				{
-					m_dictUniqueIdsToIds.Remove(uniqueId);
-				}
-			}
 		}
 
 
