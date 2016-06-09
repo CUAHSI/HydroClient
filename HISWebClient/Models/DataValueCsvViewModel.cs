@@ -13,42 +13,11 @@ namespace HISWebClient.Models
         //Copy constructor...
         public DataValueCsvViewModel(DataValueCsvViewModel tsvm)
         {
-			Id = tsvm.Id;
-			SiteName = tsvm.SiteName;
-			VariableName = tsvm.VariableName;
-			LocalDateTime = tsvm.LocalDateTime;        
-			DataValue = tsvm.DataValue;
-			VarUnits = tsvm.VarUnits;
-			DataType = tsvm.DataType;
-			SiteID = tsvm.SiteID;
-			SiteCode = tsvm.SiteCode;
-			VariableID = tsvm.VariableID;
-			VariableCode = tsvm.VariableCode;
-			Organization = tsvm.Organization;
-			SourceDescription = tsvm.SourceDescription;
-			SourceLink = tsvm.SourceLink;
-			Citation = tsvm.Citation;
-			ValueType = tsvm.ValueType;
-			TimeSupport = tsvm.TimeSupport;
-			TimeUnits = tsvm.TimeUnits;
-			IsRegular = tsvm.IsRegular;
-			NoDataValue = tsvm.NoDataValue;
-			UTCOffset = tsvm.UTCOffset;
-			DateTimeUTC = tsvm.DateTimeUTC;
-			Latitude = tsvm.Latitude;
-			Longitude = tsvm.Longitude;
-			ValueAccuracy = tsvm.ValueAccuracy;
-			CensorCode = tsvm.CensorCode;
-			MethodDescription = tsvm.MethodDescription;
-			QualityControlLevelCode = tsvm.QualityControlLevelCode;
-			SampleMedium = tsvm.SampleMedium;
-			GeneralCategory = tsvm.GeneralCategory;
-			OffsetValue = tsvm.OffsetValue;
-			OffsetDescription = tsvm.OffsetDescription;
-			OffsetUnits = tsvm.OffsetUnits;
-			QualifierCode = tsvm.QualifierCode;
+            //SeriesID	SiteName	VariableName	LocalDateTime	DataValue	VarUnits	DataType	SiteID	SiteCode	VariableID	
+            //VariableCode	Organization	SourceDescription	SourceLink	Citation	ValueType	TimeSupport	TimeUnits	IsRegular	
+            //NoDataValue	UTCOffset	DateTimeUTC	Latitude	Longitude	ValueAccuracy	CensorCode	MethodDescription	QualityControlLevelCode	
+            //SampleMedium	GeneralCategory	OffsetValue	OffsetDescription	OffsetUnits	QualifierCode
         }
-
         //Seriesid
         public string Id { get; set; }
         // Name of Site
