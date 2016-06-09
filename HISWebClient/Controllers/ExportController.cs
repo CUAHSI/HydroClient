@@ -359,6 +359,7 @@ namespace HISWebClient.Controllers
                 {
 					//Set unique ID into the async call context (used by DbBaseContext.getIds when null == httpcontext as happens on async calls!!)
 					//Source: http://stackoverflow.com/questions/14176028/why-does-logicalcallcontext-not-work-with-async - answer 10
+					
 					CallContext.LogicalSetData("uniqueId", uniqueId);
 				
 					try
