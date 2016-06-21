@@ -3618,10 +3618,6 @@ function setupDataManagerTable() {
                     case timeSeriesRequestStatus.ProcessingError:
                     case timeSeriesRequestStatus.RequestTimeSeriesError:
                         html = '<span class="glyphicon glyphicon-thumbs-down"></span><em> Error</em>';
-                            if ( 'undefined' !== typeof full.statusTooltipText) {
-                                //Add status tooltip...
-                                html = '<span class="glyphicon glyphicon-thumbs-down" data-toggle="tooltip" title="' + full.statusTooltipText + '"></span><em> Error</em>';
-                            }
                         break;
                     case timeSeriesRequestStatus.UnknownTask:
                         html = '<span class="glyphicon glyphicon-thumbs-down"></span><em> Unknown task</em>';
@@ -4214,7 +4210,7 @@ function requestTimeSeries(tableName, timeSeriesRequest, modalDialogName) {
 }
 
 //For the input table name and requestId, update the associated row with the input status...
-function updateTimeSeriesRequestStatus( tableName, requestId, timeSeriesRequestStatus, status) {
+function updateTimeSeriesRequestStatus( tableName, requestId, timeSeriesRequestStatus) {
 
     var tableId = '#' + tableName;
     var table = $(tableId).DataTable();
@@ -4228,20 +4224,6 @@ function updateTimeSeriesRequestStatus( tableName, requestId, timeSeriesRequestS
         if (requestId === rowData.TimeSeriesRequestId) {
             //Found - update row with input status
             rowData.TimeSeriesRequestStatus = timeSeriesRequestStatus;
-
-            //Add status tooltip text to row, if indicated...
-            // See related changes in setupDataManagerTable(), render function for table colummns
-            //Source: https://datatables.net/forums/discussion/32240/how-to-implement-a-popup-tooltip-on-a-datatables-cell-that-displays-all-data
-            if ( 'undefined' !== typeof status && null !== status) {
-                
-                //Add status tooltip text to row data...
-                rowData.statusTooltipText = status;
-
-                //Activate tooltip(s) on draw
-                $(tableId).off('draw.dt', enableStatusTooltip);
-                $(tableId).on('draw.dt', {'tableId': tableName }, enableStatusTooltip);
-            }
-
             this.invalidate();
             reDraw = true;
         }
@@ -4250,17 +4232,6 @@ function updateTimeSeriesRequestStatus( tableName, requestId, timeSeriesRequestS
     if ( reDraw) {
         table.draw();
     }
-}
-
-function enableStatusTooltip(event) {
-
-    var tableId = event.data.tableId;
-
-    if ( 'undefined' === typeof tableId || null === tableId) {
-        return; //Invalid parameter(s) - return early...
-    }
-
-    $('#' + tableId + ' span[data-toggle="tooltip"]').tooltip();
 }
 
 function updateTimeSeriesVariableUnits( tableName, SeriesIdsToVariableUnits) {
@@ -4516,14 +4487,7 @@ function startRequestTimeSeriesMonitor() {
                                         addFilterPlaceholders(tempEvent);
                                     }
 
-                                    var statusString = null;
-                                    if (timeSeriesRequestStatus.RequestTimeSeriesError === timeSeriesResponse.RequestStatus ||
-                                        timeSeriesRequestStatus.ProcessingError === timeSeriesResponse.RequestStatus ) {
-                                            //Error - value status string...
-                                            statusString = timeSeriesResponse.Status;
-                                        }
-
-                                    updateTimeSeriesRequestStatus( downloadMonitor.timeSeriesMonitored[requestId].tableName, requestId, timeSeriesResponse.RequestStatus, statusString);
+                                    updateTimeSeriesRequestStatus( downloadMonitor.timeSeriesMonitored[requestId].tableName, requestId, timeSeriesResponse.RequestStatus);
 
                                     //Write the blob URI to the console...
                                     //console.log(requestId);

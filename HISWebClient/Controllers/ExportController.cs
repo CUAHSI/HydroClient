@@ -60,11 +60,6 @@ namespace HISWebClient.Controllers
 
 		private static Object lockObject = new Object();
 
-		//Variable units dictionary - keyed by Site Code, Variable Code
-		private static Dictionary<Tuple<String, String, String>, String> _dictVarUnits = new Dictionary<Tuple<String, String, String>, String>();
-		private static Object lockObject_VU = new Object();
-
-
 		private DbLogContext dblogcontext = new DbLogContext("DBLog", "AdoNetAppenderLog", "local-DBLog", "deploy-DBLog");
 
 		private DbErrorContext dberrorcontext = new DbErrorContext("DBError", "AdoNetAppenderError", "local-DBLog", "deploy-DBLog");
@@ -227,7 +222,7 @@ namespace HISWebClient.Controllers
 
 
 
-		private async Task<Tuple<FileStreamResult, Exception>> DownloadFile(int id, List<TimeSeriesViewModel> currentSeries, TimeSeriesFormat timeSeriesFormat = TimeSeriesFormat.CSV)
+		private async Task<FileStreamResult> DownloadFile(int id, List<TimeSeriesViewModel> currentSeries, TimeSeriesFormat timeSeriesFormat = TimeSeriesFormat.CSV)
 		{
 
 			var seriesMetaData = getSeriesMetadata(id, currentSeries);
@@ -239,8 +234,7 @@ namespace HISWebClient.Controllers
 				if (TimeSeriesFormat.CSV == timeSeriesFormat)
 				{
 				var result = await this.getStream(id, currentSeries);
-					//return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename };
-					return new Tuple<FileStreamResult, Exception>( new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename }, null);
+					return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename };
 				}
 				else if (TimeSeriesFormat.WaterOneFlow == timeSeriesFormat)
 				{
@@ -250,7 +244,7 @@ namespace HISWebClient.Controllers
 
 					FileStreamResult fsr = new FileStreamResult(result, fileType) { FileDownloadName = filename };
 
-					return new Tuple<FileStreamResult, Exception>( fsr, null);
+					return fsr;
 				}
 				else
 				{
@@ -260,7 +254,6 @@ namespace HISWebClient.Controllers
 			}
 			catch( Exception ex )
 			{
-				//Log error...
 				dberrorcontext.clearParameters();
 				dberrorcontext.createLogEntry(System.Web.HttpContext.Current,
 											  DateTime.UtcNow, "DownloadFile(int id, List<TimeSeriesViewModel> currentSeries)",
@@ -271,8 +264,7 @@ namespace HISWebClient.Controllers
 
 				byte[] result = Encoding.ASCII.GetBytes(input);
 
-				//Return 'error' file
-				return new Tuple<FileStreamResult, Exception>( new FileStreamResult(new MemoryStream(result), "text/csv") { FileDownloadName = "ERROR " + filename }, ex);
+				return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = "ERROR " + filename };
 			}
 			//return base.File(filePath, "text/csv", filename);
 		}
@@ -387,75 +379,21 @@ namespace HISWebClient.Controllers
 
 								if (TimeSeriesFormat.WaterOneFlow == tsrIn.RequestFormat)
 								{
-
-									//Check for current timeseries variable units in retrieved series...
-									var unknownString = "unknown";
-									var varUnits = unknownString;	//Assume variable units are NOT found...
-
-									var currentTimeseries = retrievedSeries.Find(rs => timeSeriesId == rs.SeriesId);
-									if (null != currentTimeseries && (!String.IsNullOrWhiteSpace(currentTimeseries.VariableUnits)) && unknownString != currentTimeseries.VariableUnits)
-									{
-										//Variable units found AND not equal to "unknown" - update task status...
-										UpdateTaskStatus(tsrIn.RequestId, timeSeriesId, currentTimeseries.VariableUnits);
-									}
-									else
-									{ 
-										//Variable units not found (or equal to "unknown") - check variable units cache...
-										SeriesMetadata meta = getSeriesMetadata(timeSeriesId, retrievedSeries);
-										bool bFound = false;
-
-										Tuple<String, String, String> tuple = new Tuple<String, String, String>(meta.ServCode, meta.SiteCode, meta.VarCode);
-										lock (lockObject_VU)
-										{
-											KeyValuePair<Tuple<String, String, String>, String> found = _dictVarUnits.FirstOrDefault(kv => kv.Key.Equals(tuple));
-											if (null != found.Key && null != found.Value && unknownString != found.Value)
-											{
-												//Variable units found AND not equal to "unknown" - set indicator...
-												varUnits = found.Value;
-												bFound = true;
-											}
-										}
-
-										if (bFound)
-										{
-											//Variable units found - update status...
-											UpdateTaskStatus(tsrIn.RequestId, timeSeriesId, varUnits);
-											currentTimeseries.VariableUnits = varUnits;
-										}
-										else
-										{
-											//Variable units not found (or equal to "unknown") - attempt to retrieve from service...
 									SeriesData sd = null;
 
 									try
 									{
 										sd = await GetSeriesDataFromSeriesID(timeSeriesId, retrievedSeries);
 
-												varUnits = String.IsNullOrWhiteSpace(sd.myVariable.VariableUnit.Name) ? unknownString : sd.myVariable.VariableUnit.Name;
-
-												//Add retrieved variable units to cache...
-												lock (lockObject_VU)
-												{
-													if (! _dictVarUnits.ContainsKey(tuple))
-													{
-														_dictVarUnits.Add(tuple, varUnits);
-													}
-												}
-
-												//Update task status and current time series with retrieved variable units
-												UpdateTaskStatus(tsrIn.RequestId, timeSeriesId, varUnits);
-												currentTimeseries.VariableUnits = varUnits;
+										string varUnit = String.IsNullOrWhiteSpace(sd.myVariable.VariableUnit.Name) ? "unknown" : sd.myVariable.VariableUnit.Name;
+										UpdateTaskStatus(tsrIn.RequestId, timeSeriesId, varUnit);
 									}
 									catch (Exception ex)
 									{
-												//Exception - log 'Unknown' for variable units and continue... 
-												varUnits = unknownString;
-
-												UpdateTaskStatus(tsrIn.RequestId, timeSeriesId, varUnits);
-												currentTimeseries.VariableUnits = varUnits;
-											}
-										}
+										//Exception - log 'Unknown' for variable name and continue... 
+										UpdateTaskStatus(tsrIn.RequestId, timeSeriesId, "unknown");
 									}
+
 								}
 
 								string statusMessage = TimeSeriesRequestStatus.ProcessingTimeSeriesId.GetEnumDescription() +
@@ -466,21 +404,20 @@ namespace HISWebClient.Controllers
 
 								if (TimeSeriesFormat.CSV == tsrIn.RequestFormat || TimeSeriesFormat.WaterOneFlow == tsrIn.RequestFormat)
 								{
-									//Retrieve the time series data in the input format: CSV --OR-- XML
- 									Tuple<FileStreamResult, Exception> downloadResult = await DownloadFile(timeSeriesId, currentSeries, tsrIn.RequestFormat);
-									FileStreamResult filestreamresult = downloadResult.Item1;
-									Exception exDownload = downloadResult.Item2;
+									//Retrieve the time series data in the input format: CSV --OR-- XML 
+									FileStreamResult filestreamresult = await DownloadFile(timeSeriesId, currentSeries, tsrIn.RequestFormat);
 
 									//Check for failed/empty downloads.
-									Exception ex = null;
 									if (filestreamresult.FileDownloadName.Contains("ERROR", StringComparison.CurrentCultureIgnoreCase) || 0 >= filestreamresult.FileStream.Length)
 									{
 										//BCC - 25-Jan-2016 - set task status error here - log error message - throw...
 										//BCC - 08-Mar-2016 - Revised logic to log the error only - do not want to throw (i.e., stop the entire task) for problem(s) with a single file...
 
+										Exception ex;
+
 										if (filestreamresult.FileDownloadName.Contains("ERROR", StringComparison.CurrentCultureIgnoreCase))
 										{
-											ex = new Exception("Error in time series generation: " + exDownload.Message);
+											ex = new Exception("Error in time series generation...");
 										}
 										else
 										{
@@ -496,19 +433,15 @@ namespace HISWebClient.Controllers
 																			ex,
 																			"RequestTimeSeries error for Id: " + requestId + " message: " + ex.Message);
 									}
-
-									//ALWAYS Copy file contents to zip archive - Good results, error in results generation or empty results...
+									else
+									{
+										//Copy file contents to zip archive...
 										//ASSUMPTION: FileStreamResult instance properly disposes of FileStream member!!
 										var zipArchiveEntry = zipArchive.CreateEntry(filestreamresult.FileDownloadName);
 										using (var zaeStream = zipArchiveEntry.Open())
 										{
 											await filestreamresult.FileStream.CopyToAsync(zaeStream, bufSize);
 										}
-
-									//Throw exception if request deals with a single timeseries...
-									if ( null != ex && 1 >= tsrIn.TimeSeriesIds.Count )
-									{
-										throw ex;
 									}
 								}
 								else
@@ -631,9 +564,7 @@ namespace HISWebClient.Controllers
 
 						//Set status variables...
 						requestStatus = TimeSeriesRequestStatus.RequestTimeSeriesError;
-						//status = requestStatus.GetEnumDescription();
-						//BCC - 07-Jun-2016 - Include error message in status string...
-						status = requestStatus.GetEnumDescription() + ": " + ex.Message;
+						status = requestStatus.GetEnumDescription();
 
 						//Set the response status...
 						//Response.StatusCode = (int)HttpStatusCode.InternalServerError;
@@ -1427,12 +1358,9 @@ namespace HISWebClient.Controllers
 			}
 			else
 			{
-				try
-				{
 				Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>> data = await this.SeriesAndStreamOfSeriesID(meta);
 
-					//BCC - 06-Jun-2016 - Added stream null and length checks...
-					if (data == null || data.Item2.FirstOrDefault() == null || null == data.Item1 || 0 >= data.Item1.Length)
+				if (data == null || data.Item2.FirstOrDefault() == null)
 				{
 					KeyNotFoundException knfe = new KeyNotFoundException();
 
@@ -1455,12 +1383,7 @@ namespace HISWebClient.Controllers
 
 					return new Tuple<Stream, SeriesData>(data.Item1, sd);
 					//return new Tuple<Stream, SeriesData>(data.Item1, new SeriesData(meta.SeriesID, meta, dataValues, (IList < ServerSideHydroDesktop.ObjectModel.Series >) dataResult));
-
-					}
-				}
-				catch (Exception ex)
-				{
-					throw ex;
+				
 				}
 			}
 		}
@@ -1471,8 +1394,6 @@ namespace HISWebClient.Controllers
 		{
 			var requestTimeout = 60000;
 			WaterOneFlowClient client = new WaterOneFlowClient(meta.ServURL);
-			try
-			{ 
 			return await client.GetValuesAndRawStreamAsync(
 					meta.SiteCode,
 					meta.VarCode,
@@ -1480,11 +1401,6 @@ namespace HISWebClient.Controllers
                     meta.EndDate,
 					//DateTime.UtcNow,
 					Convert.ToInt32(requestTimeout));
-		}
-			catch (Exception ex)
-			{
-				throw ex;
-			}
 		}
 
 		public async Task<IList<ServerSideHydroDesktop.ObjectModel.Series>> SeriesDataFromSeriesID(SeriesMetadata meta)
