@@ -22,8 +22,8 @@ namespace ServerSideHydroDesktop
 
 		//the object containing additional metadata information
 		//about the web service including service version
-		private readonly DataServiceInfo _serviceInfo;        
-        
+		private readonly DataServiceInfo _serviceInfo;
+
 		#endregion
 
 		#region Constructors
@@ -161,27 +161,30 @@ namespace ServerSideHydroDesktop
             req.Timeout = waterOneflowTimeoutMilliseconds;
             try
             {                
-                Task<WebResponse> getTask = Task.Factory.FromAsync(
-                req.BeginGetResponse,
-                asyncResult => req.EndGetResponse(asyncResult),
-                (object)null);
+				//Task<WebResponse> getTask = Task.Factory.FromAsync(
+				//req.BeginGetResponse,
+				//asyncResult => req.EndGetResponse(asyncResult),
+				//(object)null);
 
-                try
-                {                    
-                    Stream s = await getTask
-                        .ContinueWith(t => ReadStreamFromResponse(t.Result));
-                    return new Tuple<Stream,IList<Series>>(s, _parser.ParseGetValues(s));
-                }
-                catch (Exception e)
+				Task<WebResponse> getTask = Task.Factory.FromAsync<WebResponse>(req.BeginGetResponse, req.EndGetResponse, null);
+				
+				//Stream s = await getTask
+				//	.ContinueWith(t => ReadStreamFromResponse(t.Result));
+				//return new Tuple<Stream,IList<Series>>(s, _parser.ParseGetValues(s));
+				WebResponse wr = await getTask;
+				if (getTask.IsFaulted)
                 {
-                    LogHelper.LogGetAsyncDataValuesException(_serviceURL, siteCode, variableCode, startTime, endTime, e);
-                    return null;
+					Exception ex = getTask.Exception.InnerExceptions.First();
+					throw ex;
                 }
+
+				Stream s = ReadStreamFromResponse(getTask.Result);
+				return new Tuple<Stream, IList<Series>>(s, _parser.ParseGetValues(s));
             }
-            catch (Exception setupEx)
+            catch (Exception ex)
             {
-                LogHelper.LogGetAsyncDataValuesException(_serviceURL, siteCode, variableCode, startTime, endTime, setupEx);
-                return null;
+                LogHelper.LogGetAsyncDataValuesException(_serviceURL, siteCode, variableCode, startTime, endTime, ex);
+				throw ex;
             } 
         }
 
@@ -206,31 +209,35 @@ namespace ServerSideHydroDesktop
         /// <returns></returns>
         public async Task<IList<Series>> GetValuesAsync(string siteCode, string variableCode, DateTime startTime, DateTime endTime)
         {
-            
             HttpWebRequest req = WebServiceHelper.CreateGetValuesRequest(_serviceURL, siteCode, variableCode, startTime, endTime);
-            req.Timeout = 30000; // 30-second max download            
+            //req.Timeout = 30000; // 30-second max download            
+			req.Timeout = 60000; // 60-second max download  - BCC - 06-Jun-2016 - Increase timeout interval...
             try
             {
-                Task<WebResponse> task = Task.Factory.FromAsync(
-                req.BeginGetResponse,
-                asyncResult => req.EndGetResponse(asyncResult),
-                (object)null);
+				//Task<WebResponse> task = Task.Factory.FromAsync(
+				//req.BeginGetResponse,
+				//asyncResult => req.EndGetResponse(asyncResult),
+				//(object)null);
 
-                try
+				Task<WebResponse> task = Task.Factory.FromAsync<WebResponse>(req.BeginGetResponse, req.EndGetResponse, null);
+
+                //return await task.ContinueWith(t => _parser.ParseGetValues(ReadStreamFromResponse(t.Result)));
+				WebResponse wr = await task;
+				if (task.IsFaulted)
                 {
-                    return await task.ContinueWith(t => _parser.ParseGetValues(ReadStreamFromResponse(t.Result)));
+					Exception ex = task.Exception.InnerExceptions.First();
+					throw ex;
                 }
-                catch (Exception e)
-                {
-                    LogHelper.LogGetAsyncDataValuesException(_serviceURL, siteCode, variableCode, startTime, endTime, e);
-                    return new List<Series>();
-                }   
+
+				//Parse returned series - save to series cache, if indicated 
+				IList<Series> iList = _parser.ParseGetValues(ReadStreamFromResponse(task.Result));
+				return iList;
             }
-            catch (Exception setupEx)
-            {
-                LogHelper.LogGetAsyncDataValuesException(_serviceURL, siteCode, variableCode, startTime, endTime, setupEx);
-                return new List<Series>();
-            }               
+            catch (Exception ex)
+                {
+				LogHelper.LogGetAsyncDataValuesException(_serviceURL, siteCode, variableCode, startTime, endTime, ex);
+                    return new List<Series>();
+            }
         }        
 
         /// <summary>
