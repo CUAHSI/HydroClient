@@ -24,8 +24,43 @@ namespace HISWebClient.Util
 			}
 		}
 
-		//This is another test - do my changes go to the correct branch in GitHub - HydrodataTools???
+		//Format a message from a System.Net.WebException instance
+		public static string getWebExceptionMessage(Exception ex)
+		{
+			string message = String.Empty;
 
+			//Attempt to cast the input Exception instance...
+			System.Net.WebException webex = ex as System.Net.WebException;
+			if (null != webex)
+			{
+				//Success - format message...
+				//ASSUMPTION - Status value always exists...
+				message = webex.Status.GetEnumDescription();
+
+				if (null != webex.Response)
+				{
+					//Response exists - retrieve per type...
+					System.Net.HttpWebResponse httpres = webex.Response as System.Net.HttpWebResponse;
+					if (null != httpres)
+					{
+						//Http Response...
+						message = String.Format("{0} : {1}", ((int)httpres.StatusCode).ToString(), httpres.StatusDescription);
+					}
+					else
+					{
+						System.Net.FtpWebResponse ftpres = webex.Response as System.Net.FtpWebResponse;
+						if (null != ftpres)
+						{
+							//Ftp Response...
+							message = String.Format("{0 (ftp)} : {1}", ((int)ftpres.StatusCode).ToString(), ftpres.StatusDescription);
+						}
+					}
+				}
+			}
+
+			//Processing complete - return message
+			return message;
+		}
 
 	}
 }

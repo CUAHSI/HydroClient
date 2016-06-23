@@ -152,10 +152,18 @@ function clearMonitors() {
     monitors = null;
 }
 
-$(document).ready(function () {
+$(document).ready(function() {
+
+//    console.log('document ready called!!');
+
+    $(window).on('load', function() {
+
+//        console.log('window is loaded!!');
 
     $("#pageloaddiv").hide();
     initialize();
+
+        initializeMap();
 
     //Periodically check selected time series...
     labelMonitorIntervalId = setInterval(function () {
@@ -243,8 +251,9 @@ $(document).ready(function () {
         }
     }, 250);
 
-});
+    });
 
+});
 
 function customCounter(tableName) {
     
@@ -453,156 +462,8 @@ function formatServiceTitle( serviceCode, serviceTitle) {
 
 function initialize() {
 
-    var myCenter = new google.maps.LatLng(39, -92); //us
-    //var myCenter = new google.maps.LatLng(42.3, -71);//boston
-    // var myCenter = new google.maps.LatLng(41.7, -111.9);//Salt Lake
-
-    //BC - disable infoWindow for now...
-    //    infoWindow = new google.maps.InfoWindow();
-
     //init list od datatables for modal 
     myServicesList = setupServices();
-
-    var mapProp = {
-        center: myCenter,
-        zoom: 5,
-        draggable: true,
-        scrollwheel: true,
-        mapTypeId: google.maps.MapTypeId.TERRAIN,
-        mapTypeControl: true,
-        scaleControl: true,
-        overviewMapControl: true,
-        overviewMapControlOptions: {
-            opened: true
-        },
-        zoomControl: true,
-        panControl: false,
-        zoomControlOptions: {
-            //style: google.maps.ZoomControlStyle.SMALL,
-            position: google.maps.ControlPosition.LEFT_TOP
-        },
-        mapTypeControlOptions: {
-            style: google.maps.MapTypeControlStyle.DEFAULT,
-            position: google.maps.ControlPosition.LEFT_BOTTOM
-            //mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.TERRAIN]
-        },
-    };
-
-    //get reference to map sizing of window happens later to prevent gap   
-    map = new google.maps.Map(document.getElementById("map-canvas"), mapProp);
-
-    //set map zoom limits...
-    //map.setOptions({minZoom: 5, maxZoom: 1});
-
-    //UI
-
-    addCustomMapControls();
-
-    slider = addSlider();
-
-    addLocationSearch();
-
-    //trigger update of map on these events
-    google.maps.event.addListener(map, 'dblclick', function () {
-        if ((clusteredMarkersArray.length > 0)) {
-            //If a filter applied to the map, include the filter in the updateMap(...) call
-            var criteria = retrieveSearchAndFilterCriteria('dtTimeseries', false);
-            if ('' !== criteria.Search || 0 < criteria.filters.length) {
-                //Filter criteria exists - be ready to apply criteria when you visit the server...
-                updateMap(false, retrieveSearchAndFilterCriteria('dtTimeseries', true));
-            }
-            else {
-                //No filter criteria - no need to apply criteria when you visit the server... 
-                updateMap(false);        
-            }
-        }
-    });
-    google.maps.event.addListener(map, 'dragend', function () {
-        if ((clusteredMarkersArray.length > 0)) {
-            //If a filter applied to the map, include the filter in the updateMap(...) call
-            var criteria = retrieveSearchAndFilterCriteria('dtTimeseries', false);
-            if ('' !== criteria.Search || 0 < criteria.filters.length) {
-                //Filter criteria exists - be ready to apply criteria when you visit the server...
-                updateMap(false, retrieveSearchAndFilterCriteria('dtTimeseries', true));
-            }
-            else {
-                //No filter criteria - no need to apply criteria when you visit the server... 
-                updateMap(false);        
-            }
-        }
-    });
-
-    google.maps.event.addListener(map, 'zoom_changed', function () {
-
-        if ((clusteredMarkersArray.length > 0)) {
-            //If a filter applied to the map, include the filter in the updateMap(...) call
-            var criteria = retrieveSearchAndFilterCriteria('dtTimeseries', false);
-            if ('' !== criteria.Search || 0 < criteria.filters.length) {
-                //Filter criteria exists - be ready to apply criteria when you visit the server...
-                updateMap(false, retrieveSearchAndFilterCriteria('dtTimeseries', true));
-            }
-            else {
-                //No filter criteria - no need to apply criteria when you visit the server... 
-                updateMap(false);        
-            }
-        }
-    });
-    //added to load size on startup
-    google.maps.event.addListener(map, 'idle', function () {
-        //if ((clusteredMarkersArray.length > 0)) {
-        //updateMap(false)
-
-        var area = getMapAreaSize();
-        var control = $("#MapAreaControl");
-
-        control.attr('data-areasizeinsqkm', area);
-
-        control = $('#' + 'spanAreaValue');
-
-        control.text( area.toLocaleString());
-
-        //Check current search parameters...
-        enableSearch();
-
-        //}
-    });
-
-    //Add mousemove listener for latitude/longitude reporting...
-    google.maps.event.addListener(map, 'mousemove', function (event) {
-
-        //$('#' + 'badgeLatitude').text(event.latLng.lat().toFixed(3));
-        //$('#' + 'badgeLongitude').text(event.latLng.lng().toFixed(3));
-
-        currentPosition.latLng = event.latLng;
-        $('#' + 'spanLatitudeValue').text(event.latLng.lat().toFixed(3).toString());
-        $('#' + 'spanLongitudeValue').text(event.latLng.lng().toFixed(3).toString());
-    });
-
-    //Trigger mousemove to initialize latitude/longitude display...
-    var mouseEvent = {};
-    mouseEvent.latLng = myCenter;
-
-    setTimeout( function() {
-        google.maps.event.trigger(map, 'mousemove', mouseEvent);
-    }, 1500);
-    //google.maps.event.addListener(marker, 'click', function () {
-
-    //    infowindow.setContent(contentString);
-    //    infowindow.open(map, marker);
-
-    //});
-
-
-    google.maps.event.addDomListener(window, "resize", function () {
-        $("#map-canvas").height(getMapHeight()) //setMapHeight
-        $("#map-canvas").width(getMapWidth()) //setMapWidth
-
-        google.maps.event.trigger(map, "resize");
-        if (sidepanelVisible) {
-            slider.slideReveal("show")
-        }
-    });
-
 
     //initialize datepicker for the nonmodal date range...
     //NOTE: The datepicker can be initialized only once!!  
@@ -615,12 +476,9 @@ function initialize() {
     $('#startDate').on('click', function () { $('#btnDateRange').trigger('click', {'clicked': 'startDate'}); });
     $('#endDate').on('click', function () { $('#btnDateRange').trigger( 'click', {'clicked': 'endDate'}); });
 
-
     //Initialize multiple datepicker instances on different input ids...
     $('#startDateModal').datepicker({ 'todayHighlight': true });
     $('#endDateModal').datepicker({ 'todayHighlight': true });
-
-
 
     //Set start and end of date range...
     var initDate = new Date();
@@ -896,18 +754,7 @@ function initialize() {
         var areaLeft = google.maps.geometry.spherical.computeArea(areaRect.getPath());
 
         //Add mousemove listener for latitude/longitude reporting...
-        google.maps.event.addListener(areaRect, 'mousemove', function (event) {
-
-            //$('#' + 'badgeLatitude').text(event.latLng.lat().toFixed(3));
-            //$('#' + 'badgeLongitude').text(event.latLng.lng().toFixed(3));
-
-            currentPosition.latLng = event.latLng;
-            var lat = event.latLng.lat().toFixed(3);
-            var lng = event.latLng.lng().toFixed(3);
-            $('#' + 'MapLatitudeControl').text('Latitude: ' + lat);
-            $('#' + 'MapLongitudeControl').text('Longitude: ' + lng);
-
-        });
+        google.maps.event.addListener(areaRect, 'mousemove', updateLatLng);
 
         //NOTE: BCC - 21-Sep-2015 - Per review meeting, the following current place name logic is not used.
         //                          However, the logic is retained for possible future use...
@@ -1012,14 +859,9 @@ function initialize() {
         return false;
     });
 
-    $("#map-canvas").height(getMapHeight()) //setMapHeight
-    $("#map-canvas").width(getMapWidth) //setMapWidth
-    google.maps.event.trigger(map, "resize");
-
     //BCC - 26-Jun-2015 - QA Issue #20 - Select Keywords: selected keywords saved even popup were closed without user click Save
     //Click handler for 'Select Keyword(s)' button
     $('#btnSelectKeywords').on('click', clickSelectKeywords);
-
 
     $('#btnSelectDataServices').on('click', clickSelectDataServices);
 
@@ -1077,15 +919,6 @@ function initialize() {
     $('#' + 'btnSignIn').on('click', clearMonitors);
     $('#' + 'btnSignOut').on('click', clearMonitors);
  
-    //For Apple Safari, ensure the side panel is displayed after a page refresh...
-    slider.slideReveal("hide")
-    sidepanelVisible = false
-
-    setTimeout( function() {
-        slider.slideReveal("show");
-        sidepanelVisible = true;    
-    }, 2000);
-
     //Click handlers for 'Workspace' buttons...
     var wsButtonIds = ['tabbedDataMgrTab', 'tableModal-DataMgrTS', 'tableModal-DataMgr'];
     var wsbidsLength = wsButtonIds.length;
@@ -1113,6 +946,179 @@ function initialize() {
             }        
         }, 500);
     });
+}
+
+//BCC - 09-May-2016 - Separate all map initialization logic into a separate function...
+function initializeMap() {
+
+    var myCenter = new google.maps.LatLng(39, -92); //us
+    //var myCenter = new google.maps.LatLng(42.3, -71);//boston
+    // var myCenter = new google.maps.LatLng(41.7, -111.9);//Salt Lake
+
+    //BC - disable infoWindow for now...
+    //    infoWindow = new google.maps.InfoWindow();
+
+    var mapProp = {
+        center: myCenter,
+        zoom: 5,
+        draggable: true,
+        scrollwheel: true,
+        mapTypeId: google.maps.MapTypeId.TERRAIN,
+        mapTypeControl: true,
+        scaleControl: true,
+        overviewMapControl: true,
+        overviewMapControlOptions: {
+            opened: true
+        },
+        zoomControl: true,
+        panControl: false,
+        zoomControlOptions: {
+            //style: google.maps.ZoomControlStyle.SMALL,
+            position: google.maps.ControlPosition.LEFT_TOP
+        },
+        mapTypeControlOptions: {
+            style: google.maps.MapTypeControlStyle.DEFAULT,
+            position: google.maps.ControlPosition.LEFT_BOTTOM
+            //mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.TERRAIN]
+        }//,
+    };
+
+    //get reference to map sizing of window happens later to prevent gap
+   var element = document.getElementById("map-canvas");
+   if ( null !== element) {
+    map = new google.maps.Map(element, mapProp);
+   }
+   else {
+    console.log('Element is null!!');
+    return;
+   }
+
+    //set map zoom limits...
+    //map.setOptions({minZoom: 5, maxZoom: 1});
+
+    //UI
+    addCustomMapControls();
+
+    slider = addSlider();
+
+    addLocationSearch();
+
+    //trigger update of map on these events
+    google.maps.event.addListener(map, 'dblclick', function () {
+        if ((clusteredMarkersArray.length > 0)) {
+            //If a filter applied to the map, include the filter in the updateMap(...) call
+            var criteria = retrieveSearchAndFilterCriteria('dtTimeseries', false);
+            if ('' !== criteria.Search || 0 < criteria.filters.length) {
+                //Filter criteria exists - be ready to apply criteria when you visit the server...
+                updateMap(false, retrieveSearchAndFilterCriteria('dtTimeseries', true));
+            }
+            else {
+                //No filter criteria - no need to apply criteria when you visit the server... 
+                updateMap(false);        
+            }
+        }
+    });
+
+    google.maps.event.addListener(map, 'dragend', function () {
+        if ((clusteredMarkersArray.length > 0)) {
+            //If a filter applied to the map, include the filter in the updateMap(...) call
+            var criteria = retrieveSearchAndFilterCriteria('dtTimeseries', false);
+            if ('' !== criteria.Search || 0 < criteria.filters.length) {
+                //Filter criteria exists - be ready to apply criteria when you visit the server...
+                updateMap(false, retrieveSearchAndFilterCriteria('dtTimeseries', true));
+            }
+            else {
+                //No filter criteria - no need to apply criteria when you visit the server... 
+                updateMap(false);        
+            }
+        }
+    });
+
+    google.maps.event.addListener(map, 'zoom_changed', function () {
+
+        if ((clusteredMarkersArray.length > 0)) {
+            //If a filter applied to the map, include the filter in the updateMap(...) call
+            var criteria = retrieveSearchAndFilterCriteria('dtTimeseries', false);
+            if ('' !== criteria.Search || 0 < criteria.filters.length) {
+                //Filter criteria exists - be ready to apply criteria when you visit the server...
+                updateMap(false, retrieveSearchAndFilterCriteria('dtTimeseries', true));
+            }
+            else {
+                //No filter criteria - no need to apply criteria when you visit the server... 
+                updateMap(false);        
+            }
+        }
+    });
+
+    //added to load size on startup
+    google.maps.event.addListener(map, 'idle', function () {
+        //if ((clusteredMarkersArray.length > 0)) {
+        //updateMap(false)
+
+        var area = getMapAreaSize();
+        var control = $("#MapAreaControl");
+
+        control.attr('data-areasizeinsqkm', area);
+
+        control = $('#' + 'spanAreaValue');
+
+        control.text( area.toLocaleString());
+
+        //Check current search parameters...
+        enableSearch();
+
+        //}
+    });
+
+    //Add mousemove listener for latitude/longitude reporting...
+    google.maps.event.addListener(map, 'mousemove', updateLatLng);
+
+    //Trigger mousemove to initialize latitude/longitude display...
+    var mouseEvent = {};
+    mouseEvent.latLng = myCenter;
+
+    setTimeout( function() {
+        google.maps.event.trigger(map, 'mousemove', mouseEvent);
+    }, 1500);
+    //google.maps.event.addListener(marker, 'click', function () {
+
+    //    infowindow.setContent(contentString);
+    //    infowindow.open(map, marker);
+
+    //});
+
+    google.maps.event.addDomListener(window, "resize", function () {
+        $("#map-canvas").height(getMapHeight()) //setMapHeight
+        $("#map-canvas").width(getMapWidth()) //setMapWidth
+
+        google.maps.event.trigger(map, "resize");
+        if (sidepanelVisible) {
+            slider.slideReveal("show")
+        }
+    });
+
+    $("#map-canvas").height(getMapHeight()) //setMapHeight
+    $("#map-canvas").width(getMapWidth) //setMapWidth
+    google.maps.event.trigger(map, "resize");
+
+    //For Apple Safari, ensure the side panel is displayed after a page refresh...
+    slider.slideReveal("hide")
+    sidepanelVisible = false
+
+    setTimeout( function() {
+        slider.slideReveal("show");
+        sidepanelVisible = true;    
+    }, 2000);
+
+}
+
+//Update the displayed latitude and longitude values per the updated currentPosition value...
+function updateLatLng(event) {
+
+    currentPosition.latLng = event.latLng;
+    $('#' + 'spanLatitudeValue').text(event.latLng.lat().toFixed(3).toString());
+    $('#' + 'spanLongitudeValue').text(event.latLng.lng().toFixed(3).toString());
+
 }
 
 //Event handler for Google form submit...
@@ -1543,12 +1549,14 @@ function compareFromDateAndToDate(event) {
 //}
 
 //Fancy tree click handler...
+var keywordClicks = 0;
 function keywordClickHandler(event, data) {
 
     var node = data.node;
 
     if (( 'undefined' !== typeof node) && (null !== node)) {
 
+        console.log( 'Click: ' + ++keywordClicks);
         if (node.isSelected()) {
             console.log( node.title + ' is selected!!');
         }
@@ -1562,7 +1570,7 @@ function keywordClickHandler(event, data) {
         else {
             console.log(node.title + ' is NOT active!!');
         }
-
+        console.log('----------------------------------------------------');
     }
 }
 
@@ -1735,7 +1743,7 @@ function clickSelectKeywords(event) {
 
 //Load fancytree nodes, if indicated.  Conditionally display modal 'loading keywords' dialog until fancytree is completely loaded 
 //NOTE: While this implementation works OK, it does rely on the called data URL to detemine the 
-//      type of keyword data recieved: Physical, Chemical or Biological.  
+//      type of keyword data received: Physical, Chemical or Biological.  
 //      If re-factoring is required later, please refer to the following article for a better
 //      designed approach:  Roel van Lisdonk - How to pass extra / additional parameters to the deferred.then() function in jQuery, $q (AngularJS) or Q. 
 //      http://www.roelvanlisdonk.nl/?p=3952 - 

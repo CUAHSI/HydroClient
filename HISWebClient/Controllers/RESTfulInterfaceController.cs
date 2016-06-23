@@ -68,7 +68,7 @@ namespace HISWebClient.Controllers
 			if (!bFound)
 			{
 				response.StatusCode = HttpStatusCode.NotFound;	//Blob not found -  return early
-				response.ReasonPhrase = String.Format("Requested archive file: ({0}) not found.", fileNameAndExtension).ToString();
+				response.ReasonPhrase = String.Format("Requested archive file: ({0}) not found.", fileNameAndExtension.ToString());
 				return response;
 			}
 

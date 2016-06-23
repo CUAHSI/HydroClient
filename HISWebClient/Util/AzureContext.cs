@@ -128,7 +128,7 @@ namespace HISWebClient.Util
 		//Source: http://stackoverflow.com/questions/18050836/getting-return-value-from-task-run
 		private async Task<MemoryStream> WrapDownloadToStreamAsync(CloudBlockBlob ccb, MemoryStream ms, CancellationToken ct)
 		{
-			await Task.Run(() => ccb.DownloadToStreamAsync(ms, ct)).ConfigureAwait(false);
+			await Task.Run(() => ccb.DownloadToStreamAsync(ms, ct));
 			return ms;
 		}
 
@@ -150,9 +150,6 @@ namespace HISWebClient.Util
 						string name = ccb.Name;
 
 						DateTimeOffset? dto = ccb.Properties.LastModified;
-
-						//Console.WriteLine(name);
-						//Console.WriteLine(dto);
 
 						if (null != dto)
 						{

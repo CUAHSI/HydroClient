@@ -20,8 +20,8 @@ namespace HISWebClient.Util
 		public void createLogEntry(HttpContext httpcontextCurrent, DateTime occurrenceDtUtc, string methodName, Exception exception, string exceptionMessage)
 		{
 			//Validate/initialize input parameters...
-			if ( null == httpcontextCurrent ||
-				 null == occurrenceDtUtc ||
+			//NOTE: If running under a Task - httpcontextCurrent may legitimately be null!!
+			if ( null == occurrenceDtUtc ||
 				 String.IsNullOrWhiteSpace(methodName) ||
 				 null == exception ||
 				 String.IsNullOrWhiteSpace(exceptionMessage))

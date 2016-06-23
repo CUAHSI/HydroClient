@@ -531,13 +531,22 @@ namespace HISWebClient.Controllers
 		//For the input Icon URI, perform a response-header GET.  Return the response...
 		async static Task<HttpResponseMessage> DownloadIcon(string uri)
 		{
-			HttpResponseMessage response;
+			HttpResponseMessage response = null;
+
+			try
+			{
 			using (HttpClient client = new HttpClient())
 			{
 				response = await client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead);
-			}
 
+					return response;
+			}
+			}
+			catch (Exception ex)
+			{
+				//Take no action...
 			return response;
+		}
 		}
 
 		//Return the response's final RequestUri

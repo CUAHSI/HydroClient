@@ -26,6 +26,8 @@ using System.Web.Script.Serialization;
 using System.Xml;
 using System.Xml.Linq;
 
+using System.Runtime.Remoting.Messaging;
+
 using Newtonsoft.Json;
 
 using log4net.Core;
@@ -68,6 +70,8 @@ namespace HISWebClient.Controllers
 		private DbLogContext dblogcontext = new DbLogContext("DBLog", "AdoNetAppenderLog", "local-DBLog", "deploy-DBLog");
 
 		private DbErrorContext dberrorcontext = new DbErrorContext("DBError", "AdoNetAppenderError", "local-DBLog", "deploy-DBLog");
+
+		private Random _random = new Random(DateTime.Now.Millisecond);
 
 		//Constructors - instantiate the AzureContext singleton for later reference...
 		public ExportController() : this(new AzureContext()) { }
@@ -218,9 +222,6 @@ namespace HISWebClient.Controllers
 				byte[] result = Encoding.ASCII.GetBytes(input);
 
 				return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = "ERROR " + filename };
-
-				 
-				
 			}
 			//return base.File(filePath, "text/csv", filename);
 		}
@@ -263,7 +264,7 @@ namespace HISWebClient.Controllers
 				//Log error...
 				dberrorcontext.clearParameters();
 				dberrorcontext.createLogEntry(System.Web.HttpContext.Current,
-											  DateTime.UtcNow, "DownloadFile(int id, List<TimeSeriesViewModel> currentSeries)",
+											  DateTime.UtcNow, "DownloadFile(int id, List<TimeSeriesViewModel> currentSeries, timeSeriesFormat)",
 											  ex,
 											  "DownloadFile Errors for: " + filename + " message: " + ex.Message);
 
@@ -352,8 +353,19 @@ namespace HISWebClient.Controllers
 
                 #region MyRegion run task
 
+				//Generate a unique ID...
+				int uniqueId = _random.Next();
+
+				//Save ids to log and error contexts...
+				dblogcontextRef.saveIds(uniqueId, sessionIdRef, userIpAddressRef, domainNameRef);
+				dberrorcontextRef.saveIds(uniqueId, sessionIdRef, userIpAddressRef, domainNameRef);
+
                 Task.Run(async () =>
                 {
+					//Set unique ID into the async call context (used by DbBaseContext.getIds when null == httpcontext as happens on async calls!!)
+					//Source: http://stackoverflow.com/questions/14176028/why-does-logicalcallcontext-not-work-with-async - answer 10
+					CallContext.LogicalSetData("uniqueId", uniqueId);
+				
 					try
 					{
 						DateTime startDtUtc = DateTime.UtcNow;
@@ -598,11 +610,11 @@ namespace HISWebClient.Controllers
 								dblogcontextRef.addParameter("requestId", tsrIn.RequestId);
 								dblogcontextRef.addParameter("requestName", tsrIn.RequestName);
 
-								dblogcontext.addReturn("requestId", requestId);
-								dblogcontext.addReturn("requestStatus", requestStatus);
-								dblogcontext.addReturn("status", status);
-								dblogcontext.addReturn("blobUri", blobUri);
-								dblogcontext.addReturn("blobTimeStamp", blobTimeStamp);
+								dblogcontextRef.addReturn("requestId", requestId);
+								dblogcontextRef.addReturn("requestStatus", requestStatus);
+								dblogcontextRef.addReturn("status", status);
+								dblogcontextRef.addReturn("blobUri", blobUri);
+								dblogcontextRef.addReturn("blobTimeStamp", blobTimeStamp);
 
 								dblogcontextRef.createLogEntry(sessionIdRef, userIpAddressRef, domainNameRef, userEMailAddressRef, startDtUtc, DateTime.UtcNow, "RequestTimeSeries(...)", "zip archive creation complete.", Level.Info);
 							}
@@ -650,8 +662,13 @@ namespace HISWebClient.Controllers
 							CancellationTokenSource cts = _dictTaskStatus[requestId].CTS;
 							cts.Dispose();
 						}
+
+						//Remove ids from log and error contexts...
+						dblogcontextRef.removeIds(uniqueId);
+						dberrorcontextRef.removeIds(uniqueId);
 					}
-				}).ConfigureAwait(false);
+				});
+
                 #endregion
 			}
 
@@ -734,8 +751,19 @@ namespace HISWebClient.Controllers
 				var userIpAddressRef = userIpAddress;
 				var domainNameRef = domainName;
 
+				//Generate a unique ID...
+				int uniqueId = _random.Next();
+
+				//Save ids to log and error contexts...
+				dblogcontextRef.saveIds(uniqueId, sessionIdRef, userIpAddressRef, domainNameRef);
+				dberrorcontextRef.saveIds(uniqueId, sessionIdRef, userIpAddressRef, domainNameRef);
+
 				Task.Run(async () =>
 				{
+					//Set unique ID into the async call context (used by DbBaseContext.getIds when null == httpcontext as happens on async calls!!)
+					//Source: http://stackoverflow.com/questions/14176028/why-does-logicalcallcontext-not-work-with-async - answer 10
+					CallContext.LogicalSetData("uniqueId", uniqueId);
+
 					try
 					{
 						DateTime startDtUtc = DateTime.UtcNow;
@@ -822,13 +850,20 @@ namespace HISWebClient.Controllers
 													var dataWorker = new DataLayer.DataWorker();
 													List<BusinessObjects.WebServiceNode> allWebServices = dataWorker.getWebServiceList();
 
-													var wsn = allWebServices.Find(w => w.ServiceID == dataResult.Source.OriginId);
+													//Retrieve the result's service code, scan web service data for a match...
+													var serviceCodeLowerCase = dataResult.Site.Code.Split(':')[0].ToLower();
+													BusinessObjects.WebServiceNode wsn = null;
+
+													if (!String.IsNullOrWhiteSpace(serviceCodeLowerCase))
+													{
+														wsn = allWebServices.Find(w => w.ServiceCode.ToLower() == serviceCodeLowerCase);
+													}
 
 													//Create a meta data instance
 													SeriesMetadata smd = new SeriesMetadata();
 
-													smd.ServCode = wsn.ServiceCode;
-													smd.ServURL = wsn.DescriptionUrl;
+													smd.ServCode = (null != wsn) ? wsn.ServiceCode : "unknown";	//NOTE: 'Unknown' case should never occur!!
+													smd.ServURL = (null != wsn) ? wsn.ServiceUrl : "unknown";	//NOTE: 'Unknown' case should never occur!!
 													smd.SiteCode = dataResult.Site.Code;
 													smd.VarCode = dataResult.Variable.Code;
 													smd.SiteName = dataResult.Site.Name;
@@ -909,11 +944,11 @@ namespace HISWebClient.Controllers
 								dblogcontextRef.addParameter("requestId", crIn.RequestId);
 								dblogcontextRef.addParameter("requestName", crIn.RequestName);
 
-								dblogcontext.addReturn("requestId", requestId);
-								dblogcontext.addReturn("requestStatus", requestStatus);
-								dblogcontext.addReturn("status", status);
-								dblogcontext.addReturn("blobUri", blobUri);
-								dblogcontext.addReturn("blobTimeStamp", blobTimeStamp);
+								dblogcontextRef.addReturn("requestId", requestId);
+								dblogcontextRef.addReturn("requestStatus", requestStatus);
+								dblogcontextRef.addReturn("status", status);
+								dblogcontextRef.addReturn("blobUri", blobUri);
+								dblogcontextRef.addReturn("blobTimeStamp", blobTimeStamp);
 
 								dblogcontextRef.createLogEntry(sessionIdRef, userIpAddressRef, domainNameRef, userEMailAddressRef, startDtUtc, DateTime.UtcNow, "ConvertWaterMlToCsv(...)", "zip archive creation complete.", Level.Info);
 							}
@@ -943,15 +978,17 @@ namespace HISWebClient.Controllers
 							CancellationTokenSource cts = _dictTaskStatus[requestId].CTS;
 							cts.Dispose();
 						}
+
+						//Remove ids from log and error contexts...
+						dblogcontextRef.removeIds(uniqueId);
+						dberrorcontextRef.removeIds(uniqueId);
 					}
-				}).ConfigureAwait(false);
+				});
 			}
 
 			//Return a TimeSeriesResponse in JSON format...
 			var result = new TimeSeriesResponse(crIn.RequestId, requestStatus, status, blobUri, blobTimeStamp);
 
-			//var javaScriptSerializer = new JavaScriptSerializer();
-			//var json = javaScriptSerializer.Serialize(result);
 			var json = JsonConvert.SerializeObject(result);
 
 			//Processing complete - return 
@@ -1377,7 +1414,11 @@ namespace HISWebClient.Controllers
                         dvm.IsRegular = seriesData.myVariable.IsRegular.ToString();
                         dvm.NoDataValue = seriesData.myVariable.NoDataValue.ToString();
                         dvm.UTCOffset = seriesData.values[i].UTCOffset.ToString();
-                        dvm.DateTimeUTC = seriesData.values[i].TimeStampUTC.ToString("yyyy-MM-dd HH:mm:ss");
+						//BCC - 27-Apr-2016 - values[i].UTCTimeStamp holds a valid date 
+						//					  values[i].TimeStampUTC holds the minimum date
+						//
+ 						//	I know these facts should be obvious but they somehow escape me...
+						dvm.DateTimeUTC = seriesData.values[i].UTCTimeStamp.ToString("yyyy-MM-dd HH:mm:ss");
                         dvm.Latitude = seriesData.myMetadata.Latitude.ToString();
                         dvm.Longitude = seriesData.myMetadata.Longitude.ToString();
                         dvm.ValueAccuracy = seriesData.values[i].ValueAccuracy.ToString();
@@ -1483,6 +1524,13 @@ namespace HISWebClient.Controllers
 		}
 			catch (Exception ex)
 			{
+				string reason = httpUtil.getWebExceptionMessage(ex);
+
+				if (!String.IsNullOrWhiteSpace(reason))
+				{
+					throw new Exception(reason);
+				}
+
 				throw ex;
 			}
 		}
@@ -1490,7 +1538,21 @@ namespace HISWebClient.Controllers
 		public async Task<IList<ServerSideHydroDesktop.ObjectModel.Series>> SeriesDataFromSeriesID(SeriesMetadata meta)
 		{
 			WaterOneFlowClient client = new WaterOneFlowClient(meta.ServURL);
+			try
+			{
 			return await client.GetValuesAsync(meta.SiteCode, meta.VarCode, meta.StartDate, meta.EndDate);
+		}
+			catch (Exception ex)
+			{
+				string reason = httpUtil.getWebExceptionMessage(ex);
+
+				if (!String.IsNullOrWhiteSpace(reason))
+				{
+					throw new Exception(reason);
+				}
+
+				throw ex;
+			}
 		}
 
 		public async Task<byte[]> getCSVResultByteArray(SeriesData data, string nameGuid, DateTimeOffset requestTime)
@@ -1842,7 +1904,7 @@ namespace HISWebClient.Controllers
             {
                 dberrorcontext.clearParameters();
                 dberrorcontext.createLogEntry(System.Web.HttpContext.Current,
-                                              DateTime.UtcNow, "DownloadFile(int id, List<TimeSeriesViewModel> currentSeries)",
+											  DateTime.UtcNow, "DownloadFileInList(int id, List<TimeSeriesViewModel> currentSeries, timeSeriesFormat)",
                                               ex,
                                               "DownloadFile Errors for: " + filename + " message: " + ex.Message);
 
