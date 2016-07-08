@@ -4376,7 +4376,7 @@ function startRequestTimeSeriesMonitor() {
                                     statusCurrent != timeSeriesRequestStatus.RequestTimeSeriesError &&
                                     ( ! (statusCurrent === timeSeriesRequestStatus.ClientSubmittedCancelRequest && 
                                          timeSeriesResponse.RequestStatus === timeSeriesRequestStatus.ProcessingTimeSeriesId))) {
-                                    tableRow.find('#statusMessageText').html(timeSeriesResponse.Status);
+                                    tableRow.find('#statusMessageText').text(timeSeriesResponse.Status);
                                     tableRow.find('#blobUriText').html(timeSeriesResponse.BlobUri);
                                     tableRow.find('td:eq(5)').html(timeSeriesResponse.RequestStatus);
 
@@ -4446,7 +4446,7 @@ function startRequestTimeSeriesMonitor() {
                                         glyphiconSpan.removeClass('glyphicon-refresh spin');
                                         glyphiconSpan.addClass('glyphicon-thumbs-up');
 
-                                        tableRow.find('#statusMessageText').html(timeSeriesResponse.Status);
+                                        tableRow.find('#statusMessageText').text(timeSeriesResponse.Status);
 
                                         tableRow.addClass('success');   //Color row as 'successful'
 
@@ -5059,7 +5059,7 @@ function addRowStylesDM(newrow) {
     //Cell: 2
     td = newrow.find('td:eq(2)');
     td.addClass('text-center');
-    td.css({ 'vertical-align': 'middle', 'height': '3em', 'width': '25%' });
+    td.css({ 'vertical-align': 'middle', 'height': '3em', 'width': '25%', 'word-wrap': 'break-word' });
 
     //Cell: 3
     td = newrow.find('td:eq(3)');
@@ -5070,7 +5070,6 @@ function addRowStylesDM(newrow) {
     //Cell: 4
     td = newrow.find('td:eq(4)');
     td.addClass('text-center');
-    //td.css({ 'vertical-align': 'middle', 'height': '3em', 'width': '13%'});
     td.css({ 'vertical-align': 'middle', 'height': '3em', 'width': '20%' });
 }
 
@@ -6005,7 +6004,7 @@ function addEndTaskClickHandler(jqueryButton, response) {
                             return $(this).text() === statusResponse.RequestId;
                         }).parent("tr");
 
-                        tableRow.find('#statusMessageText').html(statusResponse.Status);
+                        tableRow.find('#statusMessageText').text(statusResponse.Status);
                         tableRow.find('#blobUriText').html(statusResponse.BlobUri);
                         tableRow.find('td:eq(5)').html(statusResponse.RequestStatus);
 
@@ -6024,7 +6023,7 @@ function addEndTaskClickHandler(jqueryButton, response) {
                                 return $(this).text() === requestId;
                             }).parent("tr");
 
-                            tableRow.find('#statusMessageText').html(errorDescription);
+                            tableRow.find('#statusMessageText').text(errorDescription);
                             tableRow.find('#blobUriText').html('');
                             tableRow.find('td:eq(5)').html(timeSeriesRequestStatus.EndTaskError);
 
@@ -6389,7 +6388,7 @@ function formatStatusMessage(statusText) {
     
     var formattedMessage = '<h3 class="text-center" style="display: inline; vertical-align: middle;">' + 
                            '<span id="glyphiconSpan" class="glyphicon glyphicon-refresh spin" style="color: #32cd32;"></span></h3>' + //color is CSS LimeGreen
-                           '<div id="statusMessageText" class="text-center" style="display:inline-block; margin: 0em 0em 0em 1em; vertical-align: top;">' +
+                           '<div id="statusMessageText" class="text-center" style="display:inline-block; margin: 0em 0em 0em 1em; vertical-align: top; white-space: normal;">' +
                            statusText +
                            '</div>';
     return ( formattedMessage)
@@ -7192,8 +7191,8 @@ function addDownloadManagerRow( response, taskId ) {
         div = $('<div class="btn" style="font-size: 1em; font-weight: bold; margin: 0 auto;">' + taskId + '</div>');
         cols.push(div);
 
-        //Column 2
-        div = $('<div class="btn" style="font-size: 1em; font-weight: bold; margin: 0 auto;">' + formatStatusMessage(response.Status) + '</div>');
+        //Column 2 
+        div = $('<div class="btn" style="font-size: 1em; font-weight: bold; margin: 0 auto; word-wrap: break-word;">' + formatStatusMessage(response.Status) + '</div>');
         cols.push(div);
 
         //Column 3
@@ -7290,7 +7289,7 @@ function updateDownloadManagerRow( response ) {
         glyphiconSpan.removeClass('glyphicon-refresh spin');
         glyphiconSpan.addClass('glyphicon-thumbs-up');
 
-        tableRow.find('#statusMessageText').html(response.Status);
+        tableRow.find('#statusMessageText').text(response.Status);
 
         tableRow.addClass('success');   //Color row as 'successful'
 

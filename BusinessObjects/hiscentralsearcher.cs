@@ -268,12 +268,14 @@ namespace HISWebClient.DataLayer
 				{
 					if (ex.Status == WebExceptionStatus.Timeout)
 					{
+						//Timeout error - continue 
 						continue;
 					}
+					
 					throw;
 				}
 			}
-			throw new WebException("Timeout. Try to decrease Search Area, or Select another Keywords.", WebExceptionStatus.Timeout);
+			throw new WebException("Timeout. Please limit search area and/or Keywords.", WebExceptionStatus.Timeout);
 		}
 
 		private IEnumerable<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart> ParseSeries(XmlReader reader, DateTime startDate, DateTime endDate)

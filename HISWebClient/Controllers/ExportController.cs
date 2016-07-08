@@ -485,6 +485,7 @@ namespace HISWebClient.Controllers
 
 									//Check for failed/empty downloads.
 									Exception ex = null;
+									Exception exLog = null;
 									if (filestreamresult.FileDownloadName.Contains("ERROR", StringComparison.CurrentCultureIgnoreCase) || 0 >= filestreamresult.FileStream.Length)
 									{
 										//BCC - 25-Jan-2016 - set task status error here - log error message - throw...
@@ -492,11 +493,14 @@ namespace HISWebClient.Controllers
 
 										if (filestreamresult.FileDownloadName.Contains("ERROR", StringComparison.CurrentCultureIgnoreCase))
 										{
-											ex = new Exception("Error in time series generation: " + exDownload.Message);
+											ex = new Exception("Error in time series generation: The external server was unable to complete the request.  " +  
+															   "Please limit search area, date range and/or keywords." );
+											exLog = new Exception("Error in time series generation: " + exDownload.Message);
 										}
 										else
 										{
 											ex = new Exception("Empty time series...");
+											exLog = new Exception("Empty time series...");
 										}
 
 										dberrorcontextRef.clearParameters();
@@ -505,8 +509,8 @@ namespace HISWebClient.Controllers
 																			domainNameRef,
 																			DateTime.UtcNow,
 																			"RequestTimeSeries(TimeSeriesRequest tsrIn)",
-																			ex,
-																			"RequestTimeSeries error for Id: " + requestId + " message: " + ex.Message);
+																			exLog,
+																			"RequestTimeSeries error for Id: " + requestId + " message: " + exLog.Message);
 									}
 
 									//ALWAYS Copy file contents to zip archive - Good results, error in results generation or empty results...

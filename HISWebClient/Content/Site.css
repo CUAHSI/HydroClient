@@ -142,6 +142,16 @@ table
 	/*background-color:red;*/
 }
 
+.table-wrap
+{
+	float: left;
+
+	overflow:hidden;
+	/*word-wrap:initial;*/
+	white-space:normal;
+	width:100%;
+	/*background-color:red;*/
+}
 
 /* Assure proper alignment of control elements in a dataTable which includes a custom toolbar*/
 .toolbar, .toolbarTS{
