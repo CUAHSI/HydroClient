@@ -1,0 +1,137 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{5DBA60F1-4292-4EA0-9A78-A03AC3511DC7}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ServerSideHydroDesktop</RootNamespace>
+    <AssemblyName>ServerSideHydroDesktop</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.WindowsAzure.Storage, Version=3.0.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\WindowsAzure.Storage.4.3.0\lib\net40\Microsoft.WindowsAzure.Storage.dll</HintPath>
+    </Reference>
+    <Reference Include="System">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Core">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.CSharp">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Data">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="IWaterOneFlowParser.cs" />
+    <Compile Include="ObjectModel\BaseEntity.cs" />
+    <Compile Include="ObjectModel\Constants.cs" />
+    <Compile Include="ObjectModel\DataFile.cs" />
+    <Compile Include="ObjectModel\DataServiceInfo.cs" />
+    <Compile Include="ObjectModel\DataTypeCV.cs" />
+    <Compile Include="ObjectModel\DataValue.cs" />
+    <Compile Include="ObjectModel\ISOMetadata.cs" />
+    <Compile Include="ObjectModel\LabMethod.cs" />
+    <Compile Include="ObjectModel\Method.cs" />
+    <Compile Include="ObjectModel\OffsetType.cs" />
+    <Compile Include="ObjectModel\Qualifier.cs" />
+    <Compile Include="ObjectModel\QualityControlLevel.cs" />
+    <Compile Include="ObjectModel\QueryInfo.cs" />
+    <Compile Include="ObjectModel\RuleViolation.cs" />
+    <Compile Include="ObjectModel\Sample.cs" />
+    <Compile Include="ObjectModel\SampleMediumCV.cs" />
+    <Compile Include="ObjectModel\Series.cs" />
+    <Compile Include="ObjectModel\SeriesDataCart.cs" />
+    <Compile Include="ObjectModel\SeriesMetadata.cs" />
+    <Compile Include="ObjectModel\SeriesProvenance.cs" />
+    <Compile Include="ObjectModel\Site.cs" />
+    <Compile Include="ObjectModel\Source.cs" />
+    <Compile Include="ObjectModel\SpatialReference.cs" />
+    <Compile Include="ObjectModel\Theme.cs" />
+    <Compile Include="ObjectModel\Unit.cs" />
+    <Compile Include="ObjectModel\UnitConversion.cs" />
+    <Compile Include="ObjectModel\ValueTypeCV.cs" />
+    <Compile Include="ObjectModel\Variable.cs" />
+    <Compile Include="ParserFactory.cs" />
+    <Compile Include="SeriesCodeHelper.cs" />
+    <Compile Include="WaterOneFlow10Parser.cs" />
+    <Compile Include="WaterOneFlow11Parser.cs" />
+    <Compile Include="WaterOneFlowClient.cs" />
+    <Compile Include="WaterOneFlowParser.cs" />
+    <Compile Include="WebServiceHelper.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CUAHSIDataStorage\CUAHSIDataStorage.csproj">
+      <Project>{e13f52a1-d1bf-47dc-a5b4-bc1d0b00eca8}</Project>
+      <Name>CUAHSIDataStorage</Name>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
