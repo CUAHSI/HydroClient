@@ -1,0 +1,36 @@
+﻿
+<link href="~/Content/Site.css" rel="stylesheet" />
+ <script type='text/javascript' src="http://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true&libraries=places,geometry"></script>
+@*<link href="~/Scripts/test/maptest.css" rel="stylesheet" />*@
+    <script src="~/Scripts/jquery.slidereveal.js"></script>
+
+    <div id="slider" class="side-panel side-panel-right">
+        <div id="menu">
+            <div><img class="expander" alt="Expand" src="~/Content/Images/closetop.png" /></div>
+            <div class="" id="selectors">
+                <form id="Search" class="navbar-form" role="search">
+                    <!-- Button trigger modal -->
+                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectDateModal">Select Date</button>
+                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectVariableModal">Select Concepts(s)</button>
+                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectServicesModal">Select Services(s)</button>
+
+                    <div id="SelectedDateRange">
+
+    </div>
+                    <br />
+                    <button type="submit" class="btn btn-success btn-block">Search Map</button><br />
+                    <button id="clear" type="button" class="btn btn-warning btn-block"> Clear map </button>
+
+
+                </form>
+            </div>
+        </div>
+        <button id="close-panel-bt">Close</button>
+    <!-- <button>&times;</button> -->
+</div>
+
+    <div id="map-canvas"></div>   
+
+
+<script src="~/Scripts/test/maptest.js"></script>
+

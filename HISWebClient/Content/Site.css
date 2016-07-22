@@ -1,0 +1,571 @@
+﻿
+
+ html, body, .container, .tab-content, .tab-pane {
+			height: 100%;
+		}
+ body {
+	/*padding-top: 0px;*/
+	/*padding-bottom: 0px;*/
+	padding:0px;
+}
+
+.navbar
+{
+	background-color:lightgray;
+	height:50px;
+}
+.collapsing {
+		overflow: hidden!important;
+	}
+/* Override the default bootstrap behavior where horizontal description lists 
+   will truncate terms that are too long to fit in the left column 
+*/
+.dl-horizontal dt {
+	white-space: normal;
+}
+.navbar-custom {
+	left:0px;
+	top:10px;
+	color:lightgray;
+	background-color: lightgray;
+	border:inset;
+	border-width:1px;
+	padding:2px;
+
+
+}
+logo
+{
+	 border:0px; 
+	 vertical-align:top;
+	 left:0px;
+}
+.nav li a
+{
+	padding: 2px;
+}
+.expander{
+	top:50px;
+	padding:0px;
+	/*height:9px;*/
+	background-color: lightgray;
+	border:5px
+}
+
+.expander2{
+	padding:5px;
+	background-color: lightgray;
+	border:1px
+}
+
+/* Source: http://stackoverflow.com/questions/21697659/bootstrap-3-vertical-line-in-button-group */
+.btn-separator:after {
+	content: ' ';
+	display: block;
+	float: left;
+	background: #ADADAD;
+	margin: 10px 10px;
+	height: 34px;
+	width: 10px;
+}
+
+/*selector{
+	border:inset;
+	border-width:thin;
+}*/
+
+#map-canvas {
+	top:0px;
+	width: 100%;
+	height: 100%;
+	min-height: 100%;
+		left:0px;
+	/*position:absolute;*/
+	padding:0px;
+	margin:0px;
+	
+	
+}
+#myTab{
+	 position:absolute;
+	 top:0px;
+	 z-index:1030;
+	 right: 0px;
+
+}
+#search{
+	padding-top:50px;
+}
+.full-screen {
+	/*width: 80%;*/
+	/*height: 100%;*/
+	margin: 2%;
+	/*top: 2%;
+	left: 2%;
+	right: 2%;
+	bottom:2%;*/    
+	padding:20px;
+	background-color:white;
+	z-index:1000000; 
+}
+.modal-dialog-full
+{
+	width:100%;
+   
+}
+.modal-content-full
+{
+	width:100%;
+
+}
+.modal-body-full
+{
+	width:100%;
+   
+}
+.modal-header-full
+{
+	width:100%;
+}
+.modal-footer-full
+{
+	width:100%;
+}
+table
+{
+	float: left;
+
+	overflow:hidden;
+	/*word-wrap:initial;*/
+	white-space:nowrap;
+	width:100%;
+	/*background-color:red;*/
+}
+
+.table-wrap
+{
+	float: left;
+
+	overflow:hidden;
+	/*word-wrap:initial;*/
+	white-space:normal;
+	width:100%;
+	/*background-color:red;*/
+}
+
+/* Assure proper alignment of control elements in a dataTable which includes a custom toolbar*/
+.toolbar, .toolbarTS{
+	float: left;
+}
+
+.padded-tab-pane{
+	padding-top:65px;
+}
+
+div.GblueLabel16, div.GblueLabel20, div.GblueLabel22,div.GblueLabel24,div.GblueLabel26,div.GblueLabel28,div.GblueLabel30,div.GblueLabel32,div.GblueLabel36,div.GblueLabel40,div.GblueLabel42,div.GblueLabel44,div.GblueLabel48,div.GblueLabel56,div.GblueLabel64 
+{  display: block;  text-align: center;  color: white;  letter-spacing: 0;  font-weight: normal;  font-family: Arial;}
+div.GblueLabel16 {  /* padding-top: 23px; */  width: 44px;  font-size: 10px;}
+div.GblueLabel20 {  /* padding-top: 23px; */  width: 44px;  font-size: 10px;}
+div.GblueLabel22 {  /* padding-top: 23px; */  width: 44px;  font-size: 10px;}
+div.GblueLabel24 {  /* padding-top: 23px; */  width: 44px;  font-size: 11px;}
+div.GblueLabel26 {  /* padding-top: 22px; */  width: 44px;  font-size: 11px;}
+div.GblueLabel28 {  /* padding-top: 22px; */  width: 44px;  font-size: 11px;}
+div.GblueLabel30 {  /* padding-top: 22px; */  width: 44px;  font-size: 11px;}
+div.GblueLabel32 {  /* padding-top: 22px; */  width: 44px;  font-size: 11px;}
+div.GblueLabel36 {  /* padding-top: 22px; */  width: 44px;  font-size: 12px;}
+div.GblueLabel40 {  /* padding-top: 22px; */  width: 44px;  font-size: 12px;}
+div.GblueLabel42 {  /* padding-top: 22px; */  width: 44px;  font-size: 12px;}
+div.GblueLabel44 {  /* padding-top: 22px; */  width: 44px;  font-size: 12px;}
+div.GblueLabel48 {  /* padding-top: 22px; */  width: 48px;  font-size: 13px;}
+div.GblueLabel56 {  /* padding-top: 22px; */  width: 56px;  font-size: 13px;}
+div.GblueLabel64 {  /* padding-top: 22px; */  width: 64px;  font-size: 13px;} 
+
+
+#menu {
+	/* BC - Test - Increase width specification... */
+   width: 225px;
+   /*height:225px;*/
+	/*position: absolute;*//*this will position the div according to its parent div "map"*/
+	top: 0px;
+	right: 0px; /*place the div wherever you want with top and left px, em or % values*/
+	float:right;
+	z-index: 1002;
+	padding:15px;
+ /*Use this for your trasparency*/
+	/*background-color: white;*/
+	/*background-image: none;*/
+	/*opacity: .8;*/ /*for real browsers (Chrome, Firefox, Safari..)*/
+	/*filter:alpha(opacity=60);*/ /* for IE */
+	}
+
+#pageloaddiv {
+	position: fixed;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+	z-index: 1000000000000000;
+	background: url('images/ajax-loader-blue.gif') 50% 50% no-repeat 
+}
+td.details-control {
+	background: url('../Content/Images/cart_add.png') no-repeat center center;
+	cursor: pointer;
+}
+tr.details td.details-control {
+	background: url('../Content/Images/cart_remove.png') no-repeat center center;
+}
+
+
+/* Fancytree*/
+span.fancytree-icon {
+  position: relative;
+}
+span.fancytree-childcounter {
+  color: #fff;
+  background: #428BCA;
+/*  border: 1px solid gray; */
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 10px;
+  height: 10px;
+  line-height: 1;
+  vertical-align: baseline;
+  border-radius: 10px; /*50%;*/
+  padding: 2px;
+  text-align: center;
+  font-size: 9px;
+}
+/*.z-index_1100{
+	z-index:1100;
+}*/
+
+.datepicker{z-index:1151 !important;}
+
+tr.selected {background: #009900;}
+/*removes x in IE input control*/
+.input-msclear::-ms-clear {
+  width : 0;
+  height: 0;
+}
+
+
+/*Google maps searchbar*/
+.searchbarcontrols {
+		margin-top: 60px;
+		border: 1px solid transparent;
+		border-radius: 2px 0 0 2px;
+		box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		height: 32px;
+		outline: none;
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+#pac-input {
+background-color: #fff;
+font-family: Roboto;
+font-size: 15px;
+font-weight: 300;
+margin-left: 12px;
+padding: 0 11px 0 13px;
+text-overflow: ellipsis;
+width: 265px;
+}
+
+#pac-input:focus {
+border-color: #4d90fe;
+}
+
+.pac-container {
+font-family: Roboto;
+}
+
+#type-selector {
+color: #fff;
+background-color: #4d90fe;
+padding: 5px 11px 0px 11px;
+}
+
+#type-selector label {
+font-family: Roboto;
+font-size: 13px;
+font-weight: 300;
+}
+
+/** {
+	box-sizing: content-box;
+}*/
+.side-panel{
+	background-color: #E6E6E6;
+	padding-top: 0px;
+	padding-left: 0px;
+}
+
+.side-panel-left{
+	box-shadow: -5px 0 15px -6px #585858 inset;
+}
+.side-panel-left-overlay{
+	box-shadow: -10px 0 15px 10px #585858;
+}
+.side-panel-right{
+	box-shadow: 5px 0 15px -6px #585858 inset;
+}
+
+
+/* CSS for rotating glyphicons...
+	Source: http://chadkuehn.com/animated-font-spinners/ 
+*/
+/*
+.glyphicon-spin {
+	-webkit-animation: spin 1000ms infinite linear;
+	animation: spin 1000ms infinite linear;
+}
+@-webkit-keyframes spin {
+	0% {
+		-webkit-transform: rotate(0deg);
+		transform: rotate(0deg);
+	}
+	100% {
+		-webkit-transform: rotate(359deg);
+		transform: rotate(359deg);
+	}
+}
+@keyframes spin {
+	0% {
+		-webkit-transform: rotate(0deg);
+		transform: rotate(0deg);
+	}
+	100% {
+		-webkit-transform: rotate(359deg);
+		transform: rotate(359deg);
+	}
+}
+*/
+
+/* CSS for rotating glyphicons...
+	Source: http://stackoverflow.com/questions/19364726/issue-making-bootstrap3-icon-spin - answer 28
+*/
+
+.spin {
+  -webkit-animation: spin 1.5s infinite linear;
+  -moz-animation: spin 1.5s infinite linear;
+  -o-animation: spin 1.5s infinite linear;
+  animation: spin 1.5s infinite linear;
+	 -webkit-transform-origin: 50% 58%;
+		 transform-origin:50% 58%;
+		 -ms-transform-origin:50% 58%; /* IE 9 */
+}
+
+@-moz-keyframes spin {
+  from {
+	-moz-transform: rotate(0deg);
+  }
+  to {
+	-moz-transform: rotate(360deg);
+  }
+}
+
+@-webkit-keyframes spin {
+  from {
+	-webkit-transform: rotate(0deg);
+  }
+  to {
+	-webkit-transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  from {
+	transform: rotate(0deg);
+  }
+  to {
+	transform: rotate(360deg);
+  }
+}
+
+/* Styling for a table with a vertical scroll bar in the tbody (table with class: vscroll)
+	Source: http://www.bootply.com/qdLCAlG9fm
+*/
+
+/*.table-fixed thead {
+  width: 98%;
+}
+.table-fixed tbody {
+  height: 30em;
+  overflow-y: scroll;
+  width: 100%;
+}
+.table-fixed thead, .table-fixed tbody, .table-fixed tr, .table-fixed td, .table-fixed th {
+  display: block;
+}
+.table-fixed tbody td, .table-fixed thead > tr > th {
+  float: left;
+  border-bottom-width: 0;
+}
+
+.table-fixed th {
+  padding: 10px !important;
+  margin: 0 !important;
+}*/
+
+/* 
+    Simplified approach to table with fixed header and vertical scroll bar...
+    Sources:  http://w3facility.org/question/twitter-bootstrap-scrollable-table-rows-and-fixed-header/ 
+              Answer from Raffian 29-Dec-2013
+              http://jsfiddle.net/SAFX/Mq52k/16/
+*/
+.div-table-content {
+  overflow-y: auto;
+  height: 30em;
+  width: 100%;  /* BCC - 13-Aug-2015 - Added width: 100% to make div visible!! */
+}
+
+
+/* Styling for Bootstrap tooltips... */
+#chkbxSelectAll + .tooltip > .tooltip-inner, #chkbxSelectAllTS + .tooltip > .tooltip-inner  {
+	background-color: red;
+}
+/*Streetview close button*/
+.button {
+  font-size: 20px;
+  background-color: white;
+  padding: .2em .4em;
+  border: 0;
+  margin-right: 5px;
+  cursor: pointer;
+}
+
+/* Set default cursor on read only inputs...
+	Source: http://stackoverflow.com/questions/17319228/use-readonly-attribute-in-input-without-changing-the-cursor
+*/
+input[readonly].default-cursor {
+	cursor: pointer;
+}
+
+
+/* 
+    Disable text selection
+    Source: http://sixrevisions.com/css/disable-text-selection/
+
+*/
+.disable-selection {
+     -moz-user-select: none; /* Firefox */
+      -ms-user-select: none; /* Internet Explorer */
+   -khtml-user-select: none; /* KHTML browsers (e.g. Konqueror) */
+  -webkit-user-select: none; /* Chrome, Safari, and Opera */
+  -webkit-touch-callout: none; /* Disable Android and iOS callouts*/
+}
+
+
+/* Adjust z-index of modal background when multiple modal dialogs appear 'layered' atop one another
+
+    Source: http://www.bootply.com/86973#
+
+BCC - 14-Oct-2015 - Causes problems when displaying time series after zooming in on the map. More research required...
+
+.modal:nth-of-type(even) {
+    z-index: 1042 !important;
+}
+.modal-backdrop.in:nth-of-type(even) {
+    z-index: 1041 !important;
+}
+
+*/
+
+/* Styling for tblDataManager - align 'Show x entries' and 'Search' inputs on right, align custom toolbar on left... */
+.toolbarDataMgr {
+    display: inline-block;
+    position: relative;
+    float: left;
+    max-width: 100%;    /* Override 1170px value from container class... */
+}
+
+
+/* CSS for nested Bootstrap dropdowns... 
+    Source: http://stackoverflow.com/questions/18023493/bootstrap-3-dropdown-sub-menu-missing (answer: 331)
+            http://www.bootply.com/86684
+*/
+.dropdown-submenu{position:relative;}
+.dropdown-submenu>.dropdown-menu{top:0;left:100%;margin-top:-6px;margin-left:-1px;-webkit-border-radius:0 6px 6px 6px;-moz-border-radius:0 6px 6px 6px;border-radius:0 6px 6px 6px;}
+.dropdown-submenu:hover>.dropdown-menu{display:block;}
+.dropdown-submenu>a:after{display:block;content:" ";float:right;width:0;height:0;border-color:transparent;border-style:solid;border-width:5px 0 5px 5px;border-left-color:#cccccc;margin-top:5px;margin-right:-10px;}
+.dropdown-submenu:hover>a:after{border-left-color:#ffffff;}
+.dropdown-submenu.pull-left{float:none;}.dropdown-submenu.pull-left>.dropdown-menu{left:-100%;margin-left:10px;-webkit-border-radius:6px 0 6px 6px;-moz-border-radius:6px 0 6px 6px;border-radius:6px 0 6px 6px;}
+
+
+/* DataTables column widths - 
+    NOTE: <td> widths can be expressed in px or % only!!
+*/
+/*.tableCol5pct {
+    width: 5%;
+}*/
+
+/* DataTables column wrapping - 
+    NOTE: <td> widths can be expressed in px or % only!!
+*/
+/*.tableColWrap10pct {
+    white-space:normal;
+    width: 10%;
+}
+
+.tableColWrap15pct {
+    white-space: normal;
+    width: 15%;
+}
+
+.tableColWrap20pct {
+    white-space: normal;
+    width: 20%;
+}
+
+.tableColWrap25pct {
+    white-space: normal;
+    width: 25%;
+}
+
+.tableColWrap30pct {
+    white-space: normal;
+    width: 30%;
+}*/
+
+/* BCC - 13-Nov-2015 - Probably no longer needed
+
+#tblDataManagerGroup {
+    display: inline-block;
+    position: relative;
+    float: right;
+
+}
+
+#tblDataManager_filter {
+    float: none;
+}
+
+#tblDataManager_length {
+    float: none;
+}
+*/
+
+
+
+.labels {
+    color: white;
+    background-color: red;
+    //background-color: blue;
+    font-family:"Lucida Grande", "Arial", sans-serif;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    width: 30px;
+    white-space: nowrap;
+}
+
+/* Restrict the height of the fancy tree container... 
+
+    Source: http://stackoverflow.com/questions/25620633/is-it-possible-to-set-the-height-of-a-fancytree-when-using-the-column-view-ext
+*/
+ul.fancytree-container {
+  max-height: 30em;
+  width: 100%;
+}

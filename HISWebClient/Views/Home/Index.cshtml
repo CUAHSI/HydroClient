@@ -1,0 +1,811 @@
+﻿@model HISWebClient.Models.LoginViewModel
+<div class="_container">
+    <div class="row">
+        <div id="pageloaddiv"></div>
+        <div id="tabSelector" class=""></div>
+
+        <div class="nav navbar navbar-inverse navbar-fixed-top" style="min-width: 70em;">
+            <a href="http://www.cuahsi.org" target="_blank"> <img class="img-responsive pull-left" src="~/Content/Images/cuahsi_logo_small.png" /></a>
+            @if (HttpContext.Current.IsDebuggingEnabled)
+            {
+                <span>@System.Web.Configuration.WebConfigurationManager.AppSettings["buildTypeDebug"]</span>
+            }
+            else
+            {
+                <span>@System.Web.Configuration.WebConfigurationManager.AppSettings["buildTypeRelease"]</span>
+            }
+
+            @if (User.Identity.IsAuthenticated)
+            {
+                <div class="panel panel-default col-md-offset-2" style="display: inline-block;">
+                    <div class="panel-heading" style="background-color: lightgray;">
+                        <h3 class="panel-title" style="display: inline; font-weight: bold;"> Welcome: </h3>
+                        <span class="badge" style="font-weight: bold; font-size: larger">@User.Identity.Name</span>
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    onload = function onloadScript() {
+                        //Retrieve authenticated current user information for later reference...
+
+                        if ('function' === typeof loadCurrentUser) {
+                            loadCurrentUser();
+                        }
+                        else {
+                            console.log('Web client cannot find function: loadCurrentUser() - no current user loaded!!');
+                        }
+                    }
+                </script>
+            }
+            <ul class="nav nav-tabs pull-right" >
+                <li id="liMapTab" class="active navbar-custom hidden" style="margin-right: 1.0em; padding: 0;"> <button class="btn btn-primary" href="#map" id="mapTab" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> Search</button></li>
+                <li id="liTabbedDataMgrTab" class="navbar-custom" style="margin-right: 1.0em; padding: 0;"><button class="btn btn-primary" href="#tabbedDataMgr" id="tabbedDataMgrTab" data-toggle="tab"><span class="glyphicon glyphicon-tasks"></span> Workspace</button></li>
+
+                <li id="liHelpTab" class="navbar-custom" style="margin-right: 1.0em; padding: 0;">
+
+                    <button class="btn btn-primary" data-toggle="dropdown" style="font-size: 1.00em;">
+                        <div id="ddAbout" data-noneselected="true">
+                            <span class="glyphicon glyphicon-question-sign" style="font-weight: bold; max-width: 100%; font-size: 1.0em;"></span>
+                            <span style="font-weight: bold; font-size: 1.00em;">&nbsp;Help&nbsp;</span>
+                            <span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>
+                        </div>
+                    </button>
+
+                    <ul id="ddAboutList" class="dropdown-menu">
+                        <li id="liLicenseTab">
+                            <span>
+                                <a href="" id="licenseTab" data-toggle="modal" data-target="#licenseModal"><span class="glyphicon glyphicon-info-sign"></span> License Agreement</a>
+                            </span>
+                        </li>
+                        <li id="liContactTab">
+                            <span>
+                                <a href="" id="contactTab" data-toggle="modal" data-target="#contactModal"><span class="glyphicon glyphicon-earphone"></span> Contact</a>
+                            </span>
+                        </li>
+                        <li id="liQuickStartTab">
+                            <span>
+                                <a href="" id="quickStartTab" data-toggle="modal" data-target="#quickStartModal"><span class="glyphicon glyphicon-flash"></span> QuickStart</a>
+                            </span>
+                        </li>
+                    </ul>
+                </li>
+
+                <li id="liGoogleTab" class="navbar-custom" style="margin-right: 1em; padding: 0;">
+                    <div style="height: 2em;">
+                        <form id="formGoogleLogin" action="/Account/ExternalLogin?ReturnUrl=%2FHome%2FIndex" method="post">
+                            <!-- Source: http://forums.asp.net/t/1901949.aspx?The+required+anti+forgery+cookie+__RequestVerificationToken+is+not+present+ -->
+                            @Html.AntiForgeryToken()
+
+                            <!-- Need a 'hidden' input here.  The 'image' input cannot send any values to the server... -->
+                            <input type="hidden" id="Google" name="provider" value="Google" />
+                            <button class="btn btn-danger" id="btnSignIn"><span class="glyphicon glyphicon-log-in"></span>&nbsp;Sign in with Google</button>
+                            <button class="btn btn-danger hidden" id="btnSignOut"><span class="glyphicon glyphicon-log-out"></span>&nbsp;Sign Out</button>
+                        </form>
+                    </div>
+
+                </li>
+                @if (User.IsInRole("Admin") || User.Identity.Name == "mseul@cuahsi.org")
+                {
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin<b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            <li>@Html.ActionLink("Roles", "Index", "Roles", new { area = "Admin" }, null)</li>
+                            <li>@Html.ActionLink("Register as a new user", "Register", "Account", new { area = "" }, null)</li>
+                        </ul>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+
+    <div class="tab-content">
+        <!--BCC - 29-Jun-2015 - QA Issue #24 - Data tab (GUI): no margins from left and right (need to increase)
+                                Added 1.0em left and right margins to 'data' tab -->
+        <div class="tab-pane padded-tab-pane" id="tabbedDataMgr" style="margin-left: 1.0em; margin-right: 1.0em;">
+
+            <!-- Nav tabs for tabbed panes - Data Manager and Download Manager -->
+            <ul class="nav nav-tabs" role="tablist" style="margin-top: 0.5em; font-size: 1.5em;">
+                <li role="presentation" id="liDataMgrPane" class="active"><a href="#dataMgrPane" aria-controls="dataMgrPane" role="tab" data-toggle="tab" style="font-weight: bold; padding-left:0.2em; padding-right:0.2em">Workspace</a></li>
+                <li role="presentation" id="liDownloadMgrPane"><a href="#downloadMgrPane" aria-controls="downloadMgrPane" role="tab" data-toggle="tab" style="font-weight: bold;padding-left:0.2em; padding-right:0.2em">Exports</a></li>
+            </ul>
+
+            <!-- Tabbed panes - Data Manager and Download Manager -->
+            <div class="tab-content">
+                @*<div role="tabpanel" class="tab-pane fade in active" id="dataMgrPane">*@
+                <div role="tabpanel" class="tab-pane in active" id="dataMgrPane">
+                    @*<h1>Data Manager</h1>*@
+                    <div class="modal-body modal-body-full row">
+                        @* BCC- 24-Sep-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set 'max-width: none' on the table element!!
+                            NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
+                            Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
+                        *@
+                        <table id="tblDataManager" class="display disable-selection" cellspacing="0" style="max-width: none;" data-timeseriesmax="100">
+                            <thead>
+                                <tr>
+                                    @Html.Partial("_DataManagerTimeseriesColumns")
+                                </tr>
+                            </thead>
+                            <tfoot>
+                                <tr>
+                                    @Html.Partial("_DataManagerTimeseriesColumns")
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div class="modal-footer">
+                        @*<p>This is the modal footer!!</p>*@
+                    </div>
+                </div>
+
+                <div role="tabpanel" class="tab-pane fade" id="downloadMgrPane">
+                    <div class="checkbox modal-header">
+                        <!-- Need modal-header class here or checkbox does not work!! -->
+                        <label style="float:right; margin-right: 6em;"><input type="checkbox" id="chkbxAutoDownload" checked />&nbsp;Auto Download Archives?</label>
+                    </div>
+                    <div class="modal-body modal-body-full row">
+                        <table id="tblDownloadManagerHeaders" class="table">
+                            <thead>
+                                <tr>
+                                    <th class="text-center" style="display: none; vertical-align: middle;">Request ID</th>
+                                    <th class="text-center" style="width: 15%; vertical-align: middle;">
+                                        <label class="btn" style="font-size: 1em; font-weight: bold; margin: 0 auto;">Task Id</label>
+                                    </th>
+                                    <th class="text-center" style="width: 25%; vertical-align: middle;">
+                                        <label class="btn" style="font-size: 1em; font-weight: bold; margin: 0 auto;">Processing Status</label>
+                                    </th>
+                                    <th class="text-center" style="width: 40%; vertical-align: middle;">
+                                        <label class="btn" style="font-size: 1em; font-weight: bold; margin: 0 auto;">Time Series Archive</label>
+                                    </th>
+                                    <th class="text-center" style="width: 20%; vertical-align: middle !important;">
+                                        <input type="button" class="btn btn-primary text-center" id="btnDownloadAll" style="font-size: 1em; margin: 0 auto;" value="Download All Archives" />
+                                    </th>
+                                </tr>
+                            </thead>
+                        </table>
+                        <div class="div-table-content">
+                            <!-- BCC - Try a dynamically sized font here...
+                                 Source: http://stackoverflow.com/questions/14537611/bootstrap-responsive-text-size
+                            -->
+                            <table id="tblDownloadManager" class="table table-hover table-wrap" style="font-size: 2.0vmin; table-layout: fixed;">
+                                <tbody></tbody>
+                                <tfoot>
+                                    <tr>
+                                        @*<td>Footer text goes here</td>*@
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        @*<p>This is the modal footer!!</p>*@
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane active" id="map">
+            <!-- Right panel -->
+            <!-- BCC - 30-Jun-2015 - QA Issue #34 - General GUI: no scroll bar when reduce page size (menu items can become unavailable) -->
+            <div id="slider" class="side-panel side-panel-right" style="overflow-y: auto;">
+                <div id="menu">
+                    <div class="container" id="selectors">
+                        <form id="Search" class="searchForm form-horizontal pull-left">
+                            <div class="form-group">
+                                <div class="col-sm-8">
+                                    <button class="btn btn-primary btn-block form-control" id="btnDateRange" type="button" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectDateModal">Select Date Range</button>
+                                </div>
+                            </div>
+
+                            <div id="grpStartDate" class="form-group" style="margin-bottom: 2px;">
+                                <label class="control-label col-sm-2" for="startDate" id="lblStartDate">From: </label>
+                                <div class="col-sm-6">
+                                    <input id="startDate" class="form-control default-cursor" type="text" readonly="readonly" />
+                                    <label id="lblStartDateError" class="help-block" style="display:none;"></label>
+                                </div>
+                            </div>
+
+                            <div id="grpEndDate" class="form-group">
+                                <label class="control-label col-sm-2" for="endDate" id="lblEndDate">To: </label>
+                                <div class="col-sm-6">
+                                    <input id="endDate" class="form-control default-cursor" type="text" readonly="readonly" />
+                                    <label id="lblEndDateError" class="help-block" style="display:none;"></label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="col-sm-8">
+                                    <button class="btn btn-primary btn-block" type="button" id="btnSelectKeywords" disabled style="margin: 0 auto;">
+                                        <h4 class="text-center" style="display: inline; vertical-align: middle;">
+                                            <span id="glyphiconSpanSK" class="glyphicon glyphicon-refresh spin" style="color: #32cd32;"></span>
+                                        </h4>
+                                        Loading Keyword(s)
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="col-sm-8">
+                                    <div style="overflow-y: scroll; max-height: 10em; margin-left: -1em;">
+                                        <ol id="olConcepts" style="list-style: circle;">
+                                            <li>All</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="col-sm-8">
+                                    <button class="btn btn-primary btn-block form-control" type="button" id="btnSelectDataServices" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectServicesModal">
+                                        Select Data Service(s)
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="col-sm-7">
+                                    <div style="max-height: 10em;">
+                                        <ol id="olServices" style="list-style: circle;">
+                                            <li>All</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group" id="searchBtnDiv">
+                                <div class="col-sm-8">
+                                    <!-- For click handler see webclient.js $("#Search").submit(function (e) -->
+                                    <button type="submit" class="btn btn-success btn-block form-control" style="margin: 0 auto;">Search Map</button><br />
+                                    <button id="btnSetDefaults" type="button" class="btn btn-warning btn-block form-control" style="margin: 0 auto; margin-top: 0.5em;">Reset</button>
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-top: 2em;">
+                                <div class="col-sm-8">
+                                    <button class="btn btn-primary btn-block form-control enableWhenDataReceived" id="btnSearchResults" type="button" style="margin: 0 auto;" data-toggle="modal" data-target="#tableModal">Show Search Results</button>
+                                </div>
+                            </div>
+
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="_row">
+                <div class="map">
+                    <div id="map-canvas">
+
+                    </div>
+                    <!--Streetview close button-->
+                    <button id="StreetViewCloseButton" class="btn" style="display: none;">&times;</button>
+                    <input id="pac-input" class="searchbarcontrols" type="text"
+                           placeholder="Enter a location" />
+                    <div id="type-selector" class="searchbarcontrols hidden">
+                        <input type="radio" name="type" id="changetype-all" checked="checked">
+                        <label for="changetype-all">All</label>
+
+                        <input type="radio" name="type" id="changetype-geocode">
+                        <label for="changetype-geocode">Geocodes</label>
+                    </div>
+
+                    <div id="panelMapFilters" class="searchbarcontrols panel-heading" style="padding: 0.5em; height: auto; width: auto; display: inline-block;">
+
+                        <div id="panelMapFilters2" class="hidden" style="margin-top: 0.5em;">
+                            <span class="badge" style="text-align: left;">
+                                <span style="display: inline; font-weight: bold; text-align: left;" class="panel-title">Filters...</span>
+                                <span id="badgeMapFilters" style="margin-left: 0.5em; font-size: medium; text-align: left;">Filters go here!!!</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="tab-pane" id="graph">A timeseries viewer will be available soon!</div>
+    </div>
+</div>
+
+<!-- Modal -->
+<!-- Modal dialog for Contact -->
+<div class="modal fade" id="contactModal" tabindex="-1" role="dialog" aria-labelledby="contactModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 50em;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
+                <h3 class="modal-title" id="myModalLabel">Contact</h3>
+            </div>
+            <div class="modal-body">
+
+                <div style="margin-left: 2.0em;">
+                    <address style="margin-top: 2.0em;">
+                        <h3>Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)</h3>
+                        <br />
+                        <br />
+                        196 Boston Ave, Suite 3000<br />
+                        Medford, MA 02155<br />
+                        Phone: (339) 221-5400<br />
+                        Fax: (781) 219-4029<br />
+                    </address>
+
+                    <address>
+                        <strong>Support:</strong>   <a href="mailto:help@cuahsi.org">help@cuahsi.org</a><br /><br />
+
+                        <a href="https://cuahsi.zendesk.com/hc/en-us/sections/201050037-HydroClient-data-cuahsi-org-" target="_blank">Need additional help<span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></a>
+                    </address>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <!--p>This is the modal footer!!</p-->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal dialog for About -->
+<div class="modal fade" id="licenseModal" tabindex="-1" role="dialog" aria-labelledby="aboutModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
+                <h3 class="modal-title" id="myModalLabel">License Information  <a href="http://www.github.com/cuahsi" target="_blank">(Version @System.Web.Configuration.WebConfigurationManager.AppSettings["currentVersion"])</a></h3>
+            </div>
+            <div class="modal-body">
+
+                <div style="margin-left: 2.0em;">
+
+
+                    <h4>Distribution</h4>
+
+                    <p>
+                        HydroClient and all associated source code and documentation are available at the following URL: <a href="http://www.github.com/cuahsi">http://www.github.com/cuahsi</a>.
+                        HydroClient source code and documentation are provided free of charge under the Berkeley Software Distribution (BSD) license.
+                        Please see the following license information: Copyright (c) 2015, CUAHSI, All rights reserved.
+                    </p>
+                    <p>
+                        Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+                    </p>
+                    <ol style="list-style: decimal;">
+                        <li>
+                            Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+                        </li>
+                        <li>
+                            Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+                        </li>
+                        <li>
+                            Neither the name of CUAHSI nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+                        </li>
+                    </ol>
+                    <p>
+                        This software is provided by the copyright holders and contributors "as is" and any express or implied warranties, including, but not limited to,
+                        the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors
+                        be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute
+                        goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict
+                        liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.
+                    </p>
+                    <p>
+                        Appliation  code integrated into this application was originally developed for HydroDesktop. For more information about this open source GIS software visit www.hydrodesktop.org and see:
+                        Ames, D.P., Horsburgh, J.S., Cao, Y., Kadlec, J., Whiteaker, T., and Valentine, D., 2012. HydroDesktop: Web Services-Based Software for Hydrologic Data Discovery, Download, Visualization, and Analysis. Environmental Modelling & Software. Vol 37, pp 146-156. http://dx.doi.org/10.1016/j.envsoft.2012.03.013.
+                    </p>
+                    <p>
+                        It also relies on  DotSpatial developed by Dan Ames (https://dotspatial.codeplex.com)
+                    </p>
+                    <h4>
+                        Disclaimer
+                    </h4>
+                    <p>
+                        Although much effort has been expended in the development and testing of the HydroClient, errors and inadequacies may still occur. Users must make the final evaluation
+                        as to the usefulness of HydroClient for his or her application. HydroClient, CUAHSI HIS, and documentation are supported by National Science Foundation Grant Number EAR-1248152.
+                        Any opinions, findings, and conclusions or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the National Science Foundation.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <!--p>This is the modal footer!!</p-->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal dialog for Quick Start -->
+<div class="modal fade" id="quickStartModal" tabindex="-1" role="dialog" aria-labelledby="quickStartModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
+                <h3 class="modal-title" id="myQuickStartLabel">Quick Start </h3>
+            </div>
+            <div class="modal-body">
+                <div style="margin-left: 2.0em;">
+                    <div>
+                        @*<object data="~/Home/Quickstart"
+                            type="text/html"
+                            width="800"
+                              height="700"></object>*@
+                        <!-- NOTE: Using an object tag here to load markup into the DOM causes IE11 (and earlier) to
+                                    re-load the page - causing duplicate calls to $(document).ready() - attempting to
+                                    use a partial view here to prevent this behavior... -->
+                        @Html.Partial("Quickstart")
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <!--p>This is the modal footer!!</p-->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal dialog for Server Error... -->
+<div class="modal fade" id="serverErrorModal" style="z-index: 1000000;" tabindex="-1" role="dialog" aria-labelledby="serverErrorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
+                <h3 class="modal-title" id="myModalLabel">Server Error</h3>
+            </div>
+            <div class="modal-body">
+
+                <div style="margin-left: 2.0em;">
+                    <p>
+                        An error has occurred on the server - please re-submit your search criteria...
+                    </p>
+
+                    <h4>
+                        Server Message:
+                    </h4>
+                    <p id="serverMessageText"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <!--p>This is the modal footer!!</p-->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal dialog for Full Keyword loading ...-->
+<div class="modal fade" id="keywordModal" tabindex="-1" role="dialog" aria-labelledby="keywordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="myModalLabel">Loading Keywords...</h3>
+            </div>
+            <div class="modal-body">
+                <div style="margin-left: 2.0em;">
+                    <h2 class="text-center" style="display: inline; vertical-align: middle;">
+                        <span id="glyphiconSpanPhysical" class="glyphicon glyphicon-refresh spin" style="color: #32cd32;"></span>
+                    </h2>
+                    <div id="textPhysical" class="text-center" style="display:inline-block; margin: 0em 0em 0em 1em; vertical-align: top;">Physical</div>
+                    <br />
+
+                    <h2 class="text-center" style="display: inline; vertical-align: middle;">
+                        <span id="glyphiconSpanChemical" class="glyphicon glyphicon-refresh spin" style="color: #32cd32;"></span>
+                    </h2>
+                    <div id="textChemical" class="text-center" style="display:inline-block; margin: 0em 0em 0em 1em; vertical-align: top;">Chemical</div>
+                    <br />
+
+                    <h2 class="text-center" style="display: inline; vertical-align: middle;">
+                        <span id="glyphiconSpanBiological" class="glyphicon glyphicon-refresh spin" style="color: #32cd32;"></span>
+                    </h2>
+                    <div id="textBiological" class="text-center" style="display:inline-block; margin: 0em 0em 0em 1em; vertical-align: top;">Biological</div>
+                    <br />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <!--p>This is the modal footer!!</p-->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal dialog for Select Date ...-->
+<div class="modal fade" id="SelectDateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content col-sm-9">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 class="modal-title" id="myModalLabel">Please select your date range:</h3>
+            </div>
+            <div class="container">
+                <form class="form-horizontal pull-left">
+                    <div class="modal-body form-group">
+                        <div class="modal-inputs">
+                            <div id="grpStartDateModal" class="form-group">
+                                <label id="lblStartDateModal" class="control-label col-sm-2" for="startDateModal">From</label>
+                                <div class="col-sm-6">
+                                    <input id="startDateModal" class="form-control modal-date-range" type="text" />
+                                    <label id="lblStartDateErrorModal" class="help-block" style="display: none;"></label>
+                                </div>
+                            </div>
+                            <div id="grpEndDateModal" class="form-group">
+                                <label id="lblEndDateModal" class="control-label col-sm-2" for="endDateModal">To</label>
+                                <div class="col-sm-6">
+                                    <input id="endDateModal" class="form-control modal-date-range" type="text" />
+                                    <label id="lblEndDateErrorModal" class="help-block" style="display: none;"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer"><button type="button" id="btnDateRangeModalSave" class="btn btn-default btn-primary" data-dismiss="modal">Save</button></div>
+
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+</div>
+
+<!-- Modal dialog for Select Keywords ...-->
+<div class="modal fade" id="SelectVariableModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 class="modal-title" id="myModalLabel">Please select your Keyword(s)</h3>
+                <h6>(No selection searches all)</h6>
+
+            </div>
+            <div class="modal-body">
+                <div class="" style="background-color: #ffffff">
+                    <div class="tabbable">
+                        <!-- Only required for left/right tabs -->
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#tab1" data-toggle="tab"> Common </a></li>
+                            <li><a href="#tab2" data-toggle="tab">Full List</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="tab1">
+                                <div class="row" style="margin-left: 0px;">
+                                    <div class="controls col-lg-5">
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Evaporation, actual" id="inlineCheckbox1" class="topCategories" />Actual Evaporation
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Temperature, Air" id="inlineCheckbox7" class="topCategories" />Air Temperature
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Discharge, stream" id="inlineCheckbox2" class="topCategories" />Discharge
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Oxygen, dissolved" id="inlineCheckbox10" class="topCategories" />Dissolved Oxygen
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Groundwater Level" id="inlineCheckbox4" class="topCategories" />Groundwater Level
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Methane" id="inlineCheckbox17" class="topCategories" />Methane
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Nutrient" id="inlineCheckbox9" class="topCategories" />Nutrient
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="pH" id="inlineCheckbox11" class="topCategories" />pH
+                                        </label>
+                                    </div>
+                                    <div class="controls col-lg-5">
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Precipitation" id="inlineCheckbox12" class="topCategories" />Precipitation
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Snow Water Equivalent" id="inlineCheckbox14" class="topCategories" />Snow Water Equivalent
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Water Content, Soil" id="inlineCheckbox15" class="topCategories" />Soil Moisture
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Specific Conductance" id="inlineCheckbox13" class="topCategories" />Specific Conductance
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Solids, total suspended" id="inlineCheckbox16" class="topCategories" />Total Suspended Solids
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Turbidity" id="inlineCheckbox18" class="topCategories" />Turbidity
+                                        </label>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="keywords" value="Temperature, water" id="inlineCheckbox8" class="topCategories" />Water Temperature
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" id="btnTopSelect" class="btn btn-default btn-primary" data-dismiss="modal">Save</button>
+                                </div>
+
+                            </div>
+                            <div class="tab-pane" id="tab2">
+                                <p>
+                                    <label>Filter:</label>
+                                    <input name="search" placeholder="Filter...">
+                                    <button id="btnResetSearch">&times;</button>
+                                    <span id="matches"></span>
+                                </p>
+
+                                <div id="tree" data-source="ajax" class="sampletree">
+
+
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" id="btnHierarchySelect" class="btn btn-default btn-primary" data-dismiss="modal">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- /.modal-content -->
+</div>
+<!-- /.modal-dialog -->
+<!-- Modal dialog for select services -->
+<!--BCC - 26-Jun-2015 - Changes for QA Issue #23 - GUI: popup design do not unified -->
+<div class="modal fade" id="SelectServicesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-full" role="document">
+        <div class="modal-content modal-content-full">
+            <div class="modal-header">
+                <button type="button" id="btnSaveServiceSelectionX" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 class="modal-title" id="myModalLabel">Click to select Data Services</h3>
+                <div class="form-group" style="position: relative;">
+                    <h6 style="display:inline-block; float: left;"> (No selection searches all)</h6>
+                    <label for="checkOnlyObservedValues" style="float: right;">
+                        <input type="checkbox" name="checkOnlyObservedValues" id="checkOnlyObservedValues" data-inline="true" /> Select all non-gridded data services.<a href="javascript:;" target="_blank" onclick="helpIconClicked('checkOnlyObservedValues');"><span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></a>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-body modal-body-full">
+                <table id="dtServices" class="display" cellspacing="0">
+                    <thead>
+                        <tr>
+                            @Html.Partial("_DatatableDataservicesColumns")
+                        </tr>
+                    </thead>
+
+                    <tfoot>
+                        <tr>
+                            @Html.Partial("_DatatableDataservicesColumns")
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="modal-footer">
+                @*BCC - 30-Jun-2015 - QA Issue #44 - Popup 'Click to select Data Services': 'Save' button is missed *@
+                <h6>Note: Many of data services listed here are maintained by the data publishers. CUAHSI cannot be held responsible for the status of these servers. All data publishers are responsible for the accuracy of their data. </h6>
+                <button type="button" id="saveServiceSelection" class="btn btn-default btn-primary left" data-dismiss="modal">Close</button>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+</div>
+@*  BCC - 29-Jun-2015 - Remove 'fade' class from modal div to ensure firing of 'shown.bs.modal' event!!
+    Source: http://stackoverflow.com/questions/18568278/bootstrap-3-0-0-modal-events-not-firing
+    <div class="modal fade full-screen" id="SeriesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">*@
+
+<!-- Modal dialog for map marker search results -->
+<div class="modal" id="SeriesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-full" role="document">
+        <div class="modal-content modal-content-full">
+            <div class="modal-header modal-header-full">
+                <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
+
+                <div style="float: right; margin-right: 2em;" class="btn btn-default">
+                    <span class="glyphicon glyphicon-tasks">&nbsp;</span>
+                    <span>
+                        <button id="tableModal-DataMgr" data-dismiss="modal">Workspace</button>
+                        <button id="tableModal-DownloadMgr" data-dismiss="modal">Exports</button>
+                    </span>
+                </div>
+
+                <h3 class="modal-title" id="myModalLabel">Search Results in area</h3>
+            </div>
+            <div class="modal-body modal-body-full">
+                @* BCC- 23-Jul-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set 'max-width: none' on the table element!!
+                    NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
+                    Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
+                *@
+                <table id="dtMarkers" class="display disable-selection" cellspacing="0" style="max-width: none;" data-selectedtimeseriesmax="25">
+                    <thead>
+                        <tr>
+                            @Html.Partial("_DatatableTimeseriesColumns")
+                        </tr>
+                    </thead>
+
+                    <tfoot>
+                        <tr>
+                            @Html.Partial("_DatatableTimeseriesColumns")
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="modal-footer modal-footer-full">
+            </div>
+
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+</div>
+
+<!-- Modal dialog for all search results -->
+<div class="modal" id="tableModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-full" role="document">
+        <div class="modal-content modal-content-full">
+            <div class="modal-header modal-header-full">
+                <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
+
+                <div style="float: right; margin-right: 2em;" class="btn btn-default">
+                    <span class="glyphicon glyphicon-tasks">&nbsp;</span>
+                    <span>
+                        <button id="tableModal-DataMgrTS" data-dismiss="modal">Workspace</button>
+                        <button id="tableModal-DownloadMgrTS" data-dismiss="modal">Exports</button>
+                    </span>
+                </div>
+
+                <h3 class="modal-title" id="myModalLabel">Timeseries in Current Map Area</h3>
+                <h5>Table filters are applied to map!</h5>
+            </div>
+            <div class="modal-body modal-body-full" id="dtTimeSeriesModal">
+                @* BCC- 23-Jul-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set 'max-width: none' on the table element!!
+                    NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
+                    Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
+                *@
+                <table id="dtTimeseries" class="display disable-selection" cellspacing="0" style="max-width: none;" data-selectedtimeseriesmax="25">
+                    <thead>
+                        <tr>
+                            @Html.Partial("_DatatableTimeseriesColumns")
+                        </tr>
+                    </thead>
+
+                    <tfoot>
+                        <tr>
+                            @Html.Partial("_DatatableTimeseriesColumns")
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="modal-footer modal-footer-full">
+            </div>
+
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+</div>
+
+<!-- Modal dialog for export -->
+<div class="modal fade" id="ExportModal" tabindex="-1" role="dialog" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div lass="modal-dialog modal-dialog-full">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
+                <h3 class="modal-title" id="myModalLabel">Download</h3>
+            </div>
+            <div class="modal-body">
+
+                <div style="margin-left: 2.0em;">
+                    <button type="button" id="btnDownloadFiles" class="btn btn-default btn-primary" data-dismiss="modal">Download</button>
+                    <button type="button" id="btnCombineAndDownloadFiles" class="btn btn-default btn-primary" data-dismiss="modal">Combine & download</button>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <!--p>This is the modal footer!!</p-->
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        </div><!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+

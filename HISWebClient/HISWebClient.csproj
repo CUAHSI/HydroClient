@@ -639,8 +639,6 @@
     <Content Include="Views\Home\_DatatableDataservicesColumns.cshtml" />
     <Content Include="Views\Home\_DataManagerTimeseriesColumns.cshtml" />
     <Content Include="Views\Home\Quickstart.cshtml" />
-    <Content Include="Web-Deploy.config" />
-    <Content Include="Web-LocalBuild.config" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\yeti\" />
