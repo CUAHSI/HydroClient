@@ -95,6 +95,20 @@ namespace HISWebClient.BusinessObjects.Models
             public string VariableUnits { get; set; }
 
             public string Citation { get; set; }
+
+			//BCC - 07-Sep-2016 - Add additional fields for use with GetSeriesCatalogForBox3...
+			public string QCLID { get; set; }
+
+			public string QCLDesc { get; set; }
+
+			public string SourceOrg { get; set; }
+
+			public string SourceId { get; set; }
+
+			public string MethodId { get; set; }
+
+			public string MethodDesc { get; set; }
         }
+
     }
 }

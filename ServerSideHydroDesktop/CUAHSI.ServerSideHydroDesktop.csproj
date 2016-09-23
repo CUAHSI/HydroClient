@@ -78,6 +78,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\HISWebClient\Util\XmlContext.cs">
+      <Link>XmlContext.cs</Link>
+    </Compile>
     <Compile Include="IWaterOneFlowParser.cs" />
     <Compile Include="ObjectModel\BaseEntity.cs" />
     <Compile Include="ObjectModel\Constants.cs" />

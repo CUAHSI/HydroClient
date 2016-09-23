@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
+using HISWebClient.Util;
+
 namespace HISWebClient.DataLayer
 {
     public class DataWorker
@@ -26,9 +28,7 @@ namespace HISWebClient.DataLayer
             var searcher = new HISCentralSearcher(hisCentralUrl);
 
             //Create instance
-            //var hisCentralWebServicesList = new HisCentralWebServicesList(webServicesFilename);
-            //hisCentralWebServicesList.RefreshListFromHisCentral(searcher);
-            var xmlData = searcher.GetWebServicesXml(webServicesFilename);
+			var xmlData = searcher.GetWebServicesXml(webServicesFilename, Encoding.UTF8.CodePage);
 
             var webserviceNodeList = getWebserviceNodeList(xmlData);
 
@@ -94,7 +94,13 @@ namespace HISWebClient.DataLayer
                 {
                     if (reader.NodeType == XmlNodeType.Element)
                     {
-                        if (reader.Name == "ServiceInfo")
+						if (XmlContext.AdvanceReaderPastEmptyElement(reader))
+						{
+							//Empty element - advance and continue...
+							continue;
+						}
+						
+						if (reader.Name == "ServiceInfo")
                         {
                             string desciptionUrl = null;
                             string serviceUrl = null;
@@ -115,7 +121,13 @@ namespace HISWebClient.DataLayer
 
                                 if (reader.NodeType == XmlNodeType.Element)
                                 {
-                                    switch (reader.Name)
+									if (XmlContext.AdvanceReaderPastEmptyElement(reader))
+									{
+										//Empty element - advance and continue...
+										continue;
+									}
+									
+									switch (reader.Name)
                                     {
                                         case "Title":
                                             if (!reader.Read()) continue;

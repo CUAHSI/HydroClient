@@ -5,10 +5,15 @@
         <div id="tabSelector" class=""></div>
 
         <div class="nav navbar navbar-inverse navbar-fixed-top" style="min-width: 70em;">
-            @*<img class="img-responsive pull-left" src="~/Content/Images/beta.png" />*@
             <a href="http://www.cuahsi.org" target="_blank"> <img class="img-responsive pull-left" src="~/Content/Images/cuahsi_logo_small.png" /></a>
-
-            <span>@System.Web.Configuration.WebConfigurationManager.AppSettings["buildType"]</span>
+            @if (HttpContext.Current.IsDebuggingEnabled)
+            {
+                <span>@System.Web.Configuration.WebConfigurationManager.AppSettings["buildTypeDebug"]</span>
+            }
+            else
+            {
+                <span>@System.Web.Configuration.WebConfigurationManager.AppSettings["buildTypeRelease"]</span>
+            }
 
             @if (User.Identity.IsAuthenticated)
             {
@@ -31,22 +36,9 @@
                     }
                 </script>
             }
-            <ul class="nav nav-tabs pull-right" @*id="myTab"*@ @*style="display: inline-block; position: relative; float:right;"*@>
+            <ul class="nav nav-tabs pull-right">
                 <li id="liMapTab" class="active navbar-custom hidden" style="margin-right: 1.0em; padding: 0;"> <button class="btn btn-primary" href="#map" id="mapTab" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> Search</button></li>
-                @*   <li class="navbar-custom disabled"><a href="#graph" id="graphTab" data-toggle="tab"><span class="glyphicon glyphicon-home"></span> Graph</a></li>*@
-                @*<li id="liTableTab" class="navbar-custom data"><a href="#dataview" id="tableTab" data-toggle="tab"><span class="glyphicon glyphicon-list"></span> Table</a></li>*@
-                @*<li class="btn-separator"></li>*@
                 <li id="liTabbedDataMgrTab" class="navbar-custom" style="margin-right: 1.0em; padding: 0;"><button class="btn btn-primary" href="#tabbedDataMgr" id="tabbedDataMgrTab" data-toggle="tab"><span class="glyphicon glyphicon-tasks"></span> Workspace</button></li>
-                @*<li class="btn-separator"></li>*@
-                @*<li class="navbar-custom"><a href="" id="datamanagerTab" data-toggle="modal" data-target="#datamgrModal"><span class="glyphicon glyphicon-record"></span> Data Manager</a></li>
-                    <li class="btn-separator"></li>*@
-                @*<li class="navbar-custom"><a href="" id="downloadmanagerTab" data-toggle="modal" data-target="#dmModal"><span class="glyphicon glyphicon-cloud-download"></span> Download Manager</a></li>
-                    <li class="btn-separator"></li>*@
-
-                @*<li id="liContactTab" class="navbar-custom"><a href="" id="contactTab" data-toggle="modal" data-target="#contactModal"><span class="glyphicon glyphicon-earphone"></span> Contact</a></li>
-                    <li class="btn-separator"></li>
-                    <li id="liAboutTab" class="navbar-custom" style="margin-right: 1em;"><a href="" id="aboutTab" data-toggle="modal" data-target="#aboutModal"><span class="glyphicon glyphicon-info-sign"></span> About</a></li>
-                    <li id="liQuickStartTab" class="navbar-custom"> <a href="" id="quickStartTab" data-toggle="modal" data-target="#quickStartModal"><span class="glyphicon glyphicon-flash"></span> QuickStart</a></li>*@
 
                 <li id="liHelpTab" class="navbar-custom" style="margin-right: 1.0em; padding: 0;">
 
@@ -77,19 +69,12 @@
                     </ul>
                 </li>
 
-                @*<li class="btn-separator"></li>*@
                 <li id="liGoogleTab" class="navbar-custom" style="margin-right: 1em; padding: 0;">
                     <div style="height: 2em;">
-                        @*<form id="formGoogleLogin" action="/Account/ExternalLogin?ReturnUrl=%2F" method="post">*@
                         <form id="formGoogleLogin" action="/Account/ExternalLogin?ReturnUrl=%2FHome%2FIndex" method="post">
                             <!-- Source: http://forums.asp.net/t/1901949.aspx?The+required+anti+forgery+cookie+__RequestVerificationToken+is+not+present+ -->
                             @Html.AntiForgeryToken()
 
-                            @*@{
-                                    //Need to encode the '+' sign in the file name so that it is not converted to a space (' ') ...
-                                    string url = "/home/getgoogleicon?id=" + Server.UrlEncode("btn_google+_signin_dark_normal_web.png");
-                                    string url1 = "/home/getgoogleicon?id=" + Server.UrlEncode("btn_google+_signout_custom.png");
-                                }*@
                             <!-- Need a 'hidden' input here.  The 'image' input cannot send any values to the server... -->
                             <input type="hidden" id="Google" name="provider" value="Google" />
                             <button class="btn btn-danger" id="btnSignIn"><span class="glyphicon glyphicon-log-in"></span>&nbsp;Sign in with Google</button>
@@ -104,8 +89,6 @@
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin<b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             <li>@Html.ActionLink("Roles", "Index", "Roles", new { area = "Admin" }, null)</li>
-                            @*<li>@Html.ActionLink("Add Connection", "Index", "ConnectionParameters", new { area = "Admin" }, null)</li>
-                                <li>@Html.ActionLink("Link Connections", "Index", "ConnectionParametersUsers", new { area = "Admin" }, null)</li>*@
                             <li>@Html.ActionLink("Register as a new user", "Register", "Account", new { area = "" }, null)</li>
                         </ul>
                     </li>
@@ -117,31 +100,6 @@
     <div class="tab-content">
         <!--BCC - 29-Jun-2015 - QA Issue #24 - Data tab (GUI): no margins from left and right (need to increase)
                                 Added 1.0em left and right margins to 'data' tab -->
-        @*<div class="tab-pane padded-tab-pane" id="dataview" style="margin-left: 1.0em; margin-right: 1.0em;">
-            <div class="modal-header modal-header-full">
-                <h3 class="modal-title" id="myModalLabel">Timeseries in Current Map Area</h3>
-            </div>
-            <div class="modal-body modal-body-full disable-selection" id="dtTimeSeriesModal">
-                @* BCC- 23-Jul-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set max-width: none on the table element!!
-                    NOTE: This 'more specific' setting overrides 'max-width: 100%' as set for the <table> element in bootstrap.css (line 1407)
-                    Source: http://stackoverflow.com/questions/30500857/overflow-xauto-not-working-in-safari-and-firefox
-        *@
-        @*<table id="dtTimeseries" class="display" cellspacing="0" style="max-width: none;" data-selectedtimeseriesmax="25">
-                        <thead>
-                            <tr>
-                                @Html.Partial("_DatatableTimeseriesColumns")
-                            </tr>
-                        </thead>
-
-                        <tfoot>
-                            <tr>
-                                @Html.Partial("_DatatableTimeseriesColumns")
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>*@
-
         <div class="tab-pane padded-tab-pane" id="tabbedDataMgr" style="margin-left: 1.0em; margin-right: 1.0em;">
 
             <!-- Nav tabs for tabbed panes - Data Manager and Download Manager -->
@@ -207,8 +165,6 @@
                             <!-- BCC - Try a dynamically sized font here...
                                  Source: http://stackoverflow.com/questions/14537611/bootstrap-responsive-text-size
                             -->
-                            @*<table id="tblDownloadManager" class="table table-hover table-fixed" style="font-size: 1.5vmin; margin: 0 auto;">*@
-                            @*<table id="tblDownloadManager" class="table table-hover table-fixed" style="font-size: 2.0vmin;">*@
                             <table id="tblDownloadManager" class="table table-hover table-wrap" style="font-size: 2.0vmin; table-layout: fixed;">
                                 <tbody></tbody>
                                 <tfoot>
@@ -231,7 +187,6 @@
             <!-- BCC - 30-Jun-2015 - QA Issue #34 - General GUI: no scroll bar when reduce page size (menu items can become unavailable) -->
             <div id="slider" class="side-panel side-panel-right" style="overflow-y: auto;">
                 <div id="menu">
-                    @*   <div><img class="expander" alt="Expand" src="~/Content/Images/closetop.png" /></div>*@
                     <div class="container" id="selectors">
                         <form id="Search" class="searchForm form-horizontal pull-left">
                             <div class="form-group">
@@ -300,9 +255,6 @@
                                     <!-- For click handler see webclient.js $("#Search").submit(function (e) -->
                                     <button type="submit" class="btn btn-success btn-block form-control" style="margin: 0 auto;">Search Map</button><br />
                                     <button id="btnSetDefaults" type="button" class="btn btn-warning btn-block form-control" style="margin: 0 auto; margin-top: 0.5em;">Reset</button>
-                                    @*<div style="text-align: center; margin-top: 1em; ">
-                                        <a href="http://www.github.com/cuahsi" target="_blank">Version 1.0</a>
-                                        </div>*@
                                 </div>
                             </div>
 
@@ -331,23 +283,12 @@
                         <input type="radio" name="type" id="changetype-all" checked="checked">
                         <label for="changetype-all">All</label>
 
-                        @*<input type="radio" name="type" id="changetype-establishment">
-                            <label for="changetype-establishment">Establishments</label>
-
-                            <input type="radio" name="type" id="changetype-address">
-                            <label for="changetype-address">Addresses</label>*@
-
                         <input type="radio" name="type" id="changetype-geocode">
                         <label for="changetype-geocode">Geocodes</label>
                     </div>
 
                     <div id="panelMapFilters" class="searchbarcontrols panel-heading" style="padding: 0.5em; height: auto; width: auto; display: inline-block;">
 
-                        @*<div class="badge" style="text-align: left; display: inline;">
-                                <span id="badgeLatitude" style="font-size: medium; text-align: left;"></span>
-                                <span>/</span>
-                                <span id="badgeLongitude" style="font-size: medium; text-align: left;"></span>
-                            </div>*@
                         <div id="panelMapFilters2" class="hidden" style="margin-top: 0.5em;">
                             <span class="badge" style="text-align: left;">
                                 <span style="display: inline; font-weight: bold; text-align: left;" class="panel-title">Filters...</span>
@@ -355,12 +296,6 @@
                             </span>
                         </div>
                     </div>
-                    @*<h1 id="home">
-                            <a id="menu-toggle" href="#" class="glyphicon glyphicon-align-justify ">
-                                <i class="fa fa-bars"></i>
-                            </a>
-
-                        </h1>*@
                 </div>
 
             </div>
@@ -368,7 +303,6 @@
         <div class="tab-pane" id="graph">A timeseries viewer will be available soon!</div>
     </div>
 </div>
-@*</div>*@
 
 <!-- Modal -->
 <!-- Modal dialog for Contact -->
@@ -413,7 +347,6 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
-                @*<h3 class="modal-title" id="myModalLabel">License Information  <a href="http://www.github.com/cuahsi" target="_blank">(Version n.n)</a></h3>*@
                 <h3 class="modal-title" id="myModalLabel">License Information  <a href="http://www.github.com/cuahsi" target="_blank">(Version @System.Web.Configuration.WebConfigurationManager.AppSettings["currentVersion"])</a></h3>
             </div>
             <div class="modal-body">
@@ -483,12 +416,11 @@
             </div>
             <div class="modal-body">
                 <div style="margin-left: 2.0em;">
-                    @*<div style="width: 800px; height: 700px">*@
                     <div>
                         @*<object data="~/Home/Quickstart"
-                                type="text/html"
-                                width="800"
-                                  height="700"></object>*@
+                            type="text/html"
+                            width="800"
+                              height="700"></object>*@
                         <!-- NOTE: Using an object tag here to load markup into the DOM causes IE11 (and earlier) to
                                     re-load the page - causing duplicate calls to $(document).ready() - attempting to
                                     use a partial view here to prevent this behavior... -->
@@ -536,7 +468,6 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                @*<button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>*@
                 <h3 class="modal-title" id="myModalLabel">Loading Keywords...</h3>
             </div>
             <div class="modal-body">
@@ -652,12 +583,6 @@
                                         <label class="checkbox">
                                             <input type="checkbox" name="keywords" value="pH" id="inlineCheckbox11" class="topCategories" />pH
                                         </label>
-                                        @*<label class="checkbox">
-                                                    <input type="checkbox" name="keywords" value="dissolved solids, total" id="inlineCheckbox5" class="topCategories"/> Total Dissolved Solids
-                                            </label>
-                                            <label class="checkbox">
-                                                    <input type="checkbox" name="keywords" value="Methane" id="inlineCheckbox6" class="topCategories"/> Methane
-                                                </label>*@
                                     </div>
                                     <div class="controls col-lg-5">
                                         <label class="checkbox">
@@ -667,7 +592,6 @@
                                             <input type="checkbox" name="keywords" value="Snow Water Equivalent" id="inlineCheckbox14" class="topCategories" />Snow Water Equivalent
                                         </label>
                                         <label class="checkbox">
-                                            @*<input type="checkbox" name="keywords" value="Soil Moisture" id="inlineCheckbox15" class="topCategories"/>Soil Moisture*@
                                             <input type="checkbox" name="keywords" value="Water Content, Soil" id="inlineCheckbox15" class="topCategories" />Soil Moisture
                                         </label>
                                         <label class="checkbox">
@@ -676,9 +600,6 @@
                                         <label class="checkbox">
                                             <input type="checkbox" name="keywords" value="Solids, total suspended" id="inlineCheckbox16" class="topCategories" />Total Suspended Solids
                                         </label>
-                                        @*<label class="checkbox">
-                                                <input type="checkbox" name="keywords" value="Water Level" id="inlineCheckbox3" class="topCategories" />Water Level
-                                            </label>*@
                                         <label class="checkbox">
                                             <input type="checkbox" name="keywords" value="Turbidity" id="inlineCheckbox18" class="topCategories" />Turbidity
                                         </label>
@@ -699,24 +620,6 @@
                                     <button id="btnResetSearch">&times;</button>
                                     <span id="matches"></span>
                                 </p>
-                                @*<p>
-                                        <label for="hideMode">
-                                            <input type="checkbox" id="hideMode">
-                                            Hide unmatched nodes
-                                        </label>
-                                        <label for="leavesOnly">
-                                            <input type="checkbox" id="leavesOnly">
-                                            Leaves only
-                                        </label>
-
-                                        <label for="regex">
-                                            <input type="checkbox" id="regex">
-                                            Regular expression
-                                        </label>
-                                    </p>
-                                    <p id="sampleButtons">
-                                    </p>*@
-
 
                                 <div id="tree" data-source="ajax" class="sampletree">
 
@@ -748,7 +651,6 @@
             <div class="modal-header">
                 <button type="button" id="btnSaveServiceSelectionX" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h3 class="modal-title" id="myModalLabel">Click to select Data Services</h3>
-                @*BCC - 02-Jul-2015 - Internal QA Issue #23 - Move 'Exclude Gridded data services...' checkbox to right *@
                 <div class="form-group" style="position: relative;">
                     <h6 style="display:inline-block; float: left;"> (No selection searches all)</h6>
                     <label for="checkOnlyObservedValues" style="float: right;">
@@ -773,7 +675,7 @@
             </div>
             <div class="modal-footer">
                 @*BCC - 30-Jun-2015 - QA Issue #44 - Popup 'Click to select Data Services': 'Save' button is missed *@
-                <h6>Note: Many of data services listed here are maintained by the data publishers. CUAHSI cannot be held responsible for the status of these servers. All data publishers are responsible for the accuracy of their data. </h6>
+                <h6>Note: Many data services listed here are maintained by the data publishers. CUAHSI cannot be held responsible for the status of these servers. All data publishers are responsible for the accuracy of their data. </h6>
                 <button type="button" id="saveServiceSelection" class="btn btn-default btn-primary left" data-dismiss="modal">Close</button>
             </div>
             <!-- /.modal-content -->
@@ -791,7 +693,6 @@
         <div class="modal-content modal-content-full">
             <div class="modal-header modal-header-full">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
-                @*<button class="btn btn-default" href="#tabbedDataMgrTab" id="tableModal-DataMgr" data-dismiss="modal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-tasks"></span> Open Workspace</button>*@
 
                 <div style="float: right; margin-right: 2em;" class="btn btn-default">
                     <span class="glyphicon glyphicon-tasks">&nbsp;</span>
@@ -802,7 +703,6 @@
                 </div>
 
                 <h3 class="modal-title" id="myModalLabel">Search Results in area</h3>
-                @*<h5 style="margin-bottom: 1em;">To zip one or more data files, please click the associated table row(s) and then click the 'Export Selections' button. You can check the status by opening the workspace and selecting the "Exports" tab.</h5>*@
             </div>
             <div class="modal-body modal-body-full">
                 @* BCC- 23-Jul-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set 'max-width: none' on the table element!!
@@ -824,10 +724,6 @@
                 </table>
             </div>
             <div class="modal-footer modal-footer-full">
-                @*<span>
-                        @Html.ActionLink("Download as CSV", "downloadFile", "Export", new { id = 1 }, new { @class = "btn btn-info active pull-right", target = "_blank" })
-                    </span>
-                    <button id="DownloadAsCSV" type="button" class="btn btn-default">Download Selected as CSV</button>*@
             </div>
 
             <!-- /.modal-content -->
@@ -842,7 +738,6 @@
         <div class="modal-content modal-content-full">
             <div class="modal-header modal-header-full">
                 <button type="button" class="close" data-dismiss="modal" ariahidden="true">&times;</button>
-                @*<button class="btn btn-default" href="#tabbedDataMgrTab" id="tableModal-DataMgrTS" data-dismiss="modal" style="float: right; margin-right: 2em;"><span class="glyphicon glyphicon-tasks"></span> Open Workspace</button>*@
 
                 <div style="float: right; margin-right: 2em;" class="btn btn-default">
                     <span class="glyphicon glyphicon-tasks">&nbsp;</span>
@@ -854,7 +749,6 @@
 
                 <h3 class="modal-title" id="myModalLabel">Timeseries in Current Map Area</h3>
                 <h5>Table filters are applied to map!</h5>
-                @*<h5 style="margin-bottom: 1em;">To zip one or more data files, please click the associated table row(s) and then click the 'Export Selections' button. You can check the status by opening the workspace and selecting the "Exports" tab.</h5>*@
             </div>
             <div class="modal-body modal-body-full" id="dtTimeSeriesModal">
                 @* BCC- 23-Jul-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set 'max-width: none' on the table element!!
@@ -876,10 +770,6 @@
                 </table>
             </div>
             <div class="modal-footer modal-footer-full">
-                @*<span>
-                        @Html.ActionLink("Download as CSV", "downloadFile", "Export", new { id = 1 }, new { @class = "btn btn-info active pull-right", target = "_blank" })
-                    </span>
-                    <button id="DownloadAsCSV" type="button" class="btn btn-default">Download Selected as CSV</button>*@
             </div>
 
             <!-- /.modal-content -->
@@ -911,15 +801,6 @@
     </div>
 </div>
 
-
-
-
-@*<div id="context-menu">
-        <ul class="dropdown-menu" role="menu">
-            <li><a tabindex="-1" id="DownloadAsCSV" href="#">Download as CSV</a></li>
-            <li><a tabindex="-1" href="#">Add to DataCart</a></li>
-        </ul>
-    </div>*@
 <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">

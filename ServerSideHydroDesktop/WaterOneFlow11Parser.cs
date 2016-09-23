@@ -6,6 +6,8 @@ using System.Text;
 using System.Xml;
 using ServerSideHydroDesktop.ObjectModel;
 
+using HISWebClient.Util;
+
 namespace ServerSideHydroDesktop
 {    
     /// <summary>
@@ -26,7 +28,13 @@ namespace ServerSideHydroDesktop
             {
                 if (r.NodeType == XmlNodeType.Element)
                 {
-                    string nodeName = r.Name.ToLower();
+					if (XmlContext.AdvanceReaderPastEmptyElement(r))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
+					string nodeName = r.Name.ToLower();
                     if (nodeName == "unitname")
                     {
                         r.Read();
@@ -71,13 +79,28 @@ namespace ServerSideHydroDesktop
 
                 if (r.NodeType == XmlNodeType.Element)
                 {
-                    if (nodeName.IndexOf("variablecode") >= 0)
+					if (XmlContext.AdvanceReaderPastEmptyElement(r))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
+					if (nodeName.IndexOf("variablecode") >= 0)
                     {
                         string prefix = r.GetAttribute("vocabulary");
                         if (string.IsNullOrEmpty(prefix))
                         {
                             prefix = r.GetAttribute("network");
                         }
+
+						//BCC - 08-Aug-2016 - Retrieve variableID attribute value
+						string variableID = r.GetAttribute("variableID");
+						long result = 0;
+						if (long.TryParse(variableID, out result))
+						{
+							varInfo.Id = result;
+						}
+
                         r.Read();
                         string variableCode = r.Value;
                         if (!String.IsNullOrEmpty(prefix))
@@ -205,7 +228,13 @@ namespace ServerSideHydroDesktop
             {
                 if (r.NodeType == XmlNodeType.Element)
                 {
-                    if (r.Name == "value")
+					if (XmlContext.AdvanceReaderPastEmptyElement(r))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
+					if (r.Name == "value")
                     {
                         //create a new empty data value and add it to the list
                         var wrapper = new DataValueWrapper();
@@ -258,14 +287,22 @@ namespace ServerSideHydroDesktop
                                     qualityCode = "unknown"; //when the quality control level is unspecified
                                 }
                             }
-                            if (!qualityControlLevels.ContainsKey(qualityCode))
-                            {
-                                var qualControl = QualityControlLevel.Unknown;
-                                qualControl.Code = qualityCode;
-                                qualControl.Definition = qualityCode;
-                                qualControl.Explanation = qualityCode;
-                                qualityControlLevels.Add(qualityCode, qualControl);
-                            }
+
+							//BCC - 24-Aug-2016 - Check for a quality code of space-delimited terms...
+							string[] terms = qualityCode.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+
+							foreach (var term in terms)
+							{
+								if (!qualityControlLevels.ContainsKey(term))
+								{
+									var qualControl = QualityControlLevel.Unknown;
+									qualControl.Code = term;
+									qualControl.Definition = term;
+									qualControl.Explanation = term;
+									qualityControlLevels.Add(term, qualControl);
+								}
+							}
+
                             wrapper.QualityID = qualityCode;
 
                             //source
@@ -396,8 +433,37 @@ namespace ServerSideHydroDesktop
                     {
                         newSeries.Method = methods[SeriesCodeHelper.GetMethodCode(seriesCode)];
                         newSeries.Source = sources[SeriesCodeHelper.GetSourceCode(seriesCode)];
-                        newSeries.QualityControlLevel = qualityControlLevels[SeriesCodeHelper.GetQualityCode(seriesCode)];
-                    }
+
+						//BCC - 24-Aug-2016 - Add logic to handle space-delimited quality codes...
+						var qcCode = SeriesCodeHelper.GetQualityCode(seriesCode);
+						string[] terms = qcCode.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+
+						if (1 == terms.Length)
+						{
+							//One quality code found...
+							newSeries.QualityControlLevel = qualityControlLevels[SeriesCodeHelper.GetQualityCode(seriesCode)];
+						}
+						else
+						{
+							//Multiple quality codes found...
+							var qcl = new QualityControlLevel();
+							string separator = " | ";
+
+							qcl.Code = qcCode;
+							foreach (var term in terms)
+							{
+								var qclTemp = qualityControlLevels[term];
+
+								qcl.Definition += qclTemp.Definition + separator;
+								qcl.Explanation += qclTemp.Explanation + separator;
+							}
+
+							qcl.Definition = qcl.Definition.Substring(0, qcl.Definition.Length - separator.Length);
+							qcl.Explanation = qcl.Explanation.Substring(0, qcl.Explanation.Length - separator.Length);
+
+							newSeries.QualityControlLevel = qcl;
+						}
+					}
                     catch { }
                 }
 
@@ -453,7 +519,13 @@ namespace ServerSideHydroDesktop
             {
                 if (r.NodeType == XmlNodeType.Element)
                 {
-                    if (r.Name == "offsetDescription")
+					if (XmlContext.AdvanceReaderPastEmptyElement(r))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
+					if (r.Name == "offsetDescription")
                     {
                         r.Read();
                         offset.Description = r.Value;
@@ -497,7 +569,13 @@ namespace ServerSideHydroDesktop
             {
                 if (r.NodeType == XmlNodeType.Element)
                 {
-                    string nodeName = r.Name.ToLower();
+					if (XmlContext.AdvanceReaderPastEmptyElement(r))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
+					string nodeName = r.Name.ToLower();
                     if (nodeName == "labsamplecode")
                     {
                         r.Read();

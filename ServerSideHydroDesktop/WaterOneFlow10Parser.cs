@@ -5,6 +5,8 @@ using System.Linq;
 using System.Xml;
 using ServerSideHydroDesktop.ObjectModel;
 
+using HISWebClient.Util;
+
 namespace ServerSideHydroDesktop
 {
     public class WaterOneFlow10Parser : WaterOneFlowParser
@@ -29,13 +31,28 @@ namespace ServerSideHydroDesktop
 
                 if (r.NodeType == XmlNodeType.Element)
                 {
-                    if (nodeName.IndexOf("variablecode") >= 0)
+					if (XmlContext.AdvanceReaderPastEmptyElement(r))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
+					if (nodeName.IndexOf("variablecode") >= 0)
                     {
                         string prefix = r.GetAttribute("vocabulary");
                         if (string.IsNullOrEmpty(prefix))
                         {
                             prefix = r.GetAttribute("network");
                         }
+
+						//BCC - 08-Aug-2016 - Retrieve variableID attribute value
+						string variableID = r.GetAttribute("variableID");
+						long result = 0;
+						if (long.TryParse(variableID, out result))
+						{
+							varInfo.Id = result;
+						}
+
                         r.Read();
                         string variableCode = r.Value;
                         if (!String.IsNullOrEmpty(prefix))
@@ -167,7 +184,13 @@ namespace ServerSideHydroDesktop
             {
                 if (r.NodeType == XmlNodeType.Element)
                 {
-                    if (r.Name == "value")
+					if (XmlContext.AdvanceReaderPastEmptyElement(r))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
+					if (r.Name == "value")
                     {
                         //create a new empty data value and add it to the list
                         var wrapper = new DataValueWrapper();
@@ -396,7 +419,13 @@ namespace ServerSideHydroDesktop
 
             while (r.Read())
             {
-                if (r.NodeType == XmlNodeType.Element)
+				if (XmlContext.AdvanceReaderPastEmptyElement(r))
+				{
+					//Empty element - advance and continue...
+					continue;
+				}
+				
+				if (r.NodeType == XmlNodeType.Element)
                 {
                     if (r.Name == "offsetDescription")
                     {

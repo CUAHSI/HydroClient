@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
+using HISWebClient.Util;
+
 namespace HISWebClient.BusinessObjects
 {
     public class HisCentralWebServicesList : IWebServicesList
@@ -50,7 +52,13 @@ namespace HISWebClient.BusinessObjects
                 {
                     if (reader.NodeType == XmlNodeType.Element)
                     {
-                        if (reader.Name == "ServiceInfo")
+						if (XmlContext.AdvanceReaderPastEmptyElement(reader))
+						{
+							//Empty element - advance and continue...
+							continue;
+						}
+
+						if (reader.Name == "ServiceInfo")
                         {
                             string desciptionUrl = null;
                             string serviceUrl = null;
@@ -71,7 +79,13 @@ namespace HISWebClient.BusinessObjects
 
                                 if (reader.NodeType == XmlNodeType.Element)
                                 {
-                                    switch (reader.Name)
+									if (XmlContext.AdvanceReaderPastEmptyElement(reader))
+									{
+										//Empty element - advance and continue...
+										continue;
+									}
+									
+									switch (reader.Name)
                                     {
                                         case "Title":
                                             if (!reader.Read()) continue;
@@ -165,7 +179,7 @@ namespace HISWebClient.BusinessObjects
 
         public void RefreshListFromHisCentral(HISCentralSearcher searcher)
         {
-            searcher.GetWebServicesXml(WebServicesFilename);
+			searcher.GetWebServicesXml(WebServicesFilename, Encoding.UTF8.CodePage);
         }
 
         #endregion

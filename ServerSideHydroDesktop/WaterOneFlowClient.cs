@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using CUAHSIDataStorage;
 using ServerSideHydroDesktop.ObjectModel;
 
+using System.Threading;
+
 namespace ServerSideHydroDesktop
 {
     public class WaterOneFlowClient
@@ -23,6 +25,90 @@ namespace ServerSideHydroDesktop
 		//the object containing additional metadata information
 		//about the web service including service version
 		private readonly DataServiceInfo _serviceInfo;
+
+		private static SemaphoreSlim _semaphoreDict = new SemaphoreSlim(1, 1);	//For access to semaphore dictionary...
+
+		//Dictionary of service url's and associated semaphores...
+		private static Dictionary<string, SemaphoreSlim> _dict = new Dictionary<string, SemaphoreSlim>();
+			
+
+		#endregion
+
+		#region Utility
+
+		//WaitAsync for the semaphore associated with the input URL
+		private static async Task waitAsyncSemaphore(string url)
+		{
+			if (String.IsNullOrWhiteSpace(url))
+			{
+				return;	//Invalid input parameter - return early...
+			}
+
+			_semaphoreDict.Wait();	//Wait for access to dictionary!!
+
+			try
+			{
+				SemaphoreSlim semaphoreSlim = null;
+
+				if (_dict.ContainsKey(url))
+				{
+					//Associated semaphore exists - assign reference...
+					semaphoreSlim = _dict[url];
+				}
+				else
+				{
+					//Associated semaphore does not exist - create and assign reference
+					semaphoreSlim = new SemaphoreSlim(1, 1);
+					_dict[url] = semaphoreSlim;
+				}
+
+				_semaphoreDict.Release();			//Release the dictionary...
+				await semaphoreSlim.WaitAsync();	
+			}
+			catch (Exception ex)
+			{
+				//Take no action
+			}
+			finally
+			{
+				try
+				{
+					_semaphoreDict.Release();	//Release the dictionary...
+				}
+				catch (Exception ex)
+				{
+					//Take no action...
+				}
+			}
+		}
+
+		//Release the semaphore associated with the input URL
+		private static void releaseSemaphore(string url)
+		{
+			if (String.IsNullOrWhiteSpace(url))
+			{
+				return;	//Invalid input parameter - return early...
+			}
+
+			_semaphoreDict.Wait();	//Wait for access to dictionary!!
+
+			try
+			{
+				if (_dict.ContainsKey(url))
+				{
+					_dict[url].Release();
+				}
+			}
+			catch (Exception ex)
+			{
+				//Take no action...
+			}
+			finally
+			{
+				_semaphoreDict.Release();	//Release the dictionary...
+			}
+
+		}
 
 		#endregion
 
@@ -157,36 +243,54 @@ namespace ServerSideHydroDesktop
         /// <returns></returns>
         public async Task<Tuple<Stream, IList<Series>>> GetValuesAndRawStreamAsync(string siteCode, string variableCode, DateTime startTime, DateTime endTime, int waterOneflowTimeoutMilliseconds)
         {
-            HttpWebRequest req = WebServiceHelper.CreateGetValuesRequest(_serviceURL, siteCode, variableCode, startTime, endTime);
-            req.Timeout = waterOneflowTimeoutMilliseconds;
-            try
-            {                
-				//Task<WebResponse> getTask = Task.Factory.FromAsync(
-				//req.BeginGetResponse,
-				//asyncResult => req.EndGetResponse(asyncResult),
-				//(object)null);
+			await waitAsyncSemaphore(_serviceURL);
 
-				Task<WebResponse> getTask = Task.Factory.FromAsync<WebResponse>(req.BeginGetResponse, req.EndGetResponse, null);
-				
-				//Stream s = await getTask
-				//	.ContinueWith(t => ReadStreamFromResponse(t.Result));
-				//return new Tuple<Stream,IList<Series>>(s, _parser.ParseGetValues(s));
-				WebResponse wr = await getTask;
+			try
+            {
+				//Create request...
+				HttpWebRequest req = WebServiceHelper.CreateGetValuesRequest(_serviceURL, siteCode, variableCode, startTime, endTime);
+				//req.Timeout = waterOneflowTimeoutMilliseconds;	//Timeout not used in asynchronous tasks??
+
+				//Create task...
+				Task<WebResponse> getTask = Task.Factory.FromAsync<WebResponse>(req.BeginGetResponse,
+																				req.EndGetResponse,
+																				(object) null);
+
+				//Wait for task completion...
+				await getTask;
+
+				//Check for task exception...
 				if (getTask.IsFaulted)
-                {
+				{
 					Exception ex = getTask.Exception.InnerExceptions.First();
 					throw ex;
-                }
+				}								
 
 				Stream s = ReadStreamFromResponse(getTask.Result);
-				return new Tuple<Stream, IList<Series>>(s, _parser.ParseGetValues(s));
+
+				IList<Series> listSeries = _parser.ParseGetValues(s);
+
+				if (1 < listSeries.Count)
+				{
+					int n = 5;
+
+					++n;
+				}
+
+
+				return new Tuple<Stream, IList<Series>>(s, listSeries);
             }
             catch (Exception ex)
             {
-                LogHelper.LogGetAsyncDataValuesException(_serviceURL, siteCode, variableCode, startTime, endTime, ex);
+				LogHelper.LogGetAsyncDataValuesException(_serviceURL, siteCode, variableCode, startTime, endTime, ex);
 				throw ex;
-            } 
-        }
+            }
+			finally
+			{
+				//ALWAYS release the semaphore...
+				releaseSemaphore(_serviceURL);
+			}
+		}
 
         /// <summary>
         /// Transform a stream of a WaterOneFlow GetValues response into a Series object suitable for returning via middleware.
@@ -209,36 +313,41 @@ namespace ServerSideHydroDesktop
         /// <returns></returns>
         public async Task<IList<Series>> GetValuesAsync(string siteCode, string variableCode, DateTime startTime, DateTime endTime)
         {
-            HttpWebRequest req = WebServiceHelper.CreateGetValuesRequest(_serviceURL, siteCode, variableCode, startTime, endTime);
-            //req.Timeout = 30000; // 30-second max download            
-			req.Timeout = 60000; // 60-second max download  - BCC - 06-Jun-2016 - Increase timeout interval...
-            try
-            {
-				//Task<WebResponse> task = Task.Factory.FromAsync(
-				//req.BeginGetResponse,
-				//asyncResult => req.EndGetResponse(asyncResult),
-				//(object)null);
+			await waitAsyncSemaphore(_serviceURL);	//Wait for access to the semaphore!!
 
-				Task<WebResponse> task = Task.Factory.FromAsync<WebResponse>(req.BeginGetResponse, req.EndGetResponse, null);
+			try
+			{
+				//Create request...
+				HttpWebRequest req = WebServiceHelper.CreateGetValuesRequest(_serviceURL, siteCode, variableCode, startTime, endTime);
+				//req.Timeout = 60000;	//Timeout not used in asynchronous tasks??
 
-                //return await task.ContinueWith(t => _parser.ParseGetValues(ReadStreamFromResponse(t.Result)));
-				WebResponse wr = await task;
-				if (task.IsFaulted)
-                {
-					Exception ex = task.Exception.InnerExceptions.First();
+				//Create task...
+				Task<WebResponse> getTask = Task.Factory.FromAsync<WebResponse>(req.BeginGetResponse,
+																				req.EndGetResponse,
+																				(object) null);
+				//Wait for task completion...
+				await getTask;
+
+				//Check for task exception...
+				if (getTask.IsFaulted)
+				{
+					Exception ex = getTask.Exception.InnerExceptions.First();
 					throw ex;
-                }
+				}
 
-				//Parse returned series - save to series cache, if indicated 
-				IList<Series> iList = _parser.ParseGetValues(ReadStreamFromResponse(task.Result));
-				return iList;
-            }
-            catch (Exception ex)
-                {
+				return _parser.ParseGetValues(ReadStreamFromResponse(getTask.Result));
+			}
+			catch (Exception ex)
+			{
 				LogHelper.LogGetAsyncDataValuesException(_serviceURL, siteCode, variableCode, startTime, endTime, ex);
-                    return new List<Series>();
-            }
-        }        
+				return new List<Series>();
+			}
+			finally
+			{
+				//ALWAYS release the semaphore...
+				releaseSemaphore(_serviceURL); ;
+			}
+		}        
 
         /// <summary>
         /// Extracts a Stream ready for schema parsing from a web response stream. With this and GetValuesAsync, the request executes asynchronously, while the parsing blocks (desired behavior).
@@ -250,21 +359,22 @@ namespace ServerSideHydroDesktop
         {
 			Stream stream = response.GetResponseStream();
 
-
-			//BCC - Test - Here the stream contains data...
-			//using (System.IO.FileStream output = new System.IO.FileStream(@"C:\CUAHSI\ReadFromStreamResponse.xml", FileMode.Create))
-			//{
-			//	stream.CopyTo(output);
-			//}
-
-			//BC TEST - Copy stream contents to a new memory stream and return the memory stream...
+			//Copy stream contents to a new memory stream and return the memory stream...
 			MemoryStream ms = new MemoryStream();
 			stream.CopyTo(ms);
 			ms.Seek(0, SeekOrigin.Begin);
+
+#if (DEBUG)
+			//Here the stream contains data...
+			using (System.IO.FileStream output = new System.IO.FileStream(@"C:\CUAHSI\ReadFromStreamResponse.xml", FileMode.Create))
+			{
+				ms.CopyTo(output);
+				output.Flush();
+				ms.Seek(0, SeekOrigin.Begin);
+			}
+#endif
+	
 			return ms;
-
-
-            return stream;
         } 
 
 		#endregion

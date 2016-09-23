@@ -7,10 +7,11 @@ using System.Text;
 
 namespace HISWebClient.Models
 {
-    public class TimeSeriesViewModel
+	[Serializable]
+	public class TimeSeriesViewModel
     {
         //Initializing constructor
-        public TimeSeriesViewModel() { }
+        public TimeSeriesViewModel() {}
 
         //Copy constructor...
         public TimeSeriesViewModel(TimeSeriesViewModel tsvm)
@@ -32,14 +33,28 @@ namespace HISWebClient.Models
             ValueType = tsvm.ValueType;
             SampleMedium = tsvm.SampleMedium;
             TimeUnit = tsvm.TimeUnit;
-            //GeneralCategory = tsvm.GeneralCategory;
+			//BCC - 08-Aug-2016 - Enable general category assignment
+            GeneralCategory = tsvm.GeneralCategory;
             TimeSupport = tsvm.TimeSupport;
             ConceptKeyword = tsvm.ConceptKeyword;
 			//BCC - 15-Oct-29015 -  Suppress display of IsRegular
 			//IsRegular = tsvm.IsRegular;
             VariableUnits = tsvm.VariableUnits;
-            //Citation = tsvm.Citation;
+			Citation = tsvm.Citation;
             Organization = tsvm.Organization;
+
+			QCLID = tsvm.QCLID;
+
+			QCLDesc = tsvm.QCLDesc;
+
+			SourceOrg = tsvm.SourceOrg;
+
+			SourceId = tsvm.SourceId;
+
+			MethodId = tsvm.MethodId;
+
+			MethodDesc = tsvm.MethodDesc;
+
         }
 
         public int SeriesId { get; set; }
@@ -130,8 +145,22 @@ namespace HISWebClient.Models
         public string VariableUnits { get; set; }
 
         public string Citation { get; set; }
-        //Organization to be retrived rom service metadata
+
+        //Organization to be retrived from service metadata
         public string Organization { get; set; }
+
+		//BCC - 07-Sep-2016 - Add additional fields for use with GetSeriesCatalogForBox3...
+		public string QCLID { get; set; }
+
+		public string QCLDesc { get; set; }
+
+		public string SourceOrg { get; set; }
+
+		public string SourceId { get; set; }
+
+		public string MethodId { get; set; }
+
+		public string MethodDesc { get; set; }
 
         //Override ToString method for logging...
         public override string ToString()

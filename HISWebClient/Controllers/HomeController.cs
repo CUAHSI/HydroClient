@@ -78,11 +78,7 @@ namespace HISWebClient.Controllers
 
 		public ActionResult Index()
 		{
-			//BCC - Testing server timeout errors
-			//Session.Timeout = 1;
-
 			ViewBag.Message = "CUAHSI Hydrologic Data Services";
-			//ViewBag.ServiceDomain = RoleEnvironment.GetConfigurationSettingValue("ServiceDomain");           
 			
 			if (Session["sessionGuid"] == null)
 			{
@@ -94,10 +90,9 @@ namespace HISWebClient.Controllers
 			{
 				ViewBag.ThisSessionGuid = Session["sessionGuid"].ToString();
 			}
-			//LogHelper.LogNewAPIUse(sessionguid);
-			//var conceptKeyword = "";
+
 			var ontologyHelper = new OntologyHelper();
-			//var s = ontologyHelper.getOntology(conceptKeyword);
+
 			return View();
 		}
 
@@ -197,25 +192,13 @@ namespace HISWebClient.Controllers
 				filterAndSearchCriteria = JsonConvert.DeserializeObject<clientFilterAndSearchCriteria>(strFilterAndSearchCriteria);
 			}
 
-			//if (collection["sessionGuid"] != null)
-			//{
-			//    var sessionGuid = collection["sessionGuid"].ToString();
-			//}
-			
-
 			//if it is a new request
 			if (collection["isNewRequest"].ToString() == "true")
 			{
 
 				bool canConvert = false;
 
-				//var keywords = collection["keywords"].Split('#');
 				var keywords = Regex.Split(collection["keywords"], @"##");
-				//replace underscore with comma to align spelling 
-				//for (var k =0;k<keywords.Length;k++)
-				//{
-				//    keywords[k] = keywords[k].Replace("_", ",");
-				//}
 				var tileWidth = 10;
 				var tileHeight = 10;
 				List<int> webServiceIds = null;
@@ -228,11 +211,7 @@ namespace HISWebClient.Controllers
 					{
 						webServiceIds = collection["services"].Split(',').Select(s => Convert.ToInt32(s)).ToList();
 					}
-					//for test
-					//int[] test = new int[] { 162, 81, 171 };
-					// webServiceIds.AddRange(test);
 
-					//var progressHandler = new ProgressHandler(this);
 					var dataWorker = new DataWorker();
 
 					var allWebservices = dataWorker.getWebServiceList();
@@ -313,53 +292,48 @@ namespace HISWebClient.Controllers
 					dblogcontext.createLogEntry(System.Web.HttpContext.Current, startDtUtc, endDtUtc, "updateMarkers(...)", "calls dataWorker.getSeriesData(...)", Level.Info);
 
 					var list = new List<TimeSeriesViewModel>();
-
-					if (series.Count> 0)
+#if (DEBUG)
+					//BCC - Test - write data cart and time series objects to files...
+					using (System.IO.StreamWriter swSdc = System.IO.File.CreateText(@"C:\CUAHSI\SeriesDataCart.json"))
 					{
-						for (int i = 0; i < series.Count; i++)
+						using (System.IO.StreamWriter swTsvm = System.IO.File.CreateText(@"C:\CUAHSI\TimeSeriesViewModel.json"))
 						{
-							var tvm = new TimeSeriesViewModel();
-							tvm = mapDataCartToTimeseries(series[i], i);
-							list.Add(tvm);
+							JsonSerializer jsonser = new JsonSerializer();
+
+							swSdc.Write('[');	//Write start of array...
+							swTsvm.Write('[');
+#endif
+							if (series.Count > 0)
+							{
+								for (int i = 0; i < series.Count; i++)
+								{
+									var tvm = new TimeSeriesViewModel();
+									tvm = mapDataCartToTimeseries(series[i], i);
+									list.Add(tvm);
+
+#if (DEBUG)
+									jsonser.Serialize(swSdc, series[i]);
+									jsonser.Serialize(swTsvm, tvm);
+
+									if ( (i + 1) < series.Count )
+									{
+										swSdc.Write(',');	//Separate array element...
+										swTsvm.Write(',');
+									}
+#endif
+								}
+							}
+
+#if (DEBUG)
+							swSdc.Write(']');	//Write end of array...
+							swTsvm.Write(']');
 						}
-
-						//TO DO - Transfer logic to tblDataManager loading and copying functions 
-						//			The retrieval of the Variable Units is too time consuming to do for every time series...
-						//var count = list.Count;
-						//var list1 = new List<TimeSeriesViewModel>();
-						//for (int i = 0; i < count; ++i)
-						//{
-						//	int seriesId = list[i].SeriesId;
-						//	list1.Add(list[i]);
-						//	SeriesData sd = null;
-
-						//	//Task<SeriesData> sd = Task.Run(async () =>
-						//	Task.Run(async () =>
-						//	{
-						//		//SeriesData sd1 = await exportController.GetSeriesDataFromSeriesID(seriesId, list1);
-						//		try
-						//		{
-						//			sd = await exportController.GetSeriesDataFromSeriesID(seriesId, list1);
-						//		}
-						//		catch (Exception ex)
-						//		{
-						//			//For now take no action...
-						//			sd = null;
-						//		}
-						//	}).Wait();
-
-						//	if (null != sd)
-						//	{
-						//		list[i].VariableUnits = sd.myVariable.VariableUnit.Name;
-						//	}
-						//}
 					}
-
+#endif
 					var markerClustererHelper = new MarkerClustererHelper();
 
 					//save list for later
 					Session["Series"] = list;
-					// Session["test"] = "test";// series;
 
 					//transform list int clusteredpins
 					var pins = transformSeriesDataCartIntoClusteredPin(list, filterAndSearchCriteria);
@@ -413,7 +387,6 @@ namespace HISWebClient.Controllers
 			}
 			else
 			{
-				//var s = (string)Session["test"];
              	//BCC - 19-Nov-2015 - GitHub Issues #67 - Application unresponsive after session timeout and zoom out...
 				var retrievedSeries = (List<TimeSeriesViewModel>)Session["Series"];
 
@@ -470,7 +443,6 @@ namespace HISWebClient.Controllers
 			Uri uriDefaultIcon = new Uri(ConfigurationManager.AppSettings["uriDefaultIcon"], UriKind.Absolute);
 			Uri uriCuahsiLogo = new Uri(ConfigurationManager.AppSettings["uriCuahsiLogo"], UriKind.Relative);
 
-			//string uriIcon = String.Format("{0}{1}", "http://hiscentral.cuahsi.org/getIcon.aspx?name=", id);
             var uri = new Uri(ConfigurationManager.AppSettings["ServiceUrl"]);
             string uriIcon = String.Format("{0}{1}",  "http://" + uri.Host + "/getIcon.aspx?name=", id);
 
@@ -495,7 +467,6 @@ namespace HISWebClient.Controllers
 		//		The current controller method is provided to allow retention of file/directory name(s) as received from Google...
 		//			
 		[HttpGet]
-//		public async Task<ActionResult> getGoogleIcon(string id)			//MUST use 'id' here to match the identifier used in the MapRoute call!!
 		public ActionResult getGoogleIcon(string id)			//MUST use 'id' here to match the identifier used in the MapRoute call!!
 		{
 			//Validate/initialize input parameters
@@ -545,8 +516,8 @@ namespace HISWebClient.Controllers
 			catch (Exception ex)
 			{
 				//Take no action...
-			return response;
-		}
+				return response;
+			}
 		}
 
 		//Return the response's final RequestUri
@@ -580,12 +551,7 @@ namespace HISWebClient.Controllers
 			sb.Append("[3,50,60],");
 			sb.Append("[4,70,80]");
 			sb.Append("]");
-			//sb.Append(",");
-			//sb.Append("{");
-			//sb.Append(" labels: [ \"x\", \"A\", \"B\" ]");
-			//sb.Append("}");
 
-			//return new ContentResult { Content = sb.ToString(), ContentType = "application/json" };
 			return sb.ToString();
 		}
 		
@@ -593,21 +559,16 @@ namespace HISWebClient.Controllers
 		{
 			var sb =  new StringBuilder();
 			sb.Append("[");
-			//sb.Append("{\"key\": \"1\", \"title\": \"Hydrosphere\", \"folder\": \"true\", \"children\": [");
 			sb.Append("{\"key\": \"2\", \"title\": \"Physical\",\"folder\": true, \"lazy\":true},");
 			sb.Append("{\"key\": \"3\", \"title\": \"Chemical\",\"folder\": true, \"lazy\":true},");
 			sb.Append("{\"key\": \"4\", \"title\": \"Biological\",\"folder\": true, \"lazy\":true}");
-			//.Append("]}");	
 			sb.Append("]");
-			//var json = new JsonResult(s);
+
 			return sb.ToString();
 		}
 
 		public string getOntologyByCategory(string id)
 		{
-			//var json = "[ {\"title\": \"Sub item\", \"lazy\": true }, {\"title\": \"Sub folder\", \"folder\": true, \"lazy\": true } ]";
-			//var json = new JsonResult(s);
-
 			var ontologyHelper = new OntologyHelper();
 			var ontologyJson = ontologyHelper.getOntology(id);
 
@@ -623,11 +584,8 @@ namespace HISWebClient.Controllers
 				var currentCluster = clusteredPins[id];
 				var sb = new StringBuilder();
 				var allRetrievedSeries = (List<TimeSeriesViewModel>)Session["Series"];
-				//var seriesInCluster = retrievedSeries.
-				//var w = (List<TimeSeriesViewModel>)retrievedSeries.Select((value, index) => new { value, index }).Where(x => x.index > 50).Select(x => x);
 				
 				var seriesInCluster = new List<TimeSeriesViewModel>();
-				//seriesInCluster = allRetrievedSeries.Where((o=> allRetrievedSeries))
 
 				var allRetrievedSeriesArray = allRetrievedSeries.ToArray();
 
@@ -638,7 +596,7 @@ namespace HISWebClient.Controllers
 					
 					if (obj != null) seriesInCluster.Add(obj);
 				}
-				//var json = new JavaScriptSerializer().Serialize(seriesInCluster);
+
 				var json = JsonConvert.SerializeObject(seriesInCluster);
 				json = "{ \"data\":" + json + "}";
 				return json;
@@ -654,10 +612,9 @@ namespace HISWebClient.Controllers
 		public string getTimeseries()
 		{
 			 
-				var sb = new StringBuilder();
-				var allRetrievedSeries = (List<TimeSeriesViewModel>)Session["Series"];
-				//var seriesInCluster = retrievedSeries.
-				//var w = (List<TimeSeriesViewModel>)retrievedSeries.Select((value, index) => new { value, index }).Where(x => x.index > 50).Select(x => x);
+			var sb = new StringBuilder();
+			var allRetrievedSeries = (List<TimeSeriesViewModel>)Session["Series"];
+
 			if (allRetrievedSeries != null)
 			{
 				var allRetrievedSeriesArray = allRetrievedSeries.ToArray();
@@ -672,7 +629,6 @@ namespace HISWebClient.Controllers
 					if (obj != null) seriesInCluster.Add(obj);
 				}
 				
-				//var json = new JavaScriptSerializer().Serialize(seriesInCluster);
 				var json = JsonConvert.SerializeObject(seriesInCluster);
 				json = "{ \"data\":" + json + "}";
 				return json;
@@ -694,8 +650,6 @@ namespace HISWebClient.Controllers
 				series = filterTimeSeries(series, filterAndSearchCriteria);
 			}
 
-//			Dictionary<string, int> servCodeCounts = new Dictionary<string, int>();
-
 			for (int i = 0; i < series.Count; i++)
 			{
 
@@ -708,12 +662,8 @@ namespace HISWebClient.Controllers
 
 				//Retain the service code, title and highest value count for later reference...
 				string key = series[i].ServCode;
-				//int count = series[i].ValueCount;
 				string title = series[i].ServTitle;
 
-//				servCodeCounts[key] = (servCodeCounts.ContainsKey(key)) ? servCodeCounts[key] + 1 : 1;
-
-//				cl.ServiceCodeToTitle[key] = title + " (" + servCodeCounts[key].ToString() + ")";
 				cl.ServiceCodeToTitle[key] = title;
 	
 				clusterPins.Add(cl);
@@ -835,15 +785,25 @@ namespace HISWebClient.Controllers
 			obj.DataType = dc.DataType;
 			obj.ValueType = dc.ValueType;
 			obj.SampleMedium = dc.SampleMedium;
+			//BCC - 08-Aug-2016 - Assign view model general category...
+			obj.GeneralCategory = dc.GeneralCategory;
 			obj.TimeUnit = dc.TimeUnit;
-			//obj.GeneralCategory = dc.GeneralCategory;
 			obj.TimeSupport = dc.TimeSupport;
 			obj.ConceptKeyword = dc.ConceptKeyword;
-			//BCC - 15-Oct-29015 -  Suppress display of IsRegular
+			//BCC - 15-Oct-2015 -  Suppress display of IsRegular
 			//obj.IsRegular = dc.IsRegular;
 			obj.VariableUnits = dc.VariableUnits;
-			//obj.Citation = dc.Citation;
 			obj.Organization = dict.FirstOrDefault(x => x.Key == dc.ServCode).Value;
+
+			//BCC - 07-Sep-2016 - Add additional fields for use with GetSeriesCatalogForBox3...
+			obj.QCLID = dc.QCLID;
+			obj.QCLDesc = dc.QCLDesc;
+
+			obj.SourceId = dc.SourceId;
+			obj.SourceOrg = dc.SourceOrg;
+
+			obj.MethodId = dc.MethodId;
+			obj.MethodDesc = dc.MethodDesc;
 
 			return obj;
 		}
@@ -853,9 +813,20 @@ namespace HISWebClient.Controllers
 			var dataWorker = new DataWorker();
 
 			var allWebservices = dataWorker.getWebServiceList();
+
+			WebServiceNode wsn5588 = null;
+			int count = 0;
+			foreach (WebServiceNode wsn in allWebservices)
+			{
+				Console.WriteLine(String.Format("{0} - {1}", count++, wsn.ServiceID));
+				if (5588 == wsn.ServiceID)
+				{
+					wsn5588 = wsn;
+				}
+			}
+
 			if (allWebservices != null)
 			{
-				//var s = from a in allWebservices select new [a.ServiceID, a.ServiceCode, a.Organization, a.Sites,a.Variables]
 				var json = JsonConvert.SerializeObject(allWebservices);
 				json = "{ \"data\":" + json + "}";
 				return json;
@@ -895,104 +866,12 @@ namespace HISWebClient.Controllers
 			var filePath = Server.MapPath(dir + filename);
 			var fileType = "text/csv";
 			return "downloadtest.csv";
-			//return base.File(filePath, "text/csv", filename);
-			//if (System.IO.File.Exists(filePath))
-
-			//else
-			//    return Content("Couldn't find file");        
-
 		}
-
-		//[HttpPost]
-		//public string getSeriesValuesAsCSV(FormCollection collection)
-		//{
-		//    var series = new ServerSideHydroDesktop.ObjectModel.SeriesDataCart();
-
-
-		//    CUAHSI.Models.SeriesMetadata seriesMetaData = null;
-
-		//    for (int i = 0; i < collection.Count; i++)
-		//    {
-		//        var split = collection[i].Split(',');
-		//        list[i] = new Array(rows[i].ServCode, rows[i].ServURL, rows[i].SiteCode, rows[i].VariableCode, rows[i].BeginDate, rows[i].EndDate);
-		//        object[] metadata = new object[13];
-		//        metadata[0] = split[0];
-		//        metadata[1] = split[1];
-		//        metadata[2] = split[2];
-		//        metadata[3] = split[3];
-		//        metadata[4] = split[4];
-		//        metadata[5] = split[5];
-		//        metadata[6] = split[6];
-		//        metadata[7] = split[7];
-		//        metadata[8] = split[8];
-		//        metadata[9] = split[9];
-		//        metadata[10] = split[10];
-		//        metadata[11] = 0;
-		//        metadata[12] = 0;
-		//        metadata[13] = split[13];
-		//        seriesMetaData = new SeriesMetadata(metadata);
-		//    }
-
-		//    var url = DoSeriesDownload(seriesMetaData);
-
-
-
-		//    return "url";
-		//}
 
 		public void setdownloadIds(FormCollection collection)
 		{
 
 		}
-
-		//public async Task<string> DoSeriesDownload(SeriesMetadata seriesMetaData)
-		//{
-		//    Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>> data = await SeriesAndStreamOfSeriesID(seriesMetaData);
-		//    Tuple<Stream, SeriesData> series = null;
-		//    DateTimeOffset requestTime = DateTimeOffset.UtcNow;
-
-
-
-		//    if (data == null || data.Item2.FirstOrDefault() == null)
-		//    {
-		//        throw new KeyNotFoundException();
-		//    }
-		//    else
-		//    {
-		//        var dataResult = data.Item2.FirstOrDefault();
-		//        IList<DataValue> dataValues = dataResult.DataValueList.OrderBy(a => a.DateTimeUTC).Select(aa => new DataValue(aa)).ToList();
-		//        series = new Tuple<Stream, SeriesData>(data.Item1, new SeriesData(seriesMetaData.SeriesID, seriesMetaData, dataResult.Method, dataResult.QualityControlLevel.Code, dataValues,
-		//            dataResult.Variable.VariableUnit.Name, dataResult.Variable.VariableUnit.Abbreviation, dataResult.Site.VerticalDatum, dataResult.Site.Elevation_m));
-		//    }
-
-		//    string nameGuid = Guid.NewGuid().ToString();
-
-		//    var dl = wdcStore.PersistSeriesData(series.Item2, nameGuid, requestTime);
-
-		//    //fire and forget => no reason to require consistency with user download.
-		//    var persist = wdcStore.PersistSeriesDocumentStream(data.Item1, 0, nameGuid, DateTime.UtcNow);
-
-		//    await Task.WhenAll(new List<Task>() { dl, persist });
-
-		//    series.Item2.wdcCache = dl.Result.Uri;
-		//    //return series.Item2;
-		//    Session["StatusMessage"] = dl.Result.Uri;
-		//    return dl.Result.Uri;
-		//}
-
-
-		//BCC - 06-Jun-2016 - NEVER CALLED...
-		//public async Task<Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>>> SeriesAndStreamOfSeriesID(SeriesMetadata meta)
-		//{
-		//	WaterOneFlowClient client = new WaterOneFlowClient(meta.ServURL);
-		//	return await client.GetValuesAndRawStreamAsync(
-		//			meta.SiteCode,
-		//			meta.VarCode,
-		//			meta.StartDate,
-		//			DateTime.UtcNow,
-		//			//Convert.ToInt32(30000));
-		//			Convert.ToInt32(60000));	//BCC - 06-Jun-2016 - Increase timeout interval...
-		//}
 
 	}
 }

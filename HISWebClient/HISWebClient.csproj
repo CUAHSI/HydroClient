@@ -269,7 +269,6 @@
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
     <Compile Include="Common\FileDownloadAttribute.cs" />
     <Compile Include="Controllers\AccountController.cs" />
-    <Compile Include="Controllers\Class1.cs" />
     <Compile Include="Controllers\DataManagerController.cs" />
     <Compile Include="Controllers\DownloadManagerController.cs" />
     <Compile Include="Controllers\ExportController.cs" />
@@ -288,6 +287,14 @@
     <Compile Include="Migrations\201603211641193_AddedStatusMessage.Designer.cs">
       <DependentUpon>201603211641193_AddedStatusMessage.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201609192129407_QclSourceAndMethod.cs" />
+    <Compile Include="Migrations\201609192129407_QclSourceAndMethod.Designer.cs">
+      <DependentUpon>201609192129407_QclSourceAndMethod.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201609201523250_RemoveSourceDesc.cs" />
+    <Compile Include="Migrations\201609201523250_RemoveSourceDesc.Designer.cs">
+      <DependentUpon>201609201523250_RemoveSourceDesc.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\ClientFilterAndSearchCriteria\clientDataSource.cs" />
@@ -303,6 +310,7 @@
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
     <Compile Include="Models\OntologyHelper.cs" />
+    <Compile Include="Models\SeriesValueAttributes.cs" />
     <Compile Include="Models\TaskData.cs" />
     <Compile Include="Models\TimeSeriesRequest.cs" />
     <Compile Include="Models\TimeSeriesResponse.cs" />
@@ -315,6 +323,7 @@
     <Compile Include="Util\DbBaseContext.cs" />
     <Compile Include="Util\DbErrorContext.cs" />
     <Compile Include="Util\DbLogContext.cs" />
+    <Compile Include="Util\EnumExtensionMethods.cs" />
     <Compile Include="Util\ExportUtils.cs" />
     <Compile Include="Util\FileContext.cs" />
     <Compile Include="Util\httpUtil.cs" />
@@ -323,8 +332,8 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Util\StringContext.cs" />
+    <Compile Include="Util\XmlContext.cs" />
     <Compile Include="Views\DiagnosticMonTraceListener.cs" />
-    <Compile Include="Scripts\EnumExtensionMethods.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Areas\HelpPage\HelpPage.css" />
@@ -640,6 +649,11 @@
     <Content Include="Views\Home\_DatatableDataservicesColumns.cshtml" />
     <Content Include="Views\Home\_DataManagerTimeseriesColumns.cshtml" />
     <Content Include="Views\Home\Quickstart.cshtml" />
+    <Content Include="Web-Deploy.config" />
+    <Content Include="Web-LocalBuild.config" />
+    <Content Include="Views\Home\_DatatableQualityControlLevelsColumns.cshtml" />
+    <Content Include="Views\Home\_DatatableMethodDescriptionsColumns.cshtml" />
+    <Content Include="Views\Home\_DatatableSourceOrganizationsColumns.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\yeti\" />
@@ -694,6 +708,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201603211641193_AddedStatusMessage.resx">
       <DependentUpon>201603211641193_AddedStatusMessage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201609192129407_QclSourceAndMethod.resx">
+      <DependentUpon>201609192129407_QclSourceAndMethod.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201609201523250_RemoveSourceDesc.resx">
+      <DependentUpon>201609201523250_RemoveSourceDesc.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

@@ -5,6 +5,17 @@ using System.Web;
 
 namespace HISWebClient.Models
 {
+	public class WofIds
+	{
+		public string WofId { get; set; }
+ 
+		public string QCLID { get; set;}
+
+		public string MethodId { get; set; } 
+
+		public string SourceId { get; set;}
+	}
+
 	public class ConvertWaterMlToCsvRequest
 	{
         /// <summary>
@@ -12,16 +23,16 @@ namespace HISWebClient.Models
         /// </summary>
 		public ConvertWaterMlToCsvRequest()
 		{
-			WofIds = new List<string>();
+			WofIds = new List<WofIds>();
 		}
 
-		public ConvertWaterMlToCsvRequest(string requestNameIn, string requestIdIn, string[] wofIdsIn)
+		public ConvertWaterMlToCsvRequest(string requestNameIn, string requestIdIn, WofIds[] wofIdsIn)
         {
             RequestName = requestNameIn;
 
             RequestId = requestIdIn;
 
-            WofIds = new List<string>(wofIdsIn);
+            WofIds = new List<WofIds>(wofIdsIn);
         }
 
 		/// <summary>
@@ -38,6 +49,6 @@ namespace HISWebClient.Models
 		/// <summary>
 		/// WaterOneFlow Ids
 		/// </summary>
-		public List<string> WofIds { get; set; }
+		public List<WofIds> WofIds { get; set; }
 	}
 }

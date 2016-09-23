@@ -78,6 +78,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\HISWebClient\Util\XmlContext.cs">
+      <Link>XmlContext.cs</Link>
+    </Compile>
     <Compile Include="AreaSettings.cs" />
     <Compile Include="Box.cs" />
     <Compile Include="CatalogSettings.cs" />

@@ -30,26 +30,9 @@ namespace HISWebClient.Controllers
 			_ac = ac;
 		}
 
-
 		//GET CUAHSI/HydroClient/WaterOneFlowArchive/{id}
-		//public async Task<HttpResponseMessage> Get(string id)
 		public async Task<HttpResponseMessage> Get(string fileName, string fileExtension)
 		{
-			//For now - just return a test 'zip' file...
-			//FileStream fs = new FileStream( HttpContext.Current.Server.MapPath("~/App_Data/Test.zip"), FileMode.Open);
-
-			//fs.Seek(0, SeekOrigin.Begin);
-
-			//var pushStreamContent = new PushStreamContent((stream, content, context) =>
-			//{
-			//	fs.CopyTo(stream);
-			//	stream.Close(); // After save we close the stream to signal that we are done writing.
-			//	fs.Close();
-			//}, "application/zip");
-
-			//Retrieve the input blob Id...
-			//MemoryStream ms = await _ac.RetrieveBlobAsync(id, CancellationToken.None);
-
 			HttpResponseMessage response = new HttpResponseMessage();
 		
 			//Validate/initialize input parameters

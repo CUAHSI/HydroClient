@@ -34,7 +34,7 @@
 
 
 }
-logo
+.logo
 {
 	 border:0px; 
 	 vertical-align:top;
@@ -493,62 +493,6 @@ BCC - 14-Oct-2015 - Causes problems when displaying time series after zooming in
 .dropdown-submenu:hover>a:after{border-left-color:#ffffff;}
 .dropdown-submenu.pull-left{float:none;}.dropdown-submenu.pull-left>.dropdown-menu{left:-100%;margin-left:10px;-webkit-border-radius:6px 0 6px 6px;-moz-border-radius:6px 0 6px 6px;border-radius:6px 0 6px 6px;}
 
-
-/* DataTables column widths - 
-    NOTE: <td> widths can be expressed in px or % only!!
-*/
-/*.tableCol5pct {
-    width: 5%;
-}*/
-
-/* DataTables column wrapping - 
-    NOTE: <td> widths can be expressed in px or % only!!
-*/
-/*.tableColWrap10pct {
-    white-space:normal;
-    width: 10%;
-}
-
-.tableColWrap15pct {
-    white-space: normal;
-    width: 15%;
-}
-
-.tableColWrap20pct {
-    white-space: normal;
-    width: 20%;
-}
-
-.tableColWrap25pct {
-    white-space: normal;
-    width: 25%;
-}
-
-.tableColWrap30pct {
-    white-space: normal;
-    width: 30%;
-}*/
-
-/* BCC - 13-Nov-2015 - Probably no longer needed
-
-#tblDataManagerGroup {
-    display: inline-block;
-    position: relative;
-    float: right;
-
-}
-
-#tblDataManager_filter {
-    float: none;
-}
-
-#tblDataManager_length {
-    float: none;
-}
-*/
-
-
-
 .labels {
     color: white;
     background-color: red;
@@ -568,4 +512,53 @@ BCC - 14-Oct-2015 - Causes problems when displaying time series after zooming in
 ul.fancytree-container {
   max-height: 30em;
   width: 100%;
+}
+
+
+.width-20em{
+    width: 20em;
+}
+
+.test-long-text {
+    /*max-width: 20em;*/
+    max-width: 10em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+
+.max-width-10em {
+    max-width: 10em;
+}
+
+
+/*.large.tooltip-inner {
+    max-width: 40em;
+    width: 40em;
+}*/
+
+/*
+    BCC - 06-Sep-2016 - Override Datatables styling to allow wrapping of long text in table cells...
+*/
+/*table.td-breakword {
+    white-space: normal;
+}*/
+
+/*
+    For wrapping long text in table cells... 
+    Source: http://stackoverflow.com/questions/33275446/word-wrap-column-data-in-javascript-datatable
+*/
+/*table.td-breakword tbody td {
+    word-break: break-word;
+    vertical-align: top;
+}*/
+
+tbody tr td.td-textalign-center {
+    text-align: center;
+}
+
+thead tr th.th-textalign-center {
+    text-align: center;
 }

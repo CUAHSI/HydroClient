@@ -10,23 +10,11 @@
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/fancytree")
     @*NOTE: The Google Maps API MUST be downloaded directly from Goolge's Servers!!! See commends in BundleConfig.cs *@
-    @*<script type='text/javascript' src="http://maps.googleapis.com/maps/api/js?v=3.20&signed_in=true&libraries=places,geometry"></script>*@
     <script type='text/javascript' src="http://maps.googleapis.com/maps/api/js?v=3.22&signed_in=true&libraries=places,geometry"></script>
     @Scripts.Render("~/bundles/Google")
     @Scripts.Render("~/bundles/GoogleMapsGithubLibraries")
     @Scripts.Render("~/bundles/custom")
     @RenderSection("styles", required: false)
-    @*<script type="text/javascript">
-        window.appInsights=window.appInsights||function(ai){
-            function f(t){ai[t]=function(){var i=arguments;ai.queue.push(function(){ai[t].apply(ai,i)})}}
-            var t=document,r="script",u=t.createElement(r),i;for(u.src=ai.url||"//az416426.vo.msecnd.net/scripts/a/ai.0.10.js",t.getElementsByTagName(r)[0].parentNode.appendChild(u),ai.cookie=t.cookie,ai.queue=[],i=["Event","Exception","Metric","PageView","Trace"];i.length;)f("track"+i.pop());
-            return ai;
-        }({
-            iKey:"e9fb9d97-6526-4027-86e2-b82665b30aba"
-        });
-
-        appInsights.trackPageView();
-    </script>*@
 
     <script>
     $(document).ready(function () {
@@ -67,21 +55,7 @@
 </head>
 <body>    
     
-    @* BCC - 23-Jul-2015 - Move navbar and images to index.cshtml
-        <div class="navbar navbar-inverse navbar-fixed-top">
-
-        <img class="img-responsive" style="display: inline-block;" src="~/Content/Images/beta.png" />
-        <img class="img-responsive" style="display: inline-block;" src="~/Content/Images/cuahsi_logo_small.png" />
-
-
-    </div>*@
-    @* <div class="_container body-content">*@
     @RenderBody()
-    @*<footer class="">
-            <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
-        </footer>*@
-    @* </div>*@
-
 
     @Scripts.Render("~/bundles/bootstrap")
     @RenderSection("scripts", required: false)

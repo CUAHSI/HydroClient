@@ -43,6 +43,19 @@ namespace HISWebClient.Models.DataManager
 		public double TimeSupport { get; set; }
 		public string TimeUnit { get; set; }
 
+		//Members for Quality Control Level, Source and Method...
+		public string QCLID { get; set; }
+
+		public string QCLDesc { get; set; }
+
+		public string SourceOrg { get; set; }
+
+		public string SourceId { get; set; }
+
+		public string MethodId { get; set; }
+
+		public string MethodDesc { get; set; }
+
 		public int SeriesId { get; set; }
 		public string WaterOneFlowURI { get; set; }
 		public DateTime WaterOneFlowTimeStamp { get; set; }

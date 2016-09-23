@@ -33,7 +33,6 @@ using Newtonsoft.Json;
 using log4net.Core;
 
 using HISWebClient.Models.DataManager;
-//using HISWebClient.Models.DownloadManager;
 using HISWebClient.Util;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Reflection;
@@ -46,10 +45,6 @@ using HISWebClient.Models.DownloadManager;
 
 namespace HISWebClient.Controllers
 {
-
-	//This is a change in HydrodataTools
-	//Does the Git client display it?
-
 	public class ExportController : Controller
 	{
 		//Reference AzureContext singleton...
@@ -121,6 +116,24 @@ namespace HISWebClient.Controllers
 			return bCancelled;
 		}
 
+		//Get a task status
+		private TimeSeriesRequestStatus GetTaskStatus(string requestId)
+		{
+			TimeSeriesRequestStatus tsrs = 0;	//Indicates unknown request...
+
+			//Thread-safe access to dictionary
+			lock (lockObject)
+			{
+				if (_dictTaskStatus.ContainsKey(requestId))
+				{
+					//Task entry found - update task status
+					tsrs = _dictTaskStatus[requestId].RequestStatus;
+				}
+			}
+
+			return tsrs;
+		}
+
 		//Update a task status
 		private void UpdateTaskStatus(string requestId, TimeSeriesRequestStatus tsrsIn, string statusMessage)
 		{
@@ -150,34 +163,6 @@ namespace HISWebClient.Controllers
 			}
 		}
 
-		//Update variable units for the input time series id...
-		private void UpdateTaskStatus(string requestId, int timeseriesId, string variableUnits)
-		{
-			//Validate/initialize input parameters...
-			if (String.IsNullOrWhiteSpace(requestId) || String.IsNullOrWhiteSpace(variableUnits))
-			{
-				ArgumentNullException ane = new ArgumentNullException("Empty input parameter(s)!!!");
-
-				dberrorcontext.clearParameters();
-				dberrorcontext.createLogEntry(System.Web.HttpContext.Current,
-											  DateTime.UtcNow, "UpdateTaskStatus(string requestId, int timeseriesId, string variableUnits)",
-											  ane,
-											  ane.Message);
-
-				throw ane;
-			}
-
-			//Thread-safe access to dictionary
-			lock (lockObject)
-			{
-				if (_dictTaskStatus.ContainsKey(requestId)/* && _dictTaskStatus[requestId].SeriesIdsToVariableUnits.ContainsKey(timeseriesId)*/ )
-				{
-					//Task entry found - update task status
-					_dictTaskStatus[requestId].SeriesIdsToVariableUnits[timeseriesId] = variableUnits;
-				}
-			}
-		}
-
 		// GET: Export
 		public ActionResult Index()
 		{
@@ -191,12 +176,6 @@ namespace HISWebClient.Controllers
 		[HttpGet, FileDownload]
 		public async Task<FileStreamResult> DownloadFile(int id)
 		{
-		   
-			//var filePath = Server.MapPath(dir + filename);
-			
-
-			//cloudStorageAccount = CloudStorageAccount.Parse("DefaultEndpointsProtocol=https;AccountName=cuahsidataexport;AccountKey=yydsRROjUZa9+ShUCS0hIxZqU98vojWbBqAPI22SgGrXGjomphIWxG0cujYrSiyfNU86YeVIXICPAP8IIPuT4Q==");
-
 			var seriesMetaData = getSeriesMetadata(id);
 			var filename = FileContext.GenerateFileName(seriesMetaData);
 			var fileType = "text/csv";
@@ -204,10 +183,8 @@ namespace HISWebClient.Controllers
 			try
 			{
 				var result = await this.getStream(id);
-				//var memoryStream = new MemoryStream(result);
 
-				//filestream.Write(result, 0, result.Count);
-				return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename };
+				return new FileStreamResult(new MemoryStream(result.Item1), fileType) { FileDownloadName = filename };
 			}
 			catch( Exception ex )
 			{
@@ -219,16 +196,15 @@ namespace HISWebClient.Controllers
 
 				string input = "An error occured downloading file: " + filename;
 
-				byte[] result = Encoding.ASCII.GetBytes(input);
+				byte[] result = Encoding.UTF8.GetBytes(input);
 
 				return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = "ERROR " + filename };
 			}
-			//return base.File(filePath, "text/csv", filename);
 		}
 
 
 
-		private async Task<Tuple<FileStreamResult, Exception>> DownloadFile(int id, List<TimeSeriesViewModel> currentSeries, TimeSeriesFormat timeSeriesFormat = TimeSeriesFormat.CSV)
+		private async Task<Tuple<FileStreamResult, SeriesData, Exception>> DownloadFile(int id, List<TimeSeriesViewModel> currentSeries, TimeSeriesFormat timeSeriesFormat = TimeSeriesFormat.CSV)
 		{
 
 			var seriesMetaData = getSeriesMetadata(id, currentSeries);
@@ -239,19 +215,18 @@ namespace HISWebClient.Controllers
 			{
 				if (TimeSeriesFormat.CSV == timeSeriesFormat)
 				{
-				var result = await this.getStream(id, currentSeries);
-					//return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename };
-					return new Tuple<FileStreamResult, Exception>( new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename }, null);
+					var result = await this.getStream(id, currentSeries);
+					return new Tuple<FileStreamResult, SeriesData, Exception>( new FileStreamResult(new MemoryStream(result.Item1), fileType) { FileDownloadName = filename }, result.Item2, null);
 				}
 				else if (TimeSeriesFormat.WaterOneFlow == timeSeriesFormat)
 				{
 					var result = await this.getWOFStream(id, currentSeries);
 
-					result.Seek(0, SeekOrigin.Begin);
+					result.Item1.Seek(0, SeekOrigin.Begin);
 
-					FileStreamResult fsr = new FileStreamResult(result, fileType) { FileDownloadName = filename };
+					FileStreamResult fsr = new FileStreamResult(result.Item1, fileType) { FileDownloadName = filename };
 
-					return new Tuple<FileStreamResult, Exception>( fsr, null);
+					return new Tuple<FileStreamResult, SeriesData, Exception>( fsr, result.Item2, null);
 				}
 				else
 				{
@@ -270,10 +245,10 @@ namespace HISWebClient.Controllers
 
 				string input = "An error occured downloading file: " + filename;
 
-				byte[] result = Encoding.ASCII.GetBytes(input);
+				byte[] result = Encoding.UTF8.GetBytes(input);
 
 				//Return 'error' file
-				return new Tuple<FileStreamResult, Exception>( new FileStreamResult(new MemoryStream(result), "text/csv") { FileDownloadName = "ERROR " + filename }, ex);
+				return new Tuple<FileStreamResult, SeriesData, Exception>( new FileStreamResult(new MemoryStream(result), "text/csv") { FileDownloadName = "ERROR " + filename }, null,  ex);
 			}
 			//return base.File(filePath, "text/csv", filename);
 		}
@@ -397,79 +372,6 @@ namespace HISWebClient.Controllers
 									break;
 								}
 
-								if (TimeSeriesFormat.WaterOneFlow == tsrIn.RequestFormat)
-								{
-
-									//Check for current timeseries variable units in retrieved series...
-									var unknownString = "unknown";
-									var varUnits = unknownString;	//Assume variable units are NOT found...
-
-									var currentTimeseries = retrievedSeries.Find(rs => timeSeriesId == rs.SeriesId);
-									if (null != currentTimeseries && (!String.IsNullOrWhiteSpace(currentTimeseries.VariableUnits)) && unknownString != currentTimeseries.VariableUnits)
-									{
-										//Variable units found AND not equal to "unknown" - update task status...
-										UpdateTaskStatus(tsrIn.RequestId, timeSeriesId, currentTimeseries.VariableUnits);
-									}
-									else
-									{ 
-										//Variable units not found (or equal to "unknown") - check variable units cache...
-										SeriesMetadata meta = getSeriesMetadata(timeSeriesId, retrievedSeries);
-										bool bFound = false;
-
-										Tuple<String, String, String> tuple = new Tuple<String, String, String>(meta.ServCode, meta.SiteCode, meta.VarCode);
-										lock (lockObject_VU)
-										{
-											KeyValuePair<Tuple<String, String, String>, String> found = _dictVarUnits.FirstOrDefault(kv => kv.Key.Equals(tuple));
-											if (null != found.Key && null != found.Value && unknownString != found.Value)
-											{
-												//Variable units found AND not equal to "unknown" - set indicator...
-												varUnits = found.Value;
-												bFound = true;
-											}
-										}
-
-										if (bFound)
-										{
-											//Variable units found - update status...
-											UpdateTaskStatus(tsrIn.RequestId, timeSeriesId, varUnits);
-											currentTimeseries.VariableUnits = varUnits;
-										}
-										else
-										{
-											//Variable units not found (or equal to "unknown") - attempt to retrieve from service...
-									SeriesData sd = null;
-
-									try
-									{
-										sd = await GetSeriesDataFromSeriesID(timeSeriesId, retrievedSeries);
-
-												varUnits = String.IsNullOrWhiteSpace(sd.myVariable.VariableUnit.Name) ? unknownString : sd.myVariable.VariableUnit.Name;
-
-												//Add retrieved variable units to cache...
-												lock (lockObject_VU)
-												{
-													if (! _dictVarUnits.ContainsKey(tuple))
-													{
-														_dictVarUnits.Add(tuple, varUnits);
-													}
-												}
-
-												//Update task status and current time series with retrieved variable units
-												UpdateTaskStatus(tsrIn.RequestId, timeSeriesId, varUnits);
-												currentTimeseries.VariableUnits = varUnits;
-									}
-									catch (Exception ex)
-									{
-												//Exception - log 'Unknown' for variable units and continue... 
-												varUnits = unknownString;
-
-												UpdateTaskStatus(tsrIn.RequestId, timeSeriesId, varUnits);
-												currentTimeseries.VariableUnits = varUnits;
-											}
-										}
-									}
-								}
-
 								string statusMessage = TimeSeriesRequestStatus.ProcessingTimeSeriesId.GetEnumDescription() +
 																								timeSeriesId.ToString() +
 																								" (" + (++i).ToString() + " of " + count.ToString() + ")";
@@ -479,9 +381,9 @@ namespace HISWebClient.Controllers
 								if (TimeSeriesFormat.CSV == tsrIn.RequestFormat || TimeSeriesFormat.WaterOneFlow == tsrIn.RequestFormat)
 								{
 									//Retrieve the time series data in the input format: CSV --OR-- XML
- 									Tuple<FileStreamResult, Exception> downloadResult = await DownloadFile(timeSeriesId, currentSeries, tsrIn.RequestFormat);
+ 									Tuple<FileStreamResult, SeriesData, Exception> downloadResult = await DownloadFile(timeSeriesId, currentSeries, tsrIn.RequestFormat);
 									FileStreamResult filestreamresult = downloadResult.Item1;
-									Exception exDownload = downloadResult.Item2;
+									Exception exDownload = downloadResult.Item3;
 
 									//Check for failed/empty downloads.
 									Exception ex = null;
@@ -493,8 +395,13 @@ namespace HISWebClient.Controllers
 
 										if (filestreamresult.FileDownloadName.Contains("ERROR", StringComparison.CurrentCultureIgnoreCase))
 										{
+#if (DEBUG)
+											ex = new Exception("Error in time series generation: " +
+															   exDownload.Message );
+#else
 											ex = new Exception("Error in time series generation: The external server was unable to complete the request.  " +  
 															   "Please limit search area, date range and/or keywords." );
+#endif
 											exLog = new Exception("Error in time series generation: " + exDownload.Message);
 										}
 										else
@@ -514,12 +421,12 @@ namespace HISWebClient.Controllers
 									}
 
 									//ALWAYS Copy file contents to zip archive - Good results, error in results generation or empty results...
-										//ASSUMPTION: FileStreamResult instance properly disposes of FileStream member!!
-										var zipArchiveEntry = zipArchive.CreateEntry(filestreamresult.FileDownloadName);
-										using (var zaeStream = zipArchiveEntry.Open())
-										{
-											await filestreamresult.FileStream.CopyToAsync(zaeStream, bufSize);
-										}
+									//ASSUMPTION: FileStreamResult instance properly disposes of FileStream member!!
+									var zipArchiveEntry = zipArchive.CreateEntry(filestreamresult.FileDownloadName);
+									using (var zaeStream = zipArchiveEntry.Open())
+									{
+										await filestreamresult.FileStream.CopyToAsync(zaeStream, bufSize);
+									}
 
 									//Throw exception if request deals with a single timeseries...
 									if ( null != ex && 1 >= tsrIn.TimeSeriesIds.Count )
@@ -647,15 +554,8 @@ namespace HISWebClient.Controllers
 
 						//Set status variables...
 						requestStatus = TimeSeriesRequestStatus.RequestTimeSeriesError;
-						//status = requestStatus.GetEnumDescription();
 						//BCC - 07-Jun-2016 - Include error message in status string...
 						status = requestStatus.GetEnumDescription() + ": " + ex.Message;
-
-						//Set the response status...
-						//Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-						//Response.StatusDescription = ex.Message;
-						//Response.TrySkipIisCustomErrors = true;	//Tell IIS to use your error text not the 'standard' error text!!
-						//										//ALSO clues jQuery to add the parsed responseJSON object to the jqXHR object!!
 					}
 					finally
 					{
@@ -737,7 +637,8 @@ namespace HISWebClient.Controllers
 				//Get user data...
 				DateTime requestTimeStamp = httpContext.Timestamp;
 
-				LogRequestIds(crIn.RequestId, crIn.RequestName, crIn.WofIds);
+				var wofIds = crIn.WofIds.Select( w => w.WofId);
+				LogRequestIds(crIn.RequestId, crIn.RequestName, wofIds.ToList<string>());
 
 				//Retrieve values for use in async task...
 				string sessionId = String.Empty;
@@ -784,8 +685,8 @@ namespace HISWebClient.Controllers
 							int i = 0;
 
 							int count = crIn.WofIds.Count;
-							foreach (string wofId in crIn.WofIds)
-							{
+							foreach (WofIds currentWofIds in crIn.WofIds)
+								{
 								//Check for cancellation...
 								if (IsTaskCancelled(requestId, cancellationEnum, cancellationMessage))
 								{
@@ -794,13 +695,13 @@ namespace HISWebClient.Controllers
 
 								UpdateTaskStatus(requestId, TimeSeriesRequestStatus.ProcessingTimeSeriesId,
 									TimeSeriesRequestStatus.ProcessingTimeSeriesId.GetEnumDescription() +
-																		wofId +
+																		currentWofIds.WofId +
 																		" (" + (++i).ToString() + " of " + count.ToString() + ")");
 
 								//Retrieve WaterOneFlow file from azure blob storage as stream
 								using (MemoryStream ms = new MemoryStream())
 								{
-									bool bFound = await _ac.RetrieveBlobAsync(wofId, ct, ms);
+									bool bFound = await _ac.RetrieveBlobAsync(currentWofIds.WofId, ct, ms);
 									if (bFound)
 									{
 										//Retrieve the water one flow version...
@@ -838,64 +739,109 @@ namespace HISWebClient.Controllers
 
 												//Parse the stream for series entries...
 												//NOTE: ParseGetValues can produce a number of series instances per sorting/grouping logic
-												//ASSUMPTION: The sorting/grouping logic is the same as that performed by the WaterOneFlowClient
-												//				when returning series instances associated with a current search.  
-												//				See ExportController.SeriesAndStreamOfSeriesID(...)
 												msDecompress.Seek(0, SeekOrigin.Begin);
 												IList<ServerSideHydroDesktop.ObjectModel.Series> listSeries = parser.ParseGetValues(msDecompress);
 
 												if ((null != listSeries) && (0 < listSeries.Count))
 												{
-													//Series entries found - per code in GetSeriesDataObjectAndStreamFromSeriesID(...) take the first series only...
-													var dataResult = listSeries.FirstOrDefault();
+													//Series entries found - per code in GetSeriesDataObjectAndStreamFromSeriesID(...) process each entry
+													SeriesData sd = new SeriesData();
+													SeriesMetadata smd = null;
 
-													//Load web service list for later reference...
-													//NOTE: Since this code runs in a background thread, there is no HTTP context, no way to save the result to the Session object...
-													var dataWorker = new DataLayer.DataWorker();
-													List<BusinessObjects.WebServiceNode> allWebServices = dataWorker.getWebServiceList();
+													//Instantiate DataValue list...
+													List<DataValue> dvList = new List<DataValue>();
 
-													//Retrieve the result's service code, scan web service data for a match...
-													var serviceCodeLowerCase = dataResult.Site.Code.Split(':')[0].ToLower();
-													BusinessObjects.WebServiceNode wsn = null;
-
-													if (!String.IsNullOrWhiteSpace(serviceCodeLowerCase))
+													//For each series in the returned list...
+													foreach (var dataResult in listSeries)
 													{
-														wsn = allWebServices.Find(w => w.ServiceCode.ToLower() == serviceCodeLowerCase);
+														//Check for a particular time series...
+														if ( dataResult.Source.OriginId != Int32.Parse(currentWofIds.SourceId) ||
+															 dataResult.Method.Code != Int32.Parse(currentWofIds.MethodId) ||
+															 dataResult.QualityControlLevel.OriginId != Int32.Parse(currentWofIds.QCLID))
+														{
+															//Source, method and/or quality control level do NOT agree - continue...
+															continue;
+														}
+
+														//Allocate metadata, if indicated...
+														if ( null == smd)
+														{
+															//Load web service list for later reference...
+															//NOTE: Since this code runs in a background thread, there is no HTTP context, no way to save the result to the Session object...
+															var dataWorker = new DataLayer.DataWorker();
+															List<BusinessObjects.WebServiceNode> allWebServices = dataWorker.getWebServiceList();
+
+															//Retrieve the result's service code, scan web service data for a match...
+															var serviceCodeLowerCase = dataResult.Site.Code.Split(':')[0].ToLower();
+															BusinessObjects.WebServiceNode wsn = null;
+
+															if (!String.IsNullOrWhiteSpace(serviceCodeLowerCase))
+															{
+																wsn = allWebServices.Find(w => w.ServiceCode.ToLower() == serviceCodeLowerCase);
+															}
+
+															//Create a meta data instance
+															smd = new SeriesMetadata();
+
+															smd.ServCode = (null != wsn) ? wsn.ServiceCode : "unknown";	//NOTE: 'Unknown' case should never occur!!
+															smd.ServURL = (null != wsn) ? wsn.ServiceUrl : "unknown";	//NOTE: 'Unknown' case should never occur!!
+															smd.SiteCode = dataResult.Site.Code;
+															smd.VarCode = dataResult.Variable.Code;
+															smd.SiteName = dataResult.Site.Name;
+															smd.VariableName = dataResult.Variable.Name;
+															smd.SampleMedium = dataResult.Variable.SampleMedium;
+															smd.GeneralCategory = dataResult.Variable.GeneralCategory;
+															smd.StartDate = dataResult.BeginDateTime;
+															smd.EndDate = dataResult.EndDateTime;
+															//Initialize value count...
+															smd.ValueCount = 0;
+															smd.Latitude = dataResult.Site.Latitude;
+															smd.Longitude = dataResult.Site.Longitude;
+															//BCC - 08-Aug-2016 - Assign Series, Site and Variable ID's correct values...
+															smd.SeriesID = (int)dataResult.Id;
+															smd.SiteID = (int)dataResult.Site.Id;
+															smd.VariableID = (int)dataResult.Variable.Id;
+
+															sd.SeriesID = smd.SeriesID;
+															sd.myMetadata = smd;
+
+															sd.myVariable = dataResult.Variable;
+														}
+
+
+														//Add data values to list...
+														IList<DataValue> dataValues = dataResult.DataValueList.OrderBy(a => a.DateTimeUTC).Select(aa => new DataValue(aa)).ToList();
+
+														foreach (var dv in dataValues)
+														{
+															//TO DO - Need to set lab sample code...
+															//dv.LabSampleCode = ??
+															dv.MethodCode = dataResult.Method.Code.ToString();
+															dv.QualityControlLevelCode = dataResult.QualityControlLevel.Code;
+															dv.SourceCode = dataResult.Source.OriginId.ToString();
+
+															dv.SeriesData = sd;
+
+															dvList.Add(dv);
+														}
+
+														//Add Source instance
+														sd.mySource = dataResult.Source;
+
+														//Add Method instance
+														sd.myMethod = dataResult.Method;
+
+														//Add QualityControlLevel instance
+														sd.myQualityControlLevel = dataResult.QualityControlLevel;
 													}
 
-													//Create a meta data instance
-													SeriesMetadata smd = new SeriesMetadata();
+													//Add values to SeriesData instance...
+													sd.values = dvList.OrderBy(a => a.UTCTimeStamp).ToList();
 
-													smd.ServCode = (null != wsn) ? wsn.ServiceCode : "unknown";	//NOTE: 'Unknown' case should never occur!!
-													smd.ServURL = (null != wsn) ? wsn.ServiceUrl : "unknown";	//NOTE: 'Unknown' case should never occur!!
-													smd.SiteCode = dataResult.Site.Code;
-													smd.VarCode = dataResult.Variable.Code;
-													smd.SiteName = dataResult.Site.Name;
-													smd.VariableName = dataResult.Variable.Name;
-													smd.SampleMedium = dataResult.Variable.SampleMedium;
-													smd.GeneralCategory = dataResult.Variable.GeneralCategory;
-													smd.StartDate = dataResult.BeginDateTime;
-													smd.EndDate = dataResult.EndDateTime;
-													smd.ValueCount = dataResult.ValueCount;
-													smd.Latitude = dataResult.Site.Latitude;
-													smd.Longitude = dataResult.Site.Longitude;
-													smd.SeriesID = 0;
-													smd.SiteID = 0;
+													//Set the value count...
+													smd.ValueCount = sd.values.Count;
 
-													//Create the DataValues list...
-													List<DataValue> ldv = new List<DataValue>();
-													foreach (var dvOM in dataResult.DataValueList)
-													{
-														var dv = new DataValue(dvOM);
-														ldv.Add(dv);
-													}
-
-													//Allocate a new SeriesData instance...
-													SeriesData sd = new SeriesData(smd.SeriesID, smd, dataResult.Method.Description.ToString(), dataResult.QualityControlLevel.Definition.ToString(),
-																					ldv, dataResult.Variable, dataResult.Source);
-
-													//			 write data into stream
-													//			 add stream as a zip archive entry...
+													//Write data into stream, add stream as a zip archive entry...
 													using (MemoryStream ms1 = new MemoryStream())
 													{
 														await WriteDataToMemoryStreamAsCsv(sd, ms1);
@@ -906,8 +852,9 @@ namespace HISWebClient.Controllers
 														using (var zaeStream = zipArchiveEntry.Open())
 														{
 															await ms1.CopyToAsync(zaeStream, bufSize);
-														}																							
+														}
 													}
+
 												}
 											}
 										}
@@ -1135,7 +1082,6 @@ namespace HISWebClient.Controllers
 					tsr.Status = _dictTaskStatus[Id].Status;
 					tsr.BlobUri = _dictTaskStatus[Id].BlobUri;
 					tsr.BlobTimeStamp = _dictTaskStatus[Id].BlobTimeStamp;
-					tsr.SeriesIdsToVariableUnits = _dictTaskStatus[Id].SeriesIdsToVariableUnits;
 
 					//If task is cancelled or completed, remove associated entry from dictionary
 					if (TimeSeriesRequestStatus.Completed == tsr.RequestStatus ||
@@ -1158,8 +1104,6 @@ namespace HISWebClient.Controllers
 		{
 			TimeSeriesResponse tsr = checkTask(Id); 
 
-			//var javaScriptSerializer = new JavaScriptSerializer();
-			//var json = javaScriptSerializer.Serialize(tsr);
 			var json = JsonConvert.SerializeObject(tsr);
 
 			//Processing complete - return 
@@ -1183,8 +1127,6 @@ namespace HISWebClient.Controllers
 			}
 
 			//Processing complete - return JSON result
-			//var javaScriptSerializer = new JavaScriptSerializer();
-			//var json = javaScriptSerializer.Serialize(tsrList);
 			var json = JsonConvert.SerializeObject(tsrList);
 
 			//Processing complete - return 
@@ -1235,8 +1177,6 @@ namespace HISWebClient.Controllers
 				}
 			}
 
-			//var javaScriptSerializer = new JavaScriptSerializer();
-			//var json = javaScriptSerializer.Serialize(tsr);
 			var json = JsonConvert.SerializeObject(tsr);
 
 #if NEVER_DEFINED
@@ -1273,14 +1213,10 @@ namespace HISWebClient.Controllers
 				{
 					//Serialize an anonymous object...
 					var jsonObj = new { apps = new List<string>() };
-					//var javaScriptSerializer = new JavaScriptSerializer();
-					//strJSON = javaScriptSerializer.Serialize("{'apps': []}");
-					//strJSON = javaScriptSerializer.Serialize(jsonObj);
 					strJSON = JsonConvert.SerializeObject(jsonObj);
 				}
 
 				//Processing complete - return 
-				//return Json(json, "application/json", JsonRequestBehavior.AllowGet);
 
 				return new ContentResult { Content = strJSON, ContentType = "application/json" };
 			}
@@ -1290,78 +1226,24 @@ namespace HISWebClient.Controllers
 
 				//Serialize an anonymous object...
 				var jsonObj = new { apps = new List<string>() };
-				//var javaScriptSerializer = new JavaScriptSerializer();
-				//strJSON = javaScriptSerializer.Serialize("{'apps': []}");
-				//strJSON = javaScriptSerializer.Serialize(jsonObj);
 				strJSON = JsonConvert.SerializeObject(jsonObj);
 
 				return new ContentResult { Content = strJSON, ContentType = "application/json" };
 			}
 		}
 
-	    public async Task<SeriesData> GetSeriesDataFromSeriesID(int seriesId, List<TimeSeriesViewModel> currentSeries)
-		    {
-			    SeriesMetadata meta = getSeriesMetadata(seriesId, currentSeries );
-
-			    if (meta == null)
-			    {
-				    NullReferenceException nre = new NullReferenceException();
-
-				    dberrorcontext.clearParameters();
-				    dberrorcontext.createLogEntry(System.Web.HttpContext.Current,
-											      DateTime.UtcNow, "GetSeriesDataFromSeriesID(int seriesId)",
-											      nre,
-											      "meta == null");
-
-				    throw nre;
-		}
-			    else
-			    {
-				    IList<ServerSideHydroDesktop.ObjectModel.Series> listSeries = await this.SeriesDataFromSeriesID(meta);
-
-				    if (listSeries == null || listSeries.FirstOrDefault() == null)
-				    {
-					    KeyNotFoundException knfe = new KeyNotFoundException();
-
-					    dberrorcontext.clearParameters();
-					    dberrorcontext.createLogEntry(System.Web.HttpContext.Current,
-												      DateTime.UtcNow, "GetSeriesDataObjectFromSeriesID(int seriesId)",
-												      knfe,
-												      "listSeries == null");
-
-
-					    throw knfe;
-				    }
-				    else
-				    {
-					    var dataResult = listSeries.FirstOrDefault();
-					    IList<DataValue> dataValues = dataResult.DataValueList.OrderBy(a => a.DateTimeUTC).Select(aa => new DataValue(aa)).ToList();
-
-					    SeriesData sd = new SeriesData(meta.SeriesID, meta, dataResult.Method.Description.ToString(), dataResult.QualityControlLevel.Definition, dataValues,
-						    dataResult.Variable, dataResult.Source);
-
-					    return sd;
-				    }
-			    }
-		    }
-
-
-
-		public async Task<byte[]> getStream(int SeriesID, List<TimeSeriesViewModel> currentSeries = null)
+		public async Task<Tuple<byte[], SeriesData>> getStream(int SeriesID, List<TimeSeriesViewModel> currentSeries = null)
 		{
 			DateTimeOffset requestTime = DateTimeOffset.UtcNow;
 		   
 				//get series from wateroneflow and return response
 				Tuple<Stream, SeriesData> data = await GetSeriesDataObjectAndStreamFromSeriesID(SeriesID, currentSeries);
 
-				//var seriesMetaData = getSeriesMetadata(SeriesID);
-
-				//Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>> data = await SeriesAndStreamOfSeriesID(seriesMetaData);
 				string nameGuid = Guid.NewGuid().ToString();
 
 				var s = await this.getCSVResultByteArray(data.Item2, nameGuid, requestTime);
 
-				return s;
+				return new Tuple<byte[], SeriesData>(s, data.Item2);
 		}
 
         public async Task<List<DataValueCsvViewModel>> getCSVStream(int SeriesID, List<TimeSeriesViewModel> currentSeries = null, TimeSeriesFormat timeSeriesFormat = TimeSeriesFormat.CSV)
@@ -1371,9 +1253,6 @@ namespace HISWebClient.Controllers
             //get series from wateroneflow and return response
             Tuple<Stream, SeriesData> data = await GetSeriesDataObjectAndStreamFromSeriesID(SeriesID, currentSeries);
 
-            //var seriesMetaData = getSeriesMetadata(SeriesID);
-
-            //Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>> data = await SeriesAndStreamOfSeriesID(seriesMetaData);
             string nameGuid = Guid.NewGuid().ToString();
             if (timeSeriesFormat == TimeSeriesFormat.CSVMerged)
             {
@@ -1385,79 +1264,105 @@ namespace HISWebClient.Controllers
 
         private Task<List<DataValueCsvViewModel>> getCSVResultAsList(SeriesData seriesData, string nameGuid, DateTimeOffset requestTime, int seriesId)
         {
-            //SeriesID	SiteName	VariableName	LocalDateTime	DataValue	VarUnits	DataType	SiteID	SiteCode	VariableID	
-            //VariableCode	Organization	SourceDescription	SourceLink	Citation	ValueType	TimeSupport	TimeUnits	IsRegular	
-            //NoDataValue	UTCOffset	DateTimeUTC	Latitude	Longitude	ValueAccuracy	CensorCode	MethodDescription	QualityControlLevelCode	
-            //SampleMedium	GeneralCategory	OffsetValue	OffsetDescription	OffsetUnits	QualifierCode
-
             return Task.Run(() =>
                 {
                     var list = new List<DataValueCsvViewModel>();
 
-                    for (int i = 0; i < seriesData.values.Count; i++)
-                    { 
-                        var dvm = new DataValueCsvViewModel();
-                        dvm.Id = seriesId.ToString();
-                        dvm.SiteName = seriesData.myMetadata.SiteName;
-                        dvm.VariableName = seriesData.myMetadata.VariableName;
-                        dvm.LocalDateTime = seriesData.values[i].LocalTimeStamp.ToString("yyyy-MM-dd HH:mm:ss");
-                        dvm.DataValue = seriesData.values[i].Value.ToString();
-                        dvm.VarUnits = seriesData.myVariable.VariableUnit.Name;
-                        dvm.DataType = seriesData.myVariable.DataType;
-                        dvm.SiteID = seriesData.myMetadata.SiteID.ToString();
-                        dvm.SiteCode = seriesData.myMetadata.SiteCode;
-                        dvm.VariableID = seriesData.myVariable.Id.ToString();
-                        dvm.VariableCode = seriesData.myVariable.Code;
-                        dvm.Organization = seriesData.mySource.Organization;
-                        dvm.SourceDescription = seriesData.mySource.Description;
-                        dvm.SourceLink = seriesData.mySource.Link;
-                        dvm.Citation = seriesData.mySource.Citation;
-                        dvm.ValueType = seriesData.myVariable.ValueType;
-                        dvm.TimeSupport = seriesData.myVariable.TimeSupport.ToString();
-                        dvm.TimeUnits = seriesData.myVariable.TimeUnit.Name;
-                        dvm.IsRegular = seriesData.myVariable.IsRegular.ToString();
-                        dvm.NoDataValue = seriesData.myVariable.NoDataValue.ToString();
-                        dvm.UTCOffset = seriesData.values[i].UTCOffset.ToString();
+					for (int i = 0; i < seriesData.values.Count; i++)
+					{
+						var dvm = new DataValueCsvViewModel();
+						var value = seriesData.values[i];
+
+						dvm.SeriesID = seriesId.ToString();
+						dvm.SiteName = seriesData.myMetadata.SiteName;
+						dvm.VariableName = seriesData.myMetadata.VariableName;
+						dvm.LocalDateTime = value.LocalTimeStamp.ToString("yyyy-MM-dd HH:mm:ss");
+						dvm.DataValue = value.Value.ToString();
+						dvm.VarUnits = seriesData.myVariable.VariableUnit.Name;
+						dvm.DataType = seriesData.myVariable.DataType;
+						dvm.SiteID = seriesData.myMetadata.SiteID.ToString();
+						dvm.SiteCode = seriesData.myMetadata.SiteCode;
+						dvm.VariableID = seriesData.myVariable.Id.ToString();
+						dvm.VariableCode = seriesData.myVariable.Code;
+
+						//Retrieve organization, source description, sourcelink and citation references...
+						dvm.Organization = ServerSideHydroDesktop.ObjectModel.ValueTypeCV.Unknown.GetEnumDescription();
+						dvm.SourceDescription = ServerSideHydroDesktop.ObjectModel.ValueTypeCV.Unknown.GetEnumDescription();
+						dvm.SourceLink = ServerSideHydroDesktop.ObjectModel.ValueTypeCV.Unknown.GetEnumDescription();
+						dvm.Citation = ServerSideHydroDesktop.ObjectModel.ValueTypeCV.Unknown.GetEnumDescription();
+
+						var source = value.SeriesData.mySource;
+						if (null != source)
+						{
+							dvm.Organization = source.Organization; ;
+							dvm.SourceDescription = source.Description;
+							dvm.SourceLink = source.Link;
+							dvm.Citation = source.Citation;
+						}
+
+						dvm.ValueType = seriesData.myVariable.ValueType;
+						dvm.TimeSupport = seriesData.myVariable.TimeSupport.ToString();
+						dvm.TimeUnits = seriesData.myVariable.TimeUnit.Name;
+						dvm.IsRegular = seriesData.myVariable.IsRegular.ToString();
+						dvm.NoDataValue = seriesData.myVariable.NoDataValue.ToString();
+						dvm.UTCOffset = seriesData.values[i].UTCOffset.ToString();
 						//BCC - 27-Apr-2016 - values[i].UTCTimeStamp holds a valid date 
 						//					  values[i].TimeStampUTC holds the minimum date
 						//
- 						//	I know these facts should be obvious but they somehow escape me...
+						//	I know these facts should be obvious but they somehow escape me...
 						dvm.DateTimeUTC = seriesData.values[i].UTCTimeStamp.ToString("yyyy-MM-dd HH:mm:ss");
-                        dvm.Latitude = seriesData.myMetadata.Latitude.ToString();
-                        dvm.Longitude = seriesData.myMetadata.Longitude.ToString();
-                        dvm.ValueAccuracy = seriesData.values[i].ValueAccuracy.ToString();
-                        dvm.CensorCode = seriesData.values[i].CensorCode.ToString();
-                        dvm.MethodDescription = seriesData.MethodDescription;
-                        dvm.QualityControlLevelCode = seriesData.QualityControlLevelDefinition;
-                        dvm.SampleMedium = seriesData.myMetadata.SampleMedium;
-                        dvm.GeneralCategory = seriesData.myMetadata.GeneralCategory;
-                        dvm.OffsetValue = seriesData.values[i].OffsetValue.ToString();
-                        dvm.OffsetDescription = seriesData.values[i].OffsetDescription;
-                        dvm.OffsetUnits = seriesData.values[i].OffsetUnit;
-                        dvm.QualifierCode = seriesData.values[i].QualifierDescription;
+						dvm.Latitude = seriesData.myMetadata.Latitude.ToString();
+						dvm.Longitude = seriesData.myMetadata.Longitude.ToString();
+						dvm.ValueAccuracy = seriesData.values[i].ValueAccuracy.ToString();
+						dvm.CensorCode = seriesData.values[i].CensorCode.ToString();
 
-                    list.Add(dvm);
-                    }
-                    return list;
+						//Retrieve method code...
+						dvm.MethodDescription = ServerSideHydroDesktop.ObjectModel.ValueTypeCV.Unknown.GetEnumDescription();
+
+						var method = value.SeriesData.myMethod;
+						if (null != method)
+						{
+							dvm.MethodDescription = method.Description;
+						}
+
+						//Retrieve quality control level...
+						dvm.QualityControlLevelCode = ServerSideHydroDesktop.ObjectModel.ValueTypeCV.Unknown.GetEnumDescription();
+
+						var qualityControlLevel = value.SeriesData.myQualityControlLevel;
+						if (null != qualityControlLevel)
+						{
+							dvm.QualityControlLevelCode = qualityControlLevel.Definition;
+						}
+
+						dvm.SampleMedium = seriesData.myMetadata.SampleMedium;
+						dvm.GeneralCategory = seriesData.myVariable.GeneralCategory;
+						dvm.OffsetValue = seriesData.values[i].OffsetValue.ToString();
+						dvm.OffsetDescription = seriesData.values[i].OffsetDescription;
+						dvm.OffsetUnits = seriesData.values[i].OffsetUnit;
+						dvm.QualifierCode = seriesData.values[i].QualifierDescription;
+
+						list.Add(dvm);
+					}
+
+					return list;
                 });
         }
 
 		//Similar to getStream(...) but returns the WaterOneFlow stream instead of the CSV byte array...
-		public async Task<Stream> getWOFStream(int SeriesID, List<TimeSeriesViewModel> currentSeries = null)
+		public async Task<Tuple<Stream, SeriesData>> getWOFStream(int SeriesID, List<TimeSeriesViewModel> currentSeries = null)
 		{
 			DateTimeOffset requestTime = DateTimeOffset.UtcNow;
 
 			//get series from wateroneflow and return response
 			Tuple<Stream, SeriesData> data = await GetSeriesDataObjectAndStreamFromSeriesID(SeriesID, currentSeries);
 
-			return (data.Item1);
+			return (data);
 
 		}
 
 		public async Task<Tuple<Stream, SeriesData>> GetSeriesDataObjectAndStreamFromSeriesID(int seriesId, List<TimeSeriesViewModel> currentSeries)
 		{
 			SeriesMetadata meta = getSeriesMetadata(seriesId, currentSeries);
-			// SeriesMetadata meta = await QueryHelpers.QueryHelpers.SeriesMetaDataOfSeriesID(SeriesID);
 			if (meta == null)
 			{
 				NullReferenceException nre = new NullReferenceException();
@@ -1466,7 +1371,7 @@ namespace HISWebClient.Controllers
 				dberrorcontext.createLogEntry(System.Web.HttpContext.Current,
 											  DateTime.UtcNow, "GetSeriesDataObjectAndStreamFromSeriesID(int seriesId, List<TimeSeriesViewModel> currentSeries)",
 											  nre,
-											  "meta == null");
+											  "null metadata");
 
 				throw nre;
 			}
@@ -1474,33 +1379,107 @@ namespace HISWebClient.Controllers
 			{
 				try
 				{
-				Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>> data = await this.SeriesAndStreamOfSeriesID(meta);
+					Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>> data = await this.SeriesAndStreamOfSeriesID(meta);
 
 					//BCC - 06-Jun-2016 - Added stream null and length checks...
-					if (data == null || data.Item2.FirstOrDefault() == null || null == data.Item1 || 0 >= data.Item1.Length)
-				{
-					KeyNotFoundException knfe = new KeyNotFoundException();
+					if (data == null || null == data.Item2 || data.Item2.FirstOrDefault() == null || null == data.Item1 || 0 >= data.Item1.Length)
+					{
+						string msg = data == null ? "null series and stream" :
+											 null == data.Item2 ? "null series" :
+											 data.Item2.FirstOrDefault() == null ? "empty series" :
+											 null == data.Item1 ? "null stream" : "empty stream";
+						KeyNotFoundException knfe = new KeyNotFoundException(msg);
 
-					dberrorcontext.clearParameters();
-					dberrorcontext.createLogEntry(System.Web.HttpContext.Current,
-												  DateTime.UtcNow, "GetSeriesDataObjectAndStreamFromSeriesID(int seriesId, List<TimeSeriesViewModel> currentSeries)",
-												  knfe,
-												  "data == null");
+						dberrorcontext.clearParameters();
+						dberrorcontext.createLogEntry(System.Web.HttpContext.Current,
+													  DateTime.UtcNow, "GetSeriesDataObjectAndStreamFromSeriesID(int seriesId, List<TimeSeriesViewModel> currentSeries)",
+													  knfe,
+													  msg);
 
 
-					throw knfe;
-				}
-				else
-				{
-					var dataResult = data.Item2.FirstOrDefault();
-					IList<DataValue> dataValues = dataResult.DataValueList.OrderBy(a => a.DateTimeUTC).Select(aa => new DataValue(aa)).ToList();
+						throw knfe;
+					}
+					else
+					{
+						//Debug code - multiple series returned 
+#if (DEBUG)
+						if ( 1 < data.Item2.Count)
+						{
+							int n = 5;
 
-					SeriesData sd = new SeriesData(meta.SeriesID, meta, dataResult.Method.Description.ToString(), dataResult.QualityControlLevel.Definition, dataValues,
-						dataResult.Variable, dataResult.Source);
+							n++;
+						}
+#endif
+						var dataResults = data.Item2;
 
-					return new Tuple<Stream, SeriesData>(data.Item1, sd);
-					//return new Tuple<Stream, SeriesData>(data.Item1, new SeriesData(meta.SeriesID, meta, dataValues, (IList < ServerSideHydroDesktop.ObjectModel.Series >) dataResult));
+						//Assign SeriesMetaData SiteID and VariableID values from first item in Series list...
+						var dataResult1 = data.Item2.FirstOrDefault();
 
+						meta.SiteID = (int) dataResult1.Site.Id;
+						meta.VariableID = (int)dataResult1.Variable.Id;
+						SeriesData sd = new SeriesData();
+
+						sd.SeriesID = meta.SeriesID;
+						sd.myMetadata = meta;
+						sd.myVariable = dataResult1.Variable;
+
+						//Instantiate DataValue list...
+						List<DataValue> dvList = new List<DataValue>();
+
+						//Check for a particular time series (i.e, one source, method and quality control level combination)?
+						TimeSeriesViewModel tsvmTarget = null;
+						if ( null != currentSeries)
+						{
+							tsvmTarget = currentSeries.FirstOrDefault(tsvm => seriesId == tsvm.SeriesId);
+						}
+
+						foreach (var dataResult in dataResults)
+						{
+							if (null != tsvmTarget)
+							{
+ 								//Checking for a particular time series...
+								if ( dataResult.Source.OriginId != Int32.Parse(tsvmTarget.SourceId) ||
+									 dataResult.Method.Code != Int32.Parse(tsvmTarget.MethodId) ||
+									 dataResult.QualityControlLevel.OriginId != Int32.Parse(tsvmTarget.QCLID))
+								{
+									//Source, method and/or quality control level do NOT agree - continue...
+									continue;
+								}
+							}
+
+							//Add data values to list...
+							IList<DataValue> dataValues = dataResult.DataValueList.OrderBy(a => a.DateTimeUTC).Select(aa => new DataValue(aa)).ToList();
+
+							foreach( var dv in dataValues)
+							{
+								//TO DO - Need to set lab sample code...
+								//dv.LabSampleCode = ??
+								dv.MethodCode = dataResult.Method.Code.ToString();
+								dv.QualityControlLevelCode = dataResult.QualityControlLevel.Code;
+								dv.SourceCode = dataResult.Source.OriginId.ToString();
+
+								dv.SeriesData = sd;
+
+								dvList.Add(dv);
+							}
+
+							//Add Source instance
+							sd.mySource = dataResult.Source;
+
+							//Add Method instance
+							sd.myMethod = dataResult.Method;
+
+							//Add QualityControlLevel instance
+							sd.myQualityControlLevel = dataResult.QualityControlLevel;
+						}
+
+						//Add values to SeriesData instance...
+						sd.values = dvList.OrderBy(a => a.UTCTimeStamp).ToList();
+
+						//Update the value count...
+						sd.myMetadata.ValueCount = sd.values.Count;
+
+						return new Tuple<Stream, SeriesData>(data.Item1, sd);
 					}
 				}
 				catch (Exception ex)
@@ -1517,35 +1496,14 @@ namespace HISWebClient.Controllers
 			var requestTimeout = 60000;
 			WaterOneFlowClient client = new WaterOneFlowClient(meta.ServURL);
 			try
-			{ 
-			return await client.GetValuesAndRawStreamAsync(
-					meta.SiteCode,
-					meta.VarCode,
-					meta.StartDate,
-                    meta.EndDate,
-					//DateTime.UtcNow,
-					Convert.ToInt32(requestTimeout));
-		}
-			catch (Exception ex)
 			{
-				string reason = httpUtil.getWebExceptionMessage(ex);
-
-				if (!String.IsNullOrWhiteSpace(reason))
-				{
-					throw new Exception(reason);
-				}
-
-				throw ex;
+				return await client.GetValuesAndRawStreamAsync(
+						meta.SiteCode,
+						meta.VarCode,
+						meta.StartDate,
+						meta.EndDate,
+						Convert.ToInt32(requestTimeout));
 			}
-		}
-
-		public async Task<IList<ServerSideHydroDesktop.ObjectModel.Series>> SeriesDataFromSeriesID(SeriesMetadata meta)
-		{
-			WaterOneFlowClient client = new WaterOneFlowClient(meta.ServURL);
-			try
-			{
-			return await client.GetValuesAsync(meta.SiteCode, meta.VarCode, meta.StartDate, meta.EndDate);
-		}
 			catch (Exception ex)
 			{
 				string reason = httpUtil.getWebExceptionMessage(ex);
@@ -1571,11 +1529,8 @@ namespace HISWebClient.Controllers
 
 				if (ms.Length > 0)
 				{
-					// persist memory stream as blob
+					// re-wind, if indicated...
 					ms.Position = 0;
-					var csa = CloudStorageAccount.Parse(CloudConfigurationManager.GetSetting("StorageConnectionString"));
-					//CloudBlockBlob blob = await WriteMemoryStreamToBlobInGuidDirectory(data, ms, csa);
-
 				}
 
 				ms.Seek(0, SeekOrigin.Begin);
@@ -1606,75 +1561,45 @@ namespace HISWebClient.Controllers
 				//write metadata
 				csvwrtr.ValueSeparator = Char.Parse(",");
 				csvwrtr.WriteRecord(new List<string>() {  
-
-				"Organization",
-				"SourceDescription",
-				"SourceLink",
-				"VariableName",                              
-				"VarUnits",
-				"SampleMedium",
-				"MethodDescription",
-				"QualityControlLevel",
-				"DataType",
-				"ValueType",
-				//BCC - 15-Oct-29015 -  Suppress display of IsRegular
-				//"IsRegular",
-				"TimeSupport",
-				"TimeUnits",
-				"Speciation",
-				"SiteName",
-				"SiteCode",
-				"Latitude",
-				"Longitude",
-				"GeneralCategory",
-				"NoDataValue",
-				"Citation",
-
-
+					"VariableName",                              
+					"VarUnits",
+					"SampleMedium",
+					"DataType",
+					"ValueType",
+					//BCC - 15-Oct-2015 -  Suppress display of IsRegular
+					//"IsRegular",
+					"TimeSupport",
+					"TimeUnits",
+					"Speciation",
+					"SiteName",
+					"SiteCode",
+					"Latitude",
+					"Longitude",
+					"GeneralCategory",
+					"NoDataValue"
 				});
 				csvwrtr.WriteRecord(new List<string>() {  
-				
-				data.mySource.Organization,
-				data.mySource.Description,
-				data.mySource.Link,
-				data.myMetadata.VariableName,
-				data.myVariable.VariableUnit.Name,
-				data.myMetadata.SampleMedium,	
-				data.MethodDescription,                            
-				data.QualityControlLevelDefinition,		
-				data.myVariable.DataType,
-				data.myVariable.ValueType,
-				//BCC - 15-Oct-29015 -  Suppress display of IsRegular
-				//data.myVariable.IsRegular.ToString(),
-				data.myVariable.TimeSupport.ToString(),
-				//BCC - 18-Nov-2015 - GitHub issue #65 - Time Units is displaying abbreviation in download instead of full name
-				(! String.IsNullOrWhiteSpace(data.myVariable.TimeUnit.Name)) ? data.myVariable.TimeUnit.Name.ToString() :
-					(! String.IsNullOrWhiteSpace(data.myVariable.TimeUnit.Abbreviation)) ? data.myVariable.TimeUnit.Abbreviation.ToString() : 
-						ServerSideHydroDesktop.ObjectModel.Unit.UnknownTimeUnit.Name.ToString(),
-				//data.myVariable.TimeUnit.Name.ToString(),
-				data.myVariable.Speciation.ToString(),
-				data.myMetadata.SiteName,
-				data.myMetadata.SiteCode,
-				data.myMetadata.Latitude.ToString(),
-				data.myMetadata.Longitude.ToString(),
-				data.myMetadata.GeneralCategory,
-				data.myVariable.NoDataValue.ToString(),                
-				data.mySource.Citation,
-				//"UTCOffset",                
-				//"ValueAccuracy",
-				//"CensorCode",
-				//"OffsetValue",	
-				//"OffsetDescription",	
-				//"OffsetUnits",	
-				//"QualifierCode",
-
+					data.myMetadata.VariableName,
+					data.myVariable.VariableUnit.Name,
+					data.myMetadata.SampleMedium,	
+					data.myVariable.DataType,
+					data.myVariable.ValueType,
+					//BCC - 15-Oct-29015 -  Suppress display of IsRegular
+					//data.myVariable.IsRegular.ToString(),
+					data.myVariable.TimeSupport.ToString(),
+					//BCC - 18-Nov-2015 - GitHub issue #65 - Time Units is displaying abbreviation in download instead of full name
+					//BCC - 21-Jul-2016 - Add null check for TimeUnit...
+					((null != data.myVariable.TimeUnit) && (! String.IsNullOrWhiteSpace(data.myVariable.TimeUnit.Name))) ? data.myVariable.TimeUnit.Name.ToString() :
+						((null != data.myVariable.TimeUnit) && (! String.IsNullOrWhiteSpace(data.myVariable.TimeUnit.Abbreviation))) ? data.myVariable.TimeUnit.Abbreviation.ToString() : 
+							ServerSideHydroDesktop.ObjectModel.Unit.UnknownTimeUnit.Name.ToString(),
+					data.myVariable.Speciation.ToString(),
+					data.myMetadata.SiteName,
+					data.myMetadata.SiteCode,
+					data.myMetadata.Latitude.ToString(),
+					data.myMetadata.Longitude.ToString(),
+					data.myVariable.GeneralCategory,
+					data.myVariable.NoDataValue.ToString()    
 				});
-
-				//LocalDateTime 
-				//DateTimeUTC
-				//DataValues
-
-				//csvwrtr.ValueSeparator = Char.Parse(",");
 
 				//10-Aug-2015 - BCC - GitHub Issue #33 - Include Qualifier Description in downloaded time series data
 				csvwrtr.WriteRecord(new List<string>() 
@@ -1683,31 +1608,75 @@ namespace HISWebClient.Controllers
 							"LocalTimestamp",
 							"UTCOffset",
 							"Value",
+							"MethodDescription",
+							"QualityControlLevel",
 							"ValueAccuracy",                            
 							"CensorCode", 
 							"OffsetValue", 
 							"OffsetDescription",
 							"OffsetUnit",
 							"Qualifier",
-							"QualifierDescription"
+							"QualifierDescription",
+							"SourceDescription",
+							"SourceLink",
+							"Citation"
 						});
 
 				foreach (DataValue value in data.values)
 				{
 					List<string> values = new List<string>();
-                    values.Add(value.UTCTimeStamp.ToString("yyyy-MM-dd HH:mm:ss"));
-                    values.Add(value.LocalTimeStamp.ToString("yyyy-MM-dd HH:mm:ss"));
-                    values.Add(value.UTCOffset.ToString());
-                    values.Add(value.Value.ToString());
-                    values.Add(value.ValueAccuracy.ToString());
-                    values.Add(value.CensorCode);                    
+					values.Add(value.UTCTimeStamp.ToString("yyyy-MM-dd HH:mm:ss"));
+					values.Add(value.LocalTimeStamp.ToString("yyyy-MM-dd HH:mm:ss"));
+					values.Add(value.UTCOffset.ToString());
+					values.Add(value.Value.ToString());
+					
+					//Retrieve method description
+					var methodDescription = ServerSideHydroDesktop.ObjectModel.ValueTypeCV.Unknown.GetEnumDescription();
+
+					var method = value.SeriesData.myMethod;
+					if (null != method)
+					{
+						methodDescription = method.Description;
+					}
+
+					values.Add(methodDescription.ToString());
+
+					//Retrieve quality control level description
+					var qualityDefinition = ServerSideHydroDesktop.ObjectModel.ValueTypeCV.Unknown.GetEnumDescription();
+					
+					var qualityControlLevel = value.SeriesData.myQualityControlLevel;
+					if (null != qualityControlLevel)
+					{
+						qualityDefinition = qualityControlLevel.Definition;
+					}
+
+					values.Add(qualityDefinition.ToString());
+
+					values.Add(value.ValueAccuracy.ToString());
+					values.Add(value.CensorCode);
 					values.Add(value.OffsetValue.ToString());
 					values.Add(value.OffsetDescription);
 					values.Add(value.OffsetUnit);
 					values.Add(value.Qualifier);
 					values.Add(value.QualifierDescription);
-                    
-					//values.Add(value.);
+
+					//Retrieve source description, link and citation
+					var sourceDescription = ServerSideHydroDesktop.ObjectModel.ValueTypeCV.Unknown.GetEnumDescription();
+					var sourceLink = ServerSideHydroDesktop.ObjectModel.ValueTypeCV.Unknown.GetEnumDescription();
+					var citation = ServerSideHydroDesktop.ObjectModel.ValueTypeCV.Unknown.GetEnumDescription();
+
+					var source = value.SeriesData.mySource;
+					if (null != source)
+					{
+						sourceDescription = source.Organization;
+						sourceLink = source.Link;
+						citation = source.Citation;
+					}
+
+					values.Add(sourceDescription.ToString());
+					values.Add(sourceLink.ToString());
+					values.Add(citation.ToString());
+
 					csvwrtr.WriteRecord(values);
 				}
 				await csvwrtr.FlushAsync();
@@ -1716,9 +1685,9 @@ namespace HISWebClient.Controllers
 
         public FileStreamResult WriteCsvToFileStream<T>(List<T> records, CurrentUser cu = null)
         {
-			 string fileExtension = "csv";
-			 string fileName = null != cu ? FileContext.GenerateFileName( cu.UserEmail.Replace("@", "_"), fileExtension) : FileContext.GenerateFileName(null, fileExtension);
-			 string filePathAndName = Server.MapPath("~/Files/" + fileName.ToString());
+			string fileExtension = "csv";
+			string fileName = null != cu ? FileContext.GenerateFileName( cu.UserEmail.Replace("@", "_"), fileExtension) : FileContext.GenerateFileName(null, fileExtension);
+			string filePathAndName = Server.MapPath("~/Files/" + fileName.ToString());
 
 			 //Create 'Files' sub-directory, if indicated...
 			if ( ! Directory.Exists(Server.MapPath("~/Files/")))
@@ -1726,69 +1695,69 @@ namespace HISWebClient.Controllers
 				Directory.CreateDirectory(Server.MapPath("~/Files/"));
 			}
 
-			 //Use a large buffer here...
-			 FileStream fileStream = new FileStream(filePathAndName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite, 512000, FileOptions.DeleteOnClose );
+			//Use a large buffer here...
+			FileStream fileStream = new FileStream(filePathAndName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite, 512000, FileOptions.DeleteOnClose );
 
-             var streamWriter = new StreamWriter(fileStream, Encoding.GetEncoding("iso-8859-1"));
-             var csvWriter = new CsvHelper.CsvWriter(streamWriter);
+            var streamWriter = new StreamWriter(fileStream, Encoding.GetEncoding("iso-8859-1"));
+            var csvWriter = new CsvHelper.CsvWriter(streamWriter);
             
-                //Get the properties for type T for the headers
-                PropertyInfo[] propInfos = typeof(T).GetProperties();
+            //Get the properties for type T for the headers
+            PropertyInfo[] propInfos = typeof(T).GetProperties();
 
-                foreach (var prop in propInfos)
+            foreach (var prop in propInfos)
+            {
+                var attribs = prop.GetCustomAttributes();
+                if (attribs.OfType<DisplayAttribute>().Count() == 0)
                 {
-                    var attribs = prop.GetCustomAttributes();
-                    if (attribs.OfType<DisplayAttribute>().Count() == 0)
-                    {
-                        csvWriter.WriteField(prop.Name);
-                    }
+                    csvWriter.WriteField(prop.Name);
                 }
-                csvWriter.NextRecord();
-                if (records != null)
+            }
+            csvWriter.NextRecord();
+            if (records != null)
+            {
+
+                //Loop through the collection, then the properties and add the values
+				int nFlushCount = 0;
+                for (int i = 0; i <= records.Count - 1; i++)
                 {
 
-                    //Loop through the collection, then the properties and add the values
-					int nFlushCount = 0;
-                    for (int i = 0; i <= records.Count - 1; i++)
+                    T item = records[i];
+                    //csvWriter..WriteField("SiteCode");
+                    for (int j = 0; j <= propInfos.Length - 1; j++)
                     {
 
-                        T item = records[i];
-                        //csvWriter..WriteField("SiteCode");
-                        for (int j = 0; j <= propInfos.Length - 1; j++)
+                        var attribs = propInfos[j].GetCustomAttributes();
+                        if (attribs.OfType<DisplayAttribute>().Count() == 0)
                         {
+                            object o = item.GetType().GetProperty(propInfos[j].Name).GetValue(item, null);
 
-                            var attribs = propInfos[j].GetCustomAttributes();
-                            if (attribs.OfType<DisplayAttribute>().Count() == 0)
+                            if (o != null)
                             {
-                                object o = item.GetType().GetProperty(propInfos[j].Name).GetValue(item, null);
+                                string value = o.ToString();
 
-                                if (o != null)
-                                {
-                                    string value = o.ToString();
-
-                                    csvWriter.WriteField(value);
-                                }
-                                else
-                                {
-                                    csvWriter.WriteField(string.Empty);
-		}
+                                csvWriter.WriteField(value);
                             }
+                            else
+                            {
+                                csvWriter.WriteField(string.Empty);
+							}
                         }
-                        csvWriter.NextRecord();
-
-						if (10000 <= ++nFlushCount)
-						{
-							//Flush every 10,000 records...
-							nFlushCount = 0;
-							streamWriter.Flush();
-						}
                     }
+                    csvWriter.NextRecord();
+
+					if (10000 <= ++nFlushCount)
+					{
+						//Flush every 10,000 records...
+						nFlushCount = 0;
+						streamWriter.Flush();
+					}
                 }
+            }
 
-                streamWriter.Flush();
+            streamWriter.Flush();
 
-				 fileStream.Seek(0, SeekOrigin.Begin);
-				 return new FileStreamResult(fileStream, "text/plain") { FileDownloadName = fileName };
+			fileStream.Seek(0, SeekOrigin.Begin);
+			return new FileStreamResult(fileStream, "text/plain") { FileDownloadName = fileName };
             
         }
 
@@ -1862,7 +1831,7 @@ namespace HISWebClient.Controllers
 
 			var d = retrievedSeries[SeriesId];
 
-			object[] metadata = new object[15];
+			object[] metadata = new object[16];
 			metadata[0] = d.ServCode;
 			metadata[1] = d.ServURL;
 			metadata[2] = d.SiteCode;
@@ -1876,10 +1845,9 @@ namespace HISWebClient.Controllers
 			metadata[10] = d.ValueCount;
 			metadata[11] = d.Latitude;
 			metadata[12] = d.Longitude;
-			metadata[13] = 0;
-			metadata[14] = 0;
-			//metadata[13] = split[13];
-
+			metadata[13] = SeriesId;
+			metadata[14] = 0;			//SiteID - to be obtained later...
+			metadata[15] = 0;			//VariableID - to be obtained later... 
 
 			return new SeriesMetadata(metadata);
 		}
@@ -1896,7 +1864,6 @@ namespace HISWebClient.Controllers
                 if (TimeSeriesFormat.CSVMerged == timeSeriesFormat)
                 {
                     dataValuewithMetadaListForId = await this.getCSVStream(timeSeriesId, currentSeries, timeSeriesFormat);
-                    //return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = filename };
                 }                
                 else
                 {
@@ -1914,150 +1881,17 @@ namespace HISWebClient.Controllers
 
                 string input = "An error occured downloading file: " + filename;
 
-                //byte[] result = Encoding.ASCII.GetBytes(input);
-                //return new FileStreamResult(new MemoryStream(result), fileType) { FileDownloadName = "ERROR " + filename };
-
 				//Append an error entry to the list and return...
 				var errorVal = new DataValueCsvViewModel();
 
-				errorVal.Id = timeSeriesId.ToString();
+				errorVal.SeriesID = timeSeriesId.ToString();
 				errorVal.SiteName = input;
 
 				dataValuewithMetadaListForId.Add(errorVal);
 				return dataValuewithMetadaListForId;
 			}
-		
         }
-
-#if NEVER_DEFINED
-		//BCC - 07-Apr-2016 - Group decision - DO NOT include e-mail messages in Release 1.2
-        public async void sendEmail(CurrentUser cu, string zipURL)
-        {
-			//Validate/initialize input parameters...
-			if ( null == cu || String.IsNullOrWhiteSpace(cu.UserEmail) || String.IsNullOrWhiteSpace(zipURL))
-			{
-				//Invalid input parameter(s) - return early
-				return;
-			}
-
-			var body = "<p>Your download from the Water Data Center is now available...</p>" +
-						"<br/>" +
-						"<a href=\"{0}\">Please click here to retrieve the file.<a/>";     
-			
-			//"> <a/> <p>the data can be downloaded from here:</p><p>{2}</p>";
-            var message = new MailMessage();
-			message.To.Add(new MailAddress(cu.UserEmail));
-            message.Subject = "Your Water Data Center download is now available";
-
-            message.Body = string.Format(body, zipURL);
-            message.IsBodyHtml = true;
-
-			try
-			{
-				using (var smtp = new SmtpClient())
-				{
-					await smtp.SendMailAsync(message);
-					return;
-				}
-			}
-			catch (Exception ex)
-			{
-				//Exception - for now take no action...
-				var errMessage = ex.Message;
-			}
-        }
-#endif
 	}
 }
-
-
-
-/*
- 
-							if (bUseWaterOneFlow)
-							{
-								int count = tsrIn.WaterOneFlowIds.Count;
-								foreach (string waterOneFlowId in tsrIn.WaterOneFlowIds)
-								{
-									//Check for cancellation...
-									if (IsTaskCancelled(requestId, cancellationEnum, cancellationMessage))
-									{
-										break;
-									}
-
-									UpdateTaskStatus(requestId, TimeSeriesRequestStatus.ProcessingTimeSeriesId,
-										TimeSeriesRequestStatus.ProcessingTimeSeriesId.GetEnumDescription() +
-																		  waterOneFlowId +
-																		  " (" + (++i).ToString() + " of " + count.ToString() + ")");
-
-
-									//Retrieve WaterOneFlow file from azure blob storage as stream
-									MemoryStream ms = new MemoryStream();
-									bool bFound = await _ac.RetrieveBlobAsync(waterOneFlowId, ct, ms);
-
-									if ( ! IsTaskCancelled(requestId, cancellationEnum, cancellationMessage))
-									{
-										if (bFound)
-										{
-											//Retrieve the water one flow version...
-											MemoryStream msDecompress = new MemoryStream();
-
-											string version = GetWaterOneFlowVersion(ms, ref msDecompress);
-											if ( ! String.IsNullOrWhiteSpace(version))
-											{
-												IWaterOneFlowParser parser;
-												switch (version)
-												{
-													case "1.0":
-														parser = new WaterOneFlow10Parser();
-														break;
-													case "1.1":
-														parser = new WaterOneFlow11Parser();
-														break;
-													default:
-														//Take no action...
-														parser = null;
-														break;
-												}
-
-												if (null != parser)
-												{
-													//Parser found - parse water one flow contents...
-													msDecompress.Seek(0, SeekOrigin.Begin);
-													IList<ServerSideHydroDesktop.ObjectModel.Site> listSites = parser.ParseGetSites(msDecompress);
-
-													msDecompress.Seek(0, SeekOrigin.Begin);
-													IList<ServerSideHydroDesktop.ObjectModel.SeriesMetadata> listMeta = parser.ParseGetSiteInfo(msDecompress);
-
-													msDecompress.Seek(0, SeekOrigin.Begin);
-													IList<ServerSideHydroDesktop.ObjectModel.Series> listSeries = parser.ParseGetValues(msDecompress);
-
-													//			 parse file contents into stream
-													//			 add stream as a zip archive entry...
-													int n = 5;
-
-													++n;
-									
-												}
-												else
-												{
-													//TO DO - parser not found - make an error stream, add stream as a zip archive entry...
-
-												}
-											}
-											else
-											{
-												//TO DO - version not found - make an error stream, add stream as a zip archive entry...
-											}
-										}
-										else
-										{
-											//DO DO - //If not found, make an error stream, add stream as a zip archive entry...
-										}
-									}
-								}
-							}
-
- */
 
 

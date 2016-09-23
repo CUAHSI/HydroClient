@@ -541,40 +541,6 @@ namespace HISWebClient.Controllers
 		[HttpGet]
 		public ActionResult CurrentUser()
 		{
-
-			//Does the User object exist here?
-			//if (User.Identity.IsAuthenticated)
-			//{
-			//	string userId = User.Identity.GetUserId();
-			//	string userName = User.Identity.GetUserName();
-			//	string userName2 = User.Identity.Name;
-
-
-			//	var claims = UserManager.GetClaims(userId);
-
-			//	var emailClaim = claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
-			//	var nameClaim = claims.FirstOrDefault(c => c.Type == ClaimTypes.Name);
-
-			//	var user = UserManager.Users.FirstOrDefault( u => u.Id.Equals(userId));
-
-			//	var email = user.UserEmail;
-			//	var userName3 = user.UserName;
-
-			//	//var externalIdentity = HttpContext.GetOwinContext().Authentication.GetExternalIdentityAsync(DefaultAuthenticationTypes.ExternalCookie);
-
-			//	////Retain external username and email values for later reference 
-			//	//var emailClaim = externalIdentity.Result.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
-			//	//var email = emailClaim.Value;
-
-			//	//var nameClaim = externalIdentity.Result.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name);
-			//	//var userName3 = nameClaim.Value;  //Same as: externalIdentity.Result.GetUserName(); ??
-
-
-			//	int n = 5;
-
-			//	++n;
-			//}
-
 			//Check current session for current user
 			var httpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
 			CurrentUser cu = httpContext.Session[httpContext.Session.SessionID] as CurrentUser;
@@ -614,8 +580,6 @@ namespace HISWebClient.Controllers
 			}
 
 			//Sucess - convert retrieved data to JSON and return...
-			//var javaScriptSerializer = new JavaScriptSerializer();
-			//var json = javaScriptSerializer.Serialize(cu);
 			var json = JsonConvert.SerializeObject(cu);
 
 
@@ -671,11 +635,7 @@ namespace HISWebClient.Controllers
 			//Reset external login information for the current session
 			resetSessionExternalLogin();
 
-			//AuthenticationManager.SignOut();
 			AuthenticationManager.SignOut(DefaultAuthenticationTypes.ApplicationCookie, DefaultAuthenticationTypes.ExternalCookie);
-			//AuthenticationManager.SignOut(DefaultAuthenticationTypes.ExternalCookie);
-
-//          return RedirectToAction("Index", "Home");
 
 			var returnUrl = ViewBag.ReturnUrl;
 

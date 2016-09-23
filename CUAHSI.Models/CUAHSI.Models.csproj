@@ -59,6 +59,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\HISWebClient\Util\EnumExtensionMethods.cs">
+      <Link>EnumExtensionMethods.cs</Link>
+    </Compile>
     <Compile Include="Comparison\SimpleOntologyItemComparer.cs" />
     <Compile Include="Comparison\SimpleSiteComparer.cs" />
     <Compile Include="DataEnvelope.cs" />

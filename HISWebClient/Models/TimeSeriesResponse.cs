@@ -58,18 +58,16 @@ namespace HISWebClient.Models
         /// <summary>
         /// Constructors...
         /// </summary>
-        public TimeSeriesResponse() { }
+        public TimeSeriesResponse() {}
 
 		//C# 'feature' - new DateTime() same value as DateTIme.MinValue - but you can't use DateTime.MinValue as a default argument!!!
-        public TimeSeriesResponse(string requestIdIn, TimeSeriesRequestStatus tsrsIn, string statusIn, string blobUriIn = "", DateTime blobTimeStampIn = new DateTime())  
+        public TimeSeriesResponse(string requestIdIn, TimeSeriesRequestStatus tsrsIn, string statusIn, string blobUriIn = "", DateTime blobTimeStampIn = new DateTime()) : this()
         {
             RequestId = requestIdIn;
             RequestStatus = tsrsIn;
             Status = statusIn;
             BlobUri = blobUriIn;
 			BlobTimeStamp = blobTimeStampIn;
-
-			SeriesIdsToVariableUnits = new Dictionary<int, string>();
         }
 
         /// <summary>
@@ -97,7 +95,5 @@ namespace HISWebClient.Models
 		/// BlobTimeStamp - for blob files...
 		/// </summary>
 		public DateTime BlobTimeStamp { get; set; }
-
-		public Dictionary<int, string> SeriesIdsToVariableUnits { get; set; }
 	}
 }

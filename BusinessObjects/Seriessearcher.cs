@@ -221,9 +221,11 @@ namespace HISWebClient.DataLayer
 								{
 									String keyword = keywords.ElementAt(i);
 
-									//bgWorker.CheckForCancel();
-									//var series = GetSeriesCatalogForBox(tile.MinX, tile.MaxX, tile.MinY, tile.MaxY, keyword, startDate, endDate, ids, bgWorker, current, totalTilesCount);
-									var series = GetSeriesCatalogForBox(tile.MinX, tile.MaxX, tile.MinY, tile.MaxY, keyword, startDate, endDate, ids, current, totalTilesCount);
+									string sampleMedium = String.Empty;
+									string dataType = String.Empty;
+									string valueType = string.Empty;
+
+									var series = GetSeriesCatalogForBox(tile.MinX, tile.MaxX, tile.MinY, tile.MaxY, sampleMedium, dataType, valueType, keyword, startDate, endDate, ids, current, totalTilesCount);
 
 									totalTileSeriesList.AddRange(series);
 									if (tileSeriesList.Count() == 0)
@@ -261,9 +263,11 @@ namespace HISWebClient.DataLayer
 								tileSeriesList = new List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>();
 								foreach (var keyword in keywords)
 								{
-									//bgWorker.CheckForCancel();
-									//var series = GetSeriesCatalogForBox(tile.MinX, tile.MaxX, tile.MinY, tile.MaxY, keyword, startDate, endDate, ids, bgWorker, current, totalTilesCount);
-									var series = GetSeriesCatalogForBox(tile.MinX, tile.MaxX, tile.MinY, tile.MaxY, keyword, startDate, endDate, ids, current, totalTilesCount);
+									string sampleMedium = String.Empty;
+									string dataType = String.Empty;
+									string valueType = string.Empty;
+
+									var series = GetSeriesCatalogForBox(tile.MinX, tile.MaxX, tile.MinY, tile.MaxY, sampleMedium, dataType, valueType, keyword, startDate, endDate, ids, current, totalTilesCount);
 
 									tileSeriesList.AddRange(series);
 								}
@@ -345,6 +349,21 @@ namespace HISWebClient.DataLayer
 																			  int[] networkIDs, 
 																			  //BusinessObjects.Models.IProgressHandler bgWorker, 
 																			  long currentTile, long totalTilesCount);
+
+		protected abstract IEnumerable<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart> GetSeriesCatalogForBox( double xMin, 
+																														  double xMax, 
+																														  double yMin, 
+																													      double yMax,
+																														  string sampleMedium,
+																														  string dataType,
+																														  string valueType,
+																														  string keyword, 
+																														  DateTime startDate, 
+																														  DateTime endDate,
+																														  int[] networkIDs,
+																														  long currentTile, 
+																														  long totalTilesCount);
+
 	}
 }
 
