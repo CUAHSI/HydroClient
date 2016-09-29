@@ -42,6 +42,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PublishDatabases>true</PublishDatabases>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CsvHelper, Version=2.0.0.0, Culture=neutral, PublicKeyToken=8c4959082be5c823, processorArchitecture=MSIL">
@@ -324,6 +325,7 @@
     <Compile Include="Util\DbErrorContext.cs" />
     <Compile Include="Util\DbLogContext.cs" />
     <Compile Include="Util\EnumExtensionMethods.cs" />
+    <Compile Include="Util\EnvironmentContext.cs" />
     <Compile Include="Util\ExportUtils.cs" />
     <Compile Include="Util\FileContext.cs" />
     <Compile Include="Util\httpUtil.cs" />
@@ -537,18 +539,8 @@
     <Content Include="Content\documents\QuickStartGuide\HydroClient Quick Start Guide.1.pdf" />
     <Content Include="Content\documents\QuickStartGuide\HydroClient Quick Start Guide.2.pdf" />
     <Content Include="Content\documents\QuickStartGuide\HydroClient Quick Start Guide.3.pdf" />
-    <None Include="Properties\PublishProfiles\bcc-hiswebclient - FTP %282%29.pubxml" />
-    <None Include="Properties\PublishProfiles\bcc-hiswebclient - FTP %283%29.pubxml" />
-    <None Include="Properties\PublishProfiles\bcc-hiswebclient - FTP.pubxml" />
-    <None Include="Properties\PublishProfiles\bcc-hiswebclient - Web Deploy %282%29.pubxml" />
-    <None Include="Properties\PublishProfiles\bcc-hiswebclient - Web Deploy.pubxml" />
-    <None Include="Properties\PublishProfiles\dev-hiswebclient - FTP.pubxml" />
-    <None Include="Properties\PublishProfiles\dev-hiswebclient - Web Deploy.pubxml" />
     <Content Include="Content\FancyTree\skin-xp\ui.fancytree.less" />
     <Content Include="Properties\webjobs-list.json" />
-    <None Include="Properties\PublishProfiles\hiswebclient - FTP.pubxml" />
-    <None Include="Properties\PublishProfiles\hiswebclient - Web Deploy.pubxml" />
-    <None Include="Properties\PublishProfiles\qa-hiswebclient - FTP %282%29.pubxml" />
     <None Include="Properties\PublishProfiles\qa-hiswebclient - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\qa-hiswebclient - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
@@ -649,8 +641,12 @@
     <Content Include="Views\Home\_DatatableDataservicesColumns.cshtml" />
     <Content Include="Views\Home\_DataManagerTimeseriesColumns.cshtml" />
     <Content Include="Views\Home\Quickstart.cshtml" />
-    <Content Include="Web-Deploy.config" />
-    <Content Include="Web-LocalBuild.config" />
+    <Content Include="Web-Deploy.config">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Web-LocalBuild.config">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Views\Home\_DatatableQualityControlLevelsColumns.cshtml" />
     <Content Include="Views\Home\_DatatableMethodDescriptionsColumns.cshtml" />
     <Content Include="Views\Home\_DatatableSourceOrganizationsColumns.cshtml" />

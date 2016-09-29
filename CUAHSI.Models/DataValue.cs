@@ -16,11 +16,13 @@ namespace CUAHSI.Models
         [DataMember]
         public DateTime TimeStamp { get; set; }
 
-        [DataMember]
-        public DateTime TimeStampUTC { get; set; }
+		//BCC - 27-Sep-2016 - Never referenced - commented out...
+		//[DataMember]
+		//public DateTime TimeStampUTC { get; set; }
 
-        [DataMember]
-        public DateTime TimeStampLocal { get; set; }
+		//BCC - 27-Sep-2016 - Never referenced - commented out...
+		//[DataMember]
+		//public DateTime TimeStampLocal { get; set; }
 
         [DataMember]
         public DateTime UTCTimeStamp { get; set; }

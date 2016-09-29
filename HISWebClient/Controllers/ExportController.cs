@@ -752,15 +752,23 @@ namespace HISWebClient.Controllers
 													List<DataValue> dvList = new List<DataValue>();
 
 													//For each series in the returned list...
-													foreach (var dataResult in listSeries)
+													foreach (var series in listSeries)
 													{
-														//Check for a particular time series...
-														if ( dataResult.Source.OriginId != Int32.Parse(currentWofIds.SourceId) ||
-															 dataResult.Method.Code != Int32.Parse(currentWofIds.MethodId) ||
-															 dataResult.QualityControlLevel.OriginId != Int32.Parse(currentWofIds.QCLID))
+														if ((!String.IsNullOrWhiteSpace(currentWofIds.SourceId)) &&
+															(!String.IsNullOrWhiteSpace(currentWofIds.MethodId)) &&
+															(!String.IsNullOrWhiteSpace(currentWofIds.QCLID)) &&
+															(series.Source.IsValid) &&
+															(series.Method.IsValid) &&
+															(series.QualityControlLevel.IsValid))
 														{
-															//Source, method and/or quality control level do NOT agree - continue...
-															continue;
+															//Comparison values non-empty/valid - Check for a particular time series...
+															if (series.Source.OriginId != Int32.Parse(currentWofIds.SourceId) ||
+																series.Method.Code != Int32.Parse(currentWofIds.MethodId) ||
+																series.QualityControlLevel.OriginId != Int32.Parse(currentWofIds.QCLID))
+															{
+																//Source, method and/or quality control level do NOT agree - continue...
+																continue;
+															}
 														}
 
 														//Allocate metadata, if indicated...
@@ -772,7 +780,7 @@ namespace HISWebClient.Controllers
 															List<BusinessObjects.WebServiceNode> allWebServices = dataWorker.getWebServiceList();
 
 															//Retrieve the result's service code, scan web service data for a match...
-															var serviceCodeLowerCase = dataResult.Site.Code.Split(':')[0].ToLower();
+															var serviceCodeLowerCase = series.Site.Code.Split(':')[0].ToLower();
 															BusinessObjects.WebServiceNode wsn = null;
 
 															if (!String.IsNullOrWhiteSpace(serviceCodeLowerCase))
@@ -785,40 +793,40 @@ namespace HISWebClient.Controllers
 
 															smd.ServCode = (null != wsn) ? wsn.ServiceCode : "unknown";	//NOTE: 'Unknown' case should never occur!!
 															smd.ServURL = (null != wsn) ? wsn.ServiceUrl : "unknown";	//NOTE: 'Unknown' case should never occur!!
-															smd.SiteCode = dataResult.Site.Code;
-															smd.VarCode = dataResult.Variable.Code;
-															smd.SiteName = dataResult.Site.Name;
-															smd.VariableName = dataResult.Variable.Name;
-															smd.SampleMedium = dataResult.Variable.SampleMedium;
-															smd.GeneralCategory = dataResult.Variable.GeneralCategory;
-															smd.StartDate = dataResult.BeginDateTime;
-															smd.EndDate = dataResult.EndDateTime;
+															smd.SiteCode = series.Site.Code;
+															smd.VarCode = series.Variable.Code;
+															smd.SiteName = series.Site.Name;
+															smd.VariableName = series.Variable.Name;
+															smd.SampleMedium = series.Variable.SampleMedium;
+															smd.GeneralCategory = series.Variable.GeneralCategory;
+															smd.StartDate = series.BeginDateTime;
+															smd.EndDate = series.EndDateTime;
 															//Initialize value count...
 															smd.ValueCount = 0;
-															smd.Latitude = dataResult.Site.Latitude;
-															smd.Longitude = dataResult.Site.Longitude;
+															smd.Latitude = series.Site.Latitude;
+															smd.Longitude = series.Site.Longitude;
 															//BCC - 08-Aug-2016 - Assign Series, Site and Variable ID's correct values...
-															smd.SeriesID = (int)dataResult.Id;
-															smd.SiteID = (int)dataResult.Site.Id;
-															smd.VariableID = (int)dataResult.Variable.Id;
+															smd.SeriesID = (int) series.Id;
+															smd.SiteID = (int) series.Site.Id;
+															smd.VariableID = (int) series.Variable.Id;
 
 															sd.SeriesID = smd.SeriesID;
 															sd.myMetadata = smd;
 
-															sd.myVariable = dataResult.Variable;
+															sd.myVariable = series.Variable;
 														}
 
 
 														//Add data values to list...
-														IList<DataValue> dataValues = dataResult.DataValueList.OrderBy(a => a.DateTimeUTC).Select(aa => new DataValue(aa)).ToList();
+														IList<DataValue> dataValues = series.DataValueList.OrderBy(a => a.DateTimeUTC).Select(aa => new DataValue(aa)).ToList();
 
 														foreach (var dv in dataValues)
 														{
 															//TO DO - Need to set lab sample code...
 															//dv.LabSampleCode = ??
-															dv.MethodCode = dataResult.Method.Code.ToString();
-															dv.QualityControlLevelCode = dataResult.QualityControlLevel.Code;
-															dv.SourceCode = dataResult.Source.OriginId.ToString();
+															dv.MethodCode = series.Method.Code.ToString();
+															dv.QualityControlLevelCode = series.QualityControlLevel.Code;
+															dv.SourceCode = series.Source.OriginId.ToString();
 
 															dv.SeriesData = sd;
 
@@ -826,13 +834,13 @@ namespace HISWebClient.Controllers
 														}
 
 														//Add Source instance
-														sd.mySource = dataResult.Source;
+														sd.mySource = series.Source;
 
 														//Add Method instance
-														sd.myMethod = dataResult.Method;
+														sd.myMethod = series.Method;
 
 														//Add QualityControlLevel instance
-														sd.myQualityControlLevel = dataResult.QualityControlLevel;
+														sd.myQualityControlLevel = series.QualityControlLevel;
 													}
 
 													//Add values to SeriesData instance...
@@ -1236,14 +1244,14 @@ namespace HISWebClient.Controllers
 		{
 			DateTimeOffset requestTime = DateTimeOffset.UtcNow;
 		   
-				//get series from wateroneflow and return response
-				Tuple<Stream, SeriesData> data = await GetSeriesDataObjectAndStreamFromSeriesID(SeriesID, currentSeries);
+			//get series from wateroneflow and return response
+			Tuple<Stream, SeriesData> data = await GetSeriesDataObjectAndStreamFromSeriesID(SeriesID, currentSeries);
 
-				string nameGuid = Guid.NewGuid().ToString();
+			string nameGuid = Guid.NewGuid().ToString();
 
-				var s = await this.getCSVResultByteArray(data.Item2, nameGuid, requestTime);
+			var s = await this.getCSVResultByteArray(data.Item2, nameGuid, requestTime);
 
-				return new Tuple<byte[], SeriesData>(s, data.Item2);
+			return new Tuple<byte[], SeriesData>(s, data.Item2);
 		}
 
         public async Task<List<DataValueCsvViewModel>> getCSVStream(int SeriesID, List<TimeSeriesViewModel> currentSeries = null, TimeSeriesFormat timeSeriesFormat = TimeSeriesFormat.CSV)
@@ -1410,18 +1418,19 @@ namespace HISWebClient.Controllers
 							n++;
 						}
 #endif
-						var dataResults = data.Item2;
+						//var dataResults = data.Item2;
+						var listSeries = data.Item2;
 
 						//Assign SeriesMetaData SiteID and VariableID values from first item in Series list...
-						var dataResult1 = data.Item2.FirstOrDefault();
+						var series1 = listSeries.FirstOrDefault();
 
-						meta.SiteID = (int) dataResult1.Site.Id;
-						meta.VariableID = (int)dataResult1.Variable.Id;
+						meta.SiteID = (int) series1.Site.Id;
+						meta.VariableID = (int) series1.Variable.Id;
 						SeriesData sd = new SeriesData();
 
 						sd.SeriesID = meta.SeriesID;
 						sd.myMetadata = meta;
-						sd.myVariable = dataResult1.Variable;
+						sd.myVariable = series1.Variable;
 
 						//Instantiate DataValue list...
 						List<DataValue> dvList = new List<DataValue>();
@@ -1433,14 +1442,20 @@ namespace HISWebClient.Controllers
 							tsvmTarget = currentSeries.FirstOrDefault(tsvm => seriesId == tsvm.SeriesId);
 						}
 
-						foreach (var dataResult in dataResults)
+						foreach (var series in listSeries)
 						{
-							if (null != tsvmTarget)
+							if ( (null != tsvmTarget) && 
+								 (!String.IsNullOrWhiteSpace(tsvmTarget.SourceId)) && 
+								 (!String.IsNullOrWhiteSpace(tsvmTarget.MethodId)) && 
+								 (!String.IsNullOrWhiteSpace(tsvmTarget.QCLID)) &&
+								 (series.Source.IsValid) &&
+								 (series.Method.IsValid) &&
+								 (series.QualityControlLevel.IsValid))
 							{
- 								//Checking for a particular time series...
-								if ( dataResult.Source.OriginId != Int32.Parse(tsvmTarget.SourceId) ||
-									 dataResult.Method.Code != Int32.Parse(tsvmTarget.MethodId) ||
-									 dataResult.QualityControlLevel.OriginId != Int32.Parse(tsvmTarget.QCLID))
+ 								//Comparison values non-empty/valid - Check for a particular time series...
+								if (series.Source.OriginId != Int32.Parse(tsvmTarget.SourceId) ||
+									series.Method.Code != Int32.Parse(tsvmTarget.MethodId) ||
+									series.QualityControlLevel.OriginId != Int32.Parse(tsvmTarget.QCLID))
 								{
 									//Source, method and/or quality control level do NOT agree - continue...
 									continue;
@@ -1448,15 +1463,15 @@ namespace HISWebClient.Controllers
 							}
 
 							//Add data values to list...
-							IList<DataValue> dataValues = dataResult.DataValueList.OrderBy(a => a.DateTimeUTC).Select(aa => new DataValue(aa)).ToList();
+							IList<DataValue> dataValues = series.DataValueList.OrderBy(a => a.DateTimeUTC).Select(aa => new DataValue(aa)).ToList();
 
 							foreach( var dv in dataValues)
 							{
 								//TO DO - Need to set lab sample code...
 								//dv.LabSampleCode = ??
-								dv.MethodCode = dataResult.Method.Code.ToString();
-								dv.QualityControlLevelCode = dataResult.QualityControlLevel.Code;
-								dv.SourceCode = dataResult.Source.OriginId.ToString();
+								dv.MethodCode = series.Method.Code.ToString();
+								dv.QualityControlLevelCode = series.QualityControlLevel.Code;
+								dv.SourceCode = series.Source.OriginId.ToString();
 
 								dv.SeriesData = sd;
 
@@ -1464,13 +1479,13 @@ namespace HISWebClient.Controllers
 							}
 
 							//Add Source instance
-							sd.mySource = dataResult.Source;
+							sd.mySource = series.Source;
 
 							//Add Method instance
-							sd.myMethod = dataResult.Method;
+							sd.myMethod = series.Method;
 
 							//Add QualityControlLevel instance
-							sd.myQualityControlLevel = dataResult.QualityControlLevel;
+							sd.myQualityControlLevel = series.QualityControlLevel;
 						}
 
 						//Add values to SeriesData instance...
@@ -1839,9 +1854,24 @@ namespace HISWebClient.Controllers
 			metadata[4] = d.SiteName;
 			metadata[5] = d.VariableName;
 			metadata[6] = d.SampleMedium;
-			metadata[7] = d.GeneralCategory;            
-			metadata[8] = d.BeginDate;
-			metadata[9] = d.EndDate;
+			metadata[7] = d.GeneralCategory;
+            //BCC - 27-Sep-2016 - Adjust times on begin and end dates...
+			//metadata[8] = d.BeginDate;
+			//metadata[9] = d.EndDate;
+
+			//Set begin date time to 00:00:00
+			DateTime beginDt = d.BeginDate;
+			metadata[8] = beginDt.Date.AddHours(0).AddMinutes(0).AddSeconds(0);
+
+			DateTime endDt = d.EndDate;
+ 			if (beginDt.Date == endDt.Date)
+			{
+				//Equal begin and end dates - increase end date by one day...
+				endDt = endDt.Date.AddDays(1);
+			}
+			//Set end date time to 23:59:59
+			metadata[9] = endDt.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
+
 			metadata[10] = d.ValueCount;
 			metadata[11] = d.Latitude;
 			metadata[12] = d.Longitude;

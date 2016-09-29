@@ -10,6 +10,10 @@ using ServerSideHydroDesktop.ObjectModel;
 
 using System.Threading;
 
+using Newtonsoft.Json;
+
+using HISWebClient.Util;
+
 namespace ServerSideHydroDesktop
 {
     public class WaterOneFlowClient
@@ -269,6 +273,44 @@ namespace ServerSideHydroDesktop
 				Stream s = ReadStreamFromResponse(getTask.Result);
 
 				IList<Series> listSeries = _parser.ParseGetValues(s);
+#if (DEBUG)
+				//BCC - 28-Sep-2016 - TO DO - Code not working - research needed...
+				//Write Series list to a file...
+				//if (EnvironmentContext.LocalEnvironment())
+				//{
+					//using (System.IO.StreamWriter swSeries = System.IO.File.CreateText(@"C:\CUAHSI\Series.json"))
+					//{
+					//	JsonSerializer jsonser = new JsonSerializer();
+
+					//	swSeries.Write('[');	//Write start of array...
+
+					//	if ( listSeries.Count > 0 )
+					//	{
+					//		for (int i = 0; i < listSeries.Count; i++)
+					//		{
+					//			try
+					//			{
+					//				jsonser.Serialize(swSeries, listSeries[i]);
+					//			}
+					//			catch (Exception ex)
+					//			{
+					//				if ((i + 1) < listSeries.Count)
+					//				{
+					//					swSeries.Write(',');
+					//				}
+					//				continue;
+					//			}
+
+					//			if ( (i + 1) < listSeries.Count)
+					//			{
+					//				swSeries.Write(',');
+					//			}
+					//		}
+					//	}
+
+					//	swSeries.Write(']');	//Write end of array...
+					//}
+				//}
 
 				if (1 < listSeries.Count)
 				{
@@ -276,7 +318,7 @@ namespace ServerSideHydroDesktop
 
 					++n;
 				}
-
+#endif
 
 				return new Tuple<Stream, IList<Series>>(s, listSeries);
             }
@@ -366,11 +408,14 @@ namespace ServerSideHydroDesktop
 
 #if (DEBUG)
 			//Here the stream contains data...
-			using (System.IO.FileStream output = new System.IO.FileStream(@"C:\CUAHSI\ReadFromStreamResponse.xml", FileMode.Create))
+			if (EnvironmentContext.LocalEnvironment())
 			{
-				ms.CopyTo(output);
-				output.Flush();
-				ms.Seek(0, SeekOrigin.Begin);
+				using (System.IO.FileStream output = new System.IO.FileStream(@"C:\CUAHSI\ReadFromStreamResponse.xml", FileMode.Create))
+				{
+					ms.CopyTo(output);
+					output.Flush();
+					ms.Seek(0, SeekOrigin.Begin);
+				}
 			}
 #endif
 	

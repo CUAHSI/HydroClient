@@ -44,7 +44,7 @@ namespace HISWebClient.Models.DataManager
 		public string TimeUnit { get; set; }
 
 		//Members for Quality Control Level, Source and Method...
-		public string QCLID { get; set; }
+		public string QCLID  { get; set; }
 
 		public string QCLDesc { get; set; }
 

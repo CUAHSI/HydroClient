@@ -686,6 +686,7 @@ function initialize() {
 
     });
 
+    //Submit function for 'Search Map' button - see index.cshtml searchBtnDiv...
     $("#Search").submit(function (e) {
 
         resetMap();
@@ -3628,6 +3629,8 @@ function btnDisableCheck(buttonId) {
     return result;
 }
 
+
+//Old style code...
 function launchByuHydroshareApp(event) {
 
     var tableId = '#' + event.data.tableId;
@@ -3652,69 +3655,117 @@ function launchByuHydroshareApp(event) {
         //URL found - find selected water one flow archives...
         var selectedRows = table.rows('.selected').data();
         var rowsLength = selectedRows.length;
-        var wofParams = [];
+        var wofParams = '';
         var extension = '.zip';
 
         for (var ii = 0; ii < rowsLength; ++ii) {
             if (timeSeriesRequestStatus.Completed == selectedRows[ii].TimeSeriesRequestStatus) {
-                var row = selectedRows[ii];
-                var item = { 'WofUri': (row.WofUri.split(extension))[0],
-                             'QCLID': row.QCLID,
-                             'MethodId': row.MethodId,
-                             'SourceId': row.SourceId
-                            };
-                wofParams.push(item);
+                if ('' !== wofParams) {
+                    wofParams += ',';
+                }
+                wofParams += (selectedRows[ii].WofUri.split(extension))[0];
             }
         }
 
-        //Create a dynamic form and submit to BYU URL...
-        // Sources: http://htmldog.com/guides/javascript/advanced/creatingelements/
-        //          http://stackoverflow.com/questions/30835990/how-to-submit-form-to-new-window
-        //          http://jsfiddle.net/qqzxtk67/
-        //          http://stackoverflow.com/questions/17431760/create-a-form-dynamically-with-jquery-and-submit
-        //          http://jsfiddle.net/MVXXX/1/
-        if ( 0 < wofParams.length) {
-            //Remove/create form...
-            $('form#dataViewerForm').remove();
-            var jqForm = $('<form id="dataViewerForm"></form>').appendTo(document.body);
+        if ( '' !== wofParams) {
+            //Selections found - call BYU app with parameters...
+            // URL format: [app base name]/?src=cuahsi&res_id=abcdefj+abcdefh+abcedfi+abcdefk 
+            var fullUrl = byuUrl + '/?src=cuahsi&res_id=' + wofParams;
 
-            //Add method, action and target...
-            var targetWindow = 'dataViewerWindow';
-
-            jqForm.attr('method', 'post');
-            jqForm.attr('action', byuUrl);
-            jqForm.attr('target', targetWindow);
-
-            //Append source...
-            jqForm.append('<input type="hidden" name="Source" value="cuahsi">');
-
-            //Append child list...
-            jqForm.append('<ul id="wofParams"></ul>');
-
-            //For each wofParams item...
-            var itemsLength = wofParams.length;
-            var jqList = $('#wofParams');
-
-
-            for (var iii = 0; iii < itemsLength; ++iii) {
-                //Append to child list...
-                var item = wofParams[iii];
-                jqList.append('<li>' +
-                              '<input type="hidden" name="WofUri" value="' + item.WofUri + '">' +
-                              '<input type="hidden" name="QCLID" value="' + item.QCLID + '">' +
-                              '<input type="hidden" name="MethodId" value="' + item.MethodId + '">' +
-                              '<input type="hidden" name="SourceId" value="' + item.SourceId + '">' +
-                              '</li>'
-                             ); 
-            }
-
-            //Open Data Viewer window, submit form...
-            window.open('', targetWindow, '', false);    
-            jqForm.submit();
+            window.open(fullUrl, '_blank', '', false);
+            
         }
     }
 }
 
+
+//New style code...
+//function launchByuHydroshareApp(event) {
+
+//    var tableId = '#' + event.data.tableId;
+//    var table = $(tableId).DataTable();
+//    var apps = event.data.getApps().apps;
+
+//    //Currently selected BYU app
+//    var valueSelected = $('#' + event.data.divId).text().trim();
+//    var byuUrl= null;
+
+//    //New selection - find the associated app URL...
+//    var length = apps.length;
+
+//    for (var i = 0; i < length; ++i) {
+//        if (valueSelected === apps[i].name) {
+//            byuUrl = apps[i].url;
+//            break;
+//        }
+//    }
+
+//    if (null !== byuUrl) {
+//        //URL found - find selected water one flow archives...
+//        var selectedRows = table.rows('.selected').data();
+//        var rowsLength = selectedRows.length;
+//        var wofParams = [];
+//        var extension = '.zip';
+
+//        for (var ii = 0; ii < rowsLength; ++ii) {
+//            if (timeSeriesRequestStatus.Completed == selectedRows[ii].TimeSeriesRequestStatus) {
+//                var row = selectedRows[ii];
+//                var item = { 'WofUri': (row.WofUri.split(extension))[0],
+//                             'QCLID': row.QCLID,
+//                             'MethodId': row.MethodId,
+//                             'SourceId': row.SourceId
+//                            };
+//                wofParams.push(item);
+//            }
+//        }
+
+//        //Create a dynamic form and submit to BYU URL...
+//        // Sources: http://htmldog.com/guides/javascript/advanced/creatingelements/
+//        //          http://stackoverflow.com/questions/30835990/how-to-submit-form-to-new-window
+//        //          http://jsfiddle.net/qqzxtk67/
+//        //          http://stackoverflow.com/questions/17431760/create-a-form-dynamically-with-jquery-and-submit
+//        //          http://jsfiddle.net/MVXXX/1/
+//        if ( 0 < wofParams.length) {
+//            //Remove/create form...
+//            $('form#dataViewerForm').remove();
+//            var jqForm = $('<form id="dataViewerForm"></form>').appendTo(document.body);
+
+//            //Add method, action and target...
+//            var targetWindow = 'dataViewerWindow';
+
+//            jqForm.attr('method', 'post');
+//            jqForm.attr('action', byuUrl);
+//            jqForm.attr('target', targetWindow);
+
+//            //Append source...
+//            jqForm.append('<input type="hidden" name="Source" value="cuahsi">');
+
+//            //Append child list...
+//            jqForm.append('<ul id="wofParams"></ul>');
+
+//            //For each wofParams item...
+//            var itemsLength = wofParams.length;
+//            var jqList = $('#wofParams');
+
+
+//            for (var iii = 0; iii < itemsLength; ++iii) {
+//                //Append to child list...
+//                var item = wofParams[iii];
+//                jqList.append('<li>' +
+//                              '<input type="hidden" name="WofUri" value="' + item.WofUri + '">' +
+//                              '<input type="hidden" name="QCLID" value="' + item.QCLID + '">' +
+//                              '<input type="hidden" name="MethodId" value="' + item.MethodId + '">' +
+//                              '<input type="hidden" name="SourceId" value="' + item.SourceId + '">' +
+//                              '</li>'
+//                             ); 
+//            }
+
+//            //Open Data Viewer window, submit form...
+//            window.open('', targetWindow, '', false);    
+//            jqForm.submit();
+//        }
+//    }
+//}
 
 //Draw event handler...
 function retrieveWaterOneFlowForTimeSeries(event) {

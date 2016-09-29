@@ -308,9 +308,9 @@ namespace HISWebClient.DataLayer
 
 						});
 					}
-					catch (OperationCanceledException e)
+					catch (OperationCanceledException oex)
 					{
-						throw e;
+						throw oex;
 					}
 				});
 				// Collect all series into result list
@@ -318,9 +318,9 @@ namespace HISWebClient.DataLayer
 				fullSeriesList.ForEach(result.AddRange);
 				return result;
 			}
-			catch (OperationCanceledException e)
+			catch (OperationCanceledException oex)
 			{
-				throw e;
+				throw oex;
 			}
 		}
 

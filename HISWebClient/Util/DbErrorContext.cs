@@ -10,7 +10,8 @@ namespace HISWebClient.Util
 	/// <summary>
 	/// A derived class for use with the AdoNetAppender...
 	/// </summary>
-	public class DbErrorContext : DbBaseContext
+//	public class DbErrorContext : DbBaseContext
+	public class DbErrorContext : HISWebClient.Util.DbBaseContext
 	{
 		//Initializing Constructor
 		public DbErrorContext(string loggerName, string adoNetAppenderName, string localConnectionStringKey, string deployConnectionStringKey) 

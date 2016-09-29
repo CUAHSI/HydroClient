@@ -9,6 +9,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
+using System.Net.Http;
+
+using log4net.Core;
 using HISWebClient.Util;
 
 namespace HISWebClient.DataLayer
@@ -245,12 +248,6 @@ namespace HISWebClient.DataLayer
 			{
 				try
 				{
-					//bgWorker.CheckForCancel();
-					//bgWorker.ReportMessage(i == 0
-					//                           ? string.Format("Sent request: {0}", keywordDesc)
-					//                           : string.Format("Timeout has occurred for {0}. New Attempt ({1} of {2})...",
-					//                               keywordDesc, i + 1, tryCount));
-
 					var request = WebRequest.Create(url.ToString());
 					request.Timeout = 30 * 1000;
 					using (var response = request.GetResponse())
@@ -260,18 +257,25 @@ namespace HISWebClient.DataLayer
 						return ParseSeries(reader, startDate, endDate);
 					}
 				}
-				catch (WebException ex)
+				catch (WebException wex)
 				{
-					if (ex.Status == WebExceptionStatus.Timeout)
+					if (wex.Status == WebExceptionStatus.Timeout)
 					{
 						//Timeout error - continue 
 						continue;
 					}
-					
-					throw;
+
+					throw wex;
+				}
+				catch (Exception ex)
+				{
+					throw ex;
 				}
 			}
-			throw new WebException("Timeout. Please limit search area and/or Keywords.", WebExceptionStatus.Timeout);
+
+			WebException wex1 = new WebException("Timeout. Please limit search area and/or Keywords.", WebExceptionStatus.Timeout);
+
+			throw wex1; 
 		}
 
 		//BCC - 07-Sep-2016 - Added new method for call to GetSeriesCatalogForBox3...
@@ -292,7 +296,6 @@ namespace HISWebClient.DataLayer
 			var url = new StringBuilder();
 			url.Append(_hisCentralUrl);
 			url.Append("/GetSeriesCatalogForBox3");
-			//url.Append("/GetSeriesCatalogForBox2");
 			url.Append("?xmin=");
 			url.Append(Uri.EscapeDataString(xMin.ToString(_invariantCulture)));
 			url.Append("&xmax=");
@@ -358,12 +361,6 @@ namespace HISWebClient.DataLayer
 			{
 				try
 				{
-					//bgWorker.CheckForCancel();
-					//bgWorker.ReportMessage(i == 0
-					//                           ? string.Format("Sent request: {0}", keywordDesc)
-					//                           : string.Format("Timeout has occurred for {0}. New Attempt ({1} of {2})...",
-					//                               keywordDesc, i + 1, tryCount));
-
 					var request = WebRequest.Create(url.ToString());
 					request.Timeout = 30 * 1000;
 					using (var response = request.GetResponse())
@@ -372,24 +369,30 @@ namespace HISWebClient.DataLayer
 						{
 							using (var reader = XmlReader.Create(stream))
 							{
-								//bgWorker.ReportMessage(string.Format("Data received for {0}", keywordDesc));
 								return ParseSeries(reader, startDate, endDate);
 							}
 						}
 					}
 				}
-				catch (WebException ex)
+				catch (WebException wex)
 				{
-					if (ex.Status == WebExceptionStatus.Timeout)
+					if (wex.Status == WebExceptionStatus.Timeout)
 					{
 						//Timeout error - continue 
 						continue;
 					}
 
-					throw;
+					throw wex;
+				}
+				catch (Exception ex)
+				{
+					throw ex;
 				}
 			}
-			throw new WebException("Timeout. Please limit search area and/or Keywords.", WebExceptionStatus.Timeout);
+
+			WebException wex1 = new WebException("Timeout. Please limit search area and/or Keywords.", WebExceptionStatus.Timeout);
+
+			throw wex1; 
 		}
 
 		private IEnumerable<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart> ParseSeries(XmlReader reader, DateTime startDate, DateTime endDate)

@@ -26,9 +26,10 @@ namespace HISWebClient.BusinessObjects
 
         public HisCentralWebServicesList(string webServicesFilename)
         {
-            //_hisCentralUrl = hisCentralUrl;
+            //_hisCentralUrl = hisCentralUrl
             WebServicesFilename = ConfigurationManager.AppSettings["ServiceUrl1_1_Endpoint"]; // "http://hiscentral.cuahsi.org/webservices/hiscentral_1_1.asmx";//Path.Combine(ServicesXmlDirectoryPath, DotSpatial.Data.Properties.Settings.Default.WebServicesFileName);
-        }
+			_hisCentralUrl = ConfigurationManager.AppSettings["ServiceUrl1_1_Endpoint"];
+		}
 
         #endregion
 

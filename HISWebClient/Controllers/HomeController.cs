@@ -41,6 +41,8 @@ namespace HISWebClient.Controllers
 
 		private ExportController exportController = new ExportController();
 
+		private static bool bFirstCall = true;
+
 		private static List<WebServiceNode> getWebServiceList()
 		{
 			var dataWorker = new DataWorker();
@@ -161,6 +163,28 @@ namespace HISWebClient.Controllers
 		}
 		public ActionResult updateMarkers(FormCollection collection)
 		{
+			if ( bFirstCall)
+			{
+				//First time called since last web site restart - log selected <appSettings> values...
+				bFirstCall = false;
+
+				dblogcontext.clearParameters();
+				dblogcontext.clearReturns();
+
+				dblogcontext.addParameter("ServiceUrl", ConfigurationManager.AppSettings["ServiceUrl"]);
+				dblogcontext.addParameter("ServiceUrl_1_1_EndPoint", ConfigurationManager.AppSettings["ServiceUrl1_1_EndPoint"]);
+				dblogcontext.addParameter("ByuUrl", ConfigurationManager.AppSettings["ByuUrl"]);
+				dblogcontext.addParameter("MaxClustercount", ConfigurationManager.AppSettings["MaxClustercount"].ToString());
+				dblogcontext.addParameter("maxAllowedTimeseriesReturn", ConfigurationManager.AppSettings["maxAllowedTimeseriesReturn"].ToString());
+				dblogcontext.addParameter("maxCombinedExportValues", ConfigurationManager.AppSettings["maxCombinedExportValues"].ToString());
+				dblogcontext.addParameter("blobContainer", ConfigurationManager.AppSettings["blobContainer"]);
+				dblogcontext.addParameter("aspnet:MaxJsonDeserializerMembers", ConfigurationManager.AppSettings["aspnet:MaxJsonDeserializerMembers"].ToString());
+				dblogcontext.addParameter("currentVersion", ConfigurationManager.AppSettings["currentVersion"].ToString());
+
+				DateTime dtNow = DateTime.UtcNow;
+				dblogcontext.createLogEntry(System.Web.HttpContext.Current, dtNow, dtNow, "updateMarkers(...)", "first call - selected appSettings values...", Level.Info);
+			}
+
 			var searchSettings = new SearchSettings();
 			string markerjSON = string.Empty;
 		   
@@ -204,8 +228,18 @@ namespace HISWebClient.Controllers
 				List<int> webServiceIds = null;
 				try
 				{
+					//Increase date range by one day to accomodate one day searches, if indicated...
+					//Set begin date time to 00:00:00, set end date time to 23:59:59
 					searchSettings.DateSettings.StartDate = Convert.ToDateTime(collection["startDate"]);
-					searchSettings.DateSettings.EndDate = Convert.ToDateTime(collection["endDate"]).AddDays(1);//add a day to allow one day searches
+					searchSettings.DateSettings.StartDate = searchSettings.DateSettings.StartDate.Date.AddHours(0).AddMinutes(0).AddSeconds(0);
+
+					searchSettings.DateSettings.EndDate = Convert.ToDateTime(collection["endDate"]);
+					if (searchSettings.DateSettings.StartDate.Date == searchSettings.DateSettings.EndDate.Date)
+					{
+						searchSettings.DateSettings.EndDate = searchSettings.DateSettings.EndDate.Date.AddDays(1);
+					}
+					searchSettings.DateSettings.EndDate = searchSettings.DateSettings.EndDate.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
+					
 					//Convert to int Array
 					if (collection["services"].Length > 0)
 					{
@@ -292,44 +326,63 @@ namespace HISWebClient.Controllers
 					dblogcontext.createLogEntry(System.Web.HttpContext.Current, startDtUtc, endDtUtc, "updateMarkers(...)", "calls dataWorker.getSeriesData(...)", Level.Info);
 
 					var list = new List<TimeSeriesViewModel>();
-#if (DEBUG)
-					//BCC - Test - write data cart and time series objects to files...
-					using (System.IO.StreamWriter swSdc = System.IO.File.CreateText(@"C:\CUAHSI\SeriesDataCart.json"))
+
+					if (!EnvironmentContext.LocalEnvironment())
 					{
-						using (System.IO.StreamWriter swTsvm = System.IO.File.CreateText(@"C:\CUAHSI\TimeSeriesViewModel.json"))
+						//Non-local environment - do not attempt to create debug files...
+						//Watch out for similar loop code in 'else' block...
+						if (series.Count > 0)
 						{
-							JsonSerializer jsonser = new JsonSerializer();
-
-							swSdc.Write('[');	//Write start of array...
-							swTsvm.Write('[');
-#endif
-							if (series.Count > 0)
+							for (int i = 0; i < series.Count; i++)
 							{
-								for (int i = 0; i < series.Count; i++)
-								{
-									var tvm = new TimeSeriesViewModel();
-									tvm = mapDataCartToTimeseries(series[i], i);
-									list.Add(tvm);
-
-#if (DEBUG)
-									jsonser.Serialize(swSdc, series[i]);
-									jsonser.Serialize(swTsvm, tvm);
-
-									if ( (i + 1) < series.Count )
-									{
-										swSdc.Write(',');	//Separate array element...
-										swTsvm.Write(',');
-									}
-#endif
-								}
+								var tvm = new TimeSeriesViewModel();
+								tvm = mapDataCartToTimeseries(series[i], i);
+								list.Add(tvm);
 							}
-
-#if (DEBUG)
-							swSdc.Write(']');	//Write end of array...
-							swTsvm.Write(']');
 						}
 					}
+					else
+					{
+						//Local environment - create debug files, if indicated...
+#if (DEBUG)
+						//BCC - Test - write data cart and time series objects to files...
+						using (System.IO.StreamWriter swSdc = System.IO.File.CreateText(@"C:\CUAHSI\SeriesDataCart.json"))
+						{
+							using (System.IO.StreamWriter swTsvm = System.IO.File.CreateText(@"C:\CUAHSI\TimeSeriesViewModel.json"))
+							{
+								JsonSerializer jsonser = new JsonSerializer();
+
+								swSdc.Write('[');	//Write start of array...
+								swTsvm.Write('[');
 #endif
+								//Watch out for similar loop code in 'if' block...
+								if (series.Count > 0)
+								{
+									for (int i = 0; i < series.Count; i++)
+									{
+										var tvm = new TimeSeriesViewModel();
+										tvm = mapDataCartToTimeseries(series[i], i);
+										list.Add(tvm);
+#if (DEBUG)
+										jsonser.Serialize(swSdc, series[i]);
+										jsonser.Serialize(swTsvm, tvm);
+
+										if ((i + 1) < series.Count)
+										{
+											swSdc.Write(',');	//Separate array element...
+											swTsvm.Write(',');
+										}
+#endif
+									}
+								}
+#if (DEBUG)
+								swSdc.Write(']');	//Write end of array...
+								swTsvm.Write(']');
+							}
+						}
+#endif
+					}
+
 					var markerClustererHelper = new MarkerClustererHelper();
 
 					//save list for later
@@ -358,14 +411,28 @@ namespace HISWebClient.Controllers
 						ex = ex.InnerException;
 					}
 
-					if ( typeof (System.InvalidOperationException) == ex.GetType() )
+					if ( typeof (WebException) == ex.GetType())
+					{
+						//Web exception - return the error message...
+						WebException wex = (WebException) ex;
+
+						Response.StatusCode = (int) wex.Status;
+						Response.StatusDescription = wex.Message;
+						Response.TrySkipIisCustomErrors = true;	//Tell IIS to use your error text not the 'standard' error text!!
+						//ALSO clues jQuery to add the parsed responseJSON object to the jqXHR object!!
+						dberrorcontext.createLogEntry(System.Web.HttpContext.Current, DateTime.UtcNow, "updateMarkers(...)", wex, "Web Exception: " + wex.Message);
+
+						return Json(new { Message = wex.Message }, "application/json");
+
+					}
+					else if ( typeof (System.InvalidOperationException) == ex.GetType() )
 					{
 						//Recover the returned error message...
 						Response.StatusCode = (int)HttpStatusCode.RequestEntityTooLarge;
 						Response.StatusDescription = ex.Message;
 						Response.TrySkipIisCustomErrors = true;	//Tell IIS to use your error text not the 'standard' error text!!
 																//ALSO clues jQuery to add the parsed responseJSON object to the jqXHR object!!
-						dberrorcontext.createLogEntry(System.Web.HttpContext.Current, DateTime.UtcNow, "updateMarkers(...)", ex, ex.Message);
+						dberrorcontext.createLogEntry(System.Web.HttpContext.Current, DateTime.UtcNow, "updateMarkers(...)", ex, "NON-Web Exception" + ex.Message);
 
 						return Json(new { Message = ex.Message }, "application/json");
 					}
@@ -377,7 +444,7 @@ namespace HISWebClient.Controllers
 						Response.StatusDescription = message;
 						Response.TrySkipIisCustomErrors = true;	//Tell IIS to use your error text not the 'standard' error text!!
 																//ALSO clues jQuery to add the parsed responseJSON object to the jqXHR object!!
-						dberrorcontext.createLogEntry(System.Web.HttpContext.Current, DateTime.UtcNow, "updateMarkers(...)", ex, message);
+						dberrorcontext.createLogEntry(System.Web.HttpContext.Current, DateTime.UtcNow, "updateMarkers(...)", ex, "Defaults to timeout exception: " + message);
 
 						return Json(new { Message = message }, "application/json");
 					}

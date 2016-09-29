@@ -43,7 +43,6 @@ namespace HISWebClient
             //BC - Test - write a trace message...
 //            Trace.TraceInformation("{0} {1} Application started...", DateTime.UtcNow, "Application_Start");
 //            Trace.Flush();
-
         }
     }
 }
