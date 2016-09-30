@@ -5,6 +5,7 @@ using System.Web;
 
 namespace HISWebClient.Models
 {
+	//This is a change to make SmartGit happy (like THAT is really possible...)
 	//[Serializable]
 	//public class BaseAttributes
 	//{
