@@ -20,7 +20,21 @@ namespace ServerSideHydroDesktop.ObjectModel
         /// <summary>
         /// The code of the method (optional)
         /// </summary>
-        public virtual int Code { get; set; }
+		private int _code;
+		public virtual int Code
+		{ 
+			get
+			{
+				return _code;
+			}
+			
+			set
+			{
+				_code = value;
+				neverSet = false;
+			}
+		}
+
         /// <summary>
         /// Method description
         /// </summary>
@@ -49,7 +63,9 @@ namespace ServerSideHydroDesktop.ObjectModel
                 {
                     Description = Constants.Unknown,
                     Link = Constants.Unknown,
-                    Code = 0
+                    Code = 0,
+
+					neverSet = true
                 };
             }
         }

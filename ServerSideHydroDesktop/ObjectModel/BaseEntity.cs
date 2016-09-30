@@ -14,10 +14,32 @@ namespace ServerSideHydroDesktop
     [Serializable]
     public class BaseEntity : IEquatable<BaseEntity>, ICloneable
     {
+		//Initializing constructor
+		public BaseEntity()
+		{
+			neverSet = true;
+		}
         /// <summary>
         /// Id (primary key) of the entity
         /// </summary>
-        public virtual long Id { get; set; }
+		private long _value;
+
+        public long Id
+		{ 
+			get
+			{
+				return _value;
+			}
+		
+			set
+			{
+				_value = value;
+				neverSet = false;
+			}
+		}
+
+		//Values: true - Id member never set, false otherwise
+		public virtual bool neverSet { get; protected set; }
 
         /// <summary>
         /// Two entities are considered equal if they have the same Id
@@ -94,7 +116,14 @@ namespace ServerSideHydroDesktop
         /// <returns>rule violations</returns>
         public virtual IEnumerable<RuleViolation> GetRuleViolations()
         {
-            yield break; // basically, empty
+			if (neverSet)
+			{
+				RuleViolation rv = new RuleViolation("Value never set!!", "violationNeverSet");
+
+				yield return rv;
+			}
+
+			yield break; // basically, empty
         }
 
         #endregion

@@ -24,6 +24,8 @@ namespace ServerSideHydroDesktop.ObjectModel
             Citation = Constants.Unknown;
             ISOMetadata = ISOMetadata.Unknown;
             //DataService = null;
+
+			neverSet = true;
         }
 
         //public Source(DataServiceInfo DataService)
@@ -45,7 +47,20 @@ namespace ServerSideHydroDesktop.ObjectModel
         /// <summary>
         /// The original indentifier used in the WaterML
         /// </summary>
-        public virtual int OriginId { get; set; }
+		private int _originId;
+		public virtual int OriginId
+		{
+			get
+			{
+				return _originId;
+			}
+
+			set
+			{
+				_originId = value;
+				neverSet = false;
+			}
+		}
         /// <summary>
         /// The source organization
         /// </summary>
@@ -132,6 +147,8 @@ namespace ServerSideHydroDesktop.ObjectModel
                     Citation = Constants.Unknown,
                     ISOMetadata = ISOMetadata.Unknown,
                   //  DataService = null
+
+				  neverSet = true
                 };
             }
         }
