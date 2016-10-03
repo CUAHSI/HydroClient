@@ -664,7 +664,10 @@ namespace HISWebClient.Controllers
 					if (obj != null) seriesInCluster.Add(obj);
 				}
 
-				var json = JsonConvert.SerializeObject(seriesInCluster);
+				//Order returned series by Organization, Service Title, Keyword
+				var json = JsonConvert.SerializeObject(seriesInCluster.OrderBy(tsvm => tsvm.Organization)
+																	  .ThenBy(tsvm => tsvm.ServTitle)
+																	  .ThenBy(tsvm => tsvm.ConceptKeyword));
 				json = "{ \"data\":" + json + "}";
 				return json;
 			}
@@ -684,7 +687,12 @@ namespace HISWebClient.Controllers
 
 			if (allRetrievedSeries != null)
 			{
-				var allRetrievedSeriesArray = allRetrievedSeries.ToArray();
+				//Order returned series by Organization, Service Title, Keyword
+				//var allRetrievedSeriesArray = allRetrievedSeries.ToArray();
+				var allRetrievedSeriesArray = allRetrievedSeries.OrderBy(tsvm => tsvm.Organization)
+																.ThenBy(tsvm => tsvm.ServTitle)
+																.ThenBy(tsvm => tsvm.ConceptKeyword)
+																.ToArray();
 
 				var seriesInCluster = new List<TimeSeriesViewModel>();
 
