@@ -978,6 +978,8 @@ function initializeMap() {
     addCustomMapControls();
 
     slider = addSlider();
+    //Add custom LAyer control for Map Overlays
+    addLayerControl()
 
     addLocationSearch();
 

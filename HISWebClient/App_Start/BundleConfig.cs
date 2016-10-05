@@ -60,7 +60,8 @@ namespace HISWebClient
 					  "~/Scripts/Custom/TimeSeriesFormat.js",
 					  //"~/Scripts/Custom/TimeSeriesRequestStatus.min.js",
 					  "~/Scripts/Custom/TimeSeriesRequestStatus.js",
-					  "~/Scripts/Custom/jquery-filedownload.js"
+					  "~/Scripts/Custom/jquery-filedownload.js",
+                      "~/Scripts/Custom/LayerControl.js"
                       ));
 
             bundles.Add(new StyleBundle("~/Content/css").Include(

@@ -549,6 +549,7 @@
     <Content Include="Scripts\Custom\DownloadHelper.js" />
     <Content Include="Scripts\Custom\freezeEnum.js" />
     <Content Include="Scripts\Custom\jquery-filedownload.js" />
+    <Content Include="Scripts\Custom\LayerControl.js" />
     <Content Include="Scripts\Custom\RandomId.js" />
     <Content Include="Scripts\Custom\test1.js" />
     <Content Include="Scripts\Custom\TimeSeriesFormat.js" />
