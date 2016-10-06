@@ -857,6 +857,22 @@ function initialize() {
     //Initialize static tooltips...
     setupToolTips();
 
+    //Set up static tooltips on dialog open/close...
+    var modals = ['tableModal', 'SeriesModal'];
+    var moLength = modals.length;
+    var moFunc = setupToolTips;
+
+    for (var mi = 0; mi < moLength; ++mi) {
+        var modal = '#' + modals[mi];
+        var event = 'shown.bs.modal';
+        $(modal).off(event, moFunc); 
+        $(modal).on(event, moFunc); 
+
+        event = 'hidden.bs.modal';
+        $(modal).off(event, moFunc); 
+        $(modal).on(event, moFunc); 
+    }
+
     //Set an event handler on the Google form...
     $('#formGoogleLogin').on('submit', googleFormSubmit);
 
@@ -2772,7 +2788,6 @@ function setUpDatatables(clusterid) {
     //Reset the selected row count...
     selectedRowCounts['dtMarkers'].count = 0;
 
-
     var actionUrl = "/home/getDetailsForMarker/" + clusterid
  
     var oTable= $('#dtMarkers').dataTable({
@@ -2833,7 +2848,11 @@ function setUpDatatables(clusterid) {
                      return formatDate(data);
                  }           
            },
-           { "data": "ValueCount", "visible": true, "width": "10em", "className": "td-textalign-center"},
+           { "data": "ValueCount", "visible": true, "width": "10em", "className": "td-textalign-center",
+                 'render': function (data, type, full, meta) { 
+                     return (0 === data) ? 'unknown' : data;
+                 }                      
+           },
            { "data": "VariableName", "sTitle": "Variable Name", "visible": true, "width": "10em", "className": "td-textalign-center",
              "render": renderAbbreviatedText,
              "createdCell": createdTooltipText             
@@ -2879,9 +2898,6 @@ function setUpDatatables(clusterid) {
             var tempEvent = { 'data': { 'tableId': 'dtMarkers', 'placeHolders': ['Publisher', 'Service Title', 'Keyword', 'Site Name', 'Data Type', 'Value Type', 'Sample Medium'] } };
             addFilterPlaceholders(tempEvent);
 
-            //Set up tooltips
-            setupToolTips();
-        
             var dt = $('#dtMarkers').DataTable();
             
             dt.columns.adjust();
@@ -2898,6 +2914,9 @@ function setUpDatatables(clusterid) {
                                                          'margin-top': '1.0em'});
 
             $('#' + 'dtMarkers_paginate').css({'width': '25%'});
+
+            //Set up tooltips
+            setupToolTips();
         }
     });
 
@@ -3043,43 +3062,88 @@ function setUpDatatables(clusterid) {
 //Initialize 'static' tooltips - those not subject to change during the application session...
 function setupToolTips() {
 
-    var texts = ["Select one or more rows to export. You can check the status by opening the workspace and selecting the 'Exports' tab.",
-                  "Select one or more rows to add to your workspace. Work with your data by opening the workspace and selecting the 'Data' tab.",
-                  "Display the map with current search results, if any.",
-                  "Display current search results in a table.",
-                  "Display time series selected for additional processing and/or download.",
-                  "Display CUAHSI contact information.",
-                  "Display information about the CUAHSI HydroClient.",
-                  "Display a brief HydroClient tutorial.",
-                  "Login via Google to retrieve saved Workspace entries.",
-                  "Display HydroClient licensing information"
+    var texts = [/* 0*/"Select one or more rows to export. You can check the status by opening the workspace and selecting the 'Exports' tab.",
+                 /* 1*/ "Select one or more rows to add to your workspace. Work with your data by opening the workspace and selecting the 'Data' tab.",
+                 /* 2*/ "Display the map with current search results, if any.",
+                 /* 3*/ "Display current search results in a table.",
+                 /* 4*/ "Display time series selected for additional processing and/or download.",
+                 /* 5*/ "Display CUAHSI contact information.",
+                 /* 6*/ "Display information about the CUAHSI HydroClient.",
+                 /* 7*/ "Display a brief HydroClient tutorial.",
+                 /* 8*/ "Login via Google to retrieve saved Workspace entries.",
+                 /* 9*/ "Display HydroClient licensing information",
+                 /*10*/ "Tootip text - TBD"
                 ];
 
-    var divs = { 'divZipSelections': {'text': texts[0]},
-                 'divManageSelections' : {'text': texts[1]},
-                 'divZipSelectionsTS': {'text': texts[0]},
-                 'divManageSelectionsTS' : {'text': texts[1]},
-                 'liMapTab': {'text': texts[2]},
-                 'liTableTab': {'text': texts[3]},
-                 'liTabbedDataMgrTab': {'text': texts[4]},
-                 'liContactTab': {'text': texts[5], 'placement': 'right'},
-                 'liHelpTab': {'text': texts[6], 'placement': 'right'},
-                 'liQuickStartTab': {'text': texts[7], 'placement': 'right'},
-                 'liGoogleTab': {'text': texts[8]},
-                 'liLicenseTab': {'text': texts[9], 'placement': 'right'}
+    var divs = { 'divZipSelections': {'type': 'id', 'text': texts[0]},
+                 'divManageSelections' : {'type': 'id', 'text': texts[1]},
+                 'divZipSelectionsTS': {'type': 'id', 'text': texts[0]},
+                 'divManageSelectionsTS' : {'type': 'id', 'text': texts[1]},
+                 'liMapTab': {'type': 'id', 'text': texts[2]},
+                 'liTableTab': {'type': 'id', 'text': texts[3]},
+                 'liTabbedDataMgrTab': {'type': 'id', 'text': texts[4]},
+                 'liContactTab': {'type': 'id', 'text': texts[5], 'placement': 'right'},
+                 'liHelpTab': {'type': 'id', 'text': texts[6], 'placement': 'right'},
+                 'liQuickStartTab': {'type': 'id', 'text': texts[7], 'placement': 'right'},
+                 'liGoogleTab': {'type': 'id', 'text': texts[8]},
+                 'liLicenseTab': {'type': 'id', 'text': texts[9], 'placement': 'right'},
+                 'dm_thStatus': {'type': 'id', 'text': texts[10]},
+                 'dm_thPublisher': {'type': 'id', 'text': texts[10]},
+                 'dm_thServiceTitle': {'type': 'id', 'text': texts[10]},
+                 'dm_thKeyword': {'type': 'id', 'text': texts[10]},
+                 'dm_thSiteName': {'type': 'id', 'text': texts[10]},
+                 'dm_thVariableName': {'type': 'id', 'text': texts[10]},
+                 'dm_thQcLevel': {'type': 'id', 'text': texts[10]},
+                 'dm_thMethod': {'type': 'id', 'text': texts[10]},
+                 'dm_thCollector': {'type': 'id', 'text': texts[10]},
+                 'dm_thVariableUnits': {'type': 'id', 'text': texts[10]},
+                 'dm_thDataType': {'type': 'id', 'text': texts[10]},
+                 'dm_thValueType': {'type': 'id', 'text': texts[10]},
+                 'dm_thSampleMedium': {'type': 'id', 'text': texts[10]},
+                 'dm_thStartDate': {'type': 'id', 'text': texts[10]},
+                 'dm_thEndDate': {'type': 'id', 'text': texts[10]}, 
+                 'dm_thValueCount': {'type': 'id', 'text': texts[10]},
+                 'dm_thTimeSupport': {'type': 'id', 'text': texts[10]},
+                 'dm_thTimeUnit': {'type': 'id', 'text': texts[10]},
+                 'dm_thSeriesId': {'type': 'id', 'text': texts[10]},
+                 'dm_thCreated': {'type': 'id', 'text': texts[10]},
+                 'cl_thPublisher': {'type': 'class', 'text': texts[10]},
+                 'cl_thServiceTitle': {'type': 'class', 'text': texts[10]},
+                 'cl_thKeyword': {'type': 'class', 'text': texts[10]},
+                 'cl_thSiteName': {'type': 'class', 'text': texts[10]},
+                 'cl_thDataType': {'type': 'class', 'text': texts[10]},
+                 'cl_thValueType': {'type': 'class', 'text': texts[10]},
+                 'cl_thSampleMedium': {'type': 'class', 'text': texts[10]},
+                 'cl_thQcLevel': {'type': 'class', 'text': texts[10]},
+                 'cl_thMethod': {'type': 'class', 'text': texts[10]},
+                 'cl_thCollector': {'type': 'class', 'text': texts[10]},
+                 'cl_thStartDate': {'type': 'class', 'text': texts[10]},
+                 'cl_thEndDate': {'type': 'class', 'text': texts[10]}, 
+                 'cl_thValueCount': {'type': 'class', 'text': texts[10]},
+                 'cl_thVariableName': {'type': 'class', 'text': texts[10]},
+                 'cl_thTimeSupport': {'type': 'class', 'text': texts[10]},
+                 'cl_thTimeUnit': {'type': 'class', 'text': texts[10]},
+                 'cl_thServiceUrl': {'type': 'class', 'text': texts[10]},
+                 'cl_thSiteCode': {'type': 'class', 'text': texts[10]},
+                 'cl_thVariableCode': {'type': 'class', 'text': texts[10]}
                };
 
     for (var div in divs) {
 
-        var divTooltip = $('#' + div);
+        //Select id or class - as indicated...
+        var divTooltip = ('id' === divs[div].type) ? $('#' + div) : $('.' + div);
 
-        divTooltip.tooltip('destroy');
-        divTooltip.tooltip({
-                        'animation': true,
-                        'placement': divs[div].placement ? divs[div].placement: 'auto',
-                        'trigger': 'hover',
-                        'title': divs[div].text,
-                        'delay': divs[div].delay ? divs[div].delay: {'show': 1000, 'hide': 500}});
+        if ( 0 < divTooltip.length) {
+            //jQuery object exists - destroy/create tooltip...
+            divTooltip.tooltip('destroy');
+            divTooltip.tooltip({
+                            'animation': true,
+                            'placement': divs[div].placement ? divs[div].placement: 'auto',
+                            'trigger': 'hover',
+                            'title': divs[div].text,
+                            'delay': divs[div].delay ? divs[div].delay: {'show': 1000, 'hide': 500},
+                            'container': 'body'}); //MUST use container option in datatables... source: http://stackoverflow.com/questions/33858135/bootstrap-popover-overlay-by-datatables-jquery
+        }
     }
 
 }
@@ -3252,7 +3316,11 @@ function setupDataManagerTable() {
                  return formatDate(data);
              }           
            },
-           { 'data': 'ValueCount', 'visible': true, 'width': '10em', 'className': 'td-textalign-center'},
+           { 'data': 'ValueCount', 'visible': true, 'width': '10em', 'className': 'td-textalign-center',
+                 'render': function (data, type, full, meta) { 
+                     return (0 === data) ? 'unknown' : data;
+                 }                      
+           },
            { 'data': 'TimeSupport', 'visible': true, 'width': '5em', 'className': 'td-textalign-center' },
            { 'data': 'TimeUnit', 'visible': true, 'width': '5em', 'className': 'td-textalign-center' },
            { 'data': 'SeriesId', 'visible': true, 'width': '5em', 'className': 'td-textalign-center' },
@@ -3290,6 +3358,7 @@ function setupDataManagerTable() {
 
             $('#' + tableName + '_paginate').css({'width': '25%'});
 
+            setupToolTips();
         }
     });
 
@@ -4381,7 +4450,7 @@ function setfooterFilters(tableId, columnsArray, translatesArray, chkbxApplyFilt
 
             setSelectOptions( select, colIndex, column, translatesArray);
         }
-                });
+   });
 }
 
 
@@ -6067,7 +6136,11 @@ function setUpTimeseriesDatatable() {
                      return formatDate(data);
                  }           
             },
-            { "data": "ValueCount", "visible": true, "width": "10em", "className": "td-textalign-center" },
+            { "data": "ValueCount", "visible": true, "width": "10em", "className": "td-textalign-center",
+                 'render': function (data, type, full, meta) { 
+                     return (0 === data) ? 'unknown' : data;
+                 }                      
+            },
             { "data": "VariableName", "sTitle": "Variable Name", "visible": true, "width": "10em",  "className": "td-textalign-center",
               "render": renderAbbreviatedText,
              "createdCell": createdTooltipText             
@@ -6113,9 +6186,6 @@ function setUpTimeseriesDatatable() {
             var tempEvent = { 'data': { 'tableId': 'dtTimeseries', 'placeHolders': ['Publisher', 'Service Title', 'Keyword', 'Site Name', 'Data Type', 'Value Type', 'Sample Medium'] } };
             addFilterPlaceholders(tempEvent);
 
-            //Set up tooltips
-            setupToolTips();
-
             var dt = $('#dtTimeseries').DataTable();
             
             dt.columns.adjust();
@@ -6132,6 +6202,9 @@ function setUpTimeseriesDatatable() {
                                                             'margin-top': '1.0em'});
 
             $('#' + 'dtTimeseries_paginate').css({'width': '25%'});
+
+            //Set up tooltips - ALWAYS set up tooltips last!!
+            setupToolTips();
         }
 
     });
@@ -6519,72 +6592,6 @@ function helpIconClicked(identifier) {
     }
 
 }
-
-//Set up tooltips...
-function setUpTooltips(elementId) {
-
-    if ('dtMarkers' === elementId) {
-        //dtMarkers table
-
-        //Datatable number of records select...
-        var jqueryObject = $('#dtMarkers_length');
-
-        jqueryObject.tooltip('destroy');
-        jqueryObject.tooltip({
-            'animation': true,
-            'placement': 'auto',
-            'trigger': 'hover',
-            'title': 'Select the number of table entries to view on one page...'
-        });
-
-        //'Top' 25 select...
-        jqueryObject = $('#spanSelectAll');
-
-        //Simulate btn-primary colors...
-        var templateString = '<div class="tooltip" role="tooltip">' +
-                                '<div class="tooltip-arrow"></div>' +
-                                '<div class="tooltip-inner" style="color: #ffffff; background-color: #428bca; border-color: #357ebd;"></div>' + 
-                             '</div>'
-
-        jqueryObject.tooltip('destroy');
-        jqueryObject.tooltip({
-            'animation': true,
-            'placement': 'auto',
-            'trigger': 'hover',
-            'title': 'Select the top 25 rows in the current order...',
-            'template': templateString 
-        });
-
-        //'Process Selections' button...
-        jqueryObject = $('#btnZipSelections');
-
-        templateString = '<div class="tooltip" role="tooltip">' +
-                                '<div class="tooltip-arrow"></div>' +
-                                '<div style="color: green; background-color: ivory; border-color: red; font-size: 2em;">' +
-                                   '<div>' +
-                                    '<span  class="glyphicon glyphicon-hand-right"></span>' +
-                                    '<span class="tooltip-inner" style="color: green; background-color: ivory;  border-color: red; margin-left: 0.5em; margin-right: 0.5em">' +
-                                    '</span>' +
-                                    '<span  class="glyphicon glyphicon-hand-left"></span>' +
-                                   '</div>' +
-                                '</div>' +
-                             '</div>';
-
-        var titleString = 'Your time series data is only a click away!!!';
-
-        jqueryObject.tooltip('destroy');
-        jqueryObject.tooltip({
-            'animation': true,
-            'placement': 'auto',
-            'trigger': 'hover',
-            'title': titleString,
-            'template': templateString
-        });
-
-    }
-
-}
-
 
 //Query the server for the current authenticated user...
 function loadCurrentUser() {

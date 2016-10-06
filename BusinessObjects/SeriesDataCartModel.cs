@@ -108,6 +108,11 @@ namespace HISWebClient.BusinessObjects.Models
 			public string MethodId { get; set; }
 
 			public string MethodDesc { get; set; }
+
+#if (DEBUG)
+			//Debug code...
+			public int ValueCountOriginal { get; set; }
+#endif
         }
 
     }

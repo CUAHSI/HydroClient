@@ -8,6 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using HISWebClient.Util;
+
 namespace HISWebClient.DataLayer
 {
 	/// <summary>
@@ -174,41 +176,139 @@ namespace HISWebClient.DataLayer
 		/// <param name="endDate">User-specified endDate</param>
 		public static void UpdateDataCartToDateInterval(HISWebClient.BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart series, DateTime startDate, DateTime endDate)
 		{
+			//Initialize/validate input parameters...
+			if ( (null == series) || 
+				 (null == startDate) || 
+				 (null == endDate) || 
+				 (endDate < startDate) ||						//End date earlier than start date
+				 (0 >= series.ValueCount) ||					//No values in series
+				 (0.0 >= series.TimeSupport) ||					//Data is instantaneous - cannot calculate collection interval
+				 (String.IsNullOrWhiteSpace(series.TimeUnit)))	//Time unit empty - cannot calculate collection interval
+			{
+				//Input parameter(s) invalid - return early...
+				series.ValueCount = 0;	//No value count estimate made
+				return;
+			}
+
 			// Update BeginDate/EndDate/ValueCount to the user-specified range
-			var seriesStartDate = series.BeginDate < startDate ? startDate : series.BeginDate;
-           // Fix http://hydrodesktop.codeplex.com/workitem/8468
-			// HIS Central sometimes doesn't contains actual end dates for datasets,
-			// so always set end date of series to user-specified endDate.
-			//var seriesEndDate = endDate; //
-            var seriesEndDate = series.EndDate > endDate ? endDate : series.EndDate;
+			var seriesStartDate = (null == series.BeginDate) ? startDate : (series.BeginDate < startDate) ? startDate : series.BeginDate;
+            var seriesEndDate = (null == series.EndDate) ? endDate : (series.EndDate > endDate) ? endDate : series.EndDate;
+			            
+			//Check series data type...
+			//Controlled vocabulary data type values
+			//Source: http://his.cuahsi.org/mastercvreg/edit_cv11.aspx?tbl=DataTypeCV&id=789577851
+			string seriesDataType = (String.IsNullOrWhiteSpace(series.DataType)) ? "unknown" : series.DataType.ToLower();
 			
-             //MS addedcheck to prevent estimated values of 0, if nuber of values > number of days don't estimate
-            // Difference in days, hours, and minutes.
-            TimeSpan ts =  endDate - startDate;
-            // Difference in days.
-            int differenceInDays = ts.Days;
+			switch (seriesDataType)
+			{
+				case "constant over interval":
+				case "continuous":
+				case "regular sampling":
+					//Data type supports value count estimation - take no action
+					break;
+				case "average":
+				case "best easy systematic estimator":
+				case "categorical":
+				case "cumulative":
+				case "incremental":
+				case "maximum":
+				case "median":
+				case "minimum":
+				case "mode":
+				case "sporadic":
+				case "standarddeviation":
+				case "unknown":
+				case "variance":
+					//Data type does NOT support value count estimation - reset value count
+					series.ValueCount = 0;
+					break;
+				default:
+					//Unknown data type - reset value count
+					series.ValueCount = 0;
+#if (DEBUG)
+					if (EnvironmentContext.LocalEnvironment())
+					{
+						//write to file...
+						using (System.IO.FileStream fs = new System.IO.FileStream(@"C:\CUAHSI\UnknownDataTypes.txt",
+																				   System.IO.FileMode.OpenOrCreate,
+																				   System.IO.FileAccess.ReadWrite,
+																				   System.IO.FileShare.ReadWrite))
+						{
+							string toWrite = String.Format("Service Code: {0} - Data Type: {1}", series.ServCode, seriesDataType);
 
-            if (series.ValueCount > differenceInDays)
-            {
+							var sr = new System.IO.StreamReader(fs);
+							bool bFound = false;
 
-               
-                var serverDateRange = series.EndDate.Subtract(series.BeginDate);
-                var userDateRange = seriesEndDate.Subtract(seriesStartDate);
+							while (-1 != sr.Peek())
+							{
+								string read = sr.ReadLine();
+								if (toWrite == read)
+								{
+									bFound = true;
+									break;
+								}
+							}
 
-                var userFromServerPercentage = serverDateRange.TotalDays > 0
-                                                   ? userDateRange.TotalDays / serverDateRange.TotalDays
-                                                   : 1.0;
-                if (userFromServerPercentage > 1.0)
-                    userFromServerPercentage = 1.0;
+							if (!bFound)
+							{
+								var sw = new System.IO.StreamWriter(fs);
+								sw.WriteLine(toWrite);
+								sw.Flush();
+							}
+						}
+					}
+#endif
+					break;
+			}
 
+			if (0 < series.ValueCount)
+			{
+				//Can estimate value count (data is not instantaneous) - determine data collection interval
+				string seriesTimeUnit = series.TimeUnit.ToLower();
+				int interval = Convert.ToInt32(series.TimeSupport);
+				TimeSpan tsInterval = new TimeSpan();
 
+				switch (seriesTimeUnit)
+				{
+					case "common year":
+						tsInterval = new TimeSpan((interval * 365), 0, 0, 0, 0);
+						break;
+					case "month":
+						tsInterval = new TimeSpan((interval * 31), 0, 0, 0, 0);
+						break;
+					case "week":
+						tsInterval = new TimeSpan((interval * 7), 0, 0, 0, 0);
+						break;
+					case "day":
+						tsInterval = new TimeSpan(interval, 0, 0, 0, 0);
+						break;
+					case "hour":
+						tsInterval = new TimeSpan(0, interval, 0, 0, 0);
+						break;
+					case "minute":
+						tsInterval = new TimeSpan(0, 0, interval, 0, 0);
+						break;
+					case "second":
+						tsInterval = new TimeSpan(0, 0, 0, interval, 0);
+						break;
+					case "millisecond":
+						tsInterval = new TimeSpan(0, 0, 0, 0, interval);
+						break;
+					default:
+						//Unknown time unit - reset value count
+						series.ValueCount = 0;
+						break;
+				}
 
-                var esimatedValueCount = (int)(series.ValueCount * userFromServerPercentage);
+				if ( 0 < series.ValueCount)
+				{
+					//Data collection interval established  - value count estimate = total time / interval time
+					TimeSpan tsTotal = seriesEndDate - seriesStartDate;
 
+					series.ValueCount = Convert.ToInt32(tsTotal.TotalMilliseconds / tsInterval.TotalMilliseconds);
+				}
+			}
 
-                series.ValueCount = esimatedValueCount;
-            }
-            
 			series.BeginDate = seriesStartDate;
 			series.EndDate = seriesEndDate;
 		}

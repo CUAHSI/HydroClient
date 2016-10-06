@@ -12,6 +12,8 @@ using System.Configuration;
 
 using log4net;
 
+using HISWebClient.Util;
+
 namespace HISWebClient.DataLayer
 {
 	  public abstract class SeriesSearcher
@@ -180,7 +182,11 @@ namespace HISWebClient.DataLayer
 			var serviceLoopOptions = new ParallelOptions
 				{
 						//CancellationToken = bgWorker.CancellationToken,
-						MaxDegreeOfParallelism = 2, 
+#if (DEBUG)
+						MaxDegreeOfParallelism = EnvironmentContext.LocalEnvironment() ? 1 : 2
+#else
+						MaxDegreeOfParallelism = 2 
+#endif
 				};
 			var tileLoopOptions = new ParallelOptions
 				{
@@ -188,7 +194,11 @@ namespace HISWebClient.DataLayer
 						CancellationToken = cts.Token,
 						// Note: currently HIS Central returns timeout if many requests are sent in the same time.
 						// To test set  MaxDegreeOfParallelism = -1
-						MaxDegreeOfParallelism = 4,
+#if (DEBUG)
+						MaxDegreeOfParallelism = EnvironmentContext.LocalEnvironment() ? 1 : 4
+#else
+						MaxDegreeOfParallelism = 4
+#endif
 				};
 			try
 			{

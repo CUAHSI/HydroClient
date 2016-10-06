@@ -86,6 +86,9 @@
     <Compile Include="..\HISWebClient\Util\ContextUtil.cs">
       <Link>ContextUtil.cs</Link>
     </Compile>
+    <Compile Include="..\HISWebClient\Util\EnvironmentContext.cs">
+      <Link>EnvironmentContext.cs</Link>
+    </Compile>
     <Compile Include="..\HISWebClient\Util\XmlContext.cs">
       <Link>XmlContext.cs</Link>
     </Compile>

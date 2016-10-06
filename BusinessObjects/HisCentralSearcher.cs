@@ -413,19 +413,15 @@ namespace HISWebClient.DataLayer
 					{
 						//Read the site information
 						var series = ReadSeriesFromHISCentral(reader);
+
 						if (series != null)
 						{
-							//BCC - 14-Jul-2015 - Revise series date range checking...
-							// Update BeginDate/EndDate/ValueCount to the user-specified range
-							//SearchHelper.UpdateDataCartToDateInterval(series, startDate, endDate);
-							//seriesList.Add(series);
-							//
-							//BCC - 23-Jul-2015 - Comment out changes for now...
-							//if ( SearchHelper.IsSeriesInDateRange(series, startDate, endDate))
-							//{
-								SearchHelper.UpdateDataCartToDateInterval(series, startDate, endDate);
-								seriesList.Add(series);
-							//}
+#if (DEBUG)
+							//Set original value count for debug purposes...
+							series.ValueCountOriginal = series.ValueCount;
+#endif
+							SearchHelper.UpdateDataCartToDateInterval(series, startDate, endDate);
+							seriesList.Add(series);
 						}
 					}
 				}
