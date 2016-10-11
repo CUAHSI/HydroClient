@@ -269,9 +269,6 @@ namespace ServerSideHydroDesktop
                                 series.Site = site;
                             }
 
-                            //ensure that properties are re-calculated
-                            series.UpdateSeriesInfoFromDataValues();
-
                             //set the checked and creation date time
                             series.CreationDateTime = DateTime.Now;
                             series.LastCheckedDateTime = DateTime.Now;

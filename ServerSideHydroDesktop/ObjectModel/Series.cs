@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using System.Linq;
+
 namespace ServerSideHydroDesktop.ObjectModel
 {
     /// <summary>
@@ -17,7 +19,6 @@ namespace ServerSideHydroDesktop.ObjectModel
         public Series()
         {
             DataValueList = new List<DataValue>();
-            ValueCount = 0;
             ThemeList = new List<Theme>();
             Method = Method.Unknown;
             Source = Source.Unknown;
@@ -34,12 +35,8 @@ namespace ServerSideHydroDesktop.ObjectModel
         /// <param name="method">the observation method</param>
         /// <param name="qualControl">the quality control level of observed values</param>
         /// <param name="source">the source of the data values for this series</param>
-        public Series(Site site, Variable variable, Method method, QualityControlLevel qualControl, Source source)
+        public Series(Site site, Variable variable, Method method, QualityControlLevel qualControl, Source source) : this()
         {
-            DataValueList = new List<DataValue>();
-            ValueCount = 0;
-            ThemeList = new List<Theme>();
-            
             Site = site;
             Variable = variable;
             Method = method;
@@ -55,22 +52,16 @@ namespace ServerSideHydroDesktop.ObjectModel
         /// </summary>
         /// <param name="original">The original series</param>
         /// <param name="copyDataValues">if set to true, then all data values are copied</param>
-        public Series(Series original, bool copyDataValues)
+        public Series(Series original, bool copyDataValues = true) : this()
         {
             //TODO: need to include series provenance information
             
-            BeginDateTime = original.BeginDateTime;
-            EndDateTime = original.EndDateTime;
             CreationDateTime = DateTime.Now;
-            DataValueList = original.DataValueList;
-            EndDateTime = original.EndDateTime;
-            EndDateTimeUTC = original.EndDateTimeUTC;
             IsCategorical = original.IsCategorical;
             Method = original.Method;
             QualityControlLevel = original.QualityControlLevel;
             Source = original.Source;
             UpdateDateTime = DateTime.Now;
-            ValueCount = original.ValueCount;
             Variable = original.Variable;
 
             //to copy the data values
@@ -95,27 +86,63 @@ namespace ServerSideHydroDesktop.ObjectModel
         /// <summary>
         /// The local time when the first value of the series was measured
         /// </summary>
-        public virtual DateTime BeginDateTime { get; set; }
+        public virtual DateTime BeginDateTime 
+		{
+			//Read only...
+			get
+			{
+				return (DataValueList == null) ? DateTime.MinValue : DataValueList.Min(dv => dv.LocalDateTime);
+			}
+		}
 
         /// <summary>
         /// The local time when the last value of the series was measured
         /// </summary>
-        public virtual DateTime EndDateTime { get; set; }
+        public virtual DateTime EndDateTime 
+		{
+			//Read only...
+			get
+			{
+				return (DataValueList == null) ? DateTime.MaxValue : DataValueList.Max(dv => dv.LocalDateTime);
+			}
+		}
 
         /// <summary>
-        /// Gets or sets the begin date time of series in UTC
+        /// Gets the begin date time of series in UTC
         /// </summary>
-        public virtual DateTime BeginDateTimeUTC { get; set; }
+        public virtual DateTime BeginDateTimeUTC
+		{
+			//Read only...
+			get
+			{
+				return (DataValueList == null) ? DateTime.MinValue : DataValueList.Min(dv => dv.DateTimeUTC);
+			}
+			
+		}
 
         /// <summary>
-        /// Gets or sets the end date time of the series in UTC
+        /// Gets the end date time of the series in UTC
         /// </summary>
-        public virtual DateTime EndDateTimeUTC { get; set; }
+        public virtual DateTime EndDateTimeUTC
+		{ 
+			//Read only...
+			get
+			{
+				return (DataValueList == null) ? DateTime.MaxValue : DataValueList.Max(dv => dv.DateTimeUTC);
+			}
+		}
 
         /// <summary>
         /// The number of data values in this series
         /// </summary>
-        public virtual int ValueCount { get; set; }
+        public virtual int ValueCount
+		{ 
+			//Read only - list count is the value count...
+			get
+			{
+				return DataValueList == null ? 0 : DataValueList.Count;
+			}
+		}
 
         /// <summary>
         /// The time when the series has been saved to the HydroDesktop 
@@ -177,23 +204,6 @@ namespace ServerSideHydroDesktop.ObjectModel
 
         #region Public methods
 
-        public void UpdateSeriesInfoFromDataValues()
-        {
-            if (DataValueList.Count > 0)
-            {
-                ValueCount = DataValueList.Count;
-                EndDateTimeUTC = DataValueList[DataValueList.Count - 1].DateTimeUTC;
-                BeginDateTimeUTC = DataValueList[0].DateTimeUTC;
-
-                EndDateTime = DataValueList[DataValueList.Count - 1].LocalDateTime;
-                BeginDateTime = DataValueList[0].LocalDateTime;
-            }
-            else
-            {
-                ValueCount = 0;
-            }
-        }
-
         /// <summary>
         /// String representation of the series
         /// <returns>SiteName | VariableName | DataType</returns>
@@ -208,10 +218,12 @@ namespace ServerSideHydroDesktop.ObjectModel
         /// </summary>
         /// <param name="val"></param>
         public virtual void AddDataValue(DataValue val)
-        { 
-            DataValueList.Add(val);
-            val.Series = this;
-            UpdateSeriesInfoFromDataValues();
+        {
+			if (null != val)
+			{
+				DataValueList.Add(val);
+				val.Series = this;
+			}
         }
 
         /// <summary>
@@ -239,15 +251,6 @@ namespace ServerSideHydroDesktop.ObjectModel
         {
             var val = new DataValue(value, time, utcOffset) {Qualifier = qualifier};
             AddDataValue(val);
-        }
-
-        /// <summary>
-        /// Shortcut method, to obtain the ValueCount from the DataValueList
-        /// </summary>
-        /// <returns>The number of DataValues in the DataValueList</returns>
-        public virtual int GetValueCount()
-        {
-            return DataValueList == null ? 0 : DataValueList.Count;
         }
 
         #endregion

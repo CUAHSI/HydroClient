@@ -251,10 +251,23 @@ namespace HISWebClient.DataLayer
 					var request = WebRequest.Create(url.ToString());
 					request.Timeout = 30 * 1000;
 					using (var response = request.GetResponse())
-					using (var reader = XmlReader.Create(response.GetResponseStream()))
 					{
-						//bgWorker.ReportMessage(string.Format("Data received for {0}", keywordDesc));
-						return ParseSeries(reader, startDate, endDate);
+						using (var stream = response.GetResponseStream())
+						{
+							using (MemoryStream ms = new MemoryStream())
+							{
+								stream.CopyTo(ms);
+								ms.Seek(0, SeekOrigin.Begin);
+#if (DEBUG)
+								writeMemoryStreamToFile(@"C:\CUAHSI\ResponseFromGetSeriesCatalogForBox2.xml", ms);
+								ms.Seek(0, SeekOrigin.Begin);
+#endif
+								using (var reader = XmlReader.Create(ms))
+								{
+									return ParseSeries(reader, startDate, endDate);
+								}
+							}
+						}
 					}
 				}
 				catch (WebException wex)
@@ -367,9 +380,18 @@ namespace HISWebClient.DataLayer
 					{
 						using (var stream = response.GetResponseStream())
 						{
-							using (var reader = XmlReader.Create(stream))
+							using (MemoryStream ms = new MemoryStream())
 							{
-								return ParseSeries(reader, startDate, endDate);
+								stream.CopyTo(ms);
+								ms.Seek(0, SeekOrigin.Begin);
+#if (DEBUG)
+								writeMemoryStreamToFile(@"C:\CUAHSI\ResponseFromGetSeriesCatalogForBox3.xml", ms);
+								ms.Seek(0, SeekOrigin.Begin);
+#endif
+								using (var reader = XmlReader.Create(ms))
+								{
+									return ParseSeries(reader, startDate, endDate);
+								}
 							}
 						}
 					}
@@ -584,5 +606,49 @@ namespace HISWebClient.DataLayer
 		}
 
 		#endregion
+
+#if (DEBUG)
+		private void writeMemoryStreamToFile( string filePathAndName, MemoryStream ms)
+		{
+			//Validate/initialize input parameters...
+			if ( String.IsNullOrWhiteSpace(filePathAndName) || null == ms)
+			{
+				return;		//Input parameter(s) invalid - return early
+			}
+
+			try
+			{
+				if (EnvironmentContext.LocalEnvironment())
+				{
+					//Position memory stream...
+					ms.Seek(0, SeekOrigin.Begin);
+
+					//Create file...
+					using (System.IO.FileStream output = new System.IO.FileStream(filePathAndName, FileMode.Create))
+					{
+						//Create XmlReader on memory stream...
+						using (var reader = XmlReader.Create(ms))
+						{
+							//Create XmlWriter on file...
+							using (XmlWriter writer = XmlWriter.Create(output))
+							{
+								//Write contents of reader to file and flush...
+								writer.WriteNode(reader, true);
+								output.Flush();
+
+								//Re-position memory stream...
+								ms.Seek(0, SeekOrigin.Begin);
+							}
+						}
+					}
+				}
+
+			}
+			catch (Exception)
+			{
+				//Take no action...
+			}
+		}
+#endif
 	}
 }
