@@ -424,7 +424,27 @@ function formatDate(data, bIncludeTime) {
     else {
         //Assume NewtonSoft format: YYYY-MM-DDTHH:MM:SS - convert to JavaScript date
       if ( ! isNaN(Date.parse(dateString))) {
+         // Success - create new Date instance
          date = new Date(dateString);
+      }
+      else {
+        //Failure - Some browsers may return NaN on Date.parse() calls, as explained here:
+        //Source: http://stackoverflow.com/questions/6427204/date-parsing-in-javascript-is-different-between-safari-and-chrome
+
+        //Attempt to split the string...
+        var parts = dateString.split(/[^0-9]/);
+
+        if (('undefined' !== typeof parts) && (null !== parts) && (3 <= parts.length)) 
+        {
+            //Success - date string contains at least 'year', 'month' and 'day' values
+            date = new Date(parts[0],                                               //Year
+                            parts[1] - 1,                                           //Month
+                            parts[2],                                               //Day
+                            'undefined' !== typeof parts[3] ? parts[3] : '00',      //Hour
+                            'undefined' !== typeof parts[4] ? parts[4] : '00',      //Minute
+                            'undefined' !== typeof parts[5] ? parts[5] : '00',      //Second
+                            'undefined' !== typeof parts[6] ? parts[6] : '000');    //Millisecond
+        }
       }
     }
 
@@ -4048,7 +4068,7 @@ function updateTimeSeriesBlobUri( tableName, requestId, blobUri, blobTimeStamp) 
         if (requestId === rowData.TimeSeriesRequestId) {
             //Found - update row with input status
             rowData.WofUri = blobUri;
-            rowData.WofTimeStamp = formatDate(blobTimeStamp, true);
+            rowData.WofTimeStamp = blobTimeStamp;
             this.invalidate();
             reDraw = true;
         }
@@ -4252,9 +4272,11 @@ function startRequestTimeSeriesMonitor() {
                                     updateTimeSeriesRequestStatus( downloadMonitor.timeSeriesMonitored[requestId].tableName, requestId, timeSeriesResponse.RequestStatus, statusString);
 
                                     //Write the blob URI to the console...
-                                    //console.log(requestId);
-                                    //console.log(timeSeriesResponse.Status);
-                                    //console.log(timeSeriesResponse.BlobUri);
+                                    //console.log('requestId: ' + requestId);
+                                    //console.log('Status: ' + timeSeriesResponse.Status);
+                                    //console.log('BlobTimeStamp' + timeSeriesResponse.BlobTimeStamp);
+                                    //console.log('BlobUri' + timeSeriesResponse.BlobUri);
+                                    //console.log('*****************');
 
                                     if (timeSeriesRequestStatus.Completed === timeSeriesResponse.RequestStatus) {
                                         //Completed status - update table entry with received blob URI and time stamp, remove monitoring entry...
@@ -5158,7 +5180,7 @@ function copyDmRecordToServerRecord( userEmail, dmRecord) {
 
     serverRecord.SeriesId = dmRecord.SeriesId;
     serverRecord.WaterOneFlowURI = dmRecord.WofUri;
-    serverRecord.WaterOneFlowTimeStamp = formatDate(dmRecord.WofTimeStamp, true);
+    serverRecord.WaterOneFlowTimeStamp = dmRecord.WofTimeStamp;
     serverRecord.Status = dmRecord.TimeSeriesRequestStatus;
     serverRecord.TimeSeriesRequestId = dmRecord.TimeSeriesRequestId;
 
