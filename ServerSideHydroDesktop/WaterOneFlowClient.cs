@@ -72,17 +72,7 @@ namespace ServerSideHydroDesktop
 			catch (Exception ex)
 			{
 				//Take no action
-			}
-			finally
-			{
-				try
-				{
-					_semaphoreDict.Release();	//Release the dictionary...
-				}
-				catch (Exception ex)
-				{
-					//Take no action...
-				}
+				_semaphoreDict.Release();			//Release the dictionary...
 			}
 		}
 

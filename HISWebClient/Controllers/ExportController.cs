@@ -1787,47 +1787,50 @@ namespace HISWebClient.Controllers
 					status = requestStatus.GetEnumDescription();
 				}
 
-				HydroClientDbContext hcdbc = new HydroClientDbContext();
-
-				//Check time stamp values - if DateTime.MinValue change to SQL Server minimum value to avoid a 'value out of range' error...
-				if (DateTime.MinValue == blobTimeStamp)
+				//using statement here ensure proper disposal of the dbcontext...
+				//Source: http://www.davepaquette.com/archive/2013/03/27/managing-entity-framework-dbcontext-lifetime-in-asp-net-mvc.aspx
+				using (HydroClientDbContext hcdbc = new HydroClientDbContext())
 				{
-					blobTimeStamp = new DateTime(1753, 1, 1);
-				}
+					//Check time stamp values - if DateTime.MinValue change to SQL Server minimum value to avoid a 'value out of range' error...
+					if (DateTime.MinValue == blobTimeStamp)
+					{
+						blobTimeStamp = new DateTime(1753, 1, 1);
+					}
 
-				//ExportTaskData etd = _hcdbc.ExportTaskDataSet.FirstOrDefault(e => e.RequestId.Equals(requestId) && e.UserEmail.Equals(cu.UserEmail));
-				ExportTaskData etd = hcdbc.ExportTaskDataSet.FirstOrDefault(e => e.RequestId.Equals(requestId) && e.UserEmail.Equals(cu.UserEmail));
-				if (null == etd)
-				{
-					//Record NOT found - add to database...
-					etd = new ExportTaskData();
+					//ExportTaskData etd = _hcdbc.ExportTaskDataSet.FirstOrDefault(e => e.RequestId.Equals(requestId) && e.UserEmail.Equals(cu.UserEmail));
+					ExportTaskData etd = hcdbc.ExportTaskDataSet.FirstOrDefault(e => e.RequestId.Equals(requestId) && e.UserEmail.Equals(cu.UserEmail));
+					if (null == etd)
+					{
+						//Record NOT found - add to database...
+						etd = new ExportTaskData();
 
-					etd.RequestId = requestId;
-					etd.RequestStatus = (int) requestStatus;
-					etd.Status = status;
-					etd.UserEmail = cu.UserEmail;
-					etd.BlobUri = blobUri;
-					etd.BlobTimeStamp = blobTimeStamp;
+						etd.RequestId = requestId;
+						etd.RequestStatus = (int) requestStatus;
+						etd.Status = status;
+						etd.UserEmail = cu.UserEmail;
+						etd.BlobUri = blobUri;
+						etd.BlobTimeStamp = blobTimeStamp;
 
-					hcdbc.ExportTaskDataSet.Add(etd);
-				}
-				else
-				{
-					//Record found - update database...
-					etd.RequestStatus = (int)requestStatus;
-					etd.Status = status;
-					etd.BlobUri = blobUri;
-					etd.BlobTimeStamp = blobTimeStamp;
-				}
+						hcdbc.ExportTaskDataSet.Add(etd);
+					}
+					else
+					{
+						//Record found - update database...
+						etd.RequestStatus = (int)requestStatus;
+						etd.Status = status;
+						etd.BlobUri = blobUri;
+						etd.BlobTimeStamp = blobTimeStamp;
+					}
 
-				try
-				{
-					//hcdbc.SaveChanges();
-					hcdbc.SaveChangesAsync();
-				}
-				catch (Exception ex)
-				{
-					var msg = ex.Message;
+					try
+					{
+						//hcdbc.SaveChanges();
+						hcdbc.SaveChangesAsync();
+					}
+					catch (Exception ex)
+					{
+						var msg = ex.Message;
+					}
 				}
 			}
 		}
