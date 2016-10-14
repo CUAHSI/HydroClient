@@ -479,7 +479,7 @@ function formatServiceTitle( serviceCode, serviceTitle) {
 //Format the input service title...
 function formatServiceTitleAbbreviated( serviceCode, serviceTitle) {
     
-    var markup = '<div  class="test-long-text">' + 
+    var markup = '<div  class="abbreviate-long-text">' + 
                  '<img style="height: 2em; width: 2em;" src="/home/getIcon?id=' + serviceCode + '">' + ' - ' + serviceTitle +
                  '</div>'
 
@@ -492,12 +492,12 @@ function formatServiceTitleAbbreviated( serviceCode, serviceTitle) {
 function renderAbbreviatedText(data, type, full, meta) {
 
     var text = (('undefined' !== typeof data ) && (null !== data)) ? data.toString() : 'unknown';
-    var markup = '<div  class="test-long-text">' + text + '</div>';
+    var markup = '<div  class="abbreviate-long-text">' + text + '</div>';
     return markup;
 }
 
 //Datatables 'createdCell' function to display a tooltip...
-//ASSUMPTION: Cell text is dislayed 'as is' on mouseenter
+//ASSUMPTION: Cell text is displayed 'as is' on mouseenter/mouseleave (formerly known as 'hover'...)
 function createdTooltipText(cell, cellData, rowData, rowIndex, colIndex) {
 
     var jqueryObj = $(cell);
@@ -506,13 +506,15 @@ function createdTooltipText(cell, cellData, rowData, rowIndex, colIndex) {
     //Source: http://chadkuehn.com/show-tooltip-over-truncated-text/
     //Setting tooltip width...
     //Source: http://stackoverflow.com/questions/25246391/bootstrap-tool-tip-setting-different-widths-for-different-tooltips
-    jqueryObj.on('mouseenter', function(event) {
+    jqueryObj.on('mouseenter mouseleave', function(event) {
         var childDiv = jqueryObj.children()[0];
-        if ((childDiv.offsetWidth < childDiv.scrollWidth) && ! jqueryObj.attr('title')) { //Element's content is wider than the content area - create a tooltip...
+        if ((childDiv.offsetWidth < childDiv.scrollWidth) && ((! jqueryObj.attr('title')) || (0 >= jqueryObj.attr('title').length))) { //Element's content is wider than the content area - create a tooltip...
+            jqueryObj.tooltip('destroy');
             jqueryObj.tooltip({
                 'title': jqueryObj.text(),
+                'trigger': 'hover',
                 'placement': 'auto',
-                'template': '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>',
+                'template': '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div style="text-align: justify; text-justify: distribute" class="tooltip-inner"></div></div>',
                 'container': 'body' //MUST use container option in datatables... source: http://stackoverflow.com/questions/33858135/bootstrap-popover-overlay-by-datatables-jquery
             });
             jqueryObj.tooltip('show');
@@ -3091,9 +3093,31 @@ function setupToolTips() {
                  /* 6*/ "Display information about the CUAHSI HydroClient.",
                  /* 7*/ "Display a brief HydroClient tutorial.",
                  /* 8*/ "Login via Google to retrieve saved Workspace entries.",
-                 /* 9*/ "Display HydroClient licensing information",
-                 /*10*/ "Tootip text - TBD"
-                ];
+                 /* 9*/ "Display HydroClient licensing information.",
+                 /*10*/ "The organization responsible for publishing the data set, which may or may not be the same organization responsible for collecting or creating the data set.",
+                 /*11*/ "A name for this collection of data. Defined by the data publisher.",
+                 /*12*/ "Search term used to tag the data set that describes the parameter being measured. Publishers must choose from a set of CUAHSI approved terms.",
+                 /*13*/ "Name given by the data collector of the location where observations in the data set have been made. Defined by the data publisher.",
+                 /*14*/ "Describes the recorded value over the time interval being sampled. Publishers must choose from a set of CUAHSI approved terms.",
+                 /*15*/ "Distinguishes between various types of observations, such as derived values versus field observations. Publishers must choose from a set of CUAHSI approved terms.",
+                 /*16*/ "Describes the medium which is being sampled for laboratory analysis or the medium in which a sensor is placed. Publishers must choose from a set of CUAHSI approved terms.",
+                 /*17*/ "Describes how the data were (or were not) subjected to quality assurance. Defined by the data publisher. ",
+                 /*18*/ "Describes the process and technique used to make the measurements in a data set. Defined by the data publisher.",
+                 /*19*/ "Organization responsible for collecting or otherwise creating the data set. Defined by the data publisher.",
+                 /*20*/ "Date of first observation in the data set. Created during the cataloging process.",
+                 /*21*/ "Date of the last observation in the data set. Created during the cataloging process.",
+                 /*22*/ "An estimate of the number of observations in this data set, which is created during the cataloging process.",
+                 /*23*/ "The parameter observed in the data set. Publishers must choose from a set of CUAHSI approved terms.",
+                 /*24*/ "Indicates the period of time which the measurement represents. Defined by the data publisher.",
+                 /*25*/ "The unit in which the time support is expressed (e.g. “day” or “minute”). Publishers must choose from a set of CUAHSI approved terms.",
+                 /*26*/ "The address of the server hosting the data set. ",
+                 /*27*/ "A shortened name for the site where the observations in the data set were made. Defined by the data publisher.",
+                 /*28*/ "A shortened name for the parameter being measured. Defined by the data publisher.",
+                 /*29*/ "The current status of the server process.",
+                 /*30*/ "The units of measure for the variable.",
+                 /*31*/ "A unique system identifier for the time series.",
+                 /*32*/ "The creation date and time for the entry.",
+                 /*33*/ "Tootip text - TBD" ];
 
     var divs = { 'divZipSelections': {'type': 'id', 'text': texts[0]},
                  'divManageSelections' : {'type': 'id', 'text': texts[1]},
@@ -3107,45 +3131,29 @@ function setupToolTips() {
                  'liQuickStartTab': {'type': 'id', 'text': texts[7], 'placement': 'right'},
                  'liGoogleTab': {'type': 'id', 'text': texts[8]},
                  'liLicenseTab': {'type': 'id', 'text': texts[9], 'placement': 'right'},
-                 'dm_thStatus': {'type': 'id', 'text': texts[10]},
-                 'dm_thPublisher': {'type': 'id', 'text': texts[10]},
-                 'dm_thServiceTitle': {'type': 'id', 'text': texts[10]},
-                 'dm_thKeyword': {'type': 'id', 'text': texts[10]},
-                 'dm_thSiteName': {'type': 'id', 'text': texts[10]},
-                 'dm_thVariableName': {'type': 'id', 'text': texts[10]},
-                 'dm_thQcLevel': {'type': 'id', 'text': texts[10]},
-                 'dm_thMethod': {'type': 'id', 'text': texts[10]},
-                 'dm_thCollector': {'type': 'id', 'text': texts[10]},
-                 'dm_thVariableUnits': {'type': 'id', 'text': texts[10]},
-                 'dm_thDataType': {'type': 'id', 'text': texts[10]},
-                 'dm_thValueType': {'type': 'id', 'text': texts[10]},
-                 'dm_thSampleMedium': {'type': 'id', 'text': texts[10]},
-                 'dm_thStartDate': {'type': 'id', 'text': texts[10]},
-                 'dm_thEndDate': {'type': 'id', 'text': texts[10]}, 
-                 'dm_thValueCount': {'type': 'id', 'text': texts[10]},
-                 'dm_thTimeSupport': {'type': 'id', 'text': texts[10]},
-                 'dm_thTimeUnit': {'type': 'id', 'text': texts[10]},
-                 'dm_thSeriesId': {'type': 'id', 'text': texts[10]},
-                 'dm_thCreated': {'type': 'id', 'text': texts[10]},
                  'cl_thPublisher': {'type': 'class', 'text': texts[10]},
-                 'cl_thServiceTitle': {'type': 'class', 'text': texts[10]},
-                 'cl_thKeyword': {'type': 'class', 'text': texts[10]},
-                 'cl_thSiteName': {'type': 'class', 'text': texts[10]},
-                 'cl_thDataType': {'type': 'class', 'text': texts[10]},
-                 'cl_thValueType': {'type': 'class', 'text': texts[10]},
-                 'cl_thSampleMedium': {'type': 'class', 'text': texts[10]},
-                 'cl_thQcLevel': {'type': 'class', 'text': texts[10]},
-                 'cl_thMethod': {'type': 'class', 'text': texts[10]},
-                 'cl_thCollector': {'type': 'class', 'text': texts[10]},
-                 'cl_thStartDate': {'type': 'class', 'text': texts[10]},
-                 'cl_thEndDate': {'type': 'class', 'text': texts[10]}, 
-                 'cl_thValueCount': {'type': 'class', 'text': texts[10]},
-                 'cl_thVariableName': {'type': 'class', 'text': texts[10]},
-                 'cl_thTimeSupport': {'type': 'class', 'text': texts[10]},
-                 'cl_thTimeUnit': {'type': 'class', 'text': texts[10]},
-                 'cl_thServiceUrl': {'type': 'class', 'text': texts[10]},
-                 'cl_thSiteCode': {'type': 'class', 'text': texts[10]},
-                 'cl_thVariableCode': {'type': 'class', 'text': texts[10]}
+                 'cl_thServiceTitle': {'type': 'class', 'text': texts[11]},
+                 'cl_thKeyword': {'type': 'class', 'text': texts[12]},
+                 'cl_thSiteName': {'type': 'class', 'text': texts[13]},
+                 'cl_thDataType': {'type': 'class', 'text': texts[14]},
+                 'cl_thValueType': {'type': 'class', 'text': texts[15]},
+                 'cl_thSampleMedium': {'type': 'class', 'text': texts[16]},
+                 'cl_thQcLevel': {'type': 'class', 'text': texts[17]},
+                 'cl_thMethod': {'type': 'class', 'text': texts[18]},
+                 'cl_thCollector': {'type': 'class', 'text': texts[19]},
+                 'cl_thStartDate': {'type': 'class', 'text': texts[20]},
+                 'cl_thEndDate': {'type': 'class', 'text': texts[21]}, 
+                 'cl_thValueCount': {'type': 'class', 'text': texts[22]},
+                 'cl_thVariableName': {'type': 'class', 'text': texts[23]},
+                 'cl_thTimeSupport': {'type': 'class', 'text': texts[24]},
+                 'cl_thTimeUnit': {'type': 'class', 'text': texts[25]},
+                 'cl_thServiceUrl': {'type': 'class', 'text': texts[26]},
+                 'cl_thSiteCode': {'type': 'class', 'text': texts[27]},
+                 'cl_thVariableCode': {'type': 'class', 'text': texts[28]},
+                 'cl_thStatus': {'type': 'class', 'text': texts[29]},
+                 'cl_thVariableUnits': {'type': 'class', 'text': texts[30]},
+                 'cl_thSeriesId': {'type': 'class', 'text': texts[31]},
+                 'cl_thCreated': {'type': 'class', 'text': texts[32]}
                };
 
     for (var div in divs) {
@@ -3157,11 +3165,11 @@ function setupToolTips() {
             //jQuery object exists - destroy/create tooltip...
             divTooltip.tooltip('destroy');
             divTooltip.tooltip({
-                            'animation': true,
                             'placement': divs[div].placement ? divs[div].placement: 'auto',
                             'trigger': 'hover',
                             'title': divs[div].text,
-                            'delay': divs[div].delay ? divs[div].delay: {'show': 1000, 'hide': 500},
+                            'delay': divs[div].delay ? divs[div].delay: {'show': 100, 'hide': 100},
+                            'template': '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div style="text-align: justify; text-justify: distribute" class="tooltip-inner"></div></div>',
                             'container': 'body'}); //MUST use container option in datatables... source: http://stackoverflow.com/questions/33858135/bootstrap-popover-overlay-by-datatables-jquery
         }
     }
