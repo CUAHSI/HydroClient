@@ -346,6 +346,7 @@
     <Content Include="Content\bootstrap-theme.min.css" />
     <Content Include="Content\dataTables.colVis.css" />
     <Content Include="Content\datatablescdn\jquery.dataTables.min.css" />
+    <Content Include="Content\gDropDownControl.css" />
     <Content Include="Content\Images\ajax-loader-green.gif">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -384,6 +385,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Images\hydroshare-logo-sm.png" />
+    <Content Include="Content\Images\Legend\NLCD_Colour_Classification_Update.jpg" />
     <Content Include="Content\Images\Markers\ClusterIcons\blue-20.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -566,6 +568,7 @@
     <Content Include="Content\FancyTree\skin-xp\vline-rtl.gif" />
     <Content Include="Content\FancyTree\skin-xp\vline.gif" />
     <Content Include="Scripts\Fancytree\sample.js" />
+    <Content Include="Scripts\GoogleMapsGithubLibraries\arcgislink.js" />
     <Content Include="Scripts\GoogleMapsGithubLibraries\infobubble.js" />
     <Content Include="Scripts\Google\keydragzoom.js" />
     <Content Include="Scripts\Google\keydragzoom_packed.js" />

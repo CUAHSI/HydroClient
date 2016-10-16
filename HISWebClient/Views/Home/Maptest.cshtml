@@ -1,36 +1,236 @@
-﻿
-<link href="~/Content/Site.css" rel="stylesheet" />
- <script type='text/javascript' src="http://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true&libraries=places,geometry"></script>
-@*<link href="~/Scripts/test/maptest.css" rel="stylesheet" />*@
-    <script src="~/Scripts/jquery.slidereveal.js"></script>
+﻿@{
+   
+    Layout = null;
+}
 
-    <div id="slider" class="side-panel side-panel-right">
-        <div id="menu">
-            <div><img class="expander" alt="Expand" src="~/Content/Images/closetop.png" /></div>
-            <div class="" id="selectors">
-                <form id="Search" class="navbar-form" role="search">
-                    <!-- Button trigger modal -->
-                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectDateModal">Select Date</button>
-                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectVariableModal">Select Concepts(s)</button>
-                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#SelectServicesModal">Select Services(s)</button>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <style type="text/css">
+        html {
+            height: 100%;
+        }
 
-                    <div id="SelectedDateRange">
+        body {
+            height: 100%;
+            margin: 0px;
+            padding: 0px;
+        }
 
-    </div>
-                    <br />
-                    <button type="submit" class="btn btn-success btn-block">Search Map</button><br />
-                    <button id="clear" type="button" class="btn btn-warning btn-block"> Clear map </button>
+        #map_canvas {
+            height: 100%;
+        }
+    </style>
+    <script type="text/javascript"
+            src="http://maps.googleapis.com/maps/api/js?sensor=false">
+    </script>
+    <script src="~/Scripts/GoogleMapsGithubLibraries/arcgislink.js"></script>
+    <script type="text/javascript">
+    var map;
+
+    var josefov = new google.maps.LatLng(49.3119, -70.67029);
+    //Define OSM as base layer in addition to the default Google layers
+    var osmMapType = new google.maps.ImageMapType({
+                    getTileUrl: function (coord, zoom) {
+                        return "http://tile.openstreetmap.org/" +
+		            zoom + "/" + coord.x + "/" + coord.y + ".png";
+                    },
+                    tileSize: new google.maps.Size(256, 256),
+                    isPng: true,
+                    alt: "OpenStreetMap",
+                    name: "OSM",
+                    maxZoom: 19
+                });
+
+   //Define custom WMS tiled layer
+   var SLPLayer = new google.maps.ImageMapType({
+                    getTileUrl: function (coord, zoom) {
+                        var proj = map.getProjection();
+                        var zfactor = Math.pow(2, zoom);
+                        // get Long Lat coordinates
+                        var top = proj.fromPointToLatLng(new google.maps.Point(coord.x * 256 / zfactor, coord.y * 256 / zfactor));
+                        var bot = proj.fromPointToLatLng(new google.maps.Point((coord.x + 1) * 256 / zfactor, (coord.y + 1) * 256 / zfactor));
+
+                        //corrections for the slight shift of the SLP (mapserver)
+                        var deltaX = 0.0013;
+                        var deltaY = 0.00058;
+
+                        //create the Bounding box string
+                        var bbox =     (top.lng() + deltaX) + "," +
+    	                               (bot.lat() + deltaY) + "," +
+    	                               (bot.lng() + deltaX) + "," +
+    	                               (top.lat() + deltaY);
+
+                        //base WMS URL
+                        var url = "http://mapserver-slp.mendelu.cz/cgi-bin/mapserv?map=/var/local/slp/krtinyWMS.map&";
+                        url += "&REQUEST=GetMap"; //WMS operation
+                        url += "&SERVICE=WMS";    //WMS service
+                        url += "&VERSION=1.1.1";  //WMS version
+                        url += "&LAYERS=" + "typologie,hm2003"; //WMS layers
+                        url += "&FORMAT=image/png" ; //WMS format
+                        url += "&BGCOLOR=0xFFFFFF";
+                        url += "&TRANSPARENT=TRUE";
+                        url += "&SRS=EPSG:4326";     //set WGS84
+                        url += "&BBOX=" + bbox;      // set bounding box
+                        url += "&WIDTH=256";         //tile size in google
+                        url += "&HEIGHT=256";
+                        return url;                 // return URL for the tile
+
+                    },
+                    tileSize: new google.maps.Size(256, 256),
+                    isPng: true
+                });
+
+   var TMSLayer = (function () {
+       function t(map, baseUrlPattern, yFlip, bounds) {
+           var _map = map;
+           var layer = new gm.ImageMapType({
+               getTileUrl: function (coord, zoom) {
+                   var proj = _map.getProjection();
+                   var zfactor = Math.pow(2, zoom);
+                   // get Long Lat coordinates
+                   var swCoord = proj.fromPointToLatLng(new gm.Point(coord.x * 256 / zfactor, (coord.y + 1) * 256 / zfactor));
+                   var neCoord = proj.fromPointToLatLng(new gm.Point((coord.x + 1) * 256 / zfactor, coord.y * 256 / zfactor));
+                   if (bounds) {
+                       var tileLatLng = new gm.LatLngBounds(swCoord, neCoord);
+                       if (!tileLatLng.intersects(bounds)) {
+                           return "http://maps.gstatic.com/intl/en_us/mapfiles/transparent.png";
+                       }
+                   }
+                   return baseUrlPattern.replace("$z", zoom).replace("$y", yFlip ? coord.y : (1 << zoom) - coord.y - 1).replace("$x", coord.x);
+               },
+               tileSize: new gm.Size(256, 256),
+               isPng: true
+           });
+           this._map = _map;
+           this._layer = layer;
+       }
+       t.prototype.setVisible = function (visible) {
+           var overlayMaps = this._map.overlayMapTypes;
+           // find the layer
+           for (var i = 0, I = overlayMaps.length; i < I && overlayMaps.getAt(i) != this._layer; ++i);
+           if (visible) {
+               // add if the map was not already added
+               if (i == overlayMaps.length) {
+                   overlayMaps.push(this._layer);
+               }
+           } else {
+               // remove if the map was added
+               if (i < overlayMaps.length) {
+                   overlayMaps.removeAt(i);
+               }
+           }
+       }
+       t.prototype.remove = function () {
+           this.setVisible(false);
+       }
+       t.prototype.setOpacity = function (opacity) {
+           if (this._layer) {
+               this._layer.setOpacity(opacity);
+           }
+       }
+       t.prototype.getOpacity = function () {
+           if (this._layer) {
+               return this._layer.getOpacity();
+           } else {
+               return 1.0;
+           }
+       }
+       t.prototype.setZIndex = function (zIndex) {
+           var i = this.getZIndex();
+           var overlayMaps = this._map.overlayMapTypes;
+           overlayMaps.removeAt(i);
+           overlayMaps.insertAt(zIndex, this._layer);
+       }
+
+       t.prototype.getZIndex = function () {
+           var overlayMaps = this._map.overlayMapTypes;
+           for (var i = 0, I = overlayMaps.length; i < I && overlayMaps.getAt(i) != this._layer; ++i);
+           return i;
+       }
+
+       return t;
+   })();
+
+   
 
 
-                </form>
-            </div>
-        </div>
-        <button id="close-panel-bt">Close</button>
-    <!-- <button>&times;</button> -->
-</div>
-
-    <div id="map-canvas"></div>   
+   function initialize() {
 
 
-<script src="~/Scripts/test/maptest.js"></script>
+       var loc = new google.maps.LatLng(49.3119, -70.67029)
+       var mapOptions = {
+           zoom: 12,
+           center: loc
+          
+       };
 
+       // Create our map. This creation will implicitly create a
+       // map type registry.
+       map = new google.maps.Map(document.getElementById('map'),
+           mapOptions);
+
+      
+
+       // Set the registry to associate 'mymap' with the
+       // custom map type we created, and set the map to
+       // show that map type.
+       // Now attach the coordinate map type to the map's registry.
+       //map.mapTypes.set('coordinate',
+       //                 new CoordMapType(new google.maps.Size(256, 256)));
+
+       //var MY_MAPTYPE_ID = 'mymaps';
+
+       // var mapOptions = {
+       //     zoom: 8,
+       //     center: josefov,           
+       //     mapTypeControlOptions: {
+       //         mapTypeIds: ['OSM', MY_MAPTYPE_ID]
+       //     },
+       //     mapTypeId: MY_MAPTYPE_ID
+       // };
+       
+       // //OSM
+       // map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
+       // //map.mapTypes.set('OSM', osmMapType);
+       ////map.setMapTypeId(google.maps.MapTypeId.ROADMAP);
+       // var myMapType = new MyMapType();
+
+       // map.mapTypes.set(MY_MAPTYPE_ID, myMapType);
+
+
+        //add WMS layer
+        //map.overlayMapTypes.push(SLPLayer);
+            //
+            //var url = 'http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Demographics/ESRI_Census_USA/MapServer';
+        //var url = 'http://hydrology.esri.com/arcgis/rest/services/WorldHydroReferenceOverlay/MapServer';
+       
+
+           
+            
+
+        //http://hydrology.esri.com/arcgis/rest/services/WorldHydroReferenceOverlay/MapServer
+        //http://services.nationalmap.gov/arcgis/rest/services/nhd/MapServer/2
+        //var url = 'http://services.nationalmap.gov/arcgis/rest/services/nhd/MapServer';
+        //var agsType = new gmaps.ags.MapType(url, {
+        //    name: 'ArcGIS'
+        //});
+        //map.mapTypes.set('arcgis', agsType);
+        //map.overlayMapTypes.insertAt(0, agsType);
+    }
+    function setVis() {
+        var service = dynamap.getMapService();
+        for (var i = 0; i < service.layers.length; i++) {
+            var el = document.getElementById('layer' + service.layers[i].id);
+            service.layers[i].visible = (el.checked === true);
+        }
+        dynamap.refresh();
+    }
+    </script>
+</head>
+<body onload="initialize()">
+    <div id="map_canvas" style="width:100%; height:100%"></div>
+</body>
+</html>

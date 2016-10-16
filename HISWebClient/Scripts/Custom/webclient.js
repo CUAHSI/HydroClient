@@ -935,7 +935,7 @@ function initializeMap() {
 
     //BC - disable infoWindow for now...
     //    infoWindow = new google.maps.InfoWindow();
-
+   
     var mapProp = {
         center: myCenter,
         zoom: 5,
@@ -956,11 +956,12 @@ function initializeMap() {
         },
         mapTypeControlOptions: {
             style: google.maps.MapTypeControlStyle.DEFAULT,
-            position: google.maps.ControlPosition.LEFT_BOTTOM
-            //mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.TERRAIN]
+            position: google.maps.ControlPosition.LEFT_BOTTOM,
+            mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.TERRAIN]
+          
         }//,
     };
-
+  
     //get reference to map sizing of window happens later to prevent gap
    var element = document.getElementById("map-canvas");
    if ( null !== element) {
@@ -970,7 +971,7 @@ function initializeMap() {
     console.log('Element is null!!');
     return;
    }
-
+  
     //set map zoom limits...
     //map.setOptions({minZoom: 5, maxZoom: 1});
 
@@ -1831,7 +1832,7 @@ function addCustomMapControls()
         // #button can be anyt dom element
         var closeButton = document.querySelector('#StreetViewCloseButton'),
             controlPosition = google.maps.ControlPosition.RIGHT_CENTER;
-
+        
         // Assumes map has been initiated 
         var streetView = map.getStreetView();
 
