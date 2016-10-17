@@ -3088,7 +3088,7 @@ function setUpDatatables(clusterid) {
 //Initialize 'static' tooltips - those not subject to change during the application session...
 function setupToolTips() {
 
-    var texts = [/* 0*/"Select one or more rows to export. You can check the status by opening the workspace and selecting the 'Exports' tab.",
+    var texts = [/* 0*/ "Select one or more rows to export. You can check the status by opening the workspace and selecting the 'Exports' tab.",
                  /* 1*/ "Select one or more rows to add to your workspace. Work with your data by opening the workspace and selecting the 'Data' tab.",
                  /* 2*/ "Display the map with current search results, if any.",
                  /* 3*/ "Display current search results in a table.",
@@ -3110,7 +3110,9 @@ function setupToolTips() {
                  /*19*/ "Organization responsible for collecting or otherwise creating the data set. Defined by the data publisher.",
                  /*20*/ "Date of first observation in the data set. Created during the cataloging process.",
                  /*21*/ "Date of the last observation in the data set. Created during the cataloging process.",
-                 /*22*/ "An estimate of the number of observations in this data set, which is created during the cataloging process.",
+                 /*22*/ "An estimate of the number of observations in this data set, which is created during the cataloging process. " +
+                         "This value is calculated using a ratio between the time range of your search and the overall time range of the data series. " +
+                         "The estimated Value Count is not available if the time series has observations that are irregularly spaced over time.",
                  /*23*/ "The parameter observed in the data set. Publishers must choose from a set of CUAHSI approved terms.",
                  /*24*/ "Indicates the period of time which the measurement represents. Defined by the data publisher.",
                  /*25*/ "The unit in which the time support is expressed (e.g. “day” or “minute”). Publishers must choose from a set of CUAHSI approved terms.",
