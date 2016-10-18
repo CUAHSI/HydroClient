@@ -263,7 +263,7 @@ tr.selected {background: #009900;}
 
 /*Google maps searchbar*/
 .searchbarcontrols {
-		margin-top: 0px;
+		margin-top: 5px;
 		border: 1px solid transparent;
 		border-radius: 2px 0 0 2px;
 		box-sizing: border-box;
@@ -273,9 +273,7 @@ tr.selected {background: #009900;}
 		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
         
 }
-.searchForm {
-   
-} 
+
 
 #pac-input {
 background-color: #fff;
