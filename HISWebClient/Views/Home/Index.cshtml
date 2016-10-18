@@ -187,85 +187,103 @@
             <!-- BCC - 30-Jun-2015 - QA Issue #34 - General GUI: no scroll bar when reduce page size (menu items can become unavailable) -->
             <div id="slider" class="side-panel side-panel-right" style="overflow-y: auto;">
                 <div id="menu">
-                    <div class="container" id="selectors">
-                        <form id="Search" class="searchForm form-horizontal pull-left">
-                            <div class="form-group">
-                                <div class="col-sm-8">
-                                    <button class="btn btn-primary btn-block form-control" id="btnDateRange" type="button" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectDateModal">Select Date Range</button>
-                                </div>
-                            </div>
-
-                            <div id="grpStartDate" class="form-group" style="margin-bottom: 2px;">
-                                <label class="control-label col-sm-2" for="startDate" id="lblStartDate">From: </label>
-                                <div class="col-sm-6">
-                                    <input id="startDate" class="form-control default-cursor" type="text" readonly="readonly" />
-                                    <label id="lblStartDateError" class="help-block" style="display:none;"></label>
-                                </div>
-                            </div>
-
-                            <div id="grpEndDate" class="form-group">
-                                <label class="control-label col-sm-2" for="endDate" id="lblEndDate">To: </label>
-                                <div class="col-sm-6">
-                                    <input id="endDate" class="form-control default-cursor" type="text" readonly="readonly" />
-                                    <label id="lblEndDateError" class="help-block" style="display:none;"></label>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <div class="col-sm-8">
-                                    <button class="btn btn-primary btn-block" type="button" id="btnSelectKeywords" disabled style="margin: 0 auto;">
-                                        <h4 class="text-center" style="display: inline; vertical-align: middle;">
-                                            <span id="glyphiconSpanSK" class="glyphicon glyphicon-refresh spin" style="color: #32cd32;"></span>
-                                        </h4>
-                                        Loading Keyword(s)
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <div class="col-sm-8">
-                                    <div style="overflow-y: scroll; max-height: 10em; margin-left: -1em;">
-                                        <ol id="olConcepts" style="list-style: circle;">
-                                            <li>All</li>
-                                        </ol>
+                    <ul class="nav nav-tabs nav-justified">
+                        <li role="presentation" class="active"><a href="#search" data-toggle="tab"> SEARCH </a></li>
+                        <li role="presentation"><a href="#legend" data-toggle="tab"> LEGENDS </a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="search">
+                            <div class="container" id="selectors">
+                                <form id="Search" class="searchForm form-horizontal pull-left">
+                                    <div class="form-group">
+                                        <div class="col-sm-8">
+                                            <button class="btn btn-primary btn-block form-control" id="btnDateRange" type="button" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectDateModal">Select Date Range</button>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
 
-                            <div class="form-group">
-                                <div class="col-sm-8">
-                                    <button class="btn btn-primary btn-block form-control" type="button" id="btnSelectDataServices" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectServicesModal">
-                                        Select Data Service(s)
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <div class="col-sm-7">
-                                    <div style="max-height: 10em;">
-                                        <ol id="olServices" style="list-style: circle;">
-                                            <li>All</li>
-                                        </ol>
+                                    <div id="grpStartDate" class="form-group" style="margin-bottom: 2px;">
+                                        <label class="control-label col-sm-2" for="startDate" id="lblStartDate">From: </label>
+                                        <div class="col-sm-6">
+                                            <input id="startDate" class="form-control default-cursor" type="text" readonly="readonly" />
+                                            <label id="lblStartDateError" class="help-block" style="display:none;"></label>
+                                        </div>
                                     </div>
-                                </div>
+
+                                    <div id="grpEndDate" class="form-group">
+                                        <label class="control-label col-sm-2" for="endDate" id="lblEndDate">To: </label>
+                                        <div class="col-sm-6">
+                                            <input id="endDate" class="form-control default-cursor" type="text" readonly="readonly" />
+                                            <label id="lblEndDateError" class="help-block" style="display:none;"></label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="col-sm-8">
+                                            <button class="btn btn-primary btn-block" type="button" id="btnSelectKeywords" disabled style="margin: 0 auto;">
+                                                <h4 class="text-center" style="display: inline; vertical-align: middle;">
+                                                    <span id="glyphiconSpanSK" class="glyphicon glyphicon-refresh spin" style="color: #32cd32;"></span>
+                                                </h4>
+                                                Loading Keyword(s)
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="col-sm-8">
+                                            <div style="overflow-y: scroll; max-height: 10em; margin-left: -1em;">
+                                                <ol id="olConcepts" style="list-style: circle;">
+                                                    <li>All</li>
+                                                </ol>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="col-sm-8">
+                                            <button class="btn btn-primary btn-block form-control" type="button" id="btnSelectDataServices" style="margin: 0 auto;" data-toggle="modal" data-target="#SelectServicesModal">
+                                                Select Data Service(s)
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="col-sm-7">
+                                            <div style="max-height: 10em;">
+                                                <ol id="olServices" style="list-style: circle;">
+                                                    <li>All</li>
+                                                </ol>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group" id="searchBtnDiv">
+                                        <div class="col-sm-8">
+                                            <!-- For click handler see webclient.js $("#Search").submit(function (e) -->
+                                            <button type="submit" class="btn btn-success btn-block form-control" style="margin: 0 auto;">Search Map</button><br />
+                                            <button id="btnSetDefaults" type="button" class="btn btn-warning btn-block form-control" style="margin: 0 auto; margin-top: 0.5em;">Reset</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group" style="margin-top: 2em;">
+                                        <div class="col-sm-8">
+                                            <button class="btn btn-primary btn-block form-control enableWhenDataReceived" id="btnSearchResults" type="button" style="margin: 0 auto;" data-toggle="modal" data-target="#tableModal">Show Search Results</button>
+                                        </div>
+                                    </div>
+
+                                </form>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="legend">
+                            <div class="legend" >
+                                 <img width="200" align="middle" src="~/Content/Images/Legend/NLCD_Colour_Classification_Update.jpg" />                              
                             </div>
 
-                            <div class="form-group" id="searchBtnDiv">
-                                <div class="col-sm-8">
-                                    <!-- For click handler see webclient.js $("#Search").submit(function (e) -->
-                                    <button type="submit" class="btn btn-success btn-block form-control" style="margin: 0 auto;">Search Map</button><br />
-                                    <button id="btnSetDefaults" type="button" class="btn btn-warning btn-block form-control" style="margin: 0 auto; margin-top: 0.5em;">Reset</button>
-                                </div>
-                            </div>
 
-                            <div class="form-group" style="margin-top: 2em;">
-                                <div class="col-sm-8">
-                                    <button class="btn btn-primary btn-block form-control enableWhenDataReceived" id="btnSearchResults" type="button" style="margin: 0 auto;" data-toggle="modal" data-target="#tableModal">Show Search Results</button>
-                                </div>
-                            </div>
+                            
+                        </div>
 
-                        </form>
                     </div>
+                   
 
                 </div>
             </div>

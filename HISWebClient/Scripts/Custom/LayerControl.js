@@ -287,30 +287,30 @@ function addLayerControl() {
                 map.overlayMapTypes.push(null); // create empty overlay entry
                 map.overlayMapTypes.setAt(1, NLCDLayer);
                 //Add Legend
-                var elem = document.createElement("img");
-                elem.setAttribute("src", "/Content/Images/Legend/NLCD_Colour_Classification_Update.jpg");
-                //elem.setAttribute("height", "768");
-                //elem.setAttribute("width", "1024");
-                elem.style.opacity = "0.7";
-                elem.setAttribute("alt", "Legend");
+                //var elem = document.createElement("img");
+                //elem.setAttribute("src", "/Content/Images/Legend/NLCD_Colour_Classification_Update.jpg");
+                ////elem.setAttribute("height", "768");
+                ////elem.setAttribute("width", "1024");
+                //elem.style.opacity = "0.7";
+                //elem.setAttribute("alt", "Legend");
                 
-                var myLegendDiv = document.createElement('div');
-                myLegendDiv.appendChild(elem);
-                myLegendDiv.id = "NLCD_Legend"
-                map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(myLegendDiv);
+                //var myLegendDiv = document.createElement('div');
+                //myLegendDiv.appendChild(elem);
+                //myLegendDiv.id = "NLCD_Legend"
+                //map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(myLegendDiv);
             }
             else {
                 map.overlayMapTypes.removeAt(1)
-                var indexOfControl = -1;
-                rightCenterControls = map.controls[google.maps.ControlPosition.RIGHT_BOTTOM];
-                rightCenterControls.forEach(function (element, index) {
-                    if( element.id === 'NLCD_Legend' ) {
-                        indexOfControl = index;
-                    }
-                } );
-                if( indexOfControl>-1 ) {
-                    rightCenterControls.removeAt(indexOfControl);
-                }
+                //var indexOfControl = -1;
+                //rightCenterControls = map.controls[google.maps.ControlPosition.RIGHT_BOTTOM];
+                //rightCenterControls.forEach(function (element, index) {
+                //    if( element.id === 'NLCD_Legend' ) {
+                //        indexOfControl = index;
+                //    }
+                //} );
+                //if( indexOfControl>-1 ) {
+                //    rightCenterControls.removeAt(indexOfControl);
+                //}
             }           
         }
     }
