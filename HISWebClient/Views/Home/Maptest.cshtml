@@ -30,129 +30,129 @@
     <script type="text/javascript">
     var map;
 
-    //var josefov = new google.maps.LatLng(49.3119, -70.67029);
-    //Define OSM as base layer in addition to the default Google layers
-    var osmMapType = new google.maps.ImageMapType({
-                    getTileUrl: function (coord, zoom) {
-                        return "http://tile.openstreetmap.org/" +
-		            zoom + "/" + coord.x + "/" + coord.y + ".png";
-                    },
-                    tileSize: new google.maps.Size(256, 256),
-                    isPng: true,
-                    alt: "OpenStreetMap",
-                    name: "OSM",
-                    maxZoom: 19
-                });
+   // //var josefov = new google.maps.LatLng(49.3119, -70.67029);
+   // //Define OSM as base layer in addition to the default Google layers
+   // var osmMapType = new google.maps.ImageMapType({
+   //                 getTileUrl: function (coord, zoom) {
+   //                     return "http://tile.openstreetmap.org/" +
+   // 	            zoom + "/" + coord.x + "/" + coord.y + ".png";
+   //                 },
+   //                 tileSize: new google.maps.Size(256, 256),
+   //                 isPng: true,
+   //                 alt: "OpenStreetMap",
+   //                 name: "OSM",
+   //                 maxZoom: 19
+   //             });
 
-   //Define custom WMS tiled layer
-   var SLPLayer = new google.maps.ImageMapType({
-                    getTileUrl: function (coord, zoom) {
-                        var proj = map.getProjection();
-                        var zfactor = Math.pow(2, zoom);
-                        // get Long Lat coordinates
-                        var top = proj.fromPointToLatLng(new google.maps.Point(coord.x * 256 / zfactor, coord.y * 256 / zfactor));
-                        var bot = proj.fromPointToLatLng(new google.maps.Point((coord.x + 1) * 256 / zfactor, (coord.y + 1) * 256 / zfactor));
+   ////Define custom WMS tiled layer
+   //var SLPLayer = new google.maps.ImageMapType({
+   //                 getTileUrl: function (coord, zoom) {
+   //                     var proj = map.getProjection();
+   //                     var zfactor = Math.pow(2, zoom);
+   //                     // get Long Lat coordinates
+   //                     var top = proj.fromPointToLatLng(new google.maps.Point(coord.x * 256 / zfactor, coord.y * 256 / zfactor));
+   //                     var bot = proj.fromPointToLatLng(new google.maps.Point((coord.x + 1) * 256 / zfactor, (coord.y + 1) * 256 / zfactor));
 
-                        //corrections for the slight shift of the SLP (mapserver)
-                        var deltaX = 0.0013;
-                        var deltaY = 0.00058;
+   //                     //corrections for the slight shift of the SLP (mapserver)
+   //                     var deltaX = 0.0013;
+   //                     var deltaY = 0.00058;
 
-                        //create the Bounding box string
-                        var bbox =     (top.lng() + deltaX) + "," +
-    	                               (bot.lat() + deltaY) + "," +
-    	                               (bot.lng() + deltaX) + "," +
-    	                               (top.lat() + deltaY);
+   //                     //create the Bounding box string
+   //                     var bbox =     (top.lng() + deltaX) + "," +
+   // 	                               (bot.lat() + deltaY) + "," +
+   // 	                               (bot.lng() + deltaX) + "," +
+   // 	                               (top.lat() + deltaY);
 
-                        //base WMS URL
-                        var url = "http://mapserver-slp.mendelu.cz/cgi-bin/mapserv?map=/var/local/slp/krtinyWMS.map&";
-                        url += "&REQUEST=GetMap"; //WMS operation
-                        url += "&SERVICE=WMS";    //WMS service
-                        url += "&VERSION=1.1.1";  //WMS version
-                        url += "&LAYERS=" + "typologie,hm2003"; //WMS layers
-                        url += "&FORMAT=image/png" ; //WMS format
-                        url += "&BGCOLOR=0xFFFFFF";
-                        url += "&TRANSPARENT=TRUE";
-                        url += "&SRS=EPSG:4326";     //set WGS84
-                        url += "&BBOX=" + bbox;      // set bounding box
-                        url += "&WIDTH=256";         //tile size in google
-                        url += "&HEIGHT=256";
-                        return url;                 // return URL for the tile
+   //                     //base WMS URL
+   //                     var url = "http://mapserver-slp.mendelu.cz/cgi-bin/mapserv?map=/var/local/slp/krtinyWMS.map&";
+   //                     url += "&REQUEST=GetMap"; //WMS operation
+   //                     url += "&SERVICE=WMS";    //WMS service
+   //                     url += "&VERSION=1.1.1";  //WMS version
+   //                     url += "&LAYERS=" + "typologie,hm2003"; //WMS layers
+   //                     url += "&FORMAT=image/png" ; //WMS format
+   //                     url += "&BGCOLOR=0xFFFFFF";
+   //                     url += "&TRANSPARENT=TRUE";
+   //                     url += "&SRS=EPSG:4326";     //set WGS84
+   //                     url += "&BBOX=" + bbox;      // set bounding box
+   //                     url += "&WIDTH=256";         //tile size in google
+   //                     url += "&HEIGHT=256";
+   //                     return url;                 // return URL for the tile
 
-                    },
-                    tileSize: new google.maps.Size(256, 256),
-                    isPng: true
-                });
+   //                 },
+   //                 tileSize: new google.maps.Size(256, 256),
+   //                 isPng: true
+   //             });
 
-   var TMSLayer = (function () {
-       function t(map, baseUrlPattern, yFlip, bounds) {
-           var _map = map;
-           var layer = new gm.ImageMapType({
-               getTileUrl: function (coord, zoom) {
-                   var proj = _map.getProjection();
-                   var zfactor = Math.pow(2, zoom);
-                   // get Long Lat coordinates
-                   var swCoord = proj.fromPointToLatLng(new gm.Point(coord.x * 256 / zfactor, (coord.y + 1) * 256 / zfactor));
-                   var neCoord = proj.fromPointToLatLng(new gm.Point((coord.x + 1) * 256 / zfactor, coord.y * 256 / zfactor));
-                   if (bounds) {
-                       var tileLatLng = new gm.LatLngBounds(swCoord, neCoord);
-                       if (!tileLatLng.intersects(bounds)) {
-                           return "http://maps.gstatic.com/intl/en_us/mapfiles/transparent.png";
-                       }
-                   }
-                   return baseUrlPattern.replace("$z", zoom).replace("$y", yFlip ? coord.y : (1 << zoom) - coord.y - 1).replace("$x", coord.x);
-               },
-               tileSize: new gm.Size(256, 256),
-               isPng: true
-           });
-           this._map = _map;
-           this._layer = layer;
-       }
-       t.prototype.setVisible = function (visible) {
-           var overlayMaps = this._map.overlayMapTypes;
-           // find the layer
-           for (var i = 0, I = overlayMaps.length; i < I && overlayMaps.getAt(i) != this._layer; ++i);
-           if (visible) {
-               // add if the map was not already added
-               if (i == overlayMaps.length) {
-                   overlayMaps.push(this._layer);
-               }
-           } else {
-               // remove if the map was added
-               if (i < overlayMaps.length) {
-                   overlayMaps.removeAt(i);
-               }
-           }
-       }
-       t.prototype.remove = function () {
-           this.setVisible(false);
-       }
-       t.prototype.setOpacity = function (opacity) {
-           if (this._layer) {
-               this._layer.setOpacity(opacity);
-           }
-       }
-       t.prototype.getOpacity = function () {
-           if (this._layer) {
-               return this._layer.getOpacity();
-           } else {
-               return 1.0;
-           }
-       }
-       t.prototype.setZIndex = function (zIndex) {
-           var i = this.getZIndex();
-           var overlayMaps = this._map.overlayMapTypes;
-           overlayMaps.removeAt(i);
-           overlayMaps.insertAt(zIndex, this._layer);
-       }
+   //var TMSLayer = (function () {
+   //    function t(map, baseUrlPattern, yFlip, bounds) {
+   //        var _map = map;
+   //        var layer = new gm.ImageMapType({
+   //            getTileUrl: function (coord, zoom) {
+   //                var proj = _map.getProjection();
+   //                var zfactor = Math.pow(2, zoom);
+   //                // get Long Lat coordinates
+   //                var swCoord = proj.fromPointToLatLng(new gm.Point(coord.x * 256 / zfactor, (coord.y + 1) * 256 / zfactor));
+   //                var neCoord = proj.fromPointToLatLng(new gm.Point((coord.x + 1) * 256 / zfactor, coord.y * 256 / zfactor));
+   //                if (bounds) {
+   //                    var tileLatLng = new gm.LatLngBounds(swCoord, neCoord);
+   //                    if (!tileLatLng.intersects(bounds)) {
+   //                        return "http://maps.gstatic.com/intl/en_us/mapfiles/transparent.png";
+   //                    }
+   //                }
+   //                return baseUrlPattern.replace("$z", zoom).replace("$y", yFlip ? coord.y : (1 << zoom) - coord.y - 1).replace("$x", coord.x);
+   //            },
+   //            tileSize: new gm.Size(256, 256),
+   //            isPng: true
+   //        });
+   //        this._map = _map;
+   //        this._layer = layer;
+   //    }
+   //    t.prototype.setVisible = function (visible) {
+   //        var overlayMaps = this._map.overlayMapTypes;
+   //        // find the layer
+   //        for (var i = 0, I = overlayMaps.length; i < I && overlayMaps.getAt(i) != this._layer; ++i);
+   //        if (visible) {
+   //            // add if the map was not already added
+   //            if (i == overlayMaps.length) {
+   //                overlayMaps.push(this._layer);
+   //            }
+   //        } else {
+   //            // remove if the map was added
+   //            if (i < overlayMaps.length) {
+   //                overlayMaps.removeAt(i);
+   //            }
+   //        }
+   //    }
+   //    t.prototype.remove = function () {
+   //        this.setVisible(false);
+   //    }
+   //    t.prototype.setOpacity = function (opacity) {
+   //        if (this._layer) {
+   //            this._layer.setOpacity(opacity);
+   //        }
+   //    }
+   //    t.prototype.getOpacity = function () {
+   //        if (this._layer) {
+   //            return this._layer.getOpacity();
+   //        } else {
+   //            return 1.0;
+   //        }
+   //    }
+   //    t.prototype.setZIndex = function (zIndex) {
+   //        var i = this.getZIndex();
+   //        var overlayMaps = this._map.overlayMapTypes;
+   //        overlayMaps.removeAt(i);
+   //        overlayMaps.insertAt(zIndex, this._layer);
+   //    }
 
-       t.prototype.getZIndex = function () {
-           var overlayMaps = this._map.overlayMapTypes;
-           for (var i = 0, I = overlayMaps.length; i < I && overlayMaps.getAt(i) != this._layer; ++i);
-           return i;
-       }
+   //    t.prototype.getZIndex = function () {
+   //        var overlayMaps = this._map.overlayMapTypes;
+   //        for (var i = 0, I = overlayMaps.length; i < I && overlayMaps.getAt(i) != this._layer; ++i);
+   //        return i;
+   //    }
 
-       return t;
-   })();
+   //    return t;
+   //})();
 
    
 
@@ -160,7 +160,7 @@
    function initialize() {
 
 
-       //var loc = new google.maps.LatLng(49.3119, -70.67029)
+       var loc = new google.maps.LatLng(49.3119, -70.67029)
        var mapOptions = {
            zoom: 12,
            center: loc

@@ -149,7 +149,13 @@ namespace HISWebClient.Controllers
 
 			return View();
 		}
-		public ActionResult datatablestest()
+        public ActionResult Maptest2()
+        {
+            ViewBag.Message = "Your application description page.";
+
+            return View();
+        }
+        public ActionResult datatablestest()
 		{
 			ViewBag.Message = "Your application description page.";
 

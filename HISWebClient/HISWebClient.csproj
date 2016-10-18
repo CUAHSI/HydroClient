@@ -654,6 +654,7 @@
     <Content Include="Views\Home\_DatatableQualityControlLevelsColumns.cshtml" />
     <Content Include="Views\Home\_DatatableMethodDescriptionsColumns.cshtml" />
     <Content Include="Views\Home\_DatatableSourceOrganizationsColumns.cshtml" />
+    <Content Include="Views\Home\Maptest2.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\yeti\" />

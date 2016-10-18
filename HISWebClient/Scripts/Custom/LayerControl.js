@@ -8,13 +8,14 @@ var kml = [];
 
 
 
+
 //define generic arcgis Layer
 
 
 //******************
 //classess to init control
 function addLayerControl() {
-    gisLayers.push({ name: 'usstates', layer: new google.maps.KmlLayer({ url: 'http://cuahsiarcgis.cloudapp.net/gisressource/us_states.kmz', preserveViewport: false }), visible: false });
+    gisLayers.push({ name: 'USGS_Stream_Gages', layer: new google.maps.KmlLayer({ url: 'http://waterwatch.usgs.gov/index.php?m=real&w=kml&r=us&regions=all', preserveViewport: true }), visible: false });
 
     var TMSLayer = (function () {
         function t(map, baseUrlPattern, yFlip, name, zIndex, bounds) {
@@ -134,7 +135,8 @@ function addLayerControl() {
         },
         tileSize: new google.maps.Size(256, 256),
         isPng: true,
-        name: "ESRI_NHD"
+        name: "ESRI_NHD",
+        opacity: 1
     });
     //add Land Cover WMS layer
 
@@ -177,7 +179,7 @@ function addLayerControl() {
         tileSize: new google.maps.Size(256, 256),
         isPng: true,
         name: "USGS_NLCD",
-        opacity: 0.7
+        opacity: 0.8
     });
 
     //start process to set up custom drop down
@@ -209,11 +211,11 @@ function addLayerControl() {
     var checkOptions = {
         gmap: map,
         title: "This allows for multiple selection/toggling on/off",
-        id: "usstates",
-        label: "US states",
+        id: "USGS_Stream_Gages",
+        label: "USGS Stream Gages",
         action: function (e) {
             for (var i = 0, len = gisLayers.length; i < len; i++) {
-                if (gisLayers[i].name === 'usstates') {
+                if (gisLayers[i].name === 'USGS_Stream_Gages') {
 
                     if (!gisLayers[i].visible) {
                         //var layer = new google.maps.KmlLayer({ url: 'http://cuahsiarcgis.cloudapp.net/gisressource/us_states.kmz', preserveViewport: false, map: map })
@@ -247,7 +249,7 @@ function addLayerControl() {
              
             if (!map.overlayMapTypes.getAt(3)) {
                 var tmsLayer = new TMSLayer(map, "http://hydrology.esri.com/arcgis/rest/services/WorldHydroReferenceOverlay/MapServer/tile/$z/$y/$x", true, "ESRI_HYDRO", 3);             
-                tmsLayer.setOpacity(0.9);
+                tmsLayer.setOpacity(1);
                 tmsLayer.setVisible(true); 
             }
             else {
@@ -302,7 +304,9 @@ function addLayerControl() {
             else {
                 map.overlayMapTypes.removeAt(1)
                 //var indexOfControl = -1;
-                //rightCenterControls = map.controls[google.maps.ControlPosition.RIGHT_BOTTOM];
+                rightCenterControls = map.controls[google.maps.ControlPosition.RIGHT_BOTTOM];
+                
+                
                 //rightCenterControls.forEach(function (element, index) {
                 //    if( element.id === 'NLCD_Legend' ) {
                 //        indexOfControl = index;

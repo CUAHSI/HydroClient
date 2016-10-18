@@ -1832,7 +1832,7 @@ function getMapHeight()
 {
     
     toolbarHeight = $(document).height() - $(window).height();
-    var mapHeight = $(document).height() - toolbarHeight + "px";
+    var mapHeight = $(document).height() - 50 + "px";
     return mapHeight;
 }
 
