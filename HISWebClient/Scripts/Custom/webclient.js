@@ -105,7 +105,8 @@ var currentUser = { 'authenticated' : false,
                   };
 
 var currentPosition = {
-                        'latLng': null
+                        'latLng': null,
+                        'update': true
                       };
 
 var bResetMap = false;
@@ -506,10 +507,9 @@ function createdTooltipText(cell, cellData, rowData, rowIndex, colIndex) {
     //Source: http://chadkuehn.com/show-tooltip-over-truncated-text/
     //Setting tooltip width...
     //Source: http://stackoverflow.com/questions/25246391/bootstrap-tool-tip-setting-different-widths-for-different-tooltips
-    jqueryObj.on('mouseenter mouseleave', function(event) {
+    jqueryObj.on('mouseenter', function(event) {
         var childDiv = jqueryObj.children()[0];
         if ((childDiv.offsetWidth < childDiv.scrollWidth) && ((! jqueryObj.attr('title')) || (0 >= jqueryObj.attr('title').length))) { //Element's content is wider than the content area - create a tooltip...
-            jqueryObj.tooltip('destroy');
             jqueryObj.tooltip({
                 'title': jqueryObj.text(),
                 'trigger': 'hover',
@@ -519,6 +519,10 @@ function createdTooltipText(cell, cellData, rowData, rowIndex, colIndex) {
             });
             jqueryObj.tooltip('show');
         }
+    });
+
+    jqueryObj.on('mouseleave', function(event) {
+        jqueryObj.tooltip('destroy');
     });
 }
 
@@ -1127,10 +1131,14 @@ function initializeMap() {
 //Update the displayed latitude and longitude values per the updated currentPosition value...
 function updateLatLng(event) {
 
+    if ( ! currentPosition.update) {
+        return; //Position updating disabled - return early
+    }
+
+    //Update/display current position...
     currentPosition.latLng = event.latLng;
     $('#' + 'spanLatitudeValue').text(event.latLng.lat().toFixed(3).toString());
     $('#' + 'spanLongitudeValue').text(event.latLng.lng().toFixed(3).toString());
-
 }
 
 //Event handler for Google form submit...
@@ -2592,6 +2600,7 @@ function createInfoWindow( map, marker, serviceCodeToTitle, markerTypeName) {
                              'disableAutoPan': true,
                              'hideCloseButton': true });
     openInfoBubbles.push(iw);
+    //console.log('InfoBubble count: ' + openInfoBubbles.length);
 
     //Calculate minimum height and width in 'px' units...
     //Convert from ems: (size on ems) * (parent font size in px)
@@ -2606,9 +2615,39 @@ function createInfoWindow( map, marker, serviceCodeToTitle, markerTypeName) {
         if ( ! iw.isOpen()) {
             iw.open(map, marker);
         }
+
+        //Make current position the marker's position
+        var cp = marker.position;
+
+        currentPosition.update = false;  //Temporarily suppress position updates
+        currentPosition.latLng = cp;
+
+        //Check for change in current position, close window if indicated...
+        //NOTE: Fail-safe code for those instances in which the Google maps API does not report a 'mouseout' for the marker
+        //      The interval clears itself once it determines the current position is no longer the marker's position...
+        var intervalId;
+        intervalId = setInterval( (function(myCp, myIw) {
+            return function() {
+                if (myCp.lat() !== currentPosition.latLng.lat() || 
+                    myCp.lng() !== currentPosition.latLng.lng() ) {
+                    myIw.close();
+                    clearInterval(intervalId);  //Can bind to the reference here since this code runs after the reference is defined...
+                }
+            }
+        } )(cp, iw), 1000 )  //NOTE: Immediate execution of function to pass in cp and iw values
+                             //      If the IntervalId is passed as a parameter here, its value is undefined...
+
+        setTimeout( function() {
+            currentPosition.update = true;  //Restore position updates
+        }, 1000)
+
     });
     
     //Close on mouseout...
+    //NOTE: Google maps API returns 'mouseout' events most of the time.
+    //      If the user moves the mouse too quickly, however, 'mouseouts' 
+    //      can be lost.  See fail-safe code in 'mouseover' handler for 
+    //      these cases...
     google.maps.event.addListener(marker, 'mouseout', function () {
         iw.close();
     });
@@ -2628,8 +2667,6 @@ function removeInfoWindows() {
         }
     }
 }
-
-
 
 
 //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
@@ -3168,19 +3205,41 @@ function setupToolTips() {
         var divTooltip = ('id' === divs[div].type) ? $('#' + div) : $('.' + div);
 
         if ( 0 < divTooltip.length) {
-            //jQuery object exists - destroy/create tooltip...
-            divTooltip.tooltip('destroy');
-            divTooltip.tooltip({
-                            'placement': divs[div].placement ? divs[div].placement: 'auto',
-                            'trigger': 'hover',
-                            'title': divs[div].text,
-                            'delay': divs[div].delay ? divs[div].delay: {'show': 100, 'hide': 100},
-                            'template': '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div style="text-align: justify; text-justify: distribute" class="tooltip-inner"></div></div>',
-                            'container': 'body'}); //MUST use container option in datatables... source: http://stackoverflow.com/questions/33858135/bootstrap-popover-overlay-by-datatables-jquery
+            //jQuery object exists...
+            
+            //Create tooltip on 'mouseenter'...
+            divTooltip.off('mouseenter', tooltipCreate);
+            divTooltip.on('mouseenter', {'div': div, 'divs': divs}, tooltipCreate);
+
+            //Destroy tooltip on 'mouseleave'...
+            divTooltip.off('mouseleave', tooltipDestroy);
+            divTooltip.on('mouseleave', tooltipDestroy);
         }
     }
 
 }
+
+//Create a tooltip on the current instance...
+function tooltipCreate(event) {
+                var myDiv = $(this);
+                var div = event.data.div;
+                var divs = event.data.divs;
+
+                myDiv.tooltip({
+                                'placement': divs[div].placement ? divs[div].placement: 'auto',
+                                'trigger': 'hover',
+                                'title': divs[div].text,
+                                'delay': divs[div].delay ? divs[div].delay: {'show': 100, 'hide': 100},
+                                'template': '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div style="text-align: justify; text-justify: distribute" class="tooltip-inner"></div></div>',
+                                'container': 'body'}); //MUST use container option in datatables... source: http://stackoverflow.com/questions/33858135/bootstrap-popover-overlay-by-datatables-jquery
+                myDiv.tooltip('show');                
+}
+
+//Destroy the tooltip on the current instance...
+function tooltipDestroy() {
+    $(this).tooltip('destroy');
+}
+
 
 //Initialize an individual 'static' tooltip...
 function setupToolTip( divToolTip, textToolTip) {
