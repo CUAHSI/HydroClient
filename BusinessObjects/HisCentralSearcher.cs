@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
+using System.Configuration;
 using System.Net.Http;
 
 using log4net.Core;
@@ -249,7 +250,7 @@ namespace HISWebClient.DataLayer
 				try
 				{
 					var request = WebRequest.Create(url.ToString());
-					request.Timeout = 30 * 1000;
+					request.Timeout = Convert.ToInt32(ConfigurationManager.AppSettings["requestTimeoutMilliseconds"].ToString());
 					using (var response = request.GetResponse())
 					{
 						using (var stream = response.GetResponseStream())
@@ -375,7 +376,7 @@ namespace HISWebClient.DataLayer
 				try
 				{
 					var request = WebRequest.Create(url.ToString());
-					request.Timeout = 30 * 1000;
+					request.Timeout = Convert.ToInt32(ConfigurationManager.AppSettings["requestTimeoutMilliseconds"].ToString());
 					using (var response = request.GetResponse())
 					{
 						using (var stream = response.GetResponseStream())

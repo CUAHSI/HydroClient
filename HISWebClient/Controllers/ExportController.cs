@@ -834,13 +834,25 @@ namespace HISWebClient.Controllers
 														}
 
 														//Add Source instance
-														sd.mySource = series.Source;
+														if ((null != series.Source) && 
+															(null == sd.mySources.FirstOrDefault(s => s.OriginId == series.Source.OriginId)))
+														{
+															sd.mySources.Add(series.Source);
+														}
 
 														//Add Method instance
-														sd.myMethod = series.Method;
+														if ((null != series.Method) &&
+															(null == sd.myMethods.FirstOrDefault(m => m.Code == series.Method.Code)))
+														{
+															sd.myMethods.Add(series.Method);
+														}
 
 														//Add QualityControlLevel instance
-														sd.myQualityControlLevel = series.QualityControlLevel;
+														if ((null != series.QualityControlLevel) &&
+															(null == sd.myQualityControlLevels.FirstOrDefault(qcl => qcl.OriginId == series.QualityControlLevel.OriginId)))
+														{
+															sd.myQualityControlLevels.Add( series.QualityControlLevel);
+														}
 													}
 
 													//Add values to SeriesData instance...
@@ -1299,7 +1311,7 @@ namespace HISWebClient.Controllers
 						dvm.SourceLink = ServerSideHydroDesktop.ObjectModel.ValueTypeCV.Unknown.GetEnumDescription();
 						dvm.Citation = ServerSideHydroDesktop.ObjectModel.ValueTypeCV.Unknown.GetEnumDescription();
 
-						var source = value.SeriesData.mySource;
+						var source = value.SeriesData.mySources.FirstOrDefault(s => s.OriginId == Convert.ToInt32(value.SourceCode));
 						if (null != source)
 						{
 							dvm.Organization = source.Organization; ;
@@ -1327,7 +1339,7 @@ namespace HISWebClient.Controllers
 						//Retrieve method code...
 						dvm.MethodDescription = ServerSideHydroDesktop.ObjectModel.ValueTypeCV.Unknown.GetEnumDescription();
 
-						var method = value.SeriesData.myMethod;
+						var method = value.SeriesData.myMethods.FirstOrDefault( m => m.Code == Convert.ToInt32(value.MethodCode));
 						if (null != method)
 						{
 							dvm.MethodDescription = method.Description;
@@ -1336,7 +1348,7 @@ namespace HISWebClient.Controllers
 						//Retrieve quality control level...
 						dvm.QualityControlLevelCode = ServerSideHydroDesktop.ObjectModel.ValueTypeCV.Unknown.GetEnumDescription();
 
-						var qualityControlLevel = value.SeriesData.myQualityControlLevel;
+						var qualityControlLevel = value.SeriesData.myQualityControlLevels.FirstOrDefault(qcl => qcl.Code == value.QualityControlLevelCode);
 						if (null != qualityControlLevel)
 						{
 							dvm.QualityControlLevelCode = qualityControlLevel.Definition;
@@ -1479,13 +1491,25 @@ namespace HISWebClient.Controllers
 							}
 
 							//Add Source instance
-							sd.mySource = series.Source;
+							if ((null != series.Source) &&
+								(null == sd.mySources.FirstOrDefault(s => s.OriginId == series.Source.OriginId)))
+							{
+								sd.mySources.Add(series.Source);
+							}
 
 							//Add Method instance
-							sd.myMethod = series.Method;
+							if ((null != series.Method) &&
+								(null == sd.myMethods.FirstOrDefault(m => m.Code == series.Method.Code)))
+							{
+								sd.myMethods.Add(series.Method);
+							}
 
 							//Add QualityControlLevel instance
-							sd.myQualityControlLevel = series.QualityControlLevel;
+							if ((null != series.QualityControlLevel) &&
+								(null == sd.myQualityControlLevels.FirstOrDefault(qcl => qcl.OriginId == series.QualityControlLevel.OriginId)))
+							{
+								sd.myQualityControlLevels.Add(series.QualityControlLevel);
+							}
 						}
 
 						//Add values to SeriesData instance...
@@ -1508,7 +1532,9 @@ namespace HISWebClient.Controllers
 
 		public async Task<Tuple<Stream, IList<ServerSideHydroDesktop.ObjectModel.Series>>> SeriesAndStreamOfSeriesID(SeriesMetadata meta)
 		{
-			var requestTimeout = 60000;
+			//var requestTimeout = 60000;
+			var requestTimeout = Convert.ToInt32(ConfigurationManager.AppSettings["requestTimeoutMilliseconds"].ToString());
+
 			WaterOneFlowClient client = new WaterOneFlowClient(meta.ServURL);
 			try
 			{
@@ -1648,7 +1674,7 @@ namespace HISWebClient.Controllers
 					//Retrieve method description
 					var methodDescription = ServerSideHydroDesktop.ObjectModel.ValueTypeCV.Unknown.GetEnumDescription();
 
-					var method = value.SeriesData.myMethod;
+					var method = value.SeriesData.myMethods.FirstOrDefault( m => m.Code == Convert.ToInt32(value.MethodCode));
 					if (null != method)
 					{
 						methodDescription = method.Description;
@@ -1659,7 +1685,7 @@ namespace HISWebClient.Controllers
 					//Retrieve quality control level description
 					var qualityDefinition = ServerSideHydroDesktop.ObjectModel.ValueTypeCV.Unknown.GetEnumDescription();
 					
-					var qualityControlLevel = value.SeriesData.myQualityControlLevel;
+					var qualityControlLevel = value.SeriesData.myQualityControlLevels.FirstOrDefault(qcl => qcl.Code == value.QualityControlLevelCode);
 					if (null != qualityControlLevel)
 					{
 						qualityDefinition = qualityControlLevel.Definition;
@@ -1680,7 +1706,7 @@ namespace HISWebClient.Controllers
 					var sourceLink = ServerSideHydroDesktop.ObjectModel.ValueTypeCV.Unknown.GetEnumDescription();
 					var citation = ServerSideHydroDesktop.ObjectModel.ValueTypeCV.Unknown.GetEnumDescription();
 
-					var source = value.SeriesData.mySource;
+					var source = value.SeriesData.mySources.FirstOrDefault(s => s.OriginId == Convert.ToInt32(value.SourceCode));
 					if (null != source)
 					{
 						sourceDescription = source.Organization;

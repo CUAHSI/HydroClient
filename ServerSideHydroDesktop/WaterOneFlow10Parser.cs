@@ -302,8 +302,6 @@ namespace ServerSideHydroDesktop
                             //data value
                             val.Value = Convert.ToDouble(r.ReadString(), CultureInfo.InvariantCulture);
                         }
-
-
                     }
                     else if (r.Name == "method")
                     {

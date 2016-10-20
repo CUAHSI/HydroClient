@@ -59,7 +59,7 @@ namespace CUAHSI.Models
         /// List of Sources (MS) 
         /// </summary>
         [DataMember]
-        public Source mySource { get; set; }
+		public List<Source> mySources { get; set; }
 
         /// <summary>
         /// List of Variables (MS) 
@@ -91,10 +91,10 @@ namespace CUAHSI.Models
         public string unitAbbrev { get; set; }
 
 		[DataMember]
-		public Method myMethod { get; set; }
+		public List<Method> myMethods { get; set; }
 
 		[DataMember]
-		public QualityControlLevel myQualityControlLevel { get; set; }
+		public List<QualityControlLevel> myQualityControlLevels { get; set; }
 
         [DataMember] 
         public string VerticalDatum { get; set; }
@@ -116,10 +116,14 @@ namespace CUAHSI.Models
             values = new List<DataValue>();
             ontology = new List<OntologyItem>();
             tags = new List<HydroTag>();
+
+			mySources = new List<Source>();
+			myMethods = new List<Method>();
+			myQualityControlLevels = new List<QualityControlLevel>();
         }
 
         public SeriesData(int seriesId, SeriesMetadata myMeta, IList<DataValue> dataValues, Variable variable, 
-						  Source source, Method method, QualityControlLevel qualityControlLevel) : this()
+						  List<Source> sources, List<Method> methods, List<QualityControlLevel> qualityControlLevels) : this()
         {
             myMetadata = myMeta;
             SeriesID = seriesId;
@@ -129,9 +133,20 @@ namespace CUAHSI.Models
             values = dataValues.ToList();
             ontology = new List<OntologyItem>();
             tags = new List<HydroTag>();
-			mySource = source;
-			myMethod = method;
-			myQualityControlLevel = qualityControlLevel;
+			if (null != sources)
+			{
+				mySources = sources;
+			}
+
+			if (null != methods)
+			{
+				myMethods = methods;
+			}
+
+			if (null != qualityControlLevels)
+			{
+				myQualityControlLevels = qualityControlLevels;
+			}
         }
     }
 }

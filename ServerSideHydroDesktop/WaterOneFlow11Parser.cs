@@ -450,6 +450,8 @@ namespace ServerSideHydroDesktop
 							string separator = " | ";
 
 							qcl.Code = qcCode;
+							qcl.Definition = String.Empty;
+							qcl.Explanation = String.Empty;
 							foreach (var term in terms)
 							{
 								var qclTemp = qualityControlLevels[term];
@@ -461,10 +463,28 @@ namespace ServerSideHydroDesktop
 							qcl.Definition = qcl.Definition.Substring(0, qcl.Definition.Length - separator.Length);
 							qcl.Explanation = qcl.Explanation.Substring(0, qcl.Explanation.Length - separator.Length);
 
+							//Set the OriginId to a minimum value to indicate a 'pseudo' instance...
+							int min = qualityControlLevels.Values.Min(value => value.OriginId);
+							qcl.OriginId = min - 1;
+
 							newSeries.QualityControlLevel = qcl;
+
+							//Add compound key to dictionary, if indicated...
+							if ( ! qualityControlLevels.ContainsKey(qcl.Code))
+							{
+								qualityControlLevels.Add(qcl.Code, qcl);
+							}
 						}
 					}
-                    catch { }
+                    catch(Exception ex) 
+					{ 
+						//Any exception happening here?
+						string msg = ex.Message;
+
+						int n = 5;
+
+						++n;
+					}
                 }
 
                 //add the data value to the correct series
