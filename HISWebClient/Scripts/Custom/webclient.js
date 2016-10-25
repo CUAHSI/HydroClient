@@ -20,7 +20,6 @@ var currentMarkerPlaceName = '';
 var timeSeriesRequestStatus;
 var timeSeriesFormat;
 var slider;
-var sidepanelVisible = false;
 
 var conceptsType = '';
 
@@ -161,7 +160,7 @@ $(document).ready(function() {
     $("#pageloaddiv").hide();
     initialize();
 
-        initializeMap();
+    initializeMap();
 
     //Periodically check selected time series...
     labelMonitorIntervalId = setInterval(function () {
@@ -953,17 +952,8 @@ function initialize() {
 
     //Click handler for 'Search' button
     $('#' + 'mapTab').on('click', function(event) {    
-        //Show the zendesk iframe...
-
         setTimeout(function() {
-            $("#map-canvas").height(getMapHeight()) //setMapHeight
-            $("#map-canvas").width(getMapWidth()) //setMapWidth
-
-            google.maps.event.trigger(map, "resize");
-            //if (!sidepanelVisible) {
-            if (sidepanelVisible) {
-                slider.slideReveal("show")
-            }        
+            resizeAndPositionMap(map, slider);
         }, 500);
     });
 }
@@ -1010,7 +1000,7 @@ function initializeMap() {
     map = new google.maps.Map(element, mapProp);
    }
    else {
-    console.log('Element is null!!');
+    console.log('map-canvas element is null!!');
     return;
    }
   
@@ -1102,30 +1092,41 @@ function initializeMap() {
         google.maps.event.trigger(map, 'mousemove', mouseEvent);
     }, 1500);
 
+    //On window resize, resize and position the map...
+    //NOTE: A visible slider appears to distort window height and width values 
+    //      under this user scenario:
+    //       - connect browser to HydroClient website
+    //       - click broswer size button to maximize browser window
+    //       - click browser size button to return browser window to original size
+    //          here values returned by getMapHeight() and getMapWidth(...) are smaller than original values...
     google.maps.event.addDomListener(window, "resize", function () {
-        $("#map-canvas").height(getMapHeight()) //setMapHeight
-        $("#map-canvas").width(getMapWidth()) //setMapWidth
+        //console.log('window resize event...');
 
-        google.maps.event.trigger(map, "resize");
-        if (sidepanelVisible) {
-            slider.slideReveal("show")
+        //Retain current slider visibility...
+        var visible = isSliderVisible(slider);
+
+        //Hide slider, if indicated
+        if (visible) {
+            slider.slideReveal('hide');    
+        }
+
+        //establish new map div dimensions and position...
+        resizeAndPositionMap(map, slider);
+        
+        //Always show the slider...
+        slider.slideReveal('show');    
+        if (! visible) {
+            //Slider originally hidden - hide slider, set map div dimensions and position again...
+            slider.slideReveal('hide');    
+            resizeAndPositionMap(map, slider);
         }
     });
 
-    $("#map-canvas").height(getMapHeight()) //setMapHeight
-    $("#map-canvas").width(getMapWidth) //setMapWidth
-    google.maps.event.trigger(map, "resize");
-
-    //For Apple Safari, ensure the side panel is displayed after a page refresh...
-    slider.slideReveal("hide")
-    sidepanelVisible = false
-
+    resizeAndPositionMap(map, slider);
+ 
     setTimeout( function() {
-        slider.slideReveal("show");
-        sidepanelVisible = true;    
-    }, 2000);
-    //addCustomMapControls();
-
+        slider.slideReveal('show');
+    }, 1000);
 }
 
 //Update the displayed latitude and longitude values per the updated currentPosition value...
@@ -1144,7 +1145,7 @@ function updateLatLng(event) {
 //Event handler for Google form submit...
 function googleFormSubmit(event) {
 
-    console.log('googleFormSubmit called!!');
+    //console.log('googleFormSubmit called!!');
 
     //Check for remote logout...
     if ( 'undefined' !== typeof event.currentTarget.action && -1 !== event.currentTarget.action.indexOf('ExternalLogOut')) {
@@ -1513,22 +1514,21 @@ function keywordClickHandler(event, data) {
     var node = data.node;
 
     if (( 'undefined' !== typeof node) && (null !== node)) {
+        //console.log( 'Click: ' + ++keywordClicks);
+        //if (node.isSelected()) {
+        //    console.log( node.title + ' is selected!!');
+        //}
+        //else {
+        //    console.log(node.title + ' is NOT selected!!');
+        //}
 
-        console.log( 'Click: ' + ++keywordClicks);
-        if (node.isSelected()) {
-            console.log( node.title + ' is selected!!');
-        }
-        else {
-            console.log(node.title + ' is NOT selected!!');
-        }
-
-        if (node.isActive()) {
-            console.log(node.title + ' is active!!');
-        }
-        else {
-            console.log(node.title + ' is NOT active!!');
-        }
-        console.log('----------------------------------------------------');
+        //if (node.isActive()) {
+        //    console.log(node.title + ' is active!!');
+        //}
+        //else {
+        //    console.log(node.title + ' is NOT active!!');
+        //}
+        //console.log('----------------------------------------------------');
     }
 }
 
@@ -1538,21 +1538,19 @@ function keywordActivateHandler(event, data) {
     var node = data.node;
 
     if (('undefined' !== typeof node) && (null !== node)) {
+        //if (node.isSelected()) {
+        //    console.log(node.title + ' is selected!!');
+        //}
+        //else {
+        //    console.log(node.title + ' is NOT selected!!');
+        //}
 
-        if (node.isSelected()) {
-            console.log(node.title + ' is selected!!');
-        }
-        else {
-            console.log(node.title + ' is NOT selected!!');
-        }
-
-        if (node.isActive()) {
-            console.log(node.title + ' is active!!');
-        }
-        else {
-            console.log(node.title + ' is NOT active!!');
-        }
-
+        //if (node.isActive()) {
+        //    console.log(node.title + ' is active!!');
+        //}
+        //else {
+        //    console.log(node.title + ' is NOT active!!');
+        //}
     }
 }
 
@@ -1685,7 +1683,7 @@ function loadKeywordsIntoTree( pShowUI, pbtnKeyword, pbtnText, pglyphiconSpan ) 
                         //alert('Child node loaded!!');
 
                         if (('undefined' !== typeof data.testData) && (null !== data.testData)) {
-                            console.log('testData received: ' +data.testData);
+                            //console.log('testData received: ' +data.testData);
                     }
 
                         //Determine the keyword category - Physical, Chemical or Biological from the url...
@@ -1838,24 +1836,51 @@ function clickSelectDataServices(event) {
 
 function getMapHeight()
 {
-    
-    toolbarHeight = $(document).height() - $(window).height();
-    var mapHeight = $(document).height() - 50 + "px";
-    return mapHeight;
+    //Get window and top bar heights...
+    var hWin = $(window).height();
+    var hBar = $('#cuahsi-bar').height();
+
+    //Map height = window height - top bar height
+    return (hWin - hBar);
 }
 
 function getMapWidth(panelVisible)
 {    
-    var panelwidth = 0;
-    //panelVisible
-    //if (panelVisible) 
-    //to fix browser problems calculating size
-    var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;  
-    panelwidth = $('#slider').width();
-    //alert(width + ',' + panelwidth)
-    //var mapWidth = $(window).width() - panelwidth + "px";
-    var mapWidth = width - panelwidth + "px";
-    return mapWidth;
+    var myPanelVisible = false;
+    if ('undefined' !== typeof panelVisible && null !== panelVisible) {
+        myPanelVisible = panelVisible;
+    }
+
+    //Get window and slider widths...
+    var wWin = $(window).width();
+    var wSld = $('#slider').width();
+
+    //Map width = window width - slider width (if visible)
+    return ( wWin - (myPanelVisible ? wSld : 0));
+}
+
+//update the map dimensions and position...
+function resizeAndPositionMap(mapIn, sliderIn) {
+
+    if ('undefined' === typeof mapIn || null === mapIn ||
+        'undefined' === typeof sliderIn || null === sliderIn) {
+        return;     //Map and/or slider not defined - return early
+    }
+
+    //Map height and width
+    var hMap = getMapHeight();
+    var wMap = getMapWidth(isSliderVisible(sliderIn));
+    //console.log('resizeAndPositionMap - map height/width: ' + hMap.toString() + ' / ' + wMap.toString());
+
+    $("#map-canvas").height(hMap); //setMapHeight
+    $("#map-canvas").width(wMap); //setMapWidth
+
+    //Map position
+    var hBar = $("#cuahsi-bar").height();
+    $("#map-canvas").css("margin-top", hBar);
+
+    //Trigger Google maps API resize event...
+    google.maps.event.trigger(mapIn, "resize");
 }
 
 function addCustomMapControls()
@@ -1923,31 +1948,48 @@ function addSlider()
         trigger: $("#trigger"),
         // autoEscape: false,
         show: function (obj) {
-            $("#map-canvas").width(($(window).width() - $('#slider').width())) //setMapWidth
-            if (typeof (map) != "undefined") google.maps.event.trigger(map, "resize");
-            sidepanelVisible = true;
-
+            var mapWidth = getMapWidth(true);
+            //console.log('slider show - mapWidth: ' + mapWidth.toString());
+            $("#map-canvas").width(mapWidth); //setMapWidth
+            //Trigger Google maps API resize event...
+            if ( 'undefined' !== map && null !== map) {
+                google.maps.event.trigger(map, "resize");
+            }
         },
         shown: function (obj) {
-            //$("#map-canvas").position({ left:2* $('#slider').width() })
-            //$("#map-canvas").position({ right: $('#slider').width() })
-            // $("#map-canvas").width(($(window).width() - $('#slider').width())) //setMapWidth
-            // $("#map-canvas").position({ left:0 })
-            // google.maps.event.trigger(map, "resize");
-            //console.log(obj);
+            //var result = isSliderVisible(slider);
+            //console.log('shown - #slider visible? ' + result);
         },
         hide: function (obj) {
-            $("#map-canvas").position({ left: -$('#slider').width() })
-            $("#map-canvas").width(($(window).width())) //setMapWidth
-
-            google.maps.event.trigger(map, "resize");
-            sidepanelVisible = false;
+            var mapWidth = getMapWidth(false);
+            //console.log('slider hide - mapWidth: ' + mapWidth.toString());
+            $("#map-canvas").width(mapWidth); //setMapWidth
+            //Trigger Google maps API resize event...
+            if ( 'undefined' !== map && null !== map) {
+                google.maps.event.trigger(map, "resize");
+            }
         },
         hidden: function (obj) {
-            //console.log(obj);
+            //var result = isSliderVisible(slider);
+            //console.log('hidden - #slider visible? ' + result);
         }
     });
+
     return _slider;
+}
+
+//Per the terminology and internals for the SliderReveal library ONLY:
+//  If input instance 'shown', return true
+//  else return false 
+//Per jQuery terminology, SliderReveal is always 'visible' and never 'hidden'
+function isSliderVisible(sliderIn) {
+    //Validate/initialize input parameters...
+    if ( 'undefined' === typeof sliderIn || null === sliderIn) {
+        return false;   //Invalid parameter - return early
+    }
+
+    var result = sliderIn.data('slide-reveal');
+    return (result);
 }
 
 function toggleSidePanelControl(controlDiv, map)
@@ -1981,16 +2023,12 @@ function toggleSidePanelControl(controlDiv, map)
         controlUI.appendChild(controlText);
 
         // Setup the click event listeners: simply set the map to
-    // Chicago
-
         google.maps.event.addDomListener(controlUI, 'click', function () {
-            if (sidepanelVisible) {
-                slider.slideReveal("hide")
-                sidepanelVisible = false
+            if (isSliderVisible(slider)) {
+                slider.slideReveal("hide");
             }
             else {
-                slider.slideReveal("show")
-                sidepanelVisible = true
+                slider.slideReveal("show");
             }
         });
 
@@ -3317,7 +3355,7 @@ function setupDataManagerTable() {
                         html = '<span class="glyphicon glyphicon-thumbs-down"></span><em> Unknown task</em>';
                         break;
                     default:
-                        console.log('data = ' + data.toString());
+                        console.log('tblDataManager data = ' + data.toString());
                         html = '<span class="glyphicon glyphicon-question-sign"></span><em> Unknown Status</em>';
                         break;
                  }
@@ -5072,7 +5110,7 @@ function applyFilterToMap(event) {
 function applyFilterToMapDelayed(event) {
 
     var value = $(this).val();
-    console.log('Current search value: ' + value);
+    //console.log('Current search value: ' + value);
 
     //Clear current timeout, update current filters
    clearTimeout(currentFilters.timeout);
@@ -5113,13 +5151,13 @@ function applyFilterToMapDelayed(event) {
             }
 
             if (bMatch) {
-                console.log('Filters match!!');
+                //console.log('Filters match!!');
 
                 var chkbx = $('#' + event.data.chkbxId); 
                 chkbx.triggerHandler('click');
             }
             else {
-                console.log('Filters DO NOT match!!');
+                //console.log('Filters DO NOT match!!');
             }
         }
     }, 1000);
@@ -6510,7 +6548,7 @@ function ddActionsTS(event) {
     var html = $(this).html();
 
     if ('anchorExportSelectionsTS' === id && currentUser.authenticated) {
-        console.log('Sub-menu header clicked, current user authenticated - take no action!!');
+        //console.log('Sub-menu header clicked, current user authenticated - take no action!!');
         return;
     }
     
