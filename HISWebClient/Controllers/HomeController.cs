@@ -795,19 +795,33 @@ namespace HISWebClient.Controllers
 
 						//Add TimeSeriesViewModel property to LINQ predicate 
 						//NOTE: MUST specify a case-insensitive contains...
-						predicate = predicate.Or(item => item.GetType().GetProperty(source).GetValue(item, null).ToString().Contains(search, StringComparison.CurrentCultureIgnoreCase, new SearchStringComparer()));
+						//		Use null coalescing operator (??) to avoid null reference errors...
+						//		source: http://stackoverflow.com/questions/16490509/how-to-assign-empty-string-if-the-value-is-null-in-linq-query
+						predicate = predicate.Or(item => (item.GetType().GetProperty(source).GetValue(item, null) ?? String.Empty).ToString().Contains(search, StringComparison.CurrentCultureIgnoreCase, new SearchStringComparer()));
 					}
 					else if (null != datasource.title)
 					{
 						//Lookup value from title...
-						predicate = predicate.Or(item => (LookupValueFromTitle(datasource, item)).ToString().Contains(search, StringComparison.CurrentCultureIgnoreCase, new SearchStringComparer()));
-
+						//		Use null coalescing operator (??) to avoid null reference errors...
+						//		source: http://stackoverflow.com/questions/16490509/how-to-assign-empty-string-if-the-value-is-null-in-linq-query
+						predicate = predicate.Or(item => (LookupValueFromTitle(datasource, item) ?? String.Empty).ToString().Contains(search, StringComparison.CurrentCultureIgnoreCase, new SearchStringComparer()));
 					}
 				}
 
 				//Apply search criteria to current timeseries
 				var queryable = series.AsQueryable();
-				listFiltered = queryable.Where(predicate).ToList();
+
+				try
+				{
+					listFiltered = queryable.Where(predicate).ToList();
+				}
+				catch (Exception ex)
+				{
+					string msg = ex.Message;
+					
+					//Error in filtering - set filtered list to unfiltered list...
+					listFiltered = series;
+				}
 			}
 
 			//Apply filters (case-insensitive), if indicated...

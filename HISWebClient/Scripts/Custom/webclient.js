@@ -2924,17 +2924,17 @@ function setUpDatatables(clusterid) {
            { "data": "DataType", "visible": true, "width": "5em", "className": "td-textalign-center"},
            { "data": "ValueType", "visible": true, "width": "5em", "className": "td-textalign-center"},
            { "data": "SampleMedium", "visible": true, "width": "5em", "className": "td-textalign-center"},
-           { "data": "QCLID", "visible": false },
+           { "data": "QCLID", "visible": false, "searchable": false },
            { "data": "QCLDesc", "visible": true, "width": "10em", "className": "td-textalign-center",
              "render": renderAbbreviatedText,
              "createdCell": createdTooltipText             
            },
-           { "data": "MethodId", "visible": false },
+           { "data": "MethodId", "visible": false, "searchable": false },
            { "data": "MethodDesc", "visible": true, "width": "10em", "className": "td-textalign-center",
              "render": renderAbbreviatedText,
              "createdCell": createdTooltipText             
            },
-           { "data": "SourceId", "visible": false },
+           { "data": "SourceId", "visible": false, "searchable": false },
            { "data": "SourceOrg", "visible": true, "width": "10em", "className": "td-textalign-center",
              "render": renderAbbreviatedText,
              "createdCell": createdTooltipText             
@@ -3319,7 +3319,7 @@ function setupDataManagerTable() {
         'dom': 'C<"clear"><"toolbarDataMgr">frtilp',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
         "autoWidth": false,
         'columns': [
-           { 'data': 'TimeSeriesRequestStatus', 'visible': true,
+           { 'data': 'TimeSeriesRequestStatus', 'visible': true, "searchable": false,
              'render': function (data, type, full, meta) { 
 
                  var html = ''
@@ -3397,17 +3397,17 @@ function setupDataManagerTable() {
              'render': renderAbbreviatedText,
              'createdCell': createdTooltipText
            },   
-           { 'data': 'QCLID', 'visible': false },
+           { 'data': 'QCLID', 'visible': false, "searchable": false },
            { 'data': 'QCLDesc', 'visible': true, 'width': '10em', 'className': 'td-textalign-center',
              'render': renderAbbreviatedText,
              'createdCell': createdTooltipText             
            },
-           { 'data': 'MethodId', 'visible': false },
+           { 'data': 'MethodId', 'visible': false, "searchable": false },
            { 'data': 'MethodDesc', 'visible': true, 'width': '10em', 'className': 'td-textalign-center',
              'render': renderAbbreviatedText,
              'createdCell': createdTooltipText             
            },
-           { 'data': 'SourceId', 'visible': false },
+           { 'data': 'SourceId', 'visible': false, "searchable": false },
            { 'data': 'SourceOrg', 'visible': true, 'width': '10em', 'className': 'td-textalign-center',
              'render': renderAbbreviatedText,
              'createdCell': createdTooltipText             
@@ -3456,13 +3456,13 @@ function setupDataManagerTable() {
            { 'data': 'TimeUnit', 'visible': true, 'width': '5em', 'className': 'td-textalign-center' },
            { 'data': 'SeriesId', 'visible': true, 'width': '5em', 'className': 'td-textalign-center' },
            //BCC - Make these columns visible for testing...
-           { 'data': 'WofUri', 'visible': false },
+           { 'data': 'WofUri', 'visible': false, "searchable": false },
            { 'data': 'WofTimeStamp', 'visible': true,
              'render': function (data, type, full, meta) { 
                  return formatDate(data, true);
              }           
            },
-           { 'data': 'TimeSeriesRequestId', 'visible': false}
+           { 'data': 'TimeSeriesRequestId', 'visible': false, "searchable": false}
         ],
 
         'scrollX': true,
@@ -6298,17 +6298,17 @@ function setUpTimeseriesDatatable() {
             { "data": "DataType", "visible": true, "width": "5em", "className": "td-textalign-center" },
             { "data": "ValueType", "visible": true, "width": "5em", "className": "td-textalign-center" },
             { "data": "SampleMedium", "visible": true, "width": "5em", "className": "td-textalign-center" },
-            { "data": "QCLID", "visible": false },
+            { "data": "QCLID", "visible": false, "searchable": false },
             { "data": "QCLDesc", "visible": true, "width": "10em", "className": "td-textalign-center",
               "render": renderAbbreviatedText,
               "createdCell": createdTooltipText             
             },
-            { "data": "MethodId", "visible": false },
+            { "data": "MethodId", "visible": false, "searchable": false },
             { "data": "MethodDesc", "visible": true, "width": "10em", "className": "td-textalign-center",
               "render": renderAbbreviatedText,
               "createdCell": createdTooltipText             
             },
-            { "data": "SourceId", "visible": false },
+            { "data": "SourceId", "visible": false, "searchable": false },
             { "data": "SourceOrg", "visible": true, "width": "10em", "className": "td-textalign-center",
               "render": renderAbbreviatedText,
               "createdCell": createdTooltipText             

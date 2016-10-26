@@ -13,6 +13,12 @@
 {
 	background-color:lightgray;
 }
+
+#cuahsi-bar
+{
+    height: 50px;
+}
+
 .collapsing {
 		overflow: hidden!important;
 	}
