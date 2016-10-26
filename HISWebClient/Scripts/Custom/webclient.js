@@ -3212,35 +3212,36 @@ function setupToolTips() {
                  'liQuickStartTab': {'type': 'id', 'text': texts[7], 'placement': 'right'},
                  'liGoogleTab': {'type': 'id', 'text': texts[8]},
                  'liLicenseTab': {'type': 'id', 'text': texts[9], 'placement': 'right'},
-                 'cl_thPublisher': {'type': 'class', 'text': texts[10]},
-                 'cl_thServiceTitle': {'type': 'class', 'text': texts[11]},
-                 'cl_thKeyword': {'type': 'class', 'text': texts[12]},
-                 'cl_thSiteName': {'type': 'class', 'text': texts[13]},
-                 'cl_thDataType': {'type': 'class', 'text': texts[14]},
-                 'cl_thValueType': {'type': 'class', 'text': texts[15]},
-                 'cl_thSampleMedium': {'type': 'class', 'text': texts[16]},
-                 'cl_thQcLevel': {'type': 'class', 'text': texts[17]},
-                 'cl_thMethod': {'type': 'class', 'text': texts[18]},
-                 'cl_thCollector': {'type': 'class', 'text': texts[19]},
-                 'cl_thStartDate': {'type': 'class', 'text': texts[20]},
-                 'cl_thEndDate': {'type': 'class', 'text': texts[21]}, 
-                 'cl_thValueCount': {'type': 'class', 'text': texts[22]},
-                 'cl_thVariableName': {'type': 'class', 'text': texts[23]},
-                 'cl_thTimeSupport': {'type': 'class', 'text': texts[24]},
-                 'cl_thTimeUnit': {'type': 'class', 'text': texts[25]},
-                 'cl_thServiceUrl': {'type': 'class', 'text': texts[26]},
-                 'cl_thSiteCode': {'type': 'class', 'text': texts[27]},
-                 'cl_thVariableCode': {'type': 'class', 'text': texts[28]},
-                 'cl_thStatus': {'type': 'class', 'text': texts[29]},
-                 'cl_thVariableUnits': {'type': 'class', 'text': texts[30]},
-                 'cl_thSeriesId': {'type': 'class', 'text': texts[31]},
-                 'cl_thCreated': {'type': 'class', 'text': texts[32]}
+                 'cl_thPublisher': {'type': 'class', 'text': texts[10], 'thead': true},
+                 'cl_thServiceTitle': {'type': 'class', 'text': texts[11], 'thead': true},
+                 'cl_thKeyword': {'type': 'class', 'text': texts[12], 'thead': true},
+                 'cl_thSiteName': {'type': 'class', 'text': texts[13], 'thead': true},
+                 'cl_thDataType': {'type': 'class', 'text': texts[14], 'thead': true},
+                 'cl_thValueType': {'type': 'class', 'text': texts[15], 'thead': true},
+                 'cl_thSampleMedium': {'type': 'class', 'text': texts[16], 'thead': true},
+                 'cl_thQcLevel': {'type': 'class', 'text': texts[17], 'thead': true},
+                 'cl_thMethod': {'type': 'class', 'text': texts[18], 'thead': true},
+                 'cl_thCollector': {'type': 'class', 'text': texts[19], 'thead': true},
+                 'cl_thStartDate': {'type': 'class', 'text': texts[20], 'thead': true},
+                 'cl_thEndDate': {'type': 'class', 'text': texts[21], 'thead': true}, 
+                 'cl_thValueCount': {'type': 'class', 'text': texts[22], 'thead': true},
+                 'cl_thVariableName': {'type': 'class', 'text': texts[23], 'thead': true},
+                 'cl_thTimeSupport': {'type': 'class', 'text': texts[24], 'thead': true},
+                 'cl_thTimeUnit': {'type': 'class', 'text': texts[25], 'thead': true},
+                 'cl_thServiceUrl': {'type': 'class', 'text': texts[26], 'thead': true},
+                 'cl_thSiteCode': {'type': 'class', 'text': texts[27], 'thead': true},
+                 'cl_thVariableCode': {'type': 'class', 'text': texts[28], 'thead': true},
+                 'cl_thStatus': {'type': 'class', 'text': texts[29], 'thead': true},
+                 'cl_thVariableUnits': {'type': 'class', 'text': texts[30], 'thead': true},
+                 'cl_thSeriesId': {'type': 'class', 'text': texts[31], 'thead': true},
+                 'cl_thCreated': {'type': 'class', 'text': texts[32], 'thead': true}
                };
 
     for (var div in divs) {
 
         //Select id or class - as indicated...
-        var divTooltip = ('id' === divs[div].type) ? $('#' + div) : $('.' + div);
+        //var divTooltip = ('id' === divs[div].type) ? $('#' + div) : $('.' + div);
+        var divTooltip = ('id' === divs[div].type) ? $((divs[div].thead ? 'thead ' : '') + '#' + div ) : $((divs[div].thead ? 'thead ' : '') + '.' + div);
 
         if ( 0 < divTooltip.length) {
             //jQuery object exists...
