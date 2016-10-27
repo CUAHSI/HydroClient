@@ -1,8 +1,8 @@
 ﻿{
   "$schema": "http://schemastore.org/schemas/json/webjob-publish-settings.json",
   "webJobName": "BlobPurge",
-  "startTime": "2015-08-12T00:00:00-05:00",
-  "endTime": null,
+  "startTime": "2016-10-24T00:00:00-05:00",
+  "endTime": "2016-10-26T00:00:00-05:00",
   "jobRecurrenceFrequency": "Day",
   "interval": 1,
   "runMode": "Scheduled"
