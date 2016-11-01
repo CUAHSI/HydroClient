@@ -625,7 +625,7 @@ namespace HISWebClient.DataLayer
 					ms.Seek(0, SeekOrigin.Begin);
 
 					//Create file...
-					using (System.IO.FileStream output = new System.IO.FileStream(filePathAndName, FileMode.Create))
+					using (System.IO.FileStream output = new System.IO.FileStream(filePathAndName, FileMode.OpenOrCreate))
 					{
 						//Create XmlReader on memory stream...
 						using (var reader = XmlReader.Create(ms))
@@ -645,9 +645,10 @@ namespace HISWebClient.DataLayer
 				}
 
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
 				//Take no action...
+				string msg = ex.Message;
 			}
 		}
 #endif

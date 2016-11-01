@@ -55,9 +55,10 @@
 
 </head>
 <!-- Inhibit scrollbar display in map area by Internet Explorer
+     NOTE: DO NOT include oncontextmenu and onselectstart event attributes so to allow mouse right click and text selection on page
      Source: https://groups.google.com/forum/#!msg/google-maps-api/LQF9Y3-S3D0/SvUlNJtdTxYJ
     -->
-<body scroll="no" marginwidth=0 marginheight=0 leftmargin=0 rightmargin=0 topmargin=0 bottommargin=0 oncontextmenu="return false;" onselectstart="return false;">
+<body scroll="no" marginwidth=0 marginheight=0 leftmargin=0 rightmargin=0 topmargin=0 bottommargin=0>
 
     @RenderBody()
 

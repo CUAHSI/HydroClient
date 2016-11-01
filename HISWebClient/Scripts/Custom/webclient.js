@@ -525,6 +525,45 @@ function createdTooltipText(cell, cellData, rowData, rowIndex, colIndex) {
     });
 }
 
+function renderTooltipStatus(cell, tooltipText) {
+
+    var jqueryObj = $(cell);
+
+    jqueryObj.on('mouseenter', function(event) {
+        var childDiv = jqueryObj.children()[0];
+        $(childDiv).tooltip({
+            'title': tooltipText,
+            'trigger': 'hover',
+            'placement': 'auto',
+            'template': '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div style="text-align: justify; text-justify: distribute" class="tooltip-inner"></div></div>',
+            'container': 'body' //MUST use container option in datatables... source: http://stackoverflow.com/questions/33858135/bootstrap-popover-overlay-by-datatables-jquery
+        });
+        jqueryObj.tooltip('show');
+    });
+
+    jqueryObj.on('mouseleave', function(event) {
+        jqueryObj.tooltip('destroy');
+    });
+}
+
+function renderTooltipElement(jqElement, tooltipText) {
+
+    jqElement.on('mouseenter', function(event) {
+        jqElement.tooltip({
+            'title': tooltipText,
+            'trigger': 'hover',
+            'placement': 'auto',
+            'template': '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div style="text-align: justify; text-justify: distribute" class="tooltip-inner"></div></div>',
+            'container': 'body' //MUST use container option in datatables... source: http://stackoverflow.com/questions/33858135/bootstrap-popover-overlay-by-datatables-jquery
+        });
+        jqElement.tooltip('show');
+    });
+
+    jqElement.on('mouseleave', function(event) {
+        jqElement.tooltip('destroy');
+    });
+}
+
 function initialize() {
 
     //init list od datatables for modal 
@@ -1266,6 +1305,21 @@ function enableSearch() {
     spanArea.css( {'font-size': '1.5em',
                    'margin-right': '0.5em',
                    'vertical-align': 'middle'} );
+
+    //Set search area tooltip...
+    spanArea.tooltip('destroy');
+    if (bSearchEnabled) {
+        tooltip = 'Ready to search!!';
+    }
+    else {
+        tooltip = (0 < tooltip.length) ? tooltip : 'Search disabled...';
+    }
+
+    spanArea.tooltip({
+                    'animation': true,
+                    'placement': 'auto',
+                    'trigger': 'hover',
+                    'title': tooltip });
 
     //Proceesing complete - return result
     return bSearchEnabled;
@@ -3324,6 +3378,9 @@ function setupDataManagerTable() {
              'render': function (data, type, full, meta) { 
 
                  var html = ''
+                 var api = new $.fn.dataTable.Api(meta.settings);
+                 var cell = api.cell(meta.row, meta.col).node();    //Get DOM element of the selected cell...
+                 var tooltipText = '';
                  var val = parseInt(data);
                  switch (val) {
                     case timeSeriesRequestStatus.NotStarted:
@@ -3341,23 +3398,29 @@ function setupDataManagerTable() {
                         break;
                     case timeSeriesRequestStatus.Completed:
                         html = '<span class="glyphicon glyphicon-thumbs-up" style="color: #32cd32"></span><em> Completed</em>';
+                        renderTooltipStatus(cell, 'Processing Completed');
                         break;
                     case timeSeriesRequestStatus.CheckTaskError:
                     case timeSeriesRequestStatus.EndTaskError:
                     case timeSeriesRequestStatus.ProcessingError:
                     case timeSeriesRequestStatus.RequestTimeSeriesError:
                         html = '<span class="glyphicon glyphicon-thumbs-down"></span><em> Error</em>';
-                            if ( 'undefined' !== typeof full.statusTooltipText) {
-                                //Add status tooltip...
-                                html = '<span class="glyphicon glyphicon-thumbs-down" data-toggle="tooltip" title="' + full.statusTooltipText + '"></span><em> Error</em>';
-                            }
+                        tooltipText = 'Error';
+                        if ( 'undefined' !== typeof full.statusTooltipText) {
+                            //Add status tooltip...
+                            html = '<span class="glyphicon glyphicon-thumbs-down" data-toggle="tooltip" title="' + full.statusTooltipText + '"></span><em> Error</em>';
+                            tooltipText = full.statusTooltipText;
+                        }
+                        renderTooltipStatus(cell, tooltipText);
                         break;
                     case timeSeriesRequestStatus.UnknownTask:
-                        html = '<span class="glyphicon glyphicon-thumbs-down"></span><em> Unknown task</em>';
+                        html = '<span class="glyphicon glyphicon-thumbs-down" ></span><em> Unknown task</em>';
+                        renderTooltipStatus(cell, 'Unknown Task');
                         break;
                     default:
                         console.log('tblDataManager data = ' + data.toString());
                         html = '<span class="glyphicon glyphicon-question-sign"></span><em> Unknown Status</em>';
+                        renderTooltipStatus(cell, 'Unknown Status');
                         break;
                  }
 
@@ -4311,6 +4374,7 @@ function startRequestTimeSeriesMonitor() {
 
                                         glyphiconSpan.removeClass('glyphicon-refresh spin');
                                         glyphiconSpan.addClass('glyphicon-thumbs-up');
+                                        renderTooltipElement(glyphiconSpan, 'Ready for download...');
 
                                         tableRow.find('#statusMessageText').text(timeSeriesResponse.Status);
 
@@ -4354,6 +4418,8 @@ function startRequestTimeSeriesMonitor() {
 
                                                 glyphiconSpan.removeClass('glyphicon-refresh spin');
                                                 glyphiconSpan.addClass('glyphicon-thumbs-down');
+                                                renderTooltipElement(glyphiconSpan, 'Processing error...');
+
                                                 glyphiconSpan.css('color', 'red');
 
                                                 //Color table row as 'warning'
@@ -5836,6 +5902,7 @@ function addEndTaskClickHandler(jqueryButton, response) {
 
                             glyphiconSpan.removeClass('glyphicon-refresh spin');
                             glyphiconSpan.addClass('glyphicon-thumbs-down');
+                            renderTooltipElement(glyphiconSpan, 'End task error...');
                             glyphiconSpan.css('color', 'red');
 
                             //Color table row as 'warning'
@@ -6954,6 +7021,7 @@ function updateDownloadManagerRow( response ) {
 
         glyphiconSpan.removeClass('glyphicon-refresh spin');
         glyphiconSpan.addClass('glyphicon-thumbs-up');
+        renderTooltipElement(glyphiconSpan, 'Ready for download...');
 
         tableRow.find('#statusMessageText').text(response.Status);
 
@@ -6999,6 +7067,8 @@ function updateDownloadManagerRow( response ) {
 
                         glyphiconSpan.removeClass('glyphicon-refresh spin');
                         glyphiconSpan.addClass('glyphicon-thumbs-down');
+                        renderTooltipElement(glyphiconSpan, 'Download error...');
+
                         glyphiconSpan.css('color', 'red');
 
                         //Color table row as 'warning'

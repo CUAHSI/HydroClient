@@ -185,7 +185,9 @@ namespace HISWebClient.DataLayer
 				(series.EndDate <= series.BeginDate) ||	//Series End date earlier than Begin date
 				(null == beginDate) ||
 				(null == endDate) ||
-				(endDate <= beginDate))					//Search End date earlier than Begin date
+				(endDate <= beginDate) ||				//Search End date earlier than Begin date
+				(series.BeginDate > endDate) ||			//Series begins after search ends
+				(series.EndDate < beginDate))			//Series ends before search begins
 			{
 				//Input parameter(s) invalid - return early...
 				series.ValueCount = 0;	//No value count estimate made
