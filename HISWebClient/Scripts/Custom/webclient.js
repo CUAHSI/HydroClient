@@ -3627,7 +3627,7 @@ function setupDataManagerTable() {
                                         '</button>' +
 
                                            //Application list...
-                                           '<ul id="ddHydroshareList" class="dropdown-menu" style="width: 20em;">' +
+                                           '<ul id="ddHydroshareList" class="dropdown-menu">' +
                                            //Export section...
                                             '<li class="dropdown-header" id="exportApps">' +
                                                '<ul style="list-style: none; padding-left: 0em;">' +
@@ -3755,19 +3755,27 @@ function loadByuHydroshareApps() {
             var length = apps.length;
             var listItems = '<ul style="list-style: none; padding-left: 0em;">';
 
-            for (var i = 0; i < length; ++i) {
-                //Source(s) for Bootstrap dropdown styling:
-                //    http://jsfiddle.net/KyleMit/5p341amh/
-                //    http://jsfiddle.net/74eu3y15/
-                //NOTE: Use of styles: max-width: 100%, height and width to scale app icons...
-                //Source: https://wpbeaches.com/make-images-scale-responsive-web-design/
-                listItems += '<li data-toggle="tooltip" data-placement="top" title="' + apps[i].description + '"><a  style="font-weight: bold; font-size: 1.0em;" tabindex="-1" href="#">' +
-                             '<img src="' + apps[i].icon + '"' +
-                             ' style="max-width: 100%;height: 2em; width: 2em;">' + 
-                              ' ' + apps[i].name +
-                             '</a></li>';
+            if ( 0 < length) {
+                for (var i = 0; i < length; ++i) {
+                    //Source(s) for Bootstrap dropdown styling:
+                    //    http://jsfiddle.net/KyleMit/5p341amh/
+                    //    http://jsfiddle.net/74eu3y15/
+                    //NOTE: Use of styles: max-width: 100%, height and width to scale app icons...
+                    //Source: https://wpbeaches.com/make-images-scale-responsive-web-design/
+                    listItems += '<li data-toggle="tooltip" data-placement="top" title="' + apps[i].description + '"><a  style="font-weight: bold; font-size: 1.0em;" tabindex="-1" href="#">' +
+                                 '<img src="' + apps[i].icon + '"' +
+                                 ' style="max-width: 100%;height: 2em; width: 2em;">' + 
+                                  ' ' + apps[i].name +
+                                 '</a></li>';
+                }
             }
-
+            else {
+                //Empty list - display a 'not available' message...
+                listItems += '<li disabled>' + 
+                             '<span disabled class="glyphicon glyphicon-thumbs-down" style="max-width: 100%; font-size: 1.5em;"></span>' +
+                             '<span disabled style="font-weight: bold; display: inline-block; vertical-align: super;">' + '&nbsp;Hydroshare applications temporarily unavailable...' + '</span>' +
+                             '</li>';
+            }
             listItems += '</ul>';
             appsDropdown.append(listItems);
 
