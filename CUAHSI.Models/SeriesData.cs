@@ -59,7 +59,7 @@ namespace CUAHSI.Models
         /// List of Sources (MS) 
         /// </summary>
         [DataMember]
-        public Source mySource { get; set; }
+		public List<Source> mySources { get; set; }
 
         /// <summary>
         /// List of Variables (MS) 
@@ -91,10 +91,10 @@ namespace CUAHSI.Models
         public string unitAbbrev { get; set; }
 
         [DataMember]
-        public string MethodDescription { get; set; }
+		public List<Method> myMethods { get; set; }
 
         [DataMember]
-        public string QualityControlLevelDefinition { get; set; }
+		public List<QualityControlLevel> myQualityControlLevels { get; set; }
 
         [DataMember] 
         public string VerticalDatum { get; set; }
@@ -115,41 +115,38 @@ namespace CUAHSI.Models
         {
             values = new List<DataValue>();
             ontology = new List<OntologyItem>();
-            tags = new List<HydroTag>();                
+            tags = new List<HydroTag>();
+
+			mySources = new List<Source>();
+			myMethods = new List<Method>();
+			myQualityControlLevels = new List<QualityControlLevel>();
         }
 
-        //public SeriesData(int seriesId, SeriesMetadata myMeta, string methodDescription, string QualityControlLevelCode, IList<DataValue> dataValues, string unitName, string unitAbbreviation,
-        //    string verticalDatum, double elev_m)
-        //{
-        //    myMetadata = myMeta;
-        //    SeriesID = seriesId;
-        //    HasConfirmedTimeStamp = true;
-        //    TimeStampMessage = string.Empty;
-        //    MethodDescription = MethodDescription
-        //    QualityControlLevelCode = QualityControlLevelCode;
-        //    unit = unitName;
-        //    unitAbbrev = unitAbbreviation;
-        //    Elevation_m = elev_m;
-        //    VerticalDatum = verticalDatum;
-        //    values = dataValues.ToList();
-        //    ontology = new List<OntologyItem>();
-        //    tags = new List<HydroTag>();
-            
-        //}
-        public SeriesData(int seriesId, SeriesMetadata myMeta, string methodDescription, string qualityControlLevelDefinition, IList<DataValue> dataValues, Variable variable, Source source)
+        public SeriesData(int seriesId, SeriesMetadata myMeta, IList<DataValue> dataValues, Variable variable, 
+						  List<Source> sources, List<Method> methods, List<QualityControlLevel> qualityControlLevels) : this()
         {
             myMetadata = myMeta;
             SeriesID = seriesId;
             HasConfirmedTimeStamp = true;
             TimeStampMessage = string.Empty;
-            MethodDescription = methodDescription;
-            QualityControlLevelDefinition = qualityControlLevelDefinition;
             myVariable = variable;           
             values = dataValues.ToList();
             ontology = new List<OntologyItem>();
             tags = new List<HydroTag>();
-            mySource =source;
+			if (null != sources)
+			{
+				mySources = sources;
+			}
 
+			if (null != methods)
+			{
+				myMethods = methods;
+			}
+
+			if (null != qualityControlLevels)
+			{
+				myQualityControlLevels = qualityControlLevels;
+			}
         }
     }
 }

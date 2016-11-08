@@ -12,8 +12,13 @@
 .navbar
 {
 	background-color:lightgray;
-	height:50px;
 }
+
+#cuahsi-bar
+{
+    height: 50px;
+}
+
 .collapsing {
 		overflow: hidden!important;
 	}
@@ -34,7 +39,7 @@
 
 
 }
-logo
+.logo
 {
 	 border:0px; 
 	 vertical-align:top;
@@ -43,6 +48,12 @@ logo
 .nav li a
 {
 	padding: 2px;
+    box-shadow: 5px 0 15px -6px #585858 inset;
+
+}
+.login-control
+{
+    visibility:hidden;
 }
 .expander{
 	top:50px;
@@ -75,16 +86,9 @@ logo
 }*/
 
 #map-canvas {
-	top:0px;
 	width: 100%;
 	height: 100%;
 	min-height: 100%;
-		left:0px;
-	/*position:absolute;*/
-	padding:0px;
-	margin:0px;
-	
-	
 }
 #myTab{
 	 position:absolute;
@@ -94,7 +98,12 @@ logo
 
 }
 #search{
-	padding-top:50px;
+	padding-top:5px;
+    
+}
+#legend{
+	padding-top:5px;
+    padding-left:15px
 }
 .full-screen {
 	/*width: 80%;*/
@@ -190,7 +199,7 @@ div.GblueLabel64 {  /* padding-top: 22px; */  width: 64px;  font-size: 13px;}
 	right: 0px; /*place the div wherever you want with top and left px, em or % values*/
 	float:right;
 	z-index: 1002;
-	padding:15px;
+	padding:0px;
  /*Use this for your trasparency*/
 	/*background-color: white;*/
 	/*background-image: none;*/
@@ -252,7 +261,7 @@ tr.selected {background: #009900;}
 
 /*Google maps searchbar*/
 .searchbarcontrols {
-		margin-top: 60px;
+		margin-top: 5px;
 		border: 1px solid transparent;
 		border-radius: 2px 0 0 2px;
 		box-sizing: border-box;
@@ -260,7 +269,9 @@ tr.selected {background: #009900;}
 		height: 32px;
 		outline: none;
 		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        
 }
+
 
 #pac-input {
 background-color: #fff;
@@ -299,7 +310,7 @@ font-weight: 300;
 .side-panel{
 	background-color: #E6E6E6;
 	padding-top: 0px;
-	padding-left: 0px;
+	padding-left: 10px;
 }
 
 .side-panel-left{
@@ -493,62 +504,6 @@ BCC - 14-Oct-2015 - Causes problems when displaying time series after zooming in
 .dropdown-submenu:hover>a:after{border-left-color:#ffffff;}
 .dropdown-submenu.pull-left{float:none;}.dropdown-submenu.pull-left>.dropdown-menu{left:-100%;margin-left:10px;-webkit-border-radius:6px 0 6px 6px;-moz-border-radius:6px 0 6px 6px;border-radius:6px 0 6px 6px;}
 
-
-/* DataTables column widths - 
-    NOTE: <td> widths can be expressed in px or % only!!
-*/
-/*.tableCol5pct {
-    width: 5%;
-}*/
-
-/* DataTables column wrapping - 
-    NOTE: <td> widths can be expressed in px or % only!!
-*/
-/*.tableColWrap10pct {
-    white-space:normal;
-    width: 10%;
-}
-
-.tableColWrap15pct {
-    white-space: normal;
-    width: 15%;
-}
-
-.tableColWrap20pct {
-    white-space: normal;
-    width: 20%;
-}
-
-.tableColWrap25pct {
-    white-space: normal;
-    width: 25%;
-}
-
-.tableColWrap30pct {
-    white-space: normal;
-    width: 30%;
-}*/
-
-/* BCC - 13-Nov-2015 - Probably no longer needed
-
-#tblDataManagerGroup {
-    display: inline-block;
-    position: relative;
-    float: right;
-
-}
-
-#tblDataManager_filter {
-    float: none;
-}
-
-#tblDataManager_length {
-    float: none;
-}
-*/
-
-
-
 .labels {
     color: white;
     background-color: red;
@@ -569,3 +524,53 @@ ul.fancytree-container {
   max-height: 30em;
   width: 100%;
 }
+
+
+.width-20em{
+    width: 20em;
+}
+
+.abbreviate-long-text {
+    /*max-width: 20em;*/
+    max-width: 10em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+
+.max-width-10em {
+    max-width: 10em;
+}
+
+
+/*.large.tooltip-inner {
+    max-width: 40em;
+    width: 40em;
+}*/
+
+/*
+    BCC - 06-Sep-2016 - Override Datatables styling to allow wrapping of long text in table cells...
+*/
+/*table.td-breakword {
+    white-space: normal;
+}*/
+
+/*
+    For wrapping long text in table cells... 
+    Source: http://stackoverflow.com/questions/33275446/word-wrap-column-data-in-javascript-datatable
+*/
+/*table.td-breakword tbody td {
+    word-break: break-word;
+    vertical-align: top;
+}*/
+
+tbody tr td.td-textalign-center {
+    text-align: center;
+}
+
+thead tr th.th-textalign-center {
+    text-align: center;
+}
+

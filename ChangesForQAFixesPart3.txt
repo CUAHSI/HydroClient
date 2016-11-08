@@ -1,0 +1,24 @@
+
+- BC - 03-Oct-2016 - Fixes for QA Issues - Part 3
+
+>>> HISWebClient/Controllers <<<
+ - HomeController,cs 
+  - getDetailsForMarker(...)
+   - sort series list by Organization, Service Title, Keyword prior to return
+  - getTimeseries()
+   - sort series list by Organization, Service Title, Keyword prior to return
+
+
+
+>>> Scripts/Custom <<<
+ - webclient.js
+  - setupServices()
+   - add quotes to table option: initComplete
+  - setupDatatables(...)
+   - add 'order' option to data table setup
+  - lauchByuHydroShareApp(...)
+   - comment out old version
+   - uncomment new version
+  -  setupTimeseriesDatatable()
+   - add 'order' option to data table setup
+   - add filter placeholders setup to 'initComplete' table setup option

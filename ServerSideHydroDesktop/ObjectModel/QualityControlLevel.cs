@@ -6,12 +6,35 @@ namespace ServerSideHydroDesktop.ObjectModel
     /// </summary>
     public class QualityControlLevel : BaseEntity
     {
+		public QualityControlLevel()
+		{
+			OriginId = 0;
+			Code = Constants.Unknown;
+			Definition = Constants.Unknown;
+			Explanation = Constants.Unknown;
+
+			neverSet = true;
+		}
+
         /// <summary>
         /// The original identifier of the quality control level specified by a
         /// web service. This is an optional property. Set this property to 0 if not
         /// used.
         /// </summary>
-        public virtual int OriginId { get; set; }    
+		private int _originId;
+		public virtual int OriginId
+		{ 
+			get
+			{
+				return _originId;
+			}
+			
+			set
+			{
+				_originId = value;
+				neverSet = false;
+			}
+		}    
         
         /// <summary>
         /// Quality control level code specified by the web service
@@ -48,7 +71,8 @@ namespace ServerSideHydroDesktop.ObjectModel
                     Code = Constants.Unknown,
                     Definition = Constants.Unknown,
                     Explanation = Constants.Unknown,
-                    OriginId = 0
+                    OriginId = 0,
+					neverSet = true
                 };
             }
         }

@@ -1,0 +1,25 @@
+
+BC - 13-Oct-2016 - Changes for QA Fixes Part 8 
+
+
+>>> HISWebClient/Controllers <<<
+- DataManagerController.cs
+  - Override Dispose(...) to ensure disposal of member DbContext
+
+- DownloadManagerController.cs
+  - Override Dispose(...) to ensure disposal of member DbContext
+ 
+- ExportController.cs
+  - WriteTaskDataToDatabase(...)
+   - add using statement to ensure proper disposal of member DbContext
+
+
+
+>>> ServerSideHydroDesktop <<<
+- WaterOneFlowClient.cs
+   - waitAsyncSemaphore(...)
+    - revise handling of member  semaphore to ensure its count is never exceeded by Release calls
+      - add semaphore release to catch block
+      - remove finally block
+
+ 

@@ -1,0 +1,36 @@
+
+BC - 26-Oct-2016 - Changes for QA Fixes Part 14
+
+>>> SUMMARY <<<
+ - Revise dynamic LINQ filtering code to deal with null object properties
+ - Top bar sizing css rule
+ - Miscellaneous changes to page text
+
+
+
+>>> HISWebClient/Content <<<
+ - site.css
+   - add height rule for #cuahsi-bar
+
+
+
+>>> HISWebClient/Controllers <<<
+ - HomeController.cs
+   - filterTimeSeries(...)
+    - add null coalescing operator (??) to LINQ predicates to avoid 'object reference not set to an instance of an object' error for null object properties
+    - Add try/catch block to LINQ where clause to handle any other exceptions...
+
+
+
+>>> HISWebClient/Scripts/Custom <<<
+ - webclient.js
+  - table setup code - add "searchable": false, to miscellaneous column definitions
+
+
+
+>>> HISWebClient/Views/Home <<<
+ - index.cshtml
+  - Remove '!' from page sub-heading: Table filters are applied to map
+
+
+

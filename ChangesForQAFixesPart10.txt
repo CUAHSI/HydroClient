@@ -1,0 +1,17 @@
+
+BC - 17-Oct-2016 - Changes for QA Fixes Part 10
+
+>>> BusinessObjects <<<
+ - SearchHelper.cs 
+  - UpdateDataCartToDateInterval(...) 
+   - revise algorithm per WDC meeting findings...
+
+
+>>>HISWebClient <<<
+ - web.config
+  - comment out unused versions of ServiceUrl and ServerUrl1_1_Endpoint
+
+
+>>> HISWebClient/Scripts/Custom <<<
+ - webclient.js
+   - update tooltip text for Value Count header

@@ -1,0 +1,41 @@
+
+BC - 27-Oct-2016 - Changes for QA Fixes Part 16
+
+>>> SUMMARY <<<
+Revise BlobPurge schedule as explained here: http://stackoverflow.com/questions/31591073/changing-azure-webjob-occurence
+to temporarily disable job runs by setting start and stop dates/times in the past.  
+
+Remove web job 'link' from HISWebClient as explained here: https://azure.microsoft.com/en-us/documentation/articles/websites-dotnet-deploy-webjobs/
+
+>>> BlobPurge <<<
+ - Add Publish Profile: hiswebclient
+ - change file: webjob-publish-settings.json
+   - startTime: 24-Oct-2016 00:00:00
+   - stopTime: 26-Oct-2016 00:00:00
+
+webjob-publish-settings.json contents:
+{
+  "$schema": "http://schemastore.org/schemas/json/webjob-publish-settings.json",
+  "webJobName": "BlobPurge",
+  "startTime": "2016-10-24T00:00:00-05:00",
+  "endTime": "2016-10-26T00:00:00-05:00",
+  "jobRecurrenceFrequency": "Day",
+  "interval": 1,
+  "runMode": "Scheduled"
+}
+
+>>> HISWebClient <<<
+ - delete file: webjobs-list.json
+
+webjobs-list.json contents:
+{
+  "$schema": "http://schemastore.org/schemas/json/webjobs-list.json",
+  "WebJobs": [
+    {
+      "filePath": "../BlobPurge/BlobPurge.csproj"
+    },
+    {
+      "filePath": "../BlobPurge/BlobPurge.csproj"
+    }
+  ]
+}

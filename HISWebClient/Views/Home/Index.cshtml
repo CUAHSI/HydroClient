@@ -4,7 +4,7 @@
         <div id="pageloaddiv"></div>
         <div id="tabSelector" class=""></div>
 
-        <div class="nav navbar navbar-inverse navbar-fixed-top" style="min-width: 70em;">
+        <div id="cuahsi-bar" class="nav navbar navbar-inverse navbar-fixed-top" style="min-width: 70em;">
             <a href="http://www.cuahsi.org" target="_blank"> <img class="img-responsive pull-left" src="~/Content/Images/cuahsi_logo_small.png" /></a>
             @if (HttpContext.Current.IsDebuggingEnabled)
             {
@@ -36,7 +36,7 @@
                     }
                 </script>
             }
-            <ul class="nav nav-tabs pull-right" >
+            <ul class="nav nav-tabs pull-right">
                 <li id="liMapTab" class="active navbar-custom hidden" style="margin-right: 1.0em; padding: 0;"> <button class="btn btn-primary" href="#map" id="mapTab" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> Search</button></li>
                 <li id="liTabbedDataMgrTab" class="navbar-custom" style="margin-right: 1.0em; padding: 0;"><button class="btn btn-primary" href="#tabbedDataMgr" id="tabbedDataMgrTab" data-toggle="tab"><span class="glyphicon glyphicon-tasks"></span> Workspace</button></li>
 
@@ -187,6 +187,12 @@
             <!-- BCC - 30-Jun-2015 - QA Issue #34 - General GUI: no scroll bar when reduce page size (menu items can become unavailable) -->
             <div id="slider" class="side-panel side-panel-right" style="overflow-y: auto;">
                 <div id="menu">
+                    <ul class="nav nav-tabs nav-justified">
+                        <li role="presentation" class="active"><a href="#search" data-toggle="tab"> SEARCH </a></li>
+                        <li role="presentation"><a href="#legend" data-toggle="tab"> LEGENDS </a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="search">
                     <div class="container" id="selectors">
                         <form id="Search" class="searchForm form-horizontal pull-left">
                             <div class="form-group">
@@ -266,6 +272,18 @@
 
                         </form>
                     </div>
+                        </div>
+                        <div class="tab-pane" id="legend">
+                            <div class="legend" >
+                                 <img width="200" align="middle" src="~/Content/Images/Legend/NLCD_Colour_Classification_Update.jpg" />                              
+                            </div>
+
+
+                            
+                        </div>
+
+                    </div>
+                   
 
                 </div>
             </div>
@@ -675,7 +693,7 @@
             </div>
             <div class="modal-footer">
                 @*BCC - 30-Jun-2015 - QA Issue #44 - Popup 'Click to select Data Services': 'Save' button is missed *@
-                <h6>Note: Many of data services listed here are maintained by the data publishers. CUAHSI cannot be held responsible for the status of these servers. All data publishers are responsible for the accuracy of their data. </h6>
+                <h6>Note: Many data services listed here are maintained by the data publishers. CUAHSI cannot be held responsible for the status of these servers. All data publishers are responsible for the accuracy of their data. </h6>
                 <button type="button" id="saveServiceSelection" class="btn btn-default btn-primary left" data-dismiss="modal">Close</button>
             </div>
             <!-- /.modal-content -->
@@ -748,7 +766,7 @@
                 </div>
 
                 <h3 class="modal-title" id="myModalLabel">Timeseries in Current Map Area</h3>
-                <h5>Table filters are applied to map!</h5>
+                <h5>Table filters are applied to map</h5>
             </div>
             <div class="modal-body modal-body-full" id="dtTimeSeriesModal">
                 @* BCC- 23-Jul-2015 - To ensure the horizontal scroll bar appears in Apple Safari running under OS X, set 'max-width: none' on the table element!!

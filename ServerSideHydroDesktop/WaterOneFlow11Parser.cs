@@ -6,6 +6,8 @@ using System.Text;
 using System.Xml;
 using ServerSideHydroDesktop.ObjectModel;
 
+using HISWebClient.Util;
+
 namespace ServerSideHydroDesktop
 {    
     /// <summary>
@@ -26,6 +28,12 @@ namespace ServerSideHydroDesktop
             {
                 if (r.NodeType == XmlNodeType.Element)
                 {
+					if (XmlContext.AdvanceReaderPastEmptyElement(r))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
                     string nodeName = r.Name.ToLower();
                     if (nodeName == "unitname")
                     {
@@ -71,6 +79,12 @@ namespace ServerSideHydroDesktop
 
                 if (r.NodeType == XmlNodeType.Element)
                 {
+					if (XmlContext.AdvanceReaderPastEmptyElement(r))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
                     if (nodeName.IndexOf("variablecode") >= 0)
                     {
                         string prefix = r.GetAttribute("vocabulary");
@@ -78,6 +92,15 @@ namespace ServerSideHydroDesktop
                         {
                             prefix = r.GetAttribute("network");
                         }
+
+						//BCC - 08-Aug-2016 - Retrieve variableID attribute value
+						string variableID = r.GetAttribute("variableID");
+						long result = 0;
+						if (long.TryParse(variableID, out result))
+						{
+							varInfo.Id = result;
+						}
+
                         r.Read();
                         string variableCode = r.Value;
                         if (!String.IsNullOrEmpty(prefix))
@@ -205,6 +228,12 @@ namespace ServerSideHydroDesktop
             {
                 if (r.NodeType == XmlNodeType.Element)
                 {
+					if (XmlContext.AdvanceReaderPastEmptyElement(r))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
                     if (r.Name == "value")
                     {
                         //create a new empty data value and add it to the list
@@ -258,14 +287,22 @@ namespace ServerSideHydroDesktop
                                     qualityCode = "unknown"; //when the quality control level is unspecified
                                 }
                             }
-                            if (!qualityControlLevels.ContainsKey(qualityCode))
+
+							//BCC - 24-Aug-2016 - Check for a quality code of space-delimited terms...
+							string[] terms = qualityCode.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+
+							foreach (var term in terms)
+							{
+								if (!qualityControlLevels.ContainsKey(term))
                             {
                                 var qualControl = QualityControlLevel.Unknown;
-                                qualControl.Code = qualityCode;
-                                qualControl.Definition = qualityCode;
-                                qualControl.Explanation = qualityCode;
-                                qualityControlLevels.Add(qualityCode, qualControl);
+									qualControl.Code = term;
+									qualControl.Definition = term;
+									qualControl.Explanation = term;
+									qualityControlLevels.Add(term, qualControl);
                             }
+							}
+
                             wrapper.QualityID = qualityCode;
 
                             //source
@@ -396,9 +433,58 @@ namespace ServerSideHydroDesktop
                     {
                         newSeries.Method = methods[SeriesCodeHelper.GetMethodCode(seriesCode)];
                         newSeries.Source = sources[SeriesCodeHelper.GetSourceCode(seriesCode)];
+
+						//BCC - 24-Aug-2016 - Add logic to handle space-delimited quality codes...
+						var qcCode = SeriesCodeHelper.GetQualityCode(seriesCode);
+						string[] terms = qcCode.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+
+						if (1 == terms.Length)
+						{
+							//One quality code found...
                         newSeries.QualityControlLevel = qualityControlLevels[SeriesCodeHelper.GetQualityCode(seriesCode)];
                     }
-                    catch { }
+						else
+						{
+							//Multiple quality codes found...
+							var qcl = new QualityControlLevel();
+							string separator = " | ";
+
+							qcl.Code = qcCode;
+							qcl.Definition = String.Empty;
+							qcl.Explanation = String.Empty;
+							foreach (var term in terms)
+							{
+								var qclTemp = qualityControlLevels[term];
+
+								qcl.Definition += qclTemp.Definition + separator;
+								qcl.Explanation += qclTemp.Explanation + separator;
+							}
+
+							qcl.Definition = qcl.Definition.Substring(0, qcl.Definition.Length - separator.Length);
+							qcl.Explanation = qcl.Explanation.Substring(0, qcl.Explanation.Length - separator.Length);
+
+							//Set the OriginId to a minimum value to indicate a 'pseudo' instance...
+							int min = qualityControlLevels.Values.Min(value => value.OriginId);
+							qcl.OriginId = min - 1;
+
+							newSeries.QualityControlLevel = qcl;
+
+							//Add compound key to dictionary, if indicated...
+							if ( ! qualityControlLevels.ContainsKey(qcl.Code))
+							{
+								qualityControlLevels.Add(qcl.Code, qcl);
+							}
+						}
+					}
+                    catch(Exception ex) 
+					{ 
+						//Any exception happening here?
+						string msg = ex.Message;
+
+						int n = 5;
+
+						++n;
+					}
                 }
 
                 //add the data value to the correct series
@@ -453,6 +539,12 @@ namespace ServerSideHydroDesktop
             {
                 if (r.NodeType == XmlNodeType.Element)
                 {
+					if (XmlContext.AdvanceReaderPastEmptyElement(r))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
                     if (r.Name == "offsetDescription")
                     {
                         r.Read();
@@ -497,6 +589,12 @@ namespace ServerSideHydroDesktop
             {
                 if (r.NodeType == XmlNodeType.Element)
                 {
+					if (XmlContext.AdvanceReaderPastEmptyElement(r))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
                     string nodeName = r.Name.ToLower();
                     if (nodeName == "labsamplecode")
                     {

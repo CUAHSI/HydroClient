@@ -24,6 +24,17 @@ namespace HISWebClient.Controllers
 			_hcDbContext = hcdc;
 		}
 
+		//override Dispose to de-allocate dbcontext instance...
+		//Source: http://www.davepaquette.com/archive/2013/03/27/managing-entity-framework-dbcontext-lifetime-in-asp-net-mvc.aspx
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				_hcDbContext.Dispose();
+			}
+
+			base.Dispose(disposing);
+		}
 
 		//GET DataManager/{userEmail}
 		[HttpGet]

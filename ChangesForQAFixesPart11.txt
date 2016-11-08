@@ -1,0 +1,22 @@
+
+BC - 18-Oct-2016 - Changes for QA Fixes Part 11
+
+>>> HISWebClient/Scripts/Custom <<<
+ - webclient.js
+  - currentPosition JSON object 
+   - Add boolean 'update' member
+ - function createdTooltipText(...)
+  - Revise Datatables cell tooltip create/destroy logic
+    - create/show on jQuery 'mouseenter'
+    - destroy on jQuery 'mouseleave'
+ - function updateLatLng(...)
+  - add early return (no action) conditional on currentPosition.update
+ - function creatInfoWindow(...)
+  - Revise google.maps.event.AddListener code to include fail-safe, self-clearing interval code for InfoBubble closure
+  - Update comments
+ - function setupTooltips() 
+  - Revise tooltip create/destroy logic 
+   - Create on jQuery 'mouseenter' 
+   - Destroy on jQuery 'mouseleave'
+  - Add logic to ensure each handler is registered only once per instance
+

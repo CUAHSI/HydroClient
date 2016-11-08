@@ -13,7 +13,7 @@ namespace HISWebClient.Models
         //Copy constructor...
         public DataValueCsvViewModel(DataValueCsvViewModel tsvm)
         {
-			Id = tsvm.Id;
+			SeriesID = tsvm.SeriesID;
 			SiteName = tsvm.SiteName;
 			VariableName = tsvm.VariableName;
 			LocalDateTime = tsvm.LocalDateTime;        
@@ -50,7 +50,7 @@ namespace HISWebClient.Models
         }
 
         //Seriesid
-        public string Id { get; set; }
+        public string SeriesID { get; set; }
         // Name of Site
         public string SiteName { get; set; }
         //Name of Variable

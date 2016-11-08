@@ -1,0 +1,61 @@
+
+ BC - 24-Oct-2016 - Changes for QA fixes Part 13 
+
+ - Changes to correct vertical and horizontal sizing of map 'div' on supported browsers...
+
+>>> HISWebClient <<<
+ - web.config
+   - appSettings, key: buildTypeRelease
+     - r: ***RELEASE***
+     - w: <empty string> 
+       Remove label visible on main page from release build
+
+
+
+>>> HISWebClient/Content <<<
+ - site.css
+   - .navbar - remove 'height'
+   - #map-canvas - remove 'top', 'left', 'position', 'padding', 'margin'
+ 
+
+
+>>> HISWebClient/Scripts/Custom <<<
+ - webclient.js
+   - removal global variable: sidepanelVisible - no longer needed
+   - function initialize()
+     - 'mapTab' click handler - replace map resize logic with call to new 'resize and position' function
+   - function initializeMap()
+    - Revise window 'resize' handler logic to correctly size and position map div, add explanatory comments
+    - Add call to new 'resize and position' function
+    - reduce slideReveal(...) timeout interval
+   - miscellaneous changes - statement alignment, comment out debug console.log(...) calls
+  - function getMapHeight()
+   - revise height calculation
+  - function getMapWidth(...)
+   - revise width calculation
+  - function resizeAndPositionMap(...)
+   - new function encapsulating map resizing logic
+  - function addSlider()
+   - 'show' and 'hide' functions: add calls to getMapWidth(...), 
+   - 'shown' and 'hidden' functions: add debug code
+  - function isSliderVisible(...)
+   - new function to test slider visibility
+  - function toggleSidePanelControl(...)
+   - 'click' listener - add call to isSliderVisible(...)
+
+
+
+>>> HISWebClient/Views/Home <<<
+ - index.cshtml
+  - add id: 'cuahsi-bar' to nav bar div
+
+
+
+>>> HISWebClient/Views/Shared <<<
+ - _layout.cshtml
+  - Google Analytics and Zendesk document ready functions - revise statement formatting
+ - <body> tag - add attributes to suppress scrollbar display in map div under Internet Explorer
+
+
+
+

@@ -1,0 +1,15 @@
+
+
+BC - 26-Oct-2016 - Changes for QA Fixes Part 15
+
+>>> SUMMARY <<<
+ - Revise css styling to restrict table column tooltip display to <thead> area
+
+
+
+>>> HISWebClient/Scripts/Custom <<<
+ - webclient.js
+   - setupToolTips()
+    - add 'thead' boolean to selected div definitions
+    - add logic to add 'thead' to tooltip styling where indicated
+

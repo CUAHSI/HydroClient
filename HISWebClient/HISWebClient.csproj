@@ -287,6 +287,14 @@
     <Compile Include="Migrations\201603211641193_AddedStatusMessage.Designer.cs">
       <DependentUpon>201603211641193_AddedStatusMessage.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201609192129407_QclSourceAndMethod.cs" />
+    <Compile Include="Migrations\201609192129407_QclSourceAndMethod.Designer.cs">
+      <DependentUpon>201609192129407_QclSourceAndMethod.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201609201523250_RemoveSourceDesc.cs" />
+    <Compile Include="Migrations\201609201523250_RemoveSourceDesc.Designer.cs">
+      <DependentUpon>201609201523250_RemoveSourceDesc.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\ClientFilterAndSearchCriteria\clientDataSource.cs" />
@@ -302,6 +310,7 @@
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
     <Compile Include="Models\OntologyHelper.cs" />
+    <Compile Include="Models\SeriesValueAttributes.cs" />
     <Compile Include="Models\TaskData.cs" />
     <Compile Include="Models\TimeSeriesRequest.cs" />
     <Compile Include="Models\TimeSeriesResponse.cs" />
@@ -314,6 +323,8 @@
     <Compile Include="Util\DbBaseContext.cs" />
     <Compile Include="Util\DbErrorContext.cs" />
     <Compile Include="Util\DbLogContext.cs" />
+    <Compile Include="Util\EnumExtensionMethods.cs" />
+    <Compile Include="Util\EnvironmentContext.cs" />
     <Compile Include="Util\ExportUtils.cs" />
     <Compile Include="Util\FileContext.cs" />
     <Compile Include="Util\httpUtil.cs" />
@@ -322,8 +333,8 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Util\StringContext.cs" />
+    <Compile Include="Util\XmlContext.cs" />
     <Compile Include="Views\DiagnosticMonTraceListener.cs" />
-    <Compile Include="Scripts\EnumExtensionMethods.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Areas\HelpPage\HelpPage.css" />
@@ -334,6 +345,7 @@
     <Content Include="Content\bootstrap-theme.min.css" />
     <Content Include="Content\dataTables.colVis.css" />
     <Content Include="Content\datatablescdn\jquery.dataTables.min.css" />
+    <Content Include="Content\gDropDownControl.css" />
     <Content Include="Content\Images\ajax-loader-green.gif">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -372,6 +384,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Images\hydroshare-logo-sm.png" />
+    <Content Include="Content\Images\Legend\NLCD_Colour_Classification_Update.jpg" />
     <Content Include="Content\Images\Markers\ClusterIcons\blue-20.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -547,6 +560,7 @@
     <Content Include="Scripts\Custom\DownloadHelper.js" />
     <Content Include="Scripts\Custom\freezeEnum.js" />
     <Content Include="Scripts\Custom\jquery-filedownload.js" />
+    <Content Include="Scripts\Custom\LayerControl.js" />
     <Content Include="Scripts\Custom\RandomId.js" />
     <Content Include="Scripts\Custom\test1.js" />
     <Content Include="Scripts\Custom\TimeSeriesFormat.js" />
@@ -563,6 +577,7 @@
     <Content Include="Content\FancyTree\skin-xp\vline-rtl.gif" />
     <Content Include="Content\FancyTree\skin-xp\vline.gif" />
     <Content Include="Scripts\Fancytree\sample.js" />
+    <Content Include="Scripts\GoogleMapsGithubLibraries\arcgislink.js" />
     <Content Include="Scripts\GoogleMapsGithubLibraries\infobubble.js" />
     <Content Include="Scripts\Google\keydragzoom.js" />
     <Content Include="Scripts\Google\keydragzoom_packed.js" />
@@ -639,6 +654,16 @@
     <Content Include="Views\Home\_DatatableDataservicesColumns.cshtml" />
     <Content Include="Views\Home\_DataManagerTimeseriesColumns.cshtml" />
     <Content Include="Views\Home\Quickstart.cshtml" />
+    <Content Include="Web-Deploy.config">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Web-LocalBuild.config">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Views\Home\_DatatableQualityControlLevelsColumns.cshtml" />
+    <Content Include="Views\Home\_DatatableMethodDescriptionsColumns.cshtml" />
+    <Content Include="Views\Home\_DatatableSourceOrganizationsColumns.cshtml" />
+    <Content Include="Views\Home\Maptest2.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\yeti\" />
@@ -693,6 +718,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201603211641193_AddedStatusMessage.resx">
       <DependentUpon>201603211641193_AddedStatusMessage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201609192129407_QclSourceAndMethod.resx">
+      <DependentUpon>201609192129407_QclSourceAndMethod.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201609201523250_RemoveSourceDesc.resx">
+      <DependentUpon>201609201523250_RemoveSourceDesc.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

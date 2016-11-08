@@ -1,0 +1,14 @@
+
+BC - 12-Oct-2016 - Change for QA Fixes Part 6
+
+>>> HISWebClient/Scripts/Custom <<<
+ - webclient.js
+   - formatDate(...)
+    - revise date parsing logic to handle failures in calls to Date.parse(...)
+      as can occur when running in IE v11, Firefox and Safari...
+  - updateTimeSeriesBlobUri(...)
+    - remove formatDate(...) call - no longer needed 
+  - startRequestTimeSeriesMonitor() 
+   - add debug console.log(...) calls for miscellaneous timeSeriesResponse values
+ - copyDmRecordToServerRecord(...)
+   - remove formatDate(...) call - no longer needed

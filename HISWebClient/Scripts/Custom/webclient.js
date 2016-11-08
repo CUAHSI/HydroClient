@@ -20,7 +20,6 @@ var currentMarkerPlaceName = '';
 var timeSeriesRequestStatus;
 var timeSeriesFormat;
 var slider;
-var sidepanelVisible = false;
 
 var conceptsType = '';
 
@@ -105,7 +104,8 @@ var currentUser = { 'authenticated' : false,
                   };
 
 var currentPosition = {
-                        'latLng': null
+                        'latLng': null,
+                        'update': true
                       };
 
 var bResetMap = false;
@@ -424,7 +424,27 @@ function formatDate(data, bIncludeTime) {
     else {
         //Assume NewtonSoft format: YYYY-MM-DDTHH:MM:SS - convert to JavaScript date
       if ( ! isNaN(Date.parse(dateString))) {
+         // Success - create new Date instance
          date = new Date(dateString);
+      }
+      else {
+        //Failure - Some browsers may return NaN on Date.parse() calls, as explained here:
+        //Source: http://stackoverflow.com/questions/6427204/date-parsing-in-javascript-is-different-between-safari-and-chrome
+
+        //Attempt to split the string...
+        var parts = dateString.split(/[^0-9]/);
+
+        if (('undefined' !== typeof parts) && (null !== parts) && (3 <= parts.length)) 
+        {
+            //Success - date string contains at least 'year', 'month' and 'day' values
+            date = new Date(parts[0],                                               //Year
+                            parts[1] - 1,                                           //Month
+                            parts[2],                                               //Day
+                            'undefined' !== typeof parts[3] ? parts[3] : '00',      //Hour
+                            'undefined' !== typeof parts[4] ? parts[4] : '00',      //Minute
+                            'undefined' !== typeof parts[5] ? parts[5] : '00',      //Second
+                            'undefined' !== typeof parts[6] ? parts[6] : '000');    //Millisecond
+        }
       }
     }
 
@@ -456,6 +476,93 @@ function formatServiceTitle( serviceCode, serviceTitle) {
     return '<img style="height: 2em; width: 2em;" src="/home/getIcon?id=' + serviceCode + '">' + ' - ' + serviceTitle;
 }
 
+//Format the input service title...
+function formatServiceTitleAbbreviated( serviceCode, serviceTitle) {
+    
+    var markup = '<div  class="abbreviate-long-text">' + 
+                 '<img style="height: 2em; width: 2em;" src="/home/getIcon?id=' + serviceCode + '">' + ' - ' + serviceTitle +
+                 '</div>'
+
+    return markup;
+
+}
+
+//Datatables 'render' function to abbreviate long text...
+//ASSUMPTION: Input data is displayed 'as is' in a div
+function renderAbbreviatedText(data, type, full, meta) {
+
+    var text = (('undefined' !== typeof data ) && (null !== data)) ? data.toString() : 'unknown';
+    var markup = '<div  class="abbreviate-long-text">' + text + '</div>';
+    return markup;
+}
+
+//Datatables 'createdCell' function to display a tooltip...
+//ASSUMPTION: Cell text is displayed 'as is' on mouseenter/mouseleave (formerly known as 'hover'...)
+function createdTooltipText(cell, cellData, rowData, rowIndex, colIndex) {
+
+    var jqueryObj = $(cell);
+
+    //Create a tooltip for the cell text...
+    //Source: http://chadkuehn.com/show-tooltip-over-truncated-text/
+    //Setting tooltip width...
+    //Source: http://stackoverflow.com/questions/25246391/bootstrap-tool-tip-setting-different-widths-for-different-tooltips
+    jqueryObj.on('mouseenter', function(event) {
+        var childDiv = jqueryObj.children()[0];
+        if ((childDiv.offsetWidth < childDiv.scrollWidth) && ((! jqueryObj.attr('title')) || (0 >= jqueryObj.attr('title').length))) { //Element's content is wider than the content area - create a tooltip...
+            jqueryObj.tooltip({
+                'title': jqueryObj.text(),
+                'trigger': 'hover',
+                'placement': 'auto',
+                'template': '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div style="text-align: justify; text-justify: distribute" class="tooltip-inner"></div></div>',
+                'container': 'body' //MUST use container option in datatables... source: http://stackoverflow.com/questions/33858135/bootstrap-popover-overlay-by-datatables-jquery
+            });
+            jqueryObj.tooltip('show');
+        }
+    });
+
+    jqueryObj.on('mouseleave', function(event) {
+        jqueryObj.tooltip('destroy');
+    });
+}
+
+function renderTooltipStatus(cell, tooltipText) {
+
+    var jqueryObj = $(cell);
+
+    jqueryObj.on('mouseenter', function(event) {
+        var childDiv = jqueryObj.children()[0];
+        $(childDiv).tooltip({
+            'title': tooltipText,
+            'trigger': 'hover',
+            'placement': 'auto',
+            'template': '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div style="text-align: justify; text-justify: distribute" class="tooltip-inner"></div></div>',
+            'container': 'body' //MUST use container option in datatables... source: http://stackoverflow.com/questions/33858135/bootstrap-popover-overlay-by-datatables-jquery
+        });
+        jqueryObj.tooltip('show');
+    });
+
+    jqueryObj.on('mouseleave', function(event) {
+        jqueryObj.tooltip('destroy');
+    });
+}
+
+function renderTooltipElement(jqElement, tooltipText) {
+
+    jqElement.on('mouseenter', function(event) {
+        jqElement.tooltip({
+            'title': tooltipText,
+            'trigger': 'hover',
+            'placement': 'auto',
+            'template': '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div style="text-align: justify; text-justify: distribute" class="tooltip-inner"></div></div>',
+            'container': 'body' //MUST use container option in datatables... source: http://stackoverflow.com/questions/33858135/bootstrap-popover-overlay-by-datatables-jquery
+        });
+        jqElement.tooltip('show');
+    });
+
+    jqElement.on('mouseleave', function(event) {
+        jqElement.tooltip('destroy');
+    });
+}
 
 function initialize() {
 
@@ -643,6 +750,7 @@ function initialize() {
 
     });
 
+    //Submit function for 'Search Map' button - see index.cshtml searchBtnDiv...
     $("#Search").submit(function (e) {
 
         resetMap();
@@ -734,7 +842,7 @@ function initialize() {
             //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
             //Assign a handler to the DataTable 'draw.dt' event
             table.off('draw.dt', addFilterPlaceholders);
-            table.on('draw.dt', { 'tableId': 'dtTimeseries', 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Data Type', 'Value Type', 'Sample Medium'] }, addFilterPlaceholders);
+            table.on('draw.dt', { 'tableId': 'dtTimeseries', 'placeHolders': ['Publisher', 'Service Title', 'Keyword', 'Site Name', 'Data Type', 'Value Type', 'Sample Medium'] }, addFilterPlaceholders);
 
             //BCC - 09-Jul-2015 -  - QA Issue #25 - Data tab: table column titles stay in wrong order after sorting table
             //Remove/add column adjustment event handler...
@@ -760,11 +868,29 @@ function initialize() {
             var tableId = '#' + tableName;
             var jQueryDataTable = $(tableId).DataTable();
 
-            jQueryDataTable.columns.adjust().draw();
+            jQueryDataTable.columns.adjust();
+            jQueryDataTable.draw();
         }
 
         // activated tab
-    })
+    });
+
+    //click event for 'top level' nav buttons...
+    $('button[data-toggle="tab"]').on('shown.bs.tab', function (event) {
+
+        //Adjust columns and draw table whenever the workspace tab appears...
+        //NOTE: The draw() call appears effective only when the table is visible.
+        //      The 'shown.bs.tab' event indicates the tab containing the table is visible...
+        if ( 'tabbedDataMgrTab' == event.target.id) {
+            var tableName = 'tblDataManager';
+            var tableId = '#' + tableName;
+            var jQueryDataTable = $(tableId).DataTable();
+
+            jQueryDataTable.columns.adjust();
+            jQueryDataTable.draw();        
+        }
+    });
+
 
     $('.enableWhenDataReceived').addClass('disabled');
 
@@ -794,6 +920,22 @@ function initialize() {
 
     //Initialize static tooltips...
     setupToolTips();
+
+    //Set up static tooltips on dialog open/close...
+    var modals = ['tableModal', 'SeriesModal'];
+    var moLength = modals.length;
+    var moFunc = setupToolTips;
+
+    for (var mi = 0; mi < moLength; ++mi) {
+        var modal = '#' + modals[mi];
+        var event = 'shown.bs.modal';
+        $(modal).off(event, moFunc); 
+        $(modal).on(event, moFunc); 
+
+        event = 'hidden.bs.modal';
+        $(modal).off(event, moFunc); 
+        $(modal).on(event, moFunc); 
+    }
 
     //Set an event handler on the Google form...
     $('#formGoogleLogin').on('submit', googleFormSubmit);
@@ -849,17 +991,8 @@ function initialize() {
 
     //Click handler for 'Search' button
     $('#' + 'mapTab').on('click', function(event) {    
-        //Show the zendesk iframe...
-
         setTimeout(function() {
-            $("#map-canvas").height(getMapHeight()) //setMapHeight
-            $("#map-canvas").width(getMapWidth()) //setMapWidth
-
-            google.maps.event.trigger(map, "resize");
-            //if (!sidepanelVisible) {
-            if (sidepanelVisible) {
-                slider.slideReveal("show")
-            }        
+            resizeAndPositionMap(map, slider);
         }, 500);
     });
 }
@@ -873,7 +1006,7 @@ function initializeMap() {
 
     //BC - disable infoWindow for now...
     //    infoWindow = new google.maps.InfoWindow();
-
+   
     var mapProp = {
         center: myCenter,
         zoom: 5,
@@ -894,21 +1027,22 @@ function initializeMap() {
         },
         mapTypeControlOptions: {
             style: google.maps.MapTypeControlStyle.DEFAULT,
-            position: google.maps.ControlPosition.LEFT_BOTTOM
-            //mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.TERRAIN]
+            position: google.maps.ControlPosition.LEFT_BOTTOM,
+            mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.TERRAIN]
+          
         }//,
     };
-
+  
     //get reference to map sizing of window happens later to prevent gap
    var element = document.getElementById("map-canvas");
    if ( null !== element) {
     map = new google.maps.Map(element, mapProp);
    }
    else {
-    console.log('Element is null!!');
+    console.log('map-canvas element is null!!');
     return;
    }
-
+  
     //set map zoom limits...
     //map.setOptions({minZoom: 5, maxZoom: 1});
 
@@ -916,6 +1050,8 @@ function initializeMap() {
     addCustomMapControls();
 
     slider = addSlider();
+    //Add custom LAyer control for Map Overlays
+    addLayerControl()
 
     addLocationSearch();
 
@@ -995,44 +1131,60 @@ function initializeMap() {
         google.maps.event.trigger(map, 'mousemove', mouseEvent);
     }, 1500);
 
+    //On window resize, resize and position the map...
+    //NOTE: A visible slider appears to distort window height and width values 
+    //      under this user scenario:
+    //       - connect browser to HydroClient website
+    //       - click broswer size button to maximize browser window
+    //       - click browser size button to return browser window to original size
+    //          here values returned by getMapHeight() and getMapWidth(...) are smaller than original values...
     google.maps.event.addDomListener(window, "resize", function () {
-        $("#map-canvas").height(getMapHeight()) //setMapHeight
-        $("#map-canvas").width(getMapWidth()) //setMapWidth
+        //console.log('window resize event...');
 
-        google.maps.event.trigger(map, "resize");
-        if (sidepanelVisible) {
-            slider.slideReveal("show")
+        //Retain current slider visibility...
+        var visible = isSliderVisible(slider);
+
+        //Hide slider, if indicated
+        if (visible) {
+            slider.slideReveal('hide');    
+        }
+
+        //establish new map div dimensions and position...
+        resizeAndPositionMap(map, slider);
+        
+        //Always show the slider...
+        slider.slideReveal('show');    
+        if (! visible) {
+            //Slider originally hidden - hide slider, set map div dimensions and position again...
+            slider.slideReveal('hide');    
+            resizeAndPositionMap(map, slider);
         }
     });
 
-    $("#map-canvas").height(getMapHeight()) //setMapHeight
-    $("#map-canvas").width(getMapWidth) //setMapWidth
-    google.maps.event.trigger(map, "resize");
-
-    //For Apple Safari, ensure the side panel is displayed after a page refresh...
-    slider.slideReveal("hide")
-    sidepanelVisible = false
-
+    resizeAndPositionMap(map, slider);
+ 
     setTimeout( function() {
-        slider.slideReveal("show");
-        sidepanelVisible = true;    
-    }, 2000);
-
+        slider.slideReveal('show');
+    }, 1000);
 }
 
 //Update the displayed latitude and longitude values per the updated currentPosition value...
 function updateLatLng(event) {
 
+    if ( ! currentPosition.update) {
+        return; //Position updating disabled - return early
+    }
+
+    //Update/display current position...
     currentPosition.latLng = event.latLng;
     $('#' + 'spanLatitudeValue').text(event.latLng.lat().toFixed(3).toString());
     $('#' + 'spanLongitudeValue').text(event.latLng.lng().toFixed(3).toString());
-
 }
 
 //Event handler for Google form submit...
 function googleFormSubmit(event) {
 
-    console.log('googleFormSubmit called!!');
+    //console.log('googleFormSubmit called!!');
 
     //Check for remote logout...
     if ( 'undefined' !== typeof event.currentTarget.action && -1 !== event.currentTarget.action.indexOf('ExternalLogOut')) {
@@ -1153,6 +1305,21 @@ function enableSearch() {
     spanArea.css( {'font-size': '1.5em',
                    'margin-right': '0.5em',
                    'vertical-align': 'middle'} );
+
+    //Set search area tooltip...
+    spanArea.tooltip('destroy');
+    if (bSearchEnabled) {
+        tooltip = 'Ready to search!!';
+    }
+    else {
+        tooltip = (0 < tooltip.length) ? tooltip : 'Search disabled...';
+    }
+
+    spanArea.tooltip({
+                    'animation': true,
+                    'placement': 'auto',
+                    'trigger': 'hover',
+                    'title': tooltip });
 
     //Proceesing complete - return result
     return bSearchEnabled;
@@ -1401,22 +1568,21 @@ function keywordClickHandler(event, data) {
     var node = data.node;
 
     if (( 'undefined' !== typeof node) && (null !== node)) {
+        //console.log( 'Click: ' + ++keywordClicks);
+        //if (node.isSelected()) {
+        //    console.log( node.title + ' is selected!!');
+        //}
+        //else {
+        //    console.log(node.title + ' is NOT selected!!');
+        //}
 
-        console.log( 'Click: ' + ++keywordClicks);
-        if (node.isSelected()) {
-            console.log( node.title + ' is selected!!');
-        }
-        else {
-            console.log(node.title + ' is NOT selected!!');
-        }
-
-        if (node.isActive()) {
-            console.log(node.title + ' is active!!');
-        }
-        else {
-            console.log(node.title + ' is NOT active!!');
-        }
-        console.log('----------------------------------------------------');
+        //if (node.isActive()) {
+        //    console.log(node.title + ' is active!!');
+        //}
+        //else {
+        //    console.log(node.title + ' is NOT active!!');
+        //}
+        //console.log('----------------------------------------------------');
     }
 }
 
@@ -1426,21 +1592,19 @@ function keywordActivateHandler(event, data) {
     var node = data.node;
 
     if (('undefined' !== typeof node) && (null !== node)) {
+        //if (node.isSelected()) {
+        //    console.log(node.title + ' is selected!!');
+        //}
+        //else {
+        //    console.log(node.title + ' is NOT selected!!');
+        //}
 
-        if (node.isSelected()) {
-            console.log(node.title + ' is selected!!');
-        }
-        else {
-            console.log(node.title + ' is NOT selected!!');
-        }
-
-        if (node.isActive()) {
-            console.log(node.title + ' is active!!');
-        }
-        else {
-            console.log(node.title + ' is NOT active!!');
-        }
-
+        //if (node.isActive()) {
+        //    console.log(node.title + ' is active!!');
+        //}
+        //else {
+        //    console.log(node.title + ' is NOT active!!');
+        //}
     }
 }
 
@@ -1573,7 +1737,7 @@ function loadKeywordsIntoTree( pShowUI, pbtnKeyword, pbtnText, pglyphiconSpan ) 
                         //alert('Child node loaded!!');
 
                         if (('undefined' !== typeof data.testData) && (null !== data.testData)) {
-                            console.log('testData received: ' +data.testData);
+                            //console.log('testData received: ' +data.testData);
                     }
 
                         //Determine the keyword category - Physical, Chemical or Biological from the url...
@@ -1726,24 +1890,51 @@ function clickSelectDataServices(event) {
 
 function getMapHeight()
 {
-    
-    toolbarHeight = $(document).height() - $(window).height();
-    var mapHeight = $(document).height() - toolbarHeight + "px";
-    return mapHeight;
+    //Get window and top bar heights...
+    var hWin = $(window).height();
+    var hBar = $('#cuahsi-bar').height();
+
+    //Map height = window height - top bar height
+    return (hWin - hBar);
 }
 
 function getMapWidth(panelVisible)
 {    
-    var panelwidth = 0;
-    //panelVisible
-    //if (panelVisible) 
-    //to fix browser problems calculating size
-    var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;  
-    panelwidth = $('#slider').width();
-    //alert(width + ',' + panelwidth)
-    //var mapWidth = $(window).width() - panelwidth + "px";
-    var mapWidth = width - panelwidth + "px";
-    return mapWidth;
+    var myPanelVisible = false;
+    if ('undefined' !== typeof panelVisible && null !== panelVisible) {
+        myPanelVisible = panelVisible;
+    }
+
+    //Get window and slider widths...
+    var wWin = $(window).width();
+    var wSld = $('#slider').width();
+
+    //Map width = window width - slider width (if visible)
+    return ( wWin - (myPanelVisible ? wSld : 0));
+}
+
+//update the map dimensions and position...
+function resizeAndPositionMap(mapIn, sliderIn) {
+
+    if ('undefined' === typeof mapIn || null === mapIn ||
+        'undefined' === typeof sliderIn || null === sliderIn) {
+        return;     //Map and/or slider not defined - return early
+    }
+
+    //Map height and width
+    var hMap = getMapHeight();
+    var wMap = getMapWidth(isSliderVisible(sliderIn));
+    //console.log('resizeAndPositionMap - map height/width: ' + hMap.toString() + ' / ' + wMap.toString());
+
+    $("#map-canvas").height(hMap); //setMapHeight
+    $("#map-canvas").width(wMap); //setMapWidth
+
+    //Map position
+    var hBar = $("#cuahsi-bar").height();
+    $("#map-canvas").css("margin-top", hBar);
+
+    //Trigger Google maps API resize event...
+    google.maps.event.trigger(mapIn, "resize");
 }
 
 function addCustomMapControls()
@@ -1767,7 +1958,7 @@ function addCustomMapControls()
         // #button can be anyt dom element
         var closeButton = document.querySelector('#StreetViewCloseButton'),
             controlPosition = google.maps.ControlPosition.RIGHT_CENTER;
-
+        
         // Assumes map has been initiated 
         var streetView = map.getStreetView();
 
@@ -1811,31 +2002,48 @@ function addSlider()
         trigger: $("#trigger"),
         // autoEscape: false,
         show: function (obj) {
-            $("#map-canvas").width(($(window).width() - $('#slider').width())) //setMapWidth
-            if (typeof (map) != "undefined") google.maps.event.trigger(map, "resize");
-            sidepanelVisible = true;
-
+            var mapWidth = getMapWidth(true);
+            //console.log('slider show - mapWidth: ' + mapWidth.toString());
+            $("#map-canvas").width(mapWidth); //setMapWidth
+            //Trigger Google maps API resize event...
+            if ( 'undefined' !== map && null !== map) {
+                google.maps.event.trigger(map, "resize");
+            }
         },
         shown: function (obj) {
-            //$("#map-canvas").position({ left:2* $('#slider').width() })
-            //$("#map-canvas").position({ right: $('#slider').width() })
-            // $("#map-canvas").width(($(window).width() - $('#slider').width())) //setMapWidth
-            // $("#map-canvas").position({ left:0 })
-            // google.maps.event.trigger(map, "resize");
-            //console.log(obj);
+            //var result = isSliderVisible(slider);
+            //console.log('shown - #slider visible? ' + result);
         },
         hide: function (obj) {
-            $("#map-canvas").position({ left: -$('#slider').width() })
-            $("#map-canvas").width(($(window).width())) //setMapWidth
-
+            var mapWidth = getMapWidth(false);
+            //console.log('slider hide - mapWidth: ' + mapWidth.toString());
+            $("#map-canvas").width(mapWidth); //setMapWidth
+            //Trigger Google maps API resize event...
+            if ( 'undefined' !== map && null !== map) {
             google.maps.event.trigger(map, "resize");
-            sidepanelVisible = false;
+            }
         },
         hidden: function (obj) {
-            //console.log(obj);
+            //var result = isSliderVisible(slider);
+            //console.log('hidden - #slider visible? ' + result);
         }
     });
+
     return _slider;
+}
+
+//Per the terminology and internals for the SliderReveal library ONLY:
+//  If input instance 'shown', return true
+//  else return false 
+//Per jQuery terminology, SliderReveal is always 'visible' and never 'hidden'
+function isSliderVisible(sliderIn) {
+    //Validate/initialize input parameters...
+    if ( 'undefined' === typeof sliderIn || null === sliderIn) {
+        return false;   //Invalid parameter - return early
+    }
+
+    var result = sliderIn.data('slide-reveal');
+    return (result);
 }
 
 function toggleSidePanelControl(controlDiv, map)
@@ -1869,16 +2077,12 @@ function toggleSidePanelControl(controlDiv, map)
         controlUI.appendChild(controlText);
 
         // Setup the click event listeners: simply set the map to
-    // Chicago
-
         google.maps.event.addDomListener(controlUI, 'click', function () {
-            if (sidepanelVisible) {
-                slider.slideReveal("hide")
-                sidepanelVisible = false
+            if (isSliderVisible(slider)) {
+                slider.slideReveal("hide");
             }
             else {
-                slider.slideReveal("show")
-                sidepanelVisible = true
+                slider.slideReveal("show");
             }
         });
 
@@ -2488,6 +2692,7 @@ function createInfoWindow( map, marker, serviceCodeToTitle, markerTypeName) {
                              'disableAutoPan': true,
                              'hideCloseButton': true });
     openInfoBubbles.push(iw);
+    //console.log('InfoBubble count: ' + openInfoBubbles.length);
 
     //Calculate minimum height and width in 'px' units...
     //Convert from ems: (size on ems) * (parent font size in px)
@@ -2502,9 +2707,39 @@ function createInfoWindow( map, marker, serviceCodeToTitle, markerTypeName) {
         if ( ! iw.isOpen()) {
             iw.open(map, marker);
         }
+
+        //Make current position the marker's position
+        var cp = marker.position;
+
+        currentPosition.update = false;  //Temporarily suppress position updates
+        currentPosition.latLng = cp;
+
+        //Check for change in current position, close window if indicated...
+        //NOTE: Fail-safe code for those instances in which the Google maps API does not report a 'mouseout' for the marker
+        //      The interval clears itself once it determines the current position is no longer the marker's position...
+        var intervalId;
+        intervalId = setInterval( (function(myCp, myIw) {
+            return function() {
+                if (myCp.lat() !== currentPosition.latLng.lat() || 
+                    myCp.lng() !== currentPosition.latLng.lng() ) {
+                    myIw.close();
+                    clearInterval(intervalId);  //Can bind to the reference here since this code runs after the reference is defined...
+                }
+            }
+        } )(cp, iw), 1000 )  //NOTE: Immediate execution of function to pass in cp and iw values
+                             //      If the IntervalId is passed as a parameter here, its value is undefined...
+
+        setTimeout( function() {
+            currentPosition.update = true;  //Restore position updates
+        }, 1000)
+
     });
     
     //Close on mouseout...
+    //NOTE: Google maps API returns 'mouseout' events most of the time.
+    //      If the user moves the mouse too quickly, however, 'mouseouts' 
+    //      can be lost.  See fail-safe code in 'mouseover' handler for 
+    //      these cases...
     google.maps.event.addListener(marker, 'mouseout', function () {
         iw.close();
     });
@@ -2524,8 +2759,6 @@ function removeInfoWindows() {
         }
     }
 }
-
-
 
 
 //BCC - 29-Jun-2015 - QA Issue # 26 - Data tab: filters under the timeseries table have no titles
@@ -2553,9 +2786,9 @@ function addFilterPlaceholders(event) {
         if ('' === select.val()) {
             //No selection made - prepend 'placeholder' to selections
             
-            //BCC - TEST - 30-Mar-2016 - Explicitly set the elements selected index to make selected/disabled element visible in IE 11
+            //BCC - 30-Mar-2016 - Explicitly set the elements selected index to make selected/disabled element visible in IE 11
             //Source: http://stackoverflow.com/questions/27283887/adding-selected-and-disabled-attributes-to-an-option-tag-in-ie-11
-            select.prepend('<option value="999999" selected disabled style="color: grey;">Filter by: ' + placeHolders[i] + '</option>');
+            select.prepend('<option value="999999" selected disabled style="color: grey;">By: ' + placeHolders[i] + '</option>');
             select.prop( "selectedIndex", 0 );
         }
     }
@@ -2649,8 +2882,11 @@ function setupServices()
 
 
          },
-         initComplete: function () {
-             $('#dtServices').dataTable().fnAdjustColumnSizing();
+         "initComplete": function () {
+             var dt = $('#dtServices').DataTable();
+
+             dt.columns.adjust();
+             dt.draw();
 
              //Revise layout for table's info, length and pagination controls...
              var tableName = 'dtServices';
@@ -2668,7 +2904,7 @@ function setupServices()
          }
     });
 
-
+    //Add click handler for row selection...
     $('#dtServices tbody').on('click', 'tr', function () {
         $(this).toggleClass('selected');
         var id = this.cells[5].innerHTML;
@@ -2686,7 +2922,7 @@ function setupServices()
         enableDisableButton('dtServices', 'btnClearSelectionsDS');
     });
 
-    //BC - Test - add a custom toolbar to the table...
+    //Add a custom toolbar to the table...
     //source: https://datatables.net/examples/advanced_init/dom_toolbar.html
     $("div.toolbarDS").html('<input type="button" style="margin-left: 1em; float:left;" class="btn btn-warning" disabled id="btnClearSelectionsDS" value="Clear Selection(s)"/>');
 
@@ -2707,54 +2943,89 @@ function setUpDatatables(clusterid) {
     //Reset the selected row count...
     selectedRowCounts['dtMarkers'].count = 0;
 
-
     var actionUrl = "/home/getDetailsForMarker/" + clusterid
  
     var oTable= $('#dtMarkers').dataTable({
         "ajax": actionUrl,
         "deferRender": true,
         "dom": 'C<"clear"><"toolbar">frtilp',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
+        "autoWidth": false,
         "columns": [
-           { "data": "Organization", "visible": true, "className": "tableColWrap10pct"},
+           { "data": "Organization", "visible": true, "width": "10em", "className": "td-textalign-center",
+             "render": renderAbbreviatedText,
+             "createdCell": createdTooltipText
+           },
             //BCC - 09-Sep-2015 - GitHub Issue #23 - Replace Network Name with Data Service Title
-           {"data": "ServTitle", "sTitle": "Service Title", "visible": true, "className": "tableColWrap10pct",
-                 'render': function (data, type, full, meta) { 
+           { "data": "ServTitle", "sTitle": "Service Title", "visible": true, "width": "10em", "className": "td-textalign-center",
+             "render": function (data, type, full, meta) { 
                             if ('display' === type) {
-                                return formatServiceTitle( full.ServCode, data );
+                        return formatServiceTitleAbbreviated( full.ServCode, data );
                             }
                             else {
                                 return data;
                             }
-                 }           
+             },
+            "createdCell": createdTooltipText                 
            },
-           { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true, "className": "tableColWrap10pct"},
-           { "data": "DataType", "visible": true, "className": "tableCol5pct"},
-           { "data": "ValueType", "visible": true, "className": "tableCol5pct"},
-           { "data": "SampleMedium", "visible": true, "className": "tableCol5pct"},
-           { "data": "BeginDate", "sTitle": "Start Date", "visible": true, "className": "tableCol5pct",
+           { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true, "width": "10em", "className": "td-textalign-center",
+             "render": renderAbbreviatedText,
+             "createdCell": createdTooltipText           
+           },
+           { "data": "SiteName", "sTitle": "Site Name", "visible": true, "width": "10em", "className": "td-textalign-center",
+             "render": renderAbbreviatedText,
+             "createdCell": createdTooltipText             
+           },
+           { "data": "DataType", "visible": true, "width": "5em", "className": "td-textalign-center"},
+           { "data": "ValueType", "visible": true, "width": "5em", "className": "td-textalign-center"},
+           { "data": "SampleMedium", "visible": true, "width": "5em", "className": "td-textalign-center"},
+           { "data": "QCLID", "visible": false, "searchable": false },
+           { "data": "QCLDesc", "visible": true, "width": "10em", "className": "td-textalign-center",
+             "render": renderAbbreviatedText,
+             "createdCell": createdTooltipText             
+           },
+           { "data": "MethodId", "visible": false, "searchable": false },
+           { "data": "MethodDesc", "visible": true, "width": "10em", "className": "td-textalign-center",
+             "render": renderAbbreviatedText,
+             "createdCell": createdTooltipText             
+           },
+           { "data": "SourceId", "visible": false, "searchable": false },
+           { "data": "SourceOrg", "visible": true, "width": "10em", "className": "td-textalign-center",
+             "render": renderAbbreviatedText,
+             "createdCell": createdTooltipText             
+           },
+           { "data": "BeginDate", "sTitle": "Start Date", "visible": true, "width": "10em",
                  'render': function (data, type, full, meta) { 
                      return formatDate(data);
                  }           
            },
-           { "data": "EndDate","sTitle": "End Date", "visible": true, "className": "tableCol5pct", 
+           { "data": "EndDate","sTitle": "End Date", "visible": true, "width": "10em",
                  'render': function (data, type, full, meta) { 
                      return formatDate(data);
                  }           
            },
-           { "data": "ValueCount", "visible": true, "className": "tableCol5pct"},
-           { "data": "SiteName", "sTitle": "Site Name", "visible": true, "className": "tableColWrap10pct"},
-           { "data": "VariableName", "width": "50px", "sTitle": "Variable Name", "visible": true, "className": "tableColWrap10pct"},
-           { "data": "TimeSupport", "visible": true, "className": "tableCol5pct"},
-           { "data": "TimeUnit", "visible": true, "className": "tableCol5pct"},
-           { "data": null, "sTitle": "Service URL", "visible": true, "className": "tableColWrap10pct"},
+           { "data": "ValueCount", "visible": true, "width": "10em", "className": "td-textalign-center",
+                 'render': function (data, type, full, meta) { 
+                     return (0 === data) ? 'unknown' : data;
+                 }           
+           },
+           { "data": "VariableName", "sTitle": "Variable Name", "visible": true, "width": "10em", "className": "td-textalign-center",
+             "render": renderAbbreviatedText,
+             "createdCell": createdTooltipText             
+           },
+           { "data": "TimeSupport", "visible": true, "width": "5em", "className": "td-textalign-center"},
+           { "data": "TimeUnit", "visible": true, "width": "5em", "className": "td-textalign-center"},
+           { "data": null, "sTitle": "Service URL", "visible": true, "width": "10em"},
 
-           { "data": "SiteCode", "sTitle": "Site Code", "visible": true },
-           { "data": "VariableCode", "sTitle": "Variable Code", "visible": true },           
-           { "data": "SeriesId", "visible": false, "searchable": false },
-           { "data": "ServURL", "sTitle": "Web Service Description URL", "visible": false, "searchable": false },
-           { "data": "ServCode", "name": "ServiceCode", "visible": false, "searchable": false }
+           { "data": "SiteCode", "sTitle": "Site Code", "visible": true,  "width": "10em" },
+           { "data": "VariableCode", "sTitle": "Variable Code", "visible": true,  "width": "10em" },           
+           { "data": "SeriesId", "visible": false, "searchable": false,  "width": "10em" },
+           { "data": "ServURL", "sTitle": "Web Service Description URL", "visible": false, "searchable": false, "width": "10em" },
+           { "data": "ServCode", "name": "ServiceCode", "visible": false, "searchable": false,  "width": "10em" },
+           { 'data': 'VariableUnits', 'visible': false, 'width': '5em'}
         ],
-
+        "order": [[0,'asc'],    //Publisher
+                  [1,'asc'],    //Service Title
+                  [2,'asc']],    //Keyword
         "scrollX": true,
         "scrollY": "30em",
         "scrollCollapse": true,
@@ -2765,7 +3036,7 @@ function setUpDatatables(clusterid) {
                  var servCode = data.ServCode;
 
                  var descUrl = getDescriptionUrl(servCode);
-                 $('td', row).eq(13).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
+                 $('td', row).eq(16).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
 
                 //If 'Select All' in progress, add the 'selected' class to the row...
                 var selectCheck = $('#' + 'spanSelectCheck'); 
@@ -2777,15 +3048,15 @@ function setUpDatatables(clusterid) {
         "initComplete": function () {
 
             //BCC - 10-Aug-2015 - GitHub Issue #35 - Add filter by Site Name 
-            setfooterFilters('dtMarkers', [0, 1, 2, 3, 4, 5]);
+            setfooterFilters('dtMarkers', [0, 1, 2, 3, 4, 5, 6]);
 
-            var tempEvent = { 'data': { 'tableId': 'dtMarkers', 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Data Type', 'Value Type', 'Sample Medium'] } };
+            var tempEvent = { 'data': { 'tableId': 'dtMarkers', 'placeHolders': ['Publisher', 'Service Title', 'Keyword', 'Site Name', 'Data Type', 'Value Type', 'Sample Medium'] } };
             addFilterPlaceholders(tempEvent);
 
-            //BC - 10-Jul-2015 - Temporarily disable tooltips...
-            setupToolTips();
+            var dt = $('#dtMarkers').DataTable();
         
-            $('#dtMarkers').dataTable().fnAdjustColumnSizing();
+            dt.columns.adjust();
+            dt.draw();
 
             //Revise layout for table's info, length and pagination controls...
             $('#' + 'dtMarkers_info').css({'width': '25%'});
@@ -2798,6 +3069,9 @@ function setUpDatatables(clusterid) {
                                                          'margin-top': '1.0em'});
 
             $('#' + 'dtMarkers_paginate').css({'width': '25%'});
+
+            //Set up tooltips
+            setupToolTips();
         }
     });
 
@@ -2943,46 +3217,122 @@ function setUpDatatables(clusterid) {
 //Initialize 'static' tooltips - those not subject to change during the application session...
 function setupToolTips() {
 
-    var texts = ["Select one or more rows to export. You can check the status by opening the workspace and selecting the 'Exports' tab.",
-                  "Select one or more rows to add to your workspace. Work with your data by opening the workspace and selecting the 'Data' tab.",
-                  "Display the map with current search results, if any.",
-                  "Display current search results in a table.",
-                  "Display time series selected for additional processing and/or download.",
-                  "Display CUAHSI contact information.",
-                  "Display information about the CUAHSI HydroClient.",
-                  "Display a brief HydroClient tutorial.",
-                  "Login via Google to retrieve saved Workspace entries.",
-                  "Display HydroClient licensing information"
-                ];
+    var texts = [/* 0*/ "Select one or more rows to export. You can check the status by opening the workspace and selecting the 'Exports' tab.",
+                 /* 1*/ "Select one or more rows to add to your workspace. Work with your data by opening the workspace and selecting the 'Data' tab.",
+                 /* 2*/ "Display the map with current search results, if any.",
+                 /* 3*/ "Display current search results in a table.",
+                 /* 4*/ "Display time series selected for additional processing and/or download.",
+                 /* 5*/ "Display CUAHSI contact information.",
+                 /* 6*/ "Display information about the CUAHSI HydroClient.",
+                 /* 7*/ "Display a brief HydroClient tutorial.",
+                 /* 8*/ "Login via Google to retrieve saved Workspace entries.",
+                 /* 9*/ "Display HydroClient licensing information.",
+                 /*10*/ "The organization responsible for publishing the data set, which may or may not be the same organization responsible for collecting or creating the data set.",
+                 /*11*/ "A name for this collection of data. Defined by the data publisher.",
+                 /*12*/ "Search term used to tag the data set that describes the parameter being measured. Publishers must choose from a set of CUAHSI approved terms.",
+                 /*13*/ "Name given by the data collector of the location where observations in the data set have been made. Defined by the data publisher.",
+                 /*14*/ "Describes the recorded value over the time interval being sampled. Publishers must choose from a set of CUAHSI approved terms.",
+                 /*15*/ "Distinguishes between various types of observations, such as derived values versus field observations. Publishers must choose from a set of CUAHSI approved terms.",
+                 /*16*/ "Describes the medium which is being sampled for laboratory analysis or the medium in which a sensor is placed. Publishers must choose from a set of CUAHSI approved terms.",
+                 /*17*/ "Describes how the data were (or were not) subjected to quality assurance. Defined by the data publisher. ",
+                 /*18*/ "Describes the process and technique used to make the measurements in a data set. Defined by the data publisher.",
+                 /*19*/ "Organization responsible for collecting or otherwise creating the data set. Defined by the data publisher.",
+                 /*20*/ "Date of first observation in the data set. Created during the cataloging process.",
+                 /*21*/ "Date of the last observation in the data set. Created during the cataloging process.",
+                 /*22*/ "An estimate of the number of observations in this data set, which is created during the cataloging process. " +
+                         "This value is calculated using a ratio between the time range of your search and the overall time range of the data series. " +
+                         "The estimated Value Count is not available if the time series has observations that are irregularly spaced over time.",
+                 /*23*/ "The parameter observed in the data set. Publishers must choose from a set of CUAHSI approved terms.",
+                 /*24*/ "Indicates the period of time which the measurement represents. Defined by the data publisher.",
+                 /*25*/ "The unit in which the time support is expressed (e.g. “day” or “minute”). Publishers must choose from a set of CUAHSI approved terms.",
+                 /*26*/ "The address of the server hosting the data set. ",
+                 /*27*/ "A shortened name for the site where the observations in the data set were made. Defined by the data publisher.",
+                 /*28*/ "A shortened name for the parameter being measured. Defined by the data publisher.",
+                 /*29*/ "The current status of the server process.",
+                 /*30*/ "The units of measure for the variable.",
+                 /*31*/ "A unique system identifier for the time series.",
+                 /*32*/ "The creation date and time for the entry.",
+                 /*33*/ "Tootip text - TBD" ];
 
-    var divs = { 'divZipSelections': {'text': texts[0]},
-                 'divManageSelections' : {'text': texts[1]},
-                 'divZipSelectionsTS': {'text': texts[0]},
-                 'divManageSelectionsTS' : {'text': texts[1]},
-                 'liMapTab': {'text': texts[2]},
-                 'liTableTab': {'text': texts[3]},
-                 'liTabbedDataMgrTab': {'text': texts[4]},
-                 'liContactTab': {'text': texts[5], 'placement': 'right'},
-                 'liHelpTab': {'text': texts[6], 'placement': 'right'},
-                 'liQuickStartTab': {'text': texts[7], 'placement': 'right'},
-                 'liGoogleTab': {'text': texts[8]},
-                 'liLicenseTab': {'text': texts[9], 'placement': 'right'}
+    var divs = { 'divZipSelections': {'type': 'id', 'text': texts[0]},
+                 'divManageSelections' : {'type': 'id', 'text': texts[1]},
+                 'divZipSelectionsTS': {'type': 'id', 'text': texts[0]},
+                 'divManageSelectionsTS' : {'type': 'id', 'text': texts[1]},
+                 'liMapTab': {'type': 'id', 'text': texts[2]},
+                 'liTableTab': {'type': 'id', 'text': texts[3]},
+                 'liTabbedDataMgrTab': {'type': 'id', 'text': texts[4]},
+                 'liContactTab': {'type': 'id', 'text': texts[5], 'placement': 'right'},
+                 'liHelpTab': {'type': 'id', 'text': texts[6], 'placement': 'right'},
+                 'liQuickStartTab': {'type': 'id', 'text': texts[7], 'placement': 'right'},
+                 'liGoogleTab': {'type': 'id', 'text': texts[8]},
+                 'liLicenseTab': {'type': 'id', 'text': texts[9], 'placement': 'right'},
+                 'cl_thPublisher': {'type': 'class', 'text': texts[10], 'thead': true},
+                 'cl_thServiceTitle': {'type': 'class', 'text': texts[11], 'thead': true},
+                 'cl_thKeyword': {'type': 'class', 'text': texts[12], 'thead': true},
+                 'cl_thSiteName': {'type': 'class', 'text': texts[13], 'thead': true},
+                 'cl_thDataType': {'type': 'class', 'text': texts[14], 'thead': true},
+                 'cl_thValueType': {'type': 'class', 'text': texts[15], 'thead': true},
+                 'cl_thSampleMedium': {'type': 'class', 'text': texts[16], 'thead': true},
+                 'cl_thQcLevel': {'type': 'class', 'text': texts[17], 'thead': true},
+                 'cl_thMethod': {'type': 'class', 'text': texts[18], 'thead': true},
+                 'cl_thCollector': {'type': 'class', 'text': texts[19], 'thead': true},
+                 'cl_thStartDate': {'type': 'class', 'text': texts[20], 'thead': true},
+                 'cl_thEndDate': {'type': 'class', 'text': texts[21], 'thead': true}, 
+                 'cl_thValueCount': {'type': 'class', 'text': texts[22], 'thead': true},
+                 'cl_thVariableName': {'type': 'class', 'text': texts[23], 'thead': true},
+                 'cl_thTimeSupport': {'type': 'class', 'text': texts[24], 'thead': true},
+                 'cl_thTimeUnit': {'type': 'class', 'text': texts[25], 'thead': true},
+                 'cl_thServiceUrl': {'type': 'class', 'text': texts[26], 'thead': true},
+                 'cl_thSiteCode': {'type': 'class', 'text': texts[27], 'thead': true},
+                 'cl_thVariableCode': {'type': 'class', 'text': texts[28], 'thead': true},
+                 'cl_thStatus': {'type': 'class', 'text': texts[29], 'thead': true},
+                 'cl_thVariableUnits': {'type': 'class', 'text': texts[30], 'thead': true},
+                 'cl_thSeriesId': {'type': 'class', 'text': texts[31], 'thead': true},
+                 'cl_thCreated': {'type': 'class', 'text': texts[32], 'thead': true}
                };
 
     for (var div in divs) {
 
-        var divTooltip = $('#' + div);
+        //Select id or class - as indicated...
+        //var divTooltip = ('id' === divs[div].type) ? $('#' + div) : $('.' + div);
+        var divTooltip = ('id' === divs[div].type) ? $((divs[div].thead ? 'thead ' : '') + '#' + div ) : $((divs[div].thead ? 'thead ' : '') + '.' + div);
 
-        divTooltip.tooltip('destroy');
-        divTooltip.tooltip({
-                        'animation': true,
-                        'placement': divs[div].placement ? divs[div].placement: 'auto',
-                        'trigger': 'hover',
-                        'title': divs[div].text,
-                        'delay': divs[div].delay ? divs[div].delay: {'show': 1000, 'hide': 500}});
+        if ( 0 < divTooltip.length) {
+            //jQuery object exists...
+            
+            //Create tooltip on 'mouseenter'...
+            divTooltip.off('mouseenter', tooltipCreate);
+            divTooltip.on('mouseenter', {'div': div, 'divs': divs}, tooltipCreate);
+
+            //Destroy tooltip on 'mouseleave'...
+            divTooltip.off('mouseleave', tooltipDestroy);
+            divTooltip.on('mouseleave', tooltipDestroy);
+        }
     }
 
 }
+
+//Create a tooltip on the current instance...
+function tooltipCreate(event) {
+                var myDiv = $(this);
+                var div = event.data.div;
+                var divs = event.data.divs;
+
+                myDiv.tooltip({
+                        'placement': divs[div].placement ? divs[div].placement: 'auto',
+                        'trigger': 'hover',
+                        'title': divs[div].text,
+                                'delay': divs[div].delay ? divs[div].delay: {'show': 100, 'hide': 100},
+                                'template': '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div style="text-align: justify; text-justify: distribute" class="tooltip-inner"></div></div>',
+                                'container': 'body'}); //MUST use container option in datatables... source: http://stackoverflow.com/questions/33858135/bootstrap-popover-overlay-by-datatables-jquery
+                myDiv.tooltip('show');                
+}
+
+//Destroy the tooltip on the current instance...
+function tooltipDestroy() {
+    $(this).tooltip('destroy');
+}
+
 
 //Initialize an individual 'static' tooltip...
 function setupToolTip( divToolTip, textToolTip) {
@@ -3021,15 +3371,16 @@ function setupDataManagerTable() {
     //       when the table displays in the browser...
     var oTable = $(tableId).dataTable({
         'deferRender': false,
-        //'dom': 'C<"clear">l<"toolbarDataMgr">frtip',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
         'dom': 'C<"clear"><"toolbarDataMgr">frtilp',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
-        //"autoWidth": false,
-        "autoWidth": true,
+        "autoWidth": false,
         'columns': [
-           { 'data': 'TimeSeriesRequestStatus', 'visible': true,
+           { 'data': 'TimeSeriesRequestStatus', 'visible': true, "searchable": false,
              'render': function (data, type, full, meta) { 
 
                  var html = ''
+                 var api = new $.fn.dataTable.Api(meta.settings);
+                 var cell = api.cell(meta.row, meta.col).node();    //Get DOM element of the selected cell...
+                 var tooltipText = '';
                  var val = parseInt(data);
                  switch (val) {
                     case timeSeriesRequestStatus.NotStarted:
@@ -3047,23 +3398,29 @@ function setupDataManagerTable() {
                         break;
                     case timeSeriesRequestStatus.Completed:
                         html = '<span class="glyphicon glyphicon-thumbs-up" style="color: #32cd32"></span><em> Completed</em>';
+                        renderTooltipStatus(cell, 'Processing Completed');
                         break;
                     case timeSeriesRequestStatus.CheckTaskError:
                     case timeSeriesRequestStatus.EndTaskError:
                     case timeSeriesRequestStatus.ProcessingError:
                     case timeSeriesRequestStatus.RequestTimeSeriesError:
                         html = '<span class="glyphicon glyphicon-thumbs-down"></span><em> Error</em>';
+                        tooltipText = 'Error';
                             if ( 'undefined' !== typeof full.statusTooltipText) {
                                 //Add status tooltip...
                                 html = '<span class="glyphicon glyphicon-thumbs-down" data-toggle="tooltip" title="' + full.statusTooltipText + '"></span><em> Error</em>';
+                            tooltipText = full.statusTooltipText;
                             }
+                        renderTooltipStatus(cell, tooltipText);
                         break;
                     case timeSeriesRequestStatus.UnknownTask:
-                        html = '<span class="glyphicon glyphicon-thumbs-down"></span><em> Unknown task</em>';
+                        html = '<span class="glyphicon glyphicon-thumbs-down" ></span><em> Unknown task</em>';
+                        renderTooltipStatus(cell, 'Unknown Task');
                         break;
                     default:
-                        console.log('data = ' + data.toString());
+                        console.log('tblDataManager data = ' + data.toString());
                         html = '<span class="glyphicon glyphicon-question-sign"></span><em> Unknown Status</em>';
+                        renderTooltipStatus(cell, 'Unknown Status');
                         break;
                  }
 
@@ -3077,46 +3434,99 @@ function setupDataManagerTable() {
                  return '<span class="glyphicon ' + (data ? 'glyphicon-cloud' : 'glyphicon-cloud-upload') + '"></span> ' + (data ? '<em>Saved</em>' : '<em>Not Saved</em>');
              }
            },
-           { 'data': 'Organization', 'visible': true, "className": "tableColWrap10pct" },
-           { 'data': 'ServTitle', 'visible': true, "className": "tableColWrap10pct",
+           { 'data': 'Organization', 'visible': true, 'width': '10em',
+             'render': renderAbbreviatedText,
+             'createdCell': createdTooltipText
+           },
+           { 'data': 'ServTitle', 'visible': true, 'width': '10em',
                  'render': function (data, type, full, meta) { 
                             if ('display' === type) {
-                                return formatServiceTitle( full.ServiceCode, data );
+                                return formatServiceTitleAbbreviated( full.ServiceCode, data );
                             }
                             else {
                                 return data;
                             }
+                 },
+                 'createdCell': createdTooltipText
+           },
+           { 'data': 'ConceptKeyword', 'visible': true, 'width': '10em',
+             'render': renderAbbreviatedText,
+             'createdCell': createdTooltipText
+           },
+           { 'data': 'SiteName', 'visible': true, 'width': '10em',
+             'render': renderAbbreviatedText,
+             'createdCell': createdTooltipText
+           },
+           { 'data': 'VariableName', 'visible': true, 'width': '10em',
+             'render': renderAbbreviatedText,
+             'createdCell': createdTooltipText
+           },   
+           { 'data': 'QCLID', 'visible': false, "searchable": false },
+           { 'data': 'QCLDesc', 'visible': true, 'width': '10em', 'className': 'td-textalign-center',
+             'render': renderAbbreviatedText,
+             'createdCell': createdTooltipText             
+           },
+           { 'data': 'MethodId', 'visible': false, "searchable": false },
+           { 'data': 'MethodDesc', 'visible': true, 'width': '10em', 'className': 'td-textalign-center',
+             'render': renderAbbreviatedText,
+             'createdCell': createdTooltipText             
+           },
+           { 'data': 'SourceId', 'visible': false, "searchable": false },
+           { 'data': 'SourceOrg', 'visible': true, 'width': '10em', 'className': 'td-textalign-center',
+             'render': renderAbbreviatedText,
+             'createdCell': createdTooltipText             
+           },
+           { 'data': 'VariableUnits', 'visible': true, 'width': '5em', 'className': 'td-textalign-center',
+             'render': function (data, type, full, meta) {
+                 var msg = 'VariableUnits is: ';
+                 var msgOut = '';
+
+                 if ( 'undefined' == typeof data ) {
+                    msgOut = msg + 'undefined'
+                 }
+                 else if (null === data) {
+                    msgOut = msg + 'null'
+                 } 
+                 else if ( '' === data) {
+                    msgOut = msg + 'empty'
+                 }
+                 
+                 if ( '' !== msgOut) {
+                    console.log(msgOut);
+                 }
+
+                return renderAbbreviatedText(data, type, full, meta);
                  }                                  
            },
-           { "data": "ConceptKeyword", "visible": true },
-           { "data": "VariableUnits", "visible": true},
-           { 'data': 'DataType', 'visible': true },
-           { "data": "ValueType", "visible": true },
-           { "data": "SampleMedium", "visible": true },
-           { 'data': 'BeginDate', "sTitle": "Start Date", 'visible': true,
+           { 'data': 'DataType', 'visible': true, 'width': '5em', 'className': 'td-textalign-center' },
+           { "data": "ValueType", "visible": true, 'width': '5em', 'className': 'td-textalign-center' },
+           { 'data': 'SampleMedium', 'visible': true, 'width': '5em', 'className': 'td-textalign-center' },
+           { 'data': 'BeginDate', 'sTitle': 'Start Date', 'visible': true, 'width': '10em',
              'render': function (data, type, full, meta) { 
                  return formatDate(data);
              }           
            },
-           { 'data': 'EndDate', "sTitle": "End Date", 'visible': true,
+           { 'data': 'EndDate', 'sTitle': 'End Date', 'visible': true, 'width': '10em',
              'render': function (data, type, full, meta) { 
                  return formatDate(data);
              }           
            },
-           { 'data': 'ValueCount', 'visible': true },
-           { 'data': 'SiteName', 'visible': true },
-           { 'data': 'VariableName', 'width': '50px', 'visible': true },
-           { 'data': 'TimeSupport', 'visible': true },
-           { 'data': 'TimeUnit', 'visible': true },
-           { 'data': 'SeriesId', 'visible': true },
+           { 'data': 'ValueCount', 'visible': true, 'width': '10em', 'className': 'td-textalign-center',
+                 'render': function (data, type, full, meta) { 
+                     return (0 === data) ? 'unknown' : data;
+                 }                      
+           },
+           { 'data': 'TimeSupport', 'visible': true, 'width': '5em', 'className': 'td-textalign-center' },
+           { 'data': 'TimeUnit', 'visible': true, 'width': '5em', 'className': 'td-textalign-center' },
+           { 'data': 'SeriesId', 'visible': true, 'width': '5em', 'className': 'td-textalign-center' },
            //BCC - Make these columns visible for testing...
-           { 'data': 'WofUri', 'visible': false },
+           { 'data': 'WofUri', 'visible': false, "searchable": false },
            { 'data': 'WofTimeStamp', 'visible': true,
              'render': function (data, type, full, meta) { 
                  return formatDate(data, true);
              }           
            },
-           { 'data': 'TimeSeriesRequestId', 'visible': false}
+           { 'data': 'TimeSeriesRequestId', 'visible': false, "searchable": false}
         ],
 
         'scrollX': true,
@@ -3126,7 +3536,10 @@ function setupDataManagerTable() {
 
 
             //Adjust column sizing...
-            $(tableId).dataTable().fnAdjustColumnSizing();
+            var dt = $(tableId).DataTable();
+            
+            dt.columns.adjust();
+            dt.draw();
 
             //Revise layout for table's info, length and pagination controls...
             $('#' + tableName + '_info').css({'width': '25%'});
@@ -3140,6 +3553,7 @@ function setupDataManagerTable() {
 
             $('#' + tableName + '_paginate').css({'width': '25%'});
 
+            setupToolTips();
         }
     });
 
@@ -3210,11 +3624,10 @@ function setupDataManagerTable() {
                                                 '<span style="font-weight: bold; font-size: 1.00em;">&nbsp;Select Tool&nbsp;</span>' +
                                                 '<span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>' +
                                               '</div>' +
-
                                         '</button>' +
 
                                            //Application list...
-                                           '<ul id="ddHydroshareList" class="dropdown-menu" style="width: 20em;">' +
+                                           '<ul id="ddHydroshareList" class="dropdown-menu">' +
                                            //Export section...
                                             '<li class="dropdown-header" id="exportApps">' +
                                                '<ul style="list-style: none; padding-left: 0em;">' +
@@ -3288,6 +3701,32 @@ function setupDataManagerTable() {
                                                         'tableId': tableName, 'getApps': getByuAppsList, 'divLaunchId': 'divLaunchHydrodataToolDataMgr' }, ddHydrodataToolDataMgr);
 }
 
+//Clear all table selections...
+function clearDatatableSelections(event) {
+    //Retrieve all the table's RENDERED <tr> elements whether visible or not, in the current sort/search order...
+    //Source: http://datatables.net/reference/api/rows().nodes()
+    var table = $('#' + event.data.tableId).DataTable();
+    var rows = table.rows({ 'order': 'current', 'search': 'applied' });     //Retrieve rows per current sort/search order...
+    var nodesRendered = rows.nodes();                                       //Retrieve all the rendered nodes for these rows
+    //NOTE: Rendered nodes retrieved in the same order as the rows...
+    var jqueryObjects = nodesRendered.to$();    //Convert to jQuery Objects!!
+    var className = 'selected';
+
+    //Remove selected class from all rendered rows...
+    jqueryObjects.removeClass(className);
+
+    //Update data in each row...
+    rows.every(function() {
+        var rowData = this.data();
+
+        rowData.Selected = false;
+        this.data(rowData);
+    });
+
+    //Check button state...
+    enableDisableButton(event.data.tableId, event.data.btnId);
+}
+
 function getByuAppsList() {
     return byuAppsList;
 }
@@ -3316,6 +3755,7 @@ function loadByuHydroshareApps() {
             var length = apps.length;
             var listItems = '<ul style="list-style: none; padding-left: 0em;">';
 
+            if ( 0 < length) {
             for (var i = 0; i < length; ++i) {
                 //Source(s) for Bootstrap dropdown styling:
                 //    http://jsfiddle.net/KyleMit/5p341amh/
@@ -3328,7 +3768,14 @@ function loadByuHydroshareApps() {
                               ' ' + apps[i].name +
                              '</a></li>';
             }
-
+            }
+            else {
+                //Empty list - display a 'not available' message...
+                listItems += '<li disabled>' + 
+                             '<span disabled class="glyphicon glyphicon-thumbs-down" style="max-width: 100%; font-size: 1.5em;"></span>' +
+                             '<span disabled style="font-weight: bold; display: inline-block; vertical-align: super;">' + '&nbsp;Hydroshare applications temporarily unavailable...' + '</span>' +
+                             '</li>';
+            }
             listItems += '</ul>';
             appsDropdown.append(listItems);
 
@@ -3456,8 +3903,149 @@ function btnDisableCheck(buttonId) {
     return result;
 }
 
-function launchByuHydroshareApp(event) {
+//Old style code...
+//function launchByuHydroshareApp(event) {
 
+//    var tableId = '#' + event.data.tableId;
+//    var table = $(tableId).DataTable();
+//    var apps = event.data.getApps().apps;
+
+//    //Currently selected BYU app
+//    var valueSelected = $('#' + event.data.divId).text().trim();
+//    var byuUrl= null;
+
+//    //New selection - find the associated app URL...
+//    var length = apps.length;
+
+//    for (var i = 0; i < length; ++i) {
+//        if (valueSelected === apps[i].name) {
+//            byuUrl = apps[i].url;
+//            break;
+//        }
+//    }
+
+//    if (null !== byuUrl) {
+//        //URL found - find selected water one flow archives...
+//        var selectedRows = table.rows('.selected').data();
+//        var rowsLength = selectedRows.length;
+//        var wofParams = '';
+//        var extension = '.zip';
+
+//        for (var ii = 0; ii < rowsLength; ++ii) {
+//            if (timeSeriesRequestStatus.Completed == selectedRows[ii].TimeSeriesRequestStatus) {
+//                if ('' !== wofParams) {
+//                    wofParams += ',';
+//                }
+//                wofParams += (selectedRows[ii].WofUri.split(extension))[0];
+//            }
+//        }
+
+//        if ( '' !== wofParams) {
+//            //Selections found - call BYU app with parameters...
+//            // URL format: [app base name]/?src=cuahsi&res_id=abcdefj+abcdefh+abcedfi+abcdefk 
+//            var fullUrl = byuUrl + '/?src=cuahsi&res_id=' + wofParams;
+
+//            window.open(fullUrl, '_blank', '', false);
+            
+//        }
+//    }
+//}
+
+//New style code - form-based...
+//function launchByuHydroshareApp(event) {
+
+//    var tableId = '#' + event.data.tableId;
+//    var table = $(tableId).DataTable();
+//    var apps = event.data.getApps().apps;
+
+//    //Currently selected BYU app
+//    var valueSelected = $('#' + event.data.divId).text().trim();
+//    var byuUrl= null;
+
+//    //New selection - find the associated app URL...
+//    var length = apps.length;
+
+//    for (var i = 0; i < length; ++i) {
+//        if (valueSelected === apps[i].name) {
+//            byuUrl = apps[i].url;
+//            break;
+//        }
+//    }
+
+//    if (null !== byuUrl) {
+//        //URL found - find selected water one flow archives...
+//        var selectedRows = table.rows('.selected').data();
+//        var rowsLength = selectedRows.length;
+//        var wofParams = [];
+//        var extension = '.zip';
+
+//        for (var ii = 0; ii < rowsLength; ++ii) {
+//            if (timeSeriesRequestStatus.Completed == selectedRows[ii].TimeSeriesRequestStatus) {
+//                var row = selectedRows[ii];
+//                var item = { 'WofUri': (row.WofUri.split(extension))[0],
+//                             'QCLID': row.QCLID,
+//                             'MethodId': row.MethodId,
+//                             'SourceId': row.SourceId
+//                            };
+//                wofParams.push(item);
+//            }
+//        }
+
+//        //Create a dynamic form and submit to BYU URL...
+//        // Sources: http://htmldog.com/guides/javascript/advanced/creatingelements/
+//        //          http://stackoverflow.com/questions/30835990/how-to-submit-form-to-new-window
+//        //          http://jsfiddle.net/qqzxtk67/
+//        //          http://stackoverflow.com/questions/17431760/create-a-form-dynamically-with-jquery-and-submit
+//        //          http://jsfiddle.net/MVXXX/1/
+//        if ( 0 < wofParams.length) {
+//            //Remove/create form...
+//            $('form#dataViewerForm').remove();
+//            var jqForm = $('<form id="dataViewerForm"></form>').appendTo(document.body);
+
+//            //Add method, action and target...
+//            var targetWindow = 'dataViewerWindow';
+
+//            //BCC - Test - 07-Oct-2016 - Try 'get' rather than 'post'
+//            // Form arguments added to URI line as explained in source - however, appsdev server still returns a 301...
+//            //SOURCE: https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Forms/Sending_and_retrieving_form_data
+//            //jqForm.attr('method', 'post');
+//            jqForm.attr('method', 'get');
+//            jqForm.attr('action', byuUrl);
+//            jqForm.attr('target', targetWindow);
+
+//            //Append source...
+//            jqForm.append('<input type="hidden" name="Source" value="cuahsi">');
+
+//            //Append child list...
+//            jqForm.append('<ul id="wofParams"></ul>');
+
+//            //For each wofParams item...
+//            var itemsLength = wofParams.length;
+//            var jqList = $('#wofParams');
+
+
+//            for (var iii = 0; iii < itemsLength; ++iii) {
+//                //Append to child list...
+//                var item = wofParams[iii];
+//                jqList.append('<li>' +
+//                              '<input type="hidden" name="WofUri" value="' + item.WofUri + '">' +
+//                              '<input type="hidden" name="QCLID" value="' + item.QCLID + '">' +
+//                              '<input type="hidden" name="MethodId" value="' + item.MethodId + '">' +
+//                              '<input type="hidden" name="SourceId" value="' + item.SourceId + '">' +
+//                              '</li>'
+//                             ); 
+//            }
+
+//            //Open Data Viewer window, submit form...
+//            window.open('', targetWindow, '', false);    
+//            jqForm.submit();
+//        }
+//    }
+//}
+
+//New style code - expanded URI parameters...
+function launchByuHydroshareApp(event)
+{
     var tableId = '#' + event.data.tableId;
     var table = $(tableId).DataTable();
     var apps = event.data.getApps().apps;
@@ -3485,24 +4073,25 @@ function launchByuHydroshareApp(event) {
 
         for (var ii = 0; ii < rowsLength; ++ii) {
             if (timeSeriesRequestStatus.Completed == selectedRows[ii].TimeSeriesRequestStatus) {
-                if ('' !== wofParams) {
-                    wofParams += ',';
-                }
-                wofParams += (selectedRows[ii].WofUri.split(extension))[0];
+                var row = selectedRows[ii];
+
+                var params = 'WofUri=' + (row.WofUri.split(extension))[0] +
+                             '&QCLID=' + row.QCLID +
+                             '&MethodId=' + row.MethodId +
+                             '&SourceId=' + row.SourceId;
+                wofParams += '&' + params;
             }
         }
 
         if ( '' !== wofParams) {
             //Selections found - call BYU app with parameters...
-            // URL format: [app base name]/?src=cuahsi&res_id=abcdefj+abcdefh+abcedfi+abcdefk 
-            var fullUrl = byuUrl + '/?src=cuahsi&res_id=' + wofParams;
+            // URL format: [app base name]/?Source=cuahsi&WofUri=...&QCLID=...&MethodId=...&SourceId=...[&WofUri=... ...]
+            var fullUrl = byuUrl + '/?Source=cuahsi' + wofParams;
 
             window.open(fullUrl, '_blank', '', false);
-            
         }
     }
 }
-
 
 //Draw event handler...
 function retrieveWaterOneFlowForTimeSeries(event) {
@@ -3649,33 +4238,6 @@ function enableStatusTooltip(event) {
     $('#' + tableId + ' span[data-toggle="tooltip"]').tooltip();
 }
 
-function updateTimeSeriesVariableUnits( tableName, SeriesIdsToVariableUnits) {
-
-    var tableId = '#' + tableName;
-    var table = $(tableId).DataTable();
-
-    //Scan table data for input requestId...
-    var reDraw = false;
-    table.rows().every(function () {
-
-        var rowData = this.data();
-
-        for (var seriesId in SeriesIdsToVariableUnits) {
-            if ( parseInt(seriesId) === rowData.SeriesId) {
-                rowData.VariableUnits = SeriesIdsToVariableUnits[seriesId];
-                this.invalidate();
-                reDraw = true;
-                break;
-            }
-        }
-    });
-
-    if ( reDraw) {
-        table.draw();
-    }
-}
-
-
 function updateTimeSeriesBlobUri( tableName, requestId, blobUri, blobTimeStamp) {
 
     var tableId = '#' + tableName;
@@ -3689,7 +4251,7 @@ function updateTimeSeriesBlobUri( tableName, requestId, blobUri, blobTimeStamp) 
         if (requestId === rowData.TimeSeriesRequestId) {
             //Found - update row with input status
             rowData.WofUri = blobUri;
-            rowData.WofTimeStamp = formatDate(blobTimeStamp, true);
+            rowData.WofTimeStamp = blobTimeStamp;
             this.invalidate();
             reDraw = true;
         }
@@ -3820,6 +4382,7 @@ function startRequestTimeSeriesMonitor() {
 
                                         glyphiconSpan.removeClass('glyphicon-refresh spin');
                                         glyphiconSpan.addClass('glyphicon-thumbs-up');
+                                        renderTooltipElement(glyphiconSpan, 'Ready for download...');
 
                                         tableRow.find('#statusMessageText').text(timeSeriesResponse.Status);
 
@@ -3863,6 +4426,8 @@ function startRequestTimeSeriesMonitor() {
 
                                                 glyphiconSpan.removeClass('glyphicon-refresh spin');
                                                 glyphiconSpan.addClass('glyphicon-thumbs-down');
+                                                renderTooltipElement(glyphiconSpan, 'Processing error...');
+
                                                 glyphiconSpan.css('color', 'red');
 
                                                 //Color table row as 'warning'
@@ -3883,19 +4448,6 @@ function startRequestTimeSeriesMonitor() {
                             }
                             else { 
                                 if ( 'tblDataManager' === tableName ) {
-
-                                    if ( ! jQuery.isEmptyObject(timeSeriesResponse.SeriesIdsToVariableUnits)) {
-                                        //Update variable units...
-                                        updateTimeSeriesVariableUnits( tableName, timeSeriesResponse.SeriesIdsToVariableUnits);
-
-                                        //Set footer filters...
-                                        setfooterFilters( tableName, [2, 3, 4, 5, 6, 7, 8], null);
-
-                                        //Add filter placeholders...
-                                        var tempEvent = { 'data': { 'tableId': tableName, 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Variable Units', 'Data Type', 'Value Type', 'Sample Medium'] }};
-                                        addFilterPlaceholders(tempEvent);
-                                    }
-
                                     var statusString = null;
                                     if (timeSeriesRequestStatus.RequestTimeSeriesError === timeSeriesResponse.RequestStatus ||
                                         timeSeriesRequestStatus.ProcessingError === timeSeriesResponse.RequestStatus ) {
@@ -3906,9 +4458,11 @@ function startRequestTimeSeriesMonitor() {
                                     updateTimeSeriesRequestStatus( downloadMonitor.timeSeriesMonitored[requestId].tableName, requestId, timeSeriesResponse.RequestStatus, statusString);
 
                                     //Write the blob URI to the console...
-                                    //console.log(requestId);
-                                    //console.log(timeSeriesResponse.Status);
-                                    //console.log(timeSeriesResponse.BlobUri);
+                                    //console.log('requestId: ' + requestId);
+                                    //console.log('Status: ' + timeSeriesResponse.Status);
+                                    //console.log('BlobTimeStamp' + timeSeriesResponse.BlobTimeStamp);
+                                    //console.log('BlobUri' + timeSeriesResponse.BlobUri);
+                                    //console.log('*****************');
 
                                     if (timeSeriesRequestStatus.Completed === timeSeriesResponse.RequestStatus) {
                                         //Completed status - update table entry with received blob URI and time stamp, remove monitoring entry...
@@ -3989,7 +4543,7 @@ function deleteDownload(requestId) {
                     });
 
     promise.done( function (data) {
-            console.log('/DownloadManager/Delete - successful!!')
+            //console.log('/DownloadManager/Delete - successful!!')
         });
 
     promise.fail( function (jqXHR, textStatus, errorThrown) {
@@ -4063,7 +4617,7 @@ function setfooterFilters(tableId, columnsArray, translatesArray, chkbxApplyFilt
     api.columns().indexes().flatten().each(function (i) {
         if (-1 !== columnsArray.indexOf(i)) {
             var column = api.column(i);
-            var select = $('<select><option value="">Remove filter...</option></select>');
+            var select = $('<select class="max-width-10em"><option value="">Remove filter...</option></select>');
             var colIndex = column.index();
             var myTableId = tableId;
             var mychkbxApplyFilter = ('undefined' === typeof chkbxApplyFilterToMapId) ? null : chkbxApplyFilterToMapId;
@@ -4112,7 +4666,7 @@ function setfooterFilters(tableId, columnsArray, translatesArray, chkbxApplyFilt
 
                         //Retrieve column contents per table's current search/sort order...
                         var myColumn = dt.column(ii, { 'order': 'current', 'search': 'applied' });
-                        select = $('<select><option value="">Remove filter...</option></select>');
+                        select = $('<select class="max-width-10em"><option value="">Remove filter...</option></select>');
                         if (null !== myColumn) {
                             //Retrieve the filter placeholder...
                             var footer = $(myColumn.footer());
@@ -4138,7 +4692,7 @@ function setfooterFilters(tableId, columnsArray, translatesArray, chkbxApplyFilt
 
                         if (null !== myValue3) {
                             if ('' != myValue3) {
-                                mySelect3.find('option').filter(function() { return myValue3 === $(this).text(); }).prop('selected', true);
+                                mySelect3.find('option').filter(function() { return myValue3 === $(this).val(); }).prop('selected', true);
                             }
                             else {
                                 //'Remove filter...' option selected - replace with placeholder...
@@ -4174,8 +4728,13 @@ function setSelectOptions( select, currentIndex, dtColumn, translatesArray) {
 
     var bTranslates = ('undefined' !== typeof translatesArray && null !== translatesArray);
 
-    dtColumn.data().unique().sort().each(function (d, j) {                
+    //var jqueryObj = $(dtColumn);
+    dtColumn.data().unique().sort().each(function (d, j) {
+    
+                //Set the option string - may change...
                 var optionString = '<option value="' + d + '">' + d + '</option>';
+
+                //BCC - TO DO - bTranslates not used - remove logic and parameters...
                 if (bTranslates) {
             var length = translatesArray.length;
                     var bTranslated = false;
@@ -4234,7 +4793,6 @@ function toggleSelectedDataManager(event) {
 
 function toggleSelected(event) {
     var className = 'selected';
-    var nonClassName = 'notSelected';
 
     var startRange = 'startRange';
     var endRange = 'endRange';
@@ -4256,7 +4814,7 @@ function toggleSelected(event) {
     if (event.shiftKey && (!$(this).hasClass(className)) && bStart) {
         //User has pressed SHIFT+click - current row not yet selected - 'start range' assigned to another row - process range selection
         $(this).addClass(endRange);
-        processRangeSelection(event.data.tableId, startRange, endRange, className, nonClassName);
+        processRangeSelection(event.data.tableId, startRange, endRange, className);
         return;
     } 
 
@@ -4265,7 +4823,6 @@ function toggleSelected(event) {
     //Update selected row count...
     if ($(this).hasClass(className)) {
         selectedRowCounts[event.data.tableId].count = count + 1;
-        $(this).removeClass(nonClassName);  //Remove manually unselected indicator...
 
         //Set current row as 'start of range'
         jqueryRows.removeClass(startRange);
@@ -4273,7 +4830,6 @@ function toggleSelected(event) {
 
     } else {
         selectedRowCounts[event.data.tableId].count = count - 1;
-        $(this).addClass(nonClassName);     //Mark row as manually unselected by user...
 
         //Remove 'range' classes, if any
         $(this).removeClass(startRange);
@@ -4291,15 +4847,13 @@ function toggleSelected(event) {
 }
 
 //Process the range selection for the input table Id
-function processRangeSelection(tableId, startRangeClass, endRangeClass, selectClass, unSelectClass) {
-    //alert('processRangeSelection called...');
+function processRangeSelection(tableId, startRangeClass, endRangeClass, selectClass) {
     
     //Validate/initialize input parameters...
     if (( 'undefined' === typeof tableId) || (null === tableId) ||
         ('undefined' === typeof startRangeClass) || (null === startRangeClass) ||
         ('undefined' === typeof endRangeClass) || (null === endRangeClass) ||
-        ('undefined' === typeof selectClass) || (null === selectClass) ||
-        ('undefined' === typeof unSelectClass) || (null === unSelectClass)) {
+        ('undefined' === typeof selectClass) || (null === selectClass)) {
         return;
     }
 
@@ -4373,7 +4927,6 @@ function processRangeSelection(tableId, startRangeClass, endRangeClass, selectCl
         if (pos >= lower && pos <= upper) {
             var jqueryObject = $(jqueryRows[i]);
 
-            jqueryObject.removeClass(unSelectClass);
             jqueryObject.addClass(selectClass);
         }
     }
@@ -4467,7 +5020,6 @@ function selectAll(event) {
                                                 //NOTE: Rendered nodes retrieved in the same order as the rows...
     var jqueryObjects = nodesRendered.to$();    //Convert to jQuery Objects!!
     var className = 'selected';
-    var nonClassName = 'notSelected';
 
     //Remove selected class from all rendered rows...
     jqueryObjects.removeClass(className);
@@ -4504,12 +5056,6 @@ function selectAll(event) {
                 var jqueryObject = $(nodesRendered[i]);
 
                 if (null !== jqueryObject) {
-                    //Check for a manually unselected row, skip if found...
-                    if (jqueryObject.hasClass(nonClassName)) {
-                        --count;    
-                        continue;
-                    }
-
                     jqueryObject.addClass(className);   //Apply class...
                 }
             }
@@ -4543,11 +5089,9 @@ function clearSelections(event) {
                                                                             //NOTE: Rendered nodes retrieved in the same order as the rows...
     var jqueryObjects = nodesRendered.to$();    //Convert to jQuery Objects!!
     var className = 'selected';
-    var nonClassName = 'notSelected';
 
     //Remove selected class from all rendered rows...
     jqueryObjects.removeClass(className);
-    jqueryObjects.removeClass(nonClassName);
 
     //Reset the selected row count...
     selectedRowCounts[event.data.tableId].count = 0;
@@ -4641,7 +5185,7 @@ function applyFilterToMap(event) {
 function applyFilterToMapDelayed(event) {
 
     var value = $(this).val();
-    console.log('Current search value: ' + value);
+    //console.log('Current search value: ' + value);
 
     //Clear current timeout, update current filters
    clearTimeout(currentFilters.timeout);
@@ -4682,13 +5226,13 @@ function applyFilterToMapDelayed(event) {
             }
 
             if (bMatch) {
-                console.log('Filters match!!');
+                //console.log('Filters match!!');
 
                 var chkbx = $('#' + event.data.chkbxId); 
                 chkbx.triggerHandler('click');
             }
             else {
-                console.log('Filters DO NOT match!!');
+                //console.log('Filters DO NOT match!!');
             }
         }
     }, 1000);
@@ -4822,9 +5366,16 @@ function copyDmRecordToServerRecord( userEmail, dmRecord) {
 
     serverRecord.SeriesId = dmRecord.SeriesId;
     serverRecord.WaterOneFlowURI = dmRecord.WofUri;
-    serverRecord.WaterOneFlowTimeStamp = formatDate(dmRecord.WofTimeStamp, true);
+    serverRecord.WaterOneFlowTimeStamp = dmRecord.WofTimeStamp;
     serverRecord.Status = dmRecord.TimeSeriesRequestStatus;
     serverRecord.TimeSeriesRequestId = dmRecord.TimeSeriesRequestId;
+
+    serverRecord.QCLID = dmRecord.QCLID;
+    serverRecord.QCLDesc = dmRecord.QCLDesc;
+    serverRecord.MethodId = dmRecord.MethodId;
+    serverRecord.MethodDesc = dmRecord.MethodDesc; 
+    serverRecord.SourceId = dmRecord.SourceId;
+    serverRecord.SourceOrg = dmRecord.SourceOrg;
 
     //Processing complete - return Server record
     return serverRecord;
@@ -4950,7 +5501,7 @@ function saveSelections(event) {
                     });
 
     promise.done( function (data) {
-            console.log('/DataManager/Post - successful!!')
+            //console.log('/DataManager/Post - successful!!')
         });
 
     promise.fail( function (jqXHR, textStatus, errorThrown) {
@@ -5001,7 +5552,7 @@ function saveCompletedTimeseries( tableName, requestId ) {
                             });
 
             promise.done( function (data) {
-                    console.log('/DataManager/Post - successful!!')
+                    //console.log('/DataManager/Post - successful!!')
                     //Success save - update table row Saved indicator...
                     foundRowData.Saved = true;
                     rowThis.invalidate();
@@ -5041,12 +5592,18 @@ function downloadSelections(event) {
 
     var selectedRows = table.rows( '.selected' ).data();
     var selectedCount = selectedRows.length;
-    var  wofURIs = [];
+    var  wofIds = [];
 
     //Retrieve water one flow ids...
     for ( var i = 0; i < selectedCount; ++i) {
         var row = selectedRows[i];
-        wofURIs.push(row.WofUri);
+        var currentWofIds = { 'WofId' : row.WofUri,
+                              'QCLID': row.QCLID,
+                              'MethodId': row.MethodId,
+                              'SourceId': row.SourceId
+                            };
+
+        wofIds.push(currentWofIds);
     }
 
       var convertWaterMlToCsvRequest = {};
@@ -5055,7 +5612,7 @@ function downloadSelections(event) {
 
       convertWaterMlToCsvRequest.RequestName = 'CUAHSI-WDC';
       convertWaterMlToCsvRequest.RequestId = requestId;
-      convertWaterMlToCsvRequest.WofIds = wofURIs;
+      convertWaterMlToCsvRequest.WofIds = wofIds;
 
     //Call controller method...
     var convertWaterMlToCsvRequestString = JSON.stringify(convertWaterMlToCsvRequest);
@@ -5353,6 +5910,7 @@ function addEndTaskClickHandler(jqueryButton, response) {
 
                             glyphiconSpan.removeClass('glyphicon-refresh spin');
                             glyphiconSpan.addClass('glyphicon-thumbs-down');
+                            renderTooltipElement(glyphiconSpan, 'End task error...');
                             glyphiconSpan.css('color', 'red');
 
                             //Color table row as 'warning'
@@ -5428,7 +5986,10 @@ function copySelectionsToDataManager(event) {
                  dmRow.EndDate.split('T', 1)[0] === currentRow.EndDate.split('T', 1)[0] &&
                  dmRow.ValueCount === currentRow.ValueCount &&
                  dmRow.SiteName === currentRow.SiteName &&
-                 dmRow.VariableName === currentRow.VariableName ) {
+                 dmRow.VariableName === currentRow.VariableName &&
+                 dmRow.QCLID === currentRow.QCLID &&
+                 dmRow.MethodId === currentRow.MethodId &&
+                 dmRow.SourceId === currentRow.SourceId ) {
                     bFound = true;  //Duplicate found - set indicator
             }
         });
@@ -5442,30 +6003,37 @@ function copySelectionsToDataManager(event) {
         var datamgrRecord = {};
 
         datamgrRecord.Saved = false;
-        datamgrRecord.Organization = selectedRows[rI].Organization;
-        datamgrRecord.ServTitle = selectedRows[rI].ServTitle;
-        datamgrRecord.ServiceCode = selectedRows[rI].ServCode;
-        datamgrRecord.ConceptKeyword = selectedRows[rI].ConceptKeyword;
-        datamgrRecord.VariableUnits = selectedRows[rI].VariableUnits;
-        datamgrRecord.DataType = selectedRows[rI].DataType;
-        datamgrRecord.ValueType = selectedRows[rI].ValueType;
-        datamgrRecord.SampleMedium = selectedRows[rI].SampleMedium;
-        datamgrRecord.BeginDate = selectedRows[rI].BeginDate;
-        datamgrRecord.EndDate = selectedRows[rI].EndDate;
-        datamgrRecord.ValueCount = selectedRows[rI].ValueCount;
-        datamgrRecord.SiteName = selectedRows[rI].SiteName;
-        datamgrRecord.VariableName = selectedRows[rI].VariableName;
-        datamgrRecord.TimeUnit = selectedRows[rI].TimeUnit;
-        datamgrRecord.TimeSupport = selectedRows[rI].TimeSupport;
+        datamgrRecord.Organization = currentRow.Organization;
+        datamgrRecord.ServTitle = currentRow.ServTitle;
+        datamgrRecord.ServiceCode = currentRow.ServCode;
+        datamgrRecord.ConceptKeyword = currentRow.ConceptKeyword;
+        datamgrRecord.DataType = currentRow.DataType;
+        datamgrRecord.ValueType = currentRow.ValueType;
+        datamgrRecord.SampleMedium = currentRow.SampleMedium;
+        datamgrRecord.BeginDate = currentRow.BeginDate;
+        datamgrRecord.EndDate = currentRow.EndDate;
+        datamgrRecord.ValueCount = currentRow.ValueCount;
+        datamgrRecord.SiteName = currentRow.SiteName;
+        datamgrRecord.VariableName = currentRow.VariableName;
+        datamgrRecord.VariableUnits = currentRow.VariableUnits;
+        datamgrRecord.TimeUnit = currentRow.TimeUnit;
+        datamgrRecord.TimeSupport = currentRow.TimeSupport;
 
-        datamgrRecord.SeriesId = selectedRows[rI].SeriesId;
+        datamgrRecord.QCLID = currentRow.QCLID;
+        datamgrRecord.QCLDesc = currentRow.QCLDesc;
+        datamgrRecord.MethodId = currentRow.MethodId;
+        datamgrRecord.MethodDesc = currentRow.MethodDesc;        
+        datamgrRecord.SourceId = currentRow.SourceId;
+        datamgrRecord.SourceOrg = currentRow.SourceOrg;
+
+        datamgrRecord.SeriesId = currentRow.SeriesId;
         datamgrRecord.WofUri = 'Not yet available';
         datamgrRecord.WofTimeStamp = '1901-01-01';
         datamgrRecord.TimeSeriesRequestStatus = timeSeriesRequestStatus.NotStarted;
         datamgrRecord.TimeSeriesRequestId = null;
 
         //Add the newly created record...
-        datamgrTable.row.add(datamgrRecord);
+        var newRow = datamgrTable.row.add(datamgrRecord);
         ++countAdded;
     }
 
@@ -5480,19 +6048,19 @@ function copySelectionsToDataManager(event) {
     }
 
     //Set footer filters...
-    setfooterFilters( datamgrTableName, [2, 3, 4, 5, 6, 7, 8], null);
+    setfooterFilters( datamgrTableName, [2, 3, 4, 5, 13, 14, 15, 16], null);
 
     //Add filter placeholders...
-    var tempEvent = { 'data': { 'tableId': datamgrTableName, 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Variable Units', 'Data Type', 'Value Type', 'Sample Medium'] }};
+    var tempEvent = { 'data': { 'tableId': datamgrTableName, 'placeHolders': ['Publisher', 'Service Title', 'Keyword', 'Site Name', 'Variable Units', 'Data Type', 'Value Type', 'Sample Medium'] }};
     addFilterPlaceholders(tempEvent);
 
     //Adjust column sizing...
     datamgrTable.columns.adjust().draw();
 
     var event1 = { 'data': 
-                        //{ 'tableId': tableName, 'modalDialogId': 'datamgrModal' }
                         { 'tableId': datamgrTableName, 'modalDialogId': 'datamgrModal' }
                 };
+
     retrieveWaterOneFlowForTimeSeries(event1);
 }
 
@@ -5554,6 +6122,13 @@ function loadDataManager() {
                     datamgrRecord.TimeUnit = serverRecord.TimeUnit;
                     datamgrRecord.TimeSupport = serverRecord.TimeSupport;
 
+                    datamgrRecord.QCLID = serverRecord.QCLID;
+                    datamgrRecord.QCLDesc = serverRecord.QCLDesc;
+                    datamgrRecord.MethodId = serverRecord.MethodId;
+                    datamgrRecord.MethodDesc = serverRecord.MethodDesc;
+                    datamgrRecord.SourceId = serverRecord.SourceId;
+                    datamgrRecord.SourceOrg = serverRecord.SourceOrg;
+
                     datamgrRecord.SeriesId = serverRecord.SeriesId;
                     datamgrRecord.WofUri = serverRecord.WaterOneFlowURI;
                     datamgrRecord.WofTimeStamp = serverRecord.WaterOneFlowTimeStamp;
@@ -5561,17 +6136,17 @@ function loadDataManager() {
                     datamgrRecord.TimeSeriesRequestId = serverRecord.TimeSeriesRequestId;
 
                     //Add the newly created record...
-                    datamgrTable.row.add(datamgrRecord);    
+                    var newRow = datamgrTable.row.add(datamgrRecord);    
                     reDraw = true;
                 }
 
                 //Redraw table, if indicated...
                 if ( reDraw) {
                     //Set footer filters...
-                    setfooterFilters( datamgrTableName, [2, 3, 4, 5, 6, 7, 8], null);
+                    setfooterFilters( datamgrTableName, [2, 3, 4, 5, 13, 14, 15, 16], null);
 
                     //Add filter placeholders...
-                    var tempEvent = { 'data': { 'tableId': datamgrTableName, 'placeHolders': ['Organization', 'Service Title', 'Keyword', 'Variable Units', 'Data Type', 'Value Type', 'Sample Medium'] }};
+                    var tempEvent = { 'data': { 'tableId': datamgrTableName, 'placeHolders': ['Publisher', 'Service Title', 'Keyword', 'Site Name', 'Variable Units', 'Data Type', 'Value Type', 'Sample Medium'] }};
                     addFilterPlaceholders(tempEvent);
 
                     //Adjust column sizing...
@@ -5629,7 +6204,6 @@ function loadExports() {
                     clientRecord.Status = timeSeriesRequestStatus.properties[serverRecord.RequestStatus].description;
                     clientRecord.BlobUri = serverRecord.BlobUri;
                     clientRecord.BlobTimeStamp = serverRecord.BlobTimeStamp;
-                    clientRecord.SeriesIdsToVariableUnits = null;
 
                     var taskId = getNextTaskId();
                     addDownloadManagerRow(clientRecord, taskId);
@@ -5670,10 +6244,7 @@ function getSelectedRows(tableName, timeSeriesMaxOverride) {
 
         if (null !== node) {
             var jqueryObj = $(node);
-            if (jqueryObj.hasClass('notSelected')) {
-                continue;   //Row rendered and NOT selected, continue to next row...
-                                }
-            else if (jqueryObj.hasClass('selected')) {
+            if (jqueryObj.hasClass('selected')) {
                 bSelected = true;   //NOTE: User can manually select rows outside the 'Select Top ...'
                             }
                         }
@@ -5774,46 +6345,82 @@ function setUpTimeseriesDatatable() {
         "ajax": actionUrl,
         "dom": 'C<"clear"><"toolbarTS">frtilp',   //Add a custom toolbar - source: https://datatables.net/examples/advanced_init/dom_toolbar.html
         "deferRender": true,
-        "autoWidth": true,
+        "autoWidth": false,
         "columns": [
-            { "data": "Organization", "visible": true, "className": "tableColWrap10pct" },
+            { "data": "Organization", "visible": true, "width": "10em", "className": "td-textalign-center",
+             "render": renderAbbreviatedText,
+             "createdCell": createdTooltipText
+            },
             //BCC - 09-Sep-2015 - GitHub Issue #23 - Replace Network Name with Data Service Title
-            { "data": "ServTitle", "sTitle": "Service Title", "visible": true, "className": "tableColWrap10pct",
-                 'render': function (data, type, full, meta) { 
+            { "data": "ServTitle", "sTitle": "Service Title", "visible": true, "width": "10em", "className": "td-textalign-center",
+              "render": function (data, type, full, meta) { 
                             if ('display' === type) {
-                                return formatServiceTitle( full.ServCode, data );
+                        return formatServiceTitleAbbreviated( full.ServCode, data );
                             }
                             else {
                                 return data;
                             }
+              },                       
+              "createdCell": createdTooltipText                 
+            },
+            { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true, "width": "10em", "className": "td-textalign-center",
+              "render": renderAbbreviatedText,
+              "createdCell": createdTooltipText           
+            },
+            { "data": "SiteName", "sTitle": "Site Name", "visible": true, "width": "10em", "className": "td-textalign-center",
+              "render": renderAbbreviatedText,
+              "createdCell": createdTooltipText             
+            },
+            { "data": "DataType", "visible": true, "width": "5em", "className": "td-textalign-center" },
+            { "data": "ValueType", "visible": true, "width": "5em", "className": "td-textalign-center" },
+            { "data": "SampleMedium", "visible": true, "width": "5em", "className": "td-textalign-center" },
+            { "data": "QCLID", "visible": false, "searchable": false },
+            { "data": "QCLDesc", "visible": true, "width": "10em", "className": "td-textalign-center",
+              "render": renderAbbreviatedText,
+              "createdCell": createdTooltipText             
+            },
+            { "data": "MethodId", "visible": false, "searchable": false },
+            { "data": "MethodDesc", "visible": true, "width": "10em", "className": "td-textalign-center",
+              "render": renderAbbreviatedText,
+              "createdCell": createdTooltipText             
+            },
+            { "data": "SourceId", "visible": false, "searchable": false },
+            { "data": "SourceOrg", "visible": true, "width": "10em", "className": "td-textalign-center",
+              "render": renderAbbreviatedText,
+              "createdCell": createdTooltipText             
+            },
+            { "data": "BeginDate", "sTitle": "Start Date", "visible": true, "width": "10em",
+                 "render": function (data, type, full, meta) { 
+                     return formatDate(data);
                  }                       
             },
-            { "data": "ConceptKeyword", "sTitle": "Keyword", "visible": true },
-            { "data": "DataType", "visible": true },
-            { "data": "ValueType", "visible": true },
-            { "data": "SampleMedium", "visible": true },
-            { "data": "BeginDate", "sTitle": "Start Date", "visible": true,
-                 'render': function (data, type, full, meta) { 
+            { "data": "EndDate", "sTitle": "End Date", "visible": true, "width": "10em",
+                 "render": function (data, type, full, meta) { 
                      return formatDate(data);
                  }           
             },
-            { "data": "EndDate", "sTitle": "End Date", "visible": true,
+            { "data": "ValueCount", "visible": true, "width": "10em", "className": "td-textalign-center",
                  'render': function (data, type, full, meta) { 
-                     return formatDate(data);
+                     return (0 === data) ? 'unknown' : data;
                  }           
             },
-            { "data": "ValueCount", "visible": true },
-            { "data": "SiteName", "sTitle": "Site Name", "visible": true },
-            { "data": "VariableName", "width": "50px", "sTitle": "Variable Name", "visible": true },
-            { "data": "TimeSupport", "visible": true },
-            { "data": "TimeUnit", "visible": true },
-            { "data": null, "sTitle": "Service URL", "visible": true },
-
-            { "data": "SiteCode", "sTitle": "Site Code", "visible": true },
-            { "data": "VariableCode", "sTitle": "Variable Code", "visible": true },
-            { "data": "SeriesId", "visible": false, "searchable": false  },
-            { "data": "ServURL", "sTitle": "Web Service Description URL", "visible": false, "searchable": false }
+            { "data": "VariableName", "sTitle": "Variable Name", "visible": true, "width": "10em",  "className": "td-textalign-center",
+              "render": renderAbbreviatedText,
+             "createdCell": createdTooltipText             
+          },
+            { "data": "TimeSupport", "visible": true, "width": "5em", "className": "td-textalign-center" },
+            { "data": "TimeUnit", "visible": true, "width": "5em", "className": "td-textalign-center" },
+            { "data": null, "sTitle": "Service URL", "visible": true, "width": "10em" },
+            { "data": "SiteCode", "sTitle": "Site Code", "visible": true,  "width": "10em"  },
+            { "data": "VariableCode", "sTitle": "Variable Code", "visible": true,  "width": "10em"  },
+            { "data": "SeriesId", "visible": false, "searchable": false,  "width": "10em"   },
+            { "data": "ServURL", "sTitle": "Web Service Description URL", "visible": false, "searchable": false,  "width": "10em"  },
+            { "data": "ServCode", "name": "ServiceCode", "visible": false, "searchable": false,  "width": "10em" },
+            { 'data': 'VariableUnits', 'visible': false, 'width': '5em'}
            ],
+        "order": [[0,'asc'],    //Publisher
+                  [1,'asc'],    //Service Title
+                  [2,'asc']],    //Keyword
         "scrollX": true,
         "scrollY": "30em",
         "scrollCollapse": true,
@@ -5824,7 +6431,7 @@ function setUpTimeseriesDatatable() {
             var servCode = data.ServCode;
 
             var descUrl = getDescriptionUrl(servCode);
-            $('td', row).eq(13).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
+            $('td', row).eq(16).html("<a href='" + descUrl + "' target='_Blank'>" + org + " </a>");
 
             //If 'Select All' in progress, add the 'selected' class to the row...
             var selectCheck = $('#' + 'spanSelectCheckTS'); 
@@ -5837,12 +6444,15 @@ function setUpTimeseriesDatatable() {
         "initComplete": function () {
 
             //BCC - 10-Aug-2015 - GitHub Issue #35 - Add filter by Site Name
-            setfooterFilters('dtTimeseries', [0, 1, 2, 3, 4, 5], null, 'chkbxApplyFilterToMapTS');
+            setfooterFilters('dtTimeseries', [0, 1, 2, 3, 4, 5, 6], null, 'chkbxApplyFilterToMapTS');
 
-            //Set up tooltips
-            setupToolTips();
+            var tempEvent = { 'data': { 'tableId': 'dtTimeseries', 'placeHolders': ['Publisher', 'Service Title', 'Keyword', 'Site Name', 'Data Type', 'Value Type', 'Sample Medium'] } };
+            addFilterPlaceholders(tempEvent);
 
-            $('#dtTimeseries').dataTable().fnAdjustColumnSizing();
+            var dt = $('#dtTimeseries').DataTable();
+            
+            dt.columns.adjust();
+            dt.draw();
 
             //Revise layout for table's info, length and pagination controls...
             $('#' + 'dtTimeseries_info').css({'width': '25%'});
@@ -5855,6 +6465,9 @@ function setUpTimeseriesDatatable() {
                                                             'margin-top': '1.0em'});
 
             $('#' + 'dtTimeseries_paginate').css({'width': '25%'});
+
+            //Set up tooltips - ALWAYS set up tooltips last!!
+            setupToolTips();
         }
 
     });
@@ -6011,7 +6624,7 @@ function ddActionsTS(event) {
     var html = $(this).html();
 
     if ('anchorExportSelectionsTS' === id && currentUser.authenticated) {
-        console.log('Sub-menu header clicked, current user authenticated - take no action!!');
+        //console.log('Sub-menu header clicked, current user authenticated - take no action!!');
         return;
     }
     
@@ -6243,72 +6856,6 @@ function helpIconClicked(identifier) {
 
 }
 
-//Set up tooltips...
-function setUpTooltips(elementId) {
-
-    if ('dtMarkers' === elementId) {
-        //dtMarkers table
-
-        //Datatable number of records select...
-        var jqueryObject = $('#dtMarkers_length');
-
-        jqueryObject.tooltip('destroy');
-        jqueryObject.tooltip({
-            'animation': true,
-            'placement': 'auto',
-            'trigger': 'hover',
-            'title': 'Select the number of table entries to view on one page...'
-        });
-
-        //'Top' 25 select...
-        jqueryObject = $('#spanSelectAll');
-
-        //Simulate btn-primary colors...
-        var templateString = '<div class="tooltip" role="tooltip">' +
-                                '<div class="tooltip-arrow"></div>' +
-                                '<div class="tooltip-inner" style="color: #ffffff; background-color: #428bca; border-color: #357ebd;"></div>' + 
-                             '</div>'
-
-        jqueryObject.tooltip('destroy');
-        jqueryObject.tooltip({
-            'animation': true,
-            'placement': 'auto',
-            'trigger': 'hover',
-            'title': 'Select the top 25 rows in the current order...',
-            'template': templateString 
-        });
-
-        //'Process Selections' button...
-        jqueryObject = $('#btnZipSelections');
-
-        templateString = '<div class="tooltip" role="tooltip">' +
-                                '<div class="tooltip-arrow"></div>' +
-                                '<div style="color: green; background-color: ivory; border-color: red; font-size: 2em;">' +
-                                   '<div>' +
-                                    '<span  class="glyphicon glyphicon-hand-right"></span>' +
-                                    '<span class="tooltip-inner" style="color: green; background-color: ivory;  border-color: red; margin-left: 0.5em; margin-right: 0.5em">' +
-                                    '</span>' +
-                                    '<span  class="glyphicon glyphicon-hand-left"></span>' +
-                                   '</div>' +
-                                '</div>' +
-                             '</div>';
-
-        var titleString = 'Your time series data is only a click away!!!';
-
-        jqueryObject.tooltip('destroy');
-        jqueryObject.tooltip({
-            'animation': true,
-            'placement': 'auto',
-            'trigger': 'hover',
-            'title': titleString,
-            'template': templateString
-        });
-
-    }
-
-}
-
-
 //Query the server for the current authenticated user...
 function loadCurrentUser() {
 
@@ -6482,6 +7029,7 @@ function updateDownloadManagerRow( response ) {
 
         glyphiconSpan.removeClass('glyphicon-refresh spin');
         glyphiconSpan.addClass('glyphicon-thumbs-up');
+        renderTooltipElement(glyphiconSpan, 'Ready for download...');
 
         tableRow.find('#statusMessageText').text(response.Status);
 
@@ -6527,6 +7075,8 @@ function updateDownloadManagerRow( response ) {
 
                         glyphiconSpan.removeClass('glyphicon-refresh spin');
                         glyphiconSpan.addClass('glyphicon-thumbs-down');
+                        renderTooltipElement(glyphiconSpan, 'Download error...');
+
                         glyphiconSpan.css('color', 'red');
 
                         //Color table row as 'warning'

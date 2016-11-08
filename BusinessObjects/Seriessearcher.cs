@@ -12,6 +12,8 @@ using System.Configuration;
 
 using log4net;
 
+using HISWebClient.Util;
+
 namespace HISWebClient.DataLayer
 {
 	  public abstract class SeriesSearcher
@@ -180,7 +182,11 @@ namespace HISWebClient.DataLayer
 			var serviceLoopOptions = new ParallelOptions
 				{
 						//CancellationToken = bgWorker.CancellationToken,
-						MaxDegreeOfParallelism = 2, 
+#if (DEBUG)
+						MaxDegreeOfParallelism = EnvironmentContext.LocalEnvironment() ? 1 : 2
+#else
+						MaxDegreeOfParallelism = 2 
+#endif
 				};
 			var tileLoopOptions = new ParallelOptions
 				{
@@ -188,7 +194,11 @@ namespace HISWebClient.DataLayer
 						CancellationToken = cts.Token,
 						// Note: currently HIS Central returns timeout if many requests are sent in the same time.
 						// To test set  MaxDegreeOfParallelism = -1
-						MaxDegreeOfParallelism = 4,
+#if (DEBUG)
+						MaxDegreeOfParallelism = EnvironmentContext.LocalEnvironment() ? 1 : 4
+#else
+						MaxDegreeOfParallelism = 4
+#endif
 				};
 			try
 			{
@@ -221,9 +231,11 @@ namespace HISWebClient.DataLayer
 								{
 									String keyword = keywords.ElementAt(i);
 
-									//bgWorker.CheckForCancel();
-									//var series = GetSeriesCatalogForBox(tile.MinX, tile.MaxX, tile.MinY, tile.MaxY, keyword, startDate, endDate, ids, bgWorker, current, totalTilesCount);
-									var series = GetSeriesCatalogForBox(tile.MinX, tile.MaxX, tile.MinY, tile.MaxY, keyword, startDate, endDate, ids, current, totalTilesCount);
+									string sampleMedium = String.Empty;
+									string dataType = String.Empty;
+									string valueType = string.Empty;
+
+									var series = GetSeriesCatalogForBox(tile.MinX, tile.MaxX, tile.MinY, tile.MaxY, sampleMedium, dataType, valueType, keyword, startDate, endDate, ids, current, totalTilesCount);
 
 									totalTileSeriesList.AddRange(series);
 									if (tileSeriesList.Count() == 0)
@@ -261,9 +273,11 @@ namespace HISWebClient.DataLayer
 								tileSeriesList = new List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>();
 								foreach (var keyword in keywords)
 								{
-									//bgWorker.CheckForCancel();
-									//var series = GetSeriesCatalogForBox(tile.MinX, tile.MaxX, tile.MinY, tile.MaxY, keyword, startDate, endDate, ids, bgWorker, current, totalTilesCount);
-									var series = GetSeriesCatalogForBox(tile.MinX, tile.MaxX, tile.MinY, tile.MaxY, keyword, startDate, endDate, ids, current, totalTilesCount);
+									string sampleMedium = String.Empty;
+									string dataType = String.Empty;
+									string valueType = string.Empty;
+
+									var series = GetSeriesCatalogForBox(tile.MinX, tile.MaxX, tile.MinY, tile.MaxY, sampleMedium, dataType, valueType, keyword, startDate, endDate, ids, current, totalTilesCount);
 
 									tileSeriesList.AddRange(series);
 								}
@@ -304,9 +318,9 @@ namespace HISWebClient.DataLayer
 
 						});
 					}
-					catch (OperationCanceledException e)
+					catch (OperationCanceledException oex)
 					{
-						throw e;
+						throw oex;
 					}
 				});
 				// Collect all series into result list
@@ -314,9 +328,9 @@ namespace HISWebClient.DataLayer
 				fullSeriesList.ForEach(result.AddRange);
 				return result;
 			}
-			catch (OperationCanceledException e)
+			catch (OperationCanceledException oex)
 			{
-				throw e;
+				throw oex;
 			}
 		}
 
@@ -345,6 +359,21 @@ namespace HISWebClient.DataLayer
 																			  int[] networkIDs, 
 																			  //BusinessObjects.Models.IProgressHandler bgWorker, 
 																			  long currentTile, long totalTilesCount);
+
+		protected abstract IEnumerable<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart> GetSeriesCatalogForBox( double xMin, 
+																														  double xMax, 
+																														  double yMin, 
+																													      double yMax,
+																														  string sampleMedium,
+																														  string dataType,
+																														  string valueType,
+																														  string keyword, 
+																														  DateTime startDate, 
+																														  DateTime endDate,
+																														  int[] networkIDs,
+																														  long currentTile, 
+																														  long totalTilesCount);
+
 	}
 }
 

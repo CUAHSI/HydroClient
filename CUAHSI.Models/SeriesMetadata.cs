@@ -13,44 +13,6 @@ namespace CUAHSI.Models
         public SeriesMetadata()
         { }
         
-        [Obsolete("Deprecated in favor of async object[] result")]
-        /// <summary>
-        /// Maps to result of query with parameter SQL.SERIESRESULTS
-        /// HISNetworks.NetworkName AS ServCode, 0
-        /// HISNetworks.ServiceWSDL AS ServURL,  1
-        /// SeriesCatalog.SiteCode,              2
-        /// SeriesCatalog.VariableCode,          3
-        /// SeriesCatalog.SiteName,              4
-        /// SeriesCatalog.VariableName,          5
-        /// SeriesCatalog.BeginDateTime AS StartDate,  6
-        /// SeriesCatalog.EndDateTime AS EndDate,      7
-        /// SeriesCatalog.Valuecount,                  8
-        /// Sites.Latitude,                            9
-        /// Sites.Longitude,                          10
-        /// SeriesCatalog.SeriesID,                   11
-        /// Sites.SiteID                              12
-        /// </summary>
-        /// <param name="r">SeriesMetadata record with matching parameters.</param>
-        public SeriesMetadata(DataRow r)
-        {
-            ServCode = Convert.ToString(r.ItemArray[0]);
-            ServURL = Convert.ToString(r.ItemArray[1]);
-            SiteCode = Convert.ToString(r.ItemArray[2]);
-            VarCode = Convert.ToString(r.ItemArray[3]);
-            SiteName = Convert.ToString(r.ItemArray[4]);
-            VariableName = Convert.ToString(r.ItemArray[5]);   
-       
-
-            StartDate = Convert.ToDateTime(r.ItemArray[6]);
-            EndDate = Convert.ToDateTime(r.ItemArray[7]);
-            ValueCount = Convert.ToInt32(r.ItemArray[8]);
-                                                           
-            Latitude = Convert.ToDouble(r.ItemArray[9]);
-            Longitude = Convert.ToDouble(r.ItemArray[10]);
-            SeriesID = Convert.ToInt32(r.ItemArray[11]);
-            SiteID = Convert.ToInt32(r.ItemArray[12]);
-        }
-
         /// <summary>
         /// Maps to result of query with parameter SQL.SERIESRESULTS
         /// HISNetworks.NetworkName AS ServCode, 0
@@ -88,6 +50,7 @@ namespace CUAHSI.Models
             Longitude = Convert.ToDouble(ItemArray[12]);
             SeriesID = Convert.ToInt32(ItemArray[13]);
             SiteID = Convert.ToInt32(ItemArray[14]);
+			VariableID = Convert.ToInt32(ItemArray[15]);
         }
 
         public Boolean HasValue()
@@ -138,6 +101,9 @@ namespace CUAHSI.Models
         public int SeriesID { get; set; }
 
         
-        public int SiteID { get; set; }     
+        public int SiteID { get; set; }
+
+		public int VariableID { get; set; }
+
     }
 }

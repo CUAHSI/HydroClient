@@ -9,6 +9,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
+using System.Configuration;
+using System.Net.Http;
+
+using log4net.Core;
+using HISWebClient.Util;
+
 namespace HISWebClient.DataLayer
 {
 	/// <summary>
@@ -98,7 +104,6 @@ namespace HISWebClient.DataLayer
 					count = resStream.Read(buf, 0, buf.Length);
 					if (count != 0)
 					{
-						//tempString = Encoding.ASCII.GetString(buf, 0, count);
 						tempString = encoding.GetString(buf, 0, count);
 
 						sb.Append(tempString);
@@ -108,35 +113,6 @@ namespace HISWebClient.DataLayer
 
 				return sb.ToString();
 
-
-
-
-				//var request = (HttpWebRequest)WebRequest.Create(url);
-				////Endpoint is the URL to which u are making the request.
-				//request.Method = "GET";
-				//request.Credentials = CredentialCache.DefaultCredentials;
-				//request.ContentType = "text/xml";
-
-				//request.Timeout = 5000;
-
-				//// send the request and get the response
-				//response = (HttpWebResponse)request.GetResponse();
-
-				//using (var responseStream = response.GetResponseStream())
-				//{
-				//    using (var localFileStream = new FileStream(xmlFileName, FileMode.OpenOrCreate))
-				//    {
-				//        var buffer = new byte[255];
-				//        int bytesRead;
-				//        while ((bytesRead = responseStream.Read(buffer, 0, buffer.Length)) > 0)
-				//        {
-				//            localFileStream.Write(buffer, 0, bytesRead);
-				//        }
-				//    }
-				//}
-				//Stream outputStream = response.GetResponseStream();
-				//var objXMLReader = new XmlTextReader(response.GetResponseStream());
-				//return outputStream;
 			}
 			finally
 			{
@@ -273,33 +249,173 @@ namespace HISWebClient.DataLayer
 			{
 				try
 				{
-					//bgWorker.CheckForCancel();
-					//bgWorker.ReportMessage(i == 0
-					//                           ? string.Format("Sent request: {0}", keywordDesc)
-					//                           : string.Format("Timeout has occurred for {0}. New Attempt ({1} of {2})...",
-					//                               keywordDesc, i + 1, tryCount));
-
 					var request = WebRequest.Create(url.ToString());
-					request.Timeout = 30 * 1000;
+					request.Timeout = Convert.ToInt32(ConfigurationManager.AppSettings["requestTimeoutMilliseconds"].ToString());
 					using (var response = request.GetResponse())
-					using (var reader = XmlReader.Create(response.GetResponseStream()))
 					{
-						//bgWorker.ReportMessage(string.Format("Data received for {0}", keywordDesc));
-						return ParseSeries(reader, startDate, endDate);
+						using (var stream = response.GetResponseStream())
+						{
+							using (MemoryStream ms = new MemoryStream())
+							{
+								stream.CopyTo(ms);
+								ms.Seek(0, SeekOrigin.Begin);
+#if (DEBUG)
+								writeMemoryStreamToFile(@"C:\CUAHSI\ResponseFromGetSeriesCatalogForBox2.xml", ms);
+								ms.Seek(0, SeekOrigin.Begin);
+#endif
+								using (var reader = XmlReader.Create(ms))
+								{
+									return ParseSeries(reader, startDate, endDate);
+								}
+							}
+						}
 					}
 				}
-				catch (WebException ex)
+				catch (WebException wex)
 				{
-					if (ex.Status == WebExceptionStatus.Timeout)
+					if (wex.Status == WebExceptionStatus.Timeout)
 					{
 						//Timeout error - continue 
 						continue;
 					}
-					
-					throw;
+
+					throw wex;
+				}
+				catch (Exception ex)
+				{
+					throw ex;
 				}
 			}
-			throw new WebException("Timeout. Please limit search area and/or Keywords.", WebExceptionStatus.Timeout);
+
+			WebException wex1 = new WebException("Timeout. Please limit search area and/or Keywords.", WebExceptionStatus.Timeout);
+
+			throw wex1; 
+		}
+
+		//BCC - 07-Sep-2016 - Added new method for call to GetSeriesCatalogForBox3...
+		protected override IEnumerable<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart> GetSeriesCatalogForBox( double xMin, 
+																														  double xMax, 
+																														  double yMin,
+																													      double yMax,
+																														  string sampleMedium,
+																														  string dataType,
+																														  string valueType,
+																														  string keyword, 
+																														  DateTime startDate, 
+																														  DateTime endDate,
+																														  int[] networkIDs,
+																														  long currentTile, 
+																														  long totalTilesCount)
+		{
+			var url = new StringBuilder();
+			url.Append(_hisCentralUrl);
+			url.Append("/GetSeriesCatalogForBox3");
+			url.Append("?xmin=");
+			url.Append(Uri.EscapeDataString(xMin.ToString(_invariantCulture)));
+			url.Append("&xmax=");
+			url.Append(Uri.EscapeDataString(xMax.ToString(_invariantCulture)));
+			url.Append("&ymin=");
+			url.Append(Uri.EscapeDataString(yMin.ToString(_invariantCulture)));
+			url.Append("&ymax=");
+			url.Append(Uri.EscapeDataString(yMax.ToString(_invariantCulture)));
+
+			url.Append("&sampleMedium=");
+			if (!String.IsNullOrEmpty(sampleMedium))
+			{
+				url.Append(Uri.EscapeDataString(sampleMedium));
+			}
+			url.Append("&dataType=");
+			if (!String.IsNullOrEmpty(dataType))
+			{
+				url.Append(Uri.EscapeDataString(dataType));
+			}
+			url.Append("&valueType=");
+			if (!String.IsNullOrEmpty(valueType))
+			{
+				url.Append(Uri.EscapeDataString(valueType));
+			}
+
+			//to append the keyword
+			url.Append("&conceptKeyword=");
+			if (!String.IsNullOrEmpty(keyword))
+			{
+				url.Append(Uri.EscapeDataString(keyword));
+			}
+
+			//to append the list of networkIDs separated by comma
+			url.Append("&networkIDs=");
+			if (networkIDs != null)
+			{
+				var serviceParam = new StringBuilder();
+				for (int i = 0; i < networkIDs.Length - 1; i++)
+				{
+					serviceParam.Append(networkIDs[i]);
+					serviceParam.Append(",");
+				}
+				if (networkIDs.Length > 0)
+				{
+					serviceParam.Append(networkIDs[networkIDs.Length - 1]);
+				}
+				url.Append(Uri.EscapeDataString(serviceParam.ToString()));
+			}
+
+			//to append the start and end date
+			url.Append("&beginDate=");
+			url.Append(Uri.EscapeDataString(startDate.ToString("MM/dd/yyyy")));
+			url.Append("&endDate=");
+			url.Append(Uri.EscapeDataString(endDate.ToString("MM/dd/yyyy")));
+
+			var keywordDesc = string.Format("[{0}. Tile {1}/{2}]",
+											String.IsNullOrEmpty(keyword) ? "All" : keyword, currentTile,
+											totalTilesCount);
+
+			// Try to send request several times (in case, when server returns timeout)
+			const int tryCount = 5;
+			for (int i = 0; i < tryCount; i++)
+			{
+				try
+				{
+					var request = WebRequest.Create(url.ToString());
+					request.Timeout = Convert.ToInt32(ConfigurationManager.AppSettings["requestTimeoutMilliseconds"].ToString());
+					using (var response = request.GetResponse())
+					{
+						using (var stream = response.GetResponseStream())
+						{
+							using (MemoryStream ms = new MemoryStream())
+							{
+								stream.CopyTo(ms);
+								ms.Seek(0, SeekOrigin.Begin);
+#if (DEBUG)
+								writeMemoryStreamToFile(@"C:\CUAHSI\ResponseFromGetSeriesCatalogForBox3.xml", ms);
+								ms.Seek(0, SeekOrigin.Begin);
+#endif
+								using (var reader = XmlReader.Create(ms))
+								{
+						return ParseSeries(reader, startDate, endDate);
+					}
+				}
+						}
+					}
+				}
+				catch (WebException wex)
+				{
+					if (wex.Status == WebExceptionStatus.Timeout)
+					{
+						//Timeout error - continue 
+						continue;
+					}
+
+					throw wex;
+				}
+				catch (Exception ex)
+				{
+					throw ex;
+				}
+			}
+
+			WebException wex1 = new WebException("Timeout. Please limit search area and/or Keywords.", WebExceptionStatus.Timeout);
+
+			throw wex1; 
 		}
 
 		private IEnumerable<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart> ParseSeries(XmlReader reader, DateTime startDate, DateTime endDate)
@@ -309,23 +425,26 @@ namespace HISWebClient.DataLayer
 			{
 				if (reader.NodeType == XmlNodeType.Element)
 				{
-					if (reader.Name == "SeriesRecord")
+					if (XmlContext.AdvanceReaderPastEmptyElement(reader))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+
+					var nodeName = reader.Name.ToLower();
+					if (nodeName == "seriesrecord" || nodeName == "seriesrecordfull")
 					{
 						//Read the site information
 						var series = ReadSeriesFromHISCentral(reader);
+
 						if (series != null)
 						{
-							//BCC - 14-Jul-2015 - Revise series date range checking...
-							// Update BeginDate/EndDate/ValueCount to the user-specified range
-							//SearchHelper.UpdateDataCartToDateInterval(series, startDate, endDate);
-							//seriesList.Add(series);
-							//
-							//BCC - 23-Jul-2015 - Comment out changes for now...
-							//if ( SearchHelper.IsSeriesInDateRange(series, startDate, endDate))
-							//{
+#if (DEBUG)
+							//Set original value count for debug purposes...
+							series.ValueCountOriginal = series.ValueCount;
+#endif
 								SearchHelper.UpdateDataCartToDateInterval(series, startDate, endDate);
 								seriesList.Add(series);
-							//}
 						}
 					}
 				}
@@ -346,6 +465,12 @@ namespace HISWebClient.DataLayer
 				var nodeName = reader.Name.ToLower();
 				if (reader.NodeType == XmlNodeType.Element)
 				{
+					if (XmlContext.AdvanceReaderPastEmptyElement(reader))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+
 					switch (nodeName)
 					{
 						case "servcode":
@@ -441,13 +566,38 @@ namespace HISWebClient.DataLayer
 							if (!String.IsNullOrWhiteSpace(reader.Value))
 								series.IsRegular = Convert.ToBoolean(reader.Value);
 							break;
-						case "variableunits":
+						case "variableunitsabbrev":
 							reader.Read();
 							series.VariableUnits = reader.Value;
 							break;
+						//BCC - 07-Sep-2016 - Added additional reads for use with GetSeriesCatalogForBox3...
+						case "qclid":
+							reader.Read();
+							series.QCLID = reader.Value;
+							break;
+						case "qcldesc":
+							reader.Read();
+							series.QCLDesc = reader.Value;
+							break;
+						case "sourceorg":
+							reader.Read();
+							series.SourceOrg = reader.Value;
+							break;
+						case "sourceid":
+							reader.Read();
+							series.SourceId = reader.Value;
+							break;
+						case "methodid":
+							reader.Read();
+							series.MethodId = reader.Value;
+							break;
+						case "methoddesc":
+							reader.Read();
+							series.MethodDesc = reader.Value;
+							break;
 					}
 				}
-				else if (reader.NodeType == XmlNodeType.EndElement && nodeName == "seriesrecord")
+				else if (reader.NodeType == XmlNodeType.EndElement && (nodeName == "seriesrecord" || nodeName == "seriesrecordfull"))
 				{
 					return series;
 				}
@@ -457,5 +607,50 @@ namespace HISWebClient.DataLayer
 		}
 
 		#endregion
+
+#if (DEBUG)
+		private void writeMemoryStreamToFile( string filePathAndName, MemoryStream ms)
+		{
+			//Validate/initialize input parameters...
+			if ( String.IsNullOrWhiteSpace(filePathAndName) || null == ms)
+			{
+				return;		//Input parameter(s) invalid - return early
+			}
+
+			try
+			{
+				if (EnvironmentContext.LocalEnvironment())
+				{
+					//Position memory stream...
+					ms.Seek(0, SeekOrigin.Begin);
+
+					//Create file...
+					using (System.IO.FileStream output = new System.IO.FileStream(filePathAndName, FileMode.OpenOrCreate))
+					{
+						//Create XmlReader on memory stream...
+						using (var reader = XmlReader.Create(ms))
+						{
+							//Create XmlWriter on file...
+							using (XmlWriter writer = XmlWriter.Create(output))
+							{
+								//Write contents of reader to file and flush...
+								writer.WriteNode(reader, true);
+								output.Flush();
+
+								//Re-position memory stream...
+								ms.Seek(0, SeekOrigin.Begin);
+							}
+						}
+					}
+				}
+
+			}
+			catch (Exception ex)
+			{
+				//Take no action...
+				string msg = ex.Message;
+			}
+		}
+#endif
 	}
 }

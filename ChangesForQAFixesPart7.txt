@@ -1,0 +1,16 @@
+
+BC - 13-Oct-2016 - Changes for QA Fixes Part 7 
+
+>>> HISWebClient <<<
+ - web.config
+   - update keys: ServiceUrl and ServiceUrl1_1_Endpoint to Martin's new SOLR catalog URLs
+   - add key: getIconUrl to correct error in construction of getIcon.aspx URL
+
+
+
+>>> HISWebClient/Controllers <<<
+ - HomeController.cs
+   - getIcon(...)
+    - Add reference to key: getIconUrl in call to getIcon.aspx
+
+

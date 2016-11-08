@@ -5,6 +5,8 @@ using System.IO;
 using System.Xml;
 using ServerSideHydroDesktop.ObjectModel;
 
+using HISWebClient.Util;
+
 namespace ServerSideHydroDesktop
 {
     public abstract class WaterOneFlowParser : IWaterOneFlowParser
@@ -79,6 +81,12 @@ namespace ServerSideHydroDesktop
             {
                 if (reader.NodeType == XmlNodeType.Element)
                 {
+					if (XmlContext.AdvanceReaderPastEmptyElement(reader))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
                     var readerName = reader.Name.ToLower();
 
                     if (readerName == "site")
@@ -104,6 +112,12 @@ namespace ServerSideHydroDesktop
             {
                 if (reader.NodeType == XmlNodeType.Element)
                 {
+					if (XmlContext.AdvanceReaderPastEmptyElement(reader))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
                     var readerName = reader.Name.ToLower();
 
                     if (readerName == "siteinfo")
@@ -140,6 +154,12 @@ namespace ServerSideHydroDesktop
             {
                 if (r.NodeType == XmlNodeType.Element)
                 {
+					if (XmlContext.AdvanceReaderPastEmptyElement(r))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
                     string nodeName = r.Name.ToLower();
                     if (nodeName == "variable")
                     {
@@ -206,6 +226,12 @@ namespace ServerSideHydroDesktop
             {
                 if (reader.NodeType == XmlNodeType.Element)
                 {
+					if (XmlContext.AdvanceReaderPastEmptyElement(reader))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
                     string readerName = reader.Name.ToLower();
 
                     if (readerName == "queryinfo")
@@ -214,10 +240,9 @@ namespace ServerSideHydroDesktop
                         //var qry = ReadQueryInfo(reader);
                         //xmlFileInfo.QueryInfo = qry;
                     }
-                    
-                    else if (readerName == "sourceinfo")//sourceinfo does contains site information but does contain not source values. Source is separate tag in response 
+                    else if (readerName == "sourceinfo")//sourceinfo does contains site information but does not contain source values. Source is separate tag in response 
                     {
-                        //Read the source information
+                        //Read the site information
                         site = ReadSite(reader);
                     }
                     else if (readerName == "variable")
@@ -244,9 +269,6 @@ namespace ServerSideHydroDesktop
                                 series.Site = site;
                             }
 
-                            //ensure that properties are re-calculated
-                            series.UpdateSeriesInfoFromDataValues();
-
                             //set the checked and creation date time
                             series.CreationDateTime = DateTime.Now;
                             series.LastCheckedDateTime = DateTime.Now;
@@ -268,6 +290,12 @@ namespace ServerSideHydroDesktop
 
                 if (r.NodeType == XmlNodeType.Element)
                 {
+					if (XmlContext.AdvanceReaderPastEmptyElement(r))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
                     if (nodeName == "sitename")
                     {
                         r.Read();
@@ -280,6 +308,15 @@ namespace ServerSideHydroDesktop
                     else if (nodeName.IndexOf("sitecode", StringComparison.Ordinal) >= 0)
                     {
                         string networkPrefix = r.GetAttribute("network");
+
+						//BCC - 08-Aug-2016 - Retrieve siteID attribute value...
+						string siteID = r.GetAttribute("siteID");
+						long result = 0;
+						if (long.TryParse(siteID, out result))
+						{
+							site.Id = result;
+						}
+
                         r.Read();
                         string siteCode = r.Value;
                         if (!String.IsNullOrEmpty(networkPrefix))
@@ -393,6 +430,19 @@ namespace ServerSideHydroDesktop
                     }
                 }
 
+				//local projection
+				if (r.NodeType == XmlNodeType.Element && r.Name == "localSiteXY" && r.HasAttributes)
+				{
+					site.LocalProjection = new SpatialReference();
+					site.LocalProjection.SRSName = r.GetAttribute("projectionInformation");
+				}
+
+				if (XmlContext.AdvanceReaderPastEmptyElement(r))
+				{
+					//Empty element - advance and continue...
+					continue;
+				}
+
                 //latitude
                 if (r.NodeType == XmlNodeType.Element && r.Name == "latitude")
                 {
@@ -425,6 +475,7 @@ namespace ServerSideHydroDesktop
                     r.Read();
                     site.LocalY = r.ReadContentAsDouble();
                 }
+
                 if (r.NodeType == XmlNodeType.EndElement && r.Name == "geoLocation")
                 {
                     return;
@@ -472,6 +523,12 @@ namespace ServerSideHydroDesktop
 
                 if (reader.NodeType == XmlNodeType.Element)
                 {
+					if (XmlContext.AdvanceReaderPastEmptyElement(reader))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
                     switch (nodeName)
                     {
                         case "locationparam":
@@ -519,6 +576,12 @@ namespace ServerSideHydroDesktop
                 var nodeName = reader.Name.ToLower();
                 if (reader.NodeType == XmlNodeType.Element)
                 {
+					if (XmlContext.AdvanceReaderPastEmptyElement(reader))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+
                     switch (nodeName)
                     {
                         case "methodcode":
@@ -565,6 +628,12 @@ namespace ServerSideHydroDesktop
                 var nodeName = reader.Name.ToLower();
                 if (reader.NodeType == XmlNodeType.Element)
                 {
+					if (XmlContext.AdvanceReaderPastEmptyElement(reader))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
                     switch (nodeName)
                     {
                         case "qualitycontrollevelcode":
@@ -608,6 +677,12 @@ namespace ServerSideHydroDesktop
                 var nodeName = reader.Name.ToLower();
                 if (reader.NodeType == XmlNodeType.Element)
                 {
+					if (XmlContext.AdvanceReaderPastEmptyElement(reader))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
                     switch (nodeName)
                     {
                         case "organization": // WML 1.0/1.1
@@ -685,6 +760,12 @@ namespace ServerSideHydroDesktop
                 var nodeName = reader.Name.ToLower();
                 if (reader.NodeType == XmlNodeType.Element)
                 {
+					if (XmlContext.AdvanceReaderPastEmptyElement(reader))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
                     switch (nodeName)
                     {
                         case "contactname":
@@ -732,6 +813,12 @@ namespace ServerSideHydroDesktop
                 var nodeName = reader.Name.ToLower();
                 if (reader.NodeType == XmlNodeType.Element)
                 {
+					if (XmlContext.AdvanceReaderPastEmptyElement(reader))
+					{
+						//Empty element - advance and continue...
+						continue;
+					}
+					
                     switch (nodeName)
                     {
                         case "topiccategory": // WML 1.0/1.1

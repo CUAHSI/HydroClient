@@ -1,0 +1,36 @@
+
+BC - 11-Oct-2016 - Changes for QA Fixes Part 5
+
+>>> BusinessObjects <<<
+ - HisCentralSearcher.cs 
+  - GetSeriesCatalogForBox - various signatures
+   - Add debug code to write to file responses from:
+     - GetSeriesCatalogForBox2
+     - GetSeriesCatalogForBox3
+
+
+
+>>> HISWebClient/Scripts/Custom <<<
+ - webclient.js
+  - launchByuHydroshareApp(...)
+   - Revise logic to place all query parameters on URL line
+
+
+
+
+>>> ServerSideHydroDesktop <<<
+ - WaterOneFlowParser.cs
+  - remove outdated Series method calls
+
+
+
+>>> ServerSideHydroDesktop/ObjectModel <<<
+ - Series.cs 
+  - Convert various read/write properties to 'read only'
+  - Revise properties: BeginDateTime, EndDateTime, BeginDateTimeUTC, EndDateTimeUTC and ValueCount to read values directly from member list
+  - Remove method: UpdateSeriesInfoFromDataValues() - no longer needed
+  - Remove method: GetValueCount() - never called
+
+
+
+

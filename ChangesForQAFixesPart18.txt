@@ -1,0 +1,22 @@
+
+ BC - 02-Nov-2016 - Change for QA Fixes Part 18
+
+>>> SUMMARY <<<
+ - Add logic to remove diacritial marks from file names
+ - Add a Zendesk topic link to the Quick Start Guide
+
+
+
+>>> CUAHSI.Common <<<
+ - StringNormalization.cs 
+  - new class encapsulating diacritical marks removal logic
+ - StringSanitization.cs 
+  - add calls to new class methods
+
+
+
+>>> HISWebClient/Views/Home <<<
+ - Quickstart.cshtml
+  - Added link to Zendesk topic
+
+ 

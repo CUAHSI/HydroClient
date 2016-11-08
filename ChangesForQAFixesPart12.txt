@@ -1,0 +1,68 @@
+
+BC - 20-Oct-2016 - Changes for QA Fixes Part 12 
+
+>>>  BusinessObjects<<<
+ - HisCentralSearcher.cs 
+  - GetSeriesCatalogForBox(...) - both versions
+   - replace hard-coded request timeout period with AppSettings reference: 'requestTimeoutMilliseconds'
+
+
+
+>>> CUAHSI.Models <<<
+ - SeriesData.cs
+   - Convert single instance source, method and quality control level members to 
+       generic lists to accomodate those series containing data instances with 
+       different source, method and/or quality control level references
+   - r: public Source mySource... w: public List<Source> mySources...
+   - r. public Method myMethod... w: public List<Method> myMethods...
+   - r. public QualityControlLevel myQualityControlLevel... w: public List<QualityControlLevel>...
+   - Add new member initialization logic to initializing and copy constructors
+
+
+
+>>> HISWebClient <<<
+ - web.config
+  - Add AppSettings key: 'requestTimeoutMilliseconds'
+
+
+
+>>> HISWebClient/Controllers <<<
+ - ExportController.cs
+  - ConvertWaterMlToCsv(...)
+    - r: sd.mySource logic w: sd.mySources logic
+    - r: sd.myMethod logic w: sd.myMethods logic
+    - r: sd.myQualityControlLevel logic w: sd.myQualityControlLevels logic
+  - getCSVResultAsList(...)
+    - r: value.SeriesData.mySource logic w: value.SeriesData.mySources logic
+    - r: value.SeriesData.myMethod logic w: value.SeriesData.myMethods logic
+    - r: value.SeriesData.myQualityControlLevel logic w: value.SeriesData.myQualityControlLevels logic
+ - GetSeriesDataObjectAndStreamFromSeriesID(...)
+    - r: sd.mySource logic w: sd.mySources logic
+    - r: sd.myMethod logic w: sd.myMethods logic
+    - r: sd.myQualityControlLevel logic w: sd.myQualityControlLevels logic
+ - SeriesAndStreamOfSeriesID(...)
+   - replace hard-coded request timeout period with AppSettings reference: 'requestTimeoutMilliseconds'
+ - WriteDataToMemoryStreamAsCsv(...)
+    - r: value.SeriesData.mySource logic w: value.SeriesData.mySources logic
+    - r: value.SeriesData.myMethod logic w: value.SeriesData.myMethods logic
+    - r: value.SeriesData.myQualityControlLevel logic w: value.SeriesData.myQualityControlLevels logic
+
+
+
+>>> ServerSideHydroDesktop <<<
+ - WaterOneFlow10Parser.cs
+  - ReadDataValues(...)
+   - remove blank lines
+ - WaterOneFlow11Parser.cs
+   - ReadDataValues(...)
+    - For multi-term QualityControlLevel codes...
+     - For the multi-term QualityControlLevel instance...
+       - Initialize Definition and Explanation properties to String.Empty prior to string concatenation processing
+       - Calculate and assign a minimum value to OriginId to indicate a 'pseudo' instance
+       - Add catch block for debugging
+
+
+
+
+
+

@@ -1,0 +1,17 @@
+
+
+  BC - 29-Sep-2016 - Fixes for QA Issues - Part 2
+
+>>> ServerSideHydroDesktop/ObjectModel <<<
+ - BaseEntity.cs
+  - Add 'never set' validation logic
+
+ - Method.cs
+  - Add 'never set' validation logic
+
+ - QualityControlLevel.cs
+  - Add 'never set' validation logic
+
+ - Source.cs
+  - Add 'never set' validation logic
+

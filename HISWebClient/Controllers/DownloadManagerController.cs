@@ -24,6 +24,18 @@ namespace HISWebClient.Controllers
 			_hcDbContext = hcdc;
 		}
 
+		//override Dispose to de-allocate dbcontext instance...
+		//Source: http://www.davepaquette.com/archive/2013/03/27/managing-entity-framework-dbcontext-lifetime-in-asp-net-mvc.aspx
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				_hcDbContext.Dispose();
+			}
+
+			base.Dispose(disposing);
+		}
+
 		//GET DownloadManager/{userEmail}
 		[HttpGet]
 		public ActionResult Get(String id) 		//MUST use 'id' here to match the identifier used in the MapRoute call!!

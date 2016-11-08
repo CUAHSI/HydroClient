@@ -10,7 +10,7 @@
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/fancytree")
     @*NOTE: The Google Maps API MUST be downloaded directly from Goolge's Servers!!! See commends in BundleConfig.cs *@
-    <script type='text/javascript' src="http://maps.googleapis.com/maps/api/js?v=3.22&signed_in=true&libraries=places,geometry"></script>
+    <script type='text/javascript' src="http://maps.googleapis.com/maps/api/js?v=3.22&libraries=places,geometry"></script>
     @Scripts.Render("~/bundles/Google")
     @Scripts.Render("~/bundles/GoogleMapsGithubLibraries")
     @Scripts.Render("~/bundles/custom")
@@ -35,6 +35,7 @@
     <script>
     $(document).ready(function () {
         /*<![CDATA[*/window.zEmbed || function (e, t) {
+                //console.log('zendesk script runs...');
             var n, o, d, i, s, a = [],
                 r = document.createElement("iframe"); window.zEmbed = function ()
                 { a.push(arguments) }, window.zE = window.zE || window.zEmbed, r.src = "javascript:false",
@@ -53,8 +54,12 @@
     <!-- End of cuahsi Zendesk Widget script -->
 
 </head>
-<body>    
-    
+<!-- Inhibit scrollbar display in map area by Internet Explorer
+     NOTE: DO NOT include oncontextmenu and onselectstart event attributes so to allow mouse right click and text selection on page
+     Source: https://groups.google.com/forum/#!msg/google-maps-api/LQF9Y3-S3D0/SvUlNJtdTxYJ
+    -->
+<body scroll="no" marginwidth=0 marginheight=0 leftmargin=0 rightmargin=0 topmargin=0 bottommargin=0>
+
     @RenderBody()
 
     @Scripts.Render("~/bundles/bootstrap")

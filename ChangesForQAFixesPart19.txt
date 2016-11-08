@@ -1,0 +1,12 @@
+
+ BC - 02-Nov-2016 - Changes for QA Fixes Part 19
+
+ >>> SUMMARY <<<
+ - Added 'not available' message for BYU apps
+
+
+
+ >>> HISWebClient/Scripts/Custom <<<
+ - webclient.js
+  - modified BYU app list retrieval logic to display a 'not available' message upon reception of any empty list
+

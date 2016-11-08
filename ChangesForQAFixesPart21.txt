@@ -1,0 +1,12 @@
+
+ BC - 07-Nov-2016 - Changes for QA Fixes Part 21 
+
+ >>> SUMMARY <<< 
+ Update HTTP cache-control headers to disable page and code file caching on all browsers
+
+
+>>> HISWebClient/Scripts/Custom <<<
+ - webclient.js
+  - <system.webServer> 
+   - add tags to disable client caching and to update the HTTP cache-control headers to: no-cache, no-store
+

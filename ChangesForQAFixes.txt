@@ -1,0 +1,82 @@
+
+
+BC - 29-Sep-2016 - Fixes for QA Issues...
+
+>>> BusinessObjects <<<
+ - HisCentralSearcher.cs 
+  - Remove commented out code
+  - Update exceptions code
+
+ - HisCentralWebServiceList.cs
+  - assign value to member: _hisCentralUrl
+
+ - SeriesSearcher.cs
+  - Update exceptions code
+
+
+>>> CUAHSI.Models <<<
+ - DataValue.cs 
+  - Comment out unused fields
+
+
+>>> HISWebClient <<<
+ - Global.asax.cs
+  - Remove blank line
+
+ - web.config
+  - Add DefaultConnection strings for Development and QA 
+  - Add comments
+
+
+>>> HISWebClient/Controllers <<<
+ - ExportController.cs 
+  - ConvertWaterMlToCsv(...) 
+   - Make Source, Method and Quality Control Level Checks conditional on the presence of valid values
+   - r: dataResult w: Series
+  - getStream(...)
+   - Re-format code
+  - GetSeriesDataObjectAndStreamFromSeriesID(...)
+   - Make Source, Method and Quality Control Level Checks conditional on the presence of valid values
+   - r: dataResult w: Series
+  - getSeriesMetadata(...)
+   - Set start date as <date> 00:00:00
+   - Set end date as  <date> 23:59:59
+   - If start date == end date increase end date by one day
+
+ - HomeController.cs
+  - UpdateMarkers(...)
+   - On first call since last web site restart, log selected appSettings values
+   - Set start date as <date> 00:00:00
+   - Set end date as  <date> 23:59:59
+   - If start date == end date increase end date by one day
+   - Add conditional code to write SeriesDataCart and TimeSeriesViewModel instances to files when running locally in DEBUG
+   - Revise catch logic to differentiate between WebExceptions and other exception types
+
+
+>>> Models/DataManager <<<
+ - DM_TimeSeries.cs
+   - Minor formatting change
+
+
+>>> Scripts/Custom <<<
+ - webclient.js
+   - Add 'submit' function comments
+   - launchBuHydroshareApp(...)
+    - Temporarily re-add 'old version' for Data Viewer testing
+    - Temporarily disable 'new version' for Data Viewer testing
+
+
+>>>Util <<<
+ - DbErrorContext.cs
+  - Qualified base class reference
+ - EnvironmentContext.cs
+  - new code file
+
+
+>>> ServerSideHydroDesktop <<<
+ - WaterOneFlowClient.cs
+  - GetValuesAndRawStreamAsync(...)
+   - Add conditional code to write Series intances to a file when running locally in DEBUG
+   - Code fails - commented out - research required
+  - ReadStreamFromResponse(...)
+   -  Add conditional code to write WaterML data to a file when running locally in DEBUG

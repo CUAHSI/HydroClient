@@ -41,6 +41,8 @@ namespace HISWebClient.Controllers
 
 		private ExportController exportController = new ExportController();
 
+		private static bool bFirstCall = true;
+
 		private static List<WebServiceNode> getWebServiceList()
 		{
 			var dataWorker = new DataWorker();
@@ -147,6 +149,12 @@ namespace HISWebClient.Controllers
 
 			return View();
 		}
+        public ActionResult Maptest2()
+        {
+            ViewBag.Message = "Your application description page.";
+
+            return View();
+        }
 		public ActionResult datatablestest()
 		{
 			ViewBag.Message = "Your application description page.";
@@ -161,6 +169,28 @@ namespace HISWebClient.Controllers
 		}
 		public ActionResult updateMarkers(FormCollection collection)
 		{
+			if ( bFirstCall)
+			{
+				//First time called since last web site restart - log selected <appSettings> values...
+				bFirstCall = false;
+
+				dblogcontext.clearParameters();
+				dblogcontext.clearReturns();
+
+				dblogcontext.addParameter("ServiceUrl", ConfigurationManager.AppSettings["ServiceUrl"]);
+				dblogcontext.addParameter("ServiceUrl_1_1_EndPoint", ConfigurationManager.AppSettings["ServiceUrl1_1_EndPoint"]);
+				dblogcontext.addParameter("ByuUrl", ConfigurationManager.AppSettings["ByuUrl"]);
+				dblogcontext.addParameter("MaxClustercount", ConfigurationManager.AppSettings["MaxClustercount"].ToString());
+				dblogcontext.addParameter("maxAllowedTimeseriesReturn", ConfigurationManager.AppSettings["maxAllowedTimeseriesReturn"].ToString());
+				dblogcontext.addParameter("maxCombinedExportValues", ConfigurationManager.AppSettings["maxCombinedExportValues"].ToString());
+				dblogcontext.addParameter("blobContainer", ConfigurationManager.AppSettings["blobContainer"]);
+				dblogcontext.addParameter("aspnet:MaxJsonDeserializerMembers", ConfigurationManager.AppSettings["aspnet:MaxJsonDeserializerMembers"].ToString());
+				dblogcontext.addParameter("currentVersion", ConfigurationManager.AppSettings["currentVersion"].ToString());
+
+				DateTime dtNow = DateTime.UtcNow;
+				dblogcontext.createLogEntry(System.Web.HttpContext.Current, dtNow, dtNow, "updateMarkers(...)", "first call - selected appSettings values...", Level.Info);
+			}
+
 			var searchSettings = new SearchSettings();
 			string markerjSON = string.Empty;
 		   
@@ -204,8 +234,18 @@ namespace HISWebClient.Controllers
 				List<int> webServiceIds = null;
 				try
 				{
+					//Increase date range by one day to accomodate one day searches, if indicated...
+					//Set begin date time to 00:00:00, set end date time to 23:59:59
 					searchSettings.DateSettings.StartDate = Convert.ToDateTime(collection["startDate"]);
-					searchSettings.DateSettings.EndDate = Convert.ToDateTime(collection["endDate"]).AddDays(1);//add a day to allow one day searches
+					searchSettings.DateSettings.StartDate = searchSettings.DateSettings.StartDate.Date.AddHours(0).AddMinutes(0).AddSeconds(0);
+
+					searchSettings.DateSettings.EndDate = Convert.ToDateTime(collection["endDate"]);
+					if (searchSettings.DateSettings.StartDate.Date == searchSettings.DateSettings.EndDate.Date)
+					{
+						searchSettings.DateSettings.EndDate = searchSettings.DateSettings.EndDate.Date.AddDays(1);
+					}
+					searchSettings.DateSettings.EndDate = searchSettings.DateSettings.EndDate.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
+					
 					//Convert to int Array
 					if (collection["services"].Length > 0)
 					{
@@ -293,7 +333,11 @@ namespace HISWebClient.Controllers
 
 					var list = new List<TimeSeriesViewModel>();
 
-					if (series.Count> 0)
+					if (!EnvironmentContext.LocalEnvironment())
+					{
+						//Non-local environment - do not attempt to create debug files...
+						//Watch out for similar loop code in 'else' block...
+						if (series.Count > 0)
 					{
 						for (int i = 0; i < series.Count; i++)
 						{
@@ -301,6 +345,48 @@ namespace HISWebClient.Controllers
 							tvm = mapDataCartToTimeseries(series[i], i);
 							list.Add(tvm);
 						}
+					}
+					}
+					else
+					{
+						//Local environment - create debug files, if indicated...
+#if (DEBUG)
+						//BCC - Test - write data cart and time series objects to files...
+						using (System.IO.StreamWriter swSdc = System.IO.File.CreateText(@"C:\CUAHSI\SeriesDataCart.json"))
+						{
+							using (System.IO.StreamWriter swTsvm = System.IO.File.CreateText(@"C:\CUAHSI\TimeSeriesViewModel.json"))
+							{
+								JsonSerializer jsonser = new JsonSerializer();
+
+								swSdc.Write('[');	//Write start of array...
+								swTsvm.Write('[');
+#endif
+								//Watch out for similar loop code in 'if' block...
+								if (series.Count > 0)
+								{
+									for (int i = 0; i < series.Count; i++)
+									{
+										var tvm = new TimeSeriesViewModel();
+										tvm = mapDataCartToTimeseries(series[i], i);
+										list.Add(tvm);
+#if (DEBUG)
+										jsonser.Serialize(swSdc, series[i]);
+										jsonser.Serialize(swTsvm, tvm);
+
+										if ((i + 1) < series.Count)
+										{
+											swSdc.Write(',');	//Separate array element...
+											swTsvm.Write(',');
+										}
+#endif
+									}
+								}
+#if (DEBUG)
+								swSdc.Write(']');	//Write end of array...
+								swTsvm.Write(']');
+							}
+						}
+#endif
 					}
 
 					var markerClustererHelper = new MarkerClustererHelper();
@@ -331,14 +417,28 @@ namespace HISWebClient.Controllers
 						ex = ex.InnerException;
 					}
 
-					if ( typeof (System.InvalidOperationException) == ex.GetType() )
+					if ( typeof (WebException) == ex.GetType())
+					{
+						//Web exception - return the error message...
+						WebException wex = (WebException) ex;
+
+						Response.StatusCode = (int) wex.Status;
+						Response.StatusDescription = wex.Message;
+						Response.TrySkipIisCustomErrors = true;	//Tell IIS to use your error text not the 'standard' error text!!
+						//ALSO clues jQuery to add the parsed responseJSON object to the jqXHR object!!
+						dberrorcontext.createLogEntry(System.Web.HttpContext.Current, DateTime.UtcNow, "updateMarkers(...)", wex, "Web Exception: " + wex.Message);
+
+						return Json(new { Message = wex.Message }, "application/json");
+
+					}
+					else if ( typeof (System.InvalidOperationException) == ex.GetType() )
 					{
 						//Recover the returned error message...
 						Response.StatusCode = (int)HttpStatusCode.RequestEntityTooLarge;
 						Response.StatusDescription = ex.Message;
 						Response.TrySkipIisCustomErrors = true;	//Tell IIS to use your error text not the 'standard' error text!!
 																//ALSO clues jQuery to add the parsed responseJSON object to the jqXHR object!!
-						dberrorcontext.createLogEntry(System.Web.HttpContext.Current, DateTime.UtcNow, "updateMarkers(...)", ex, ex.Message);
+						dberrorcontext.createLogEntry(System.Web.HttpContext.Current, DateTime.UtcNow, "updateMarkers(...)", ex, "NON-Web Exception" + ex.Message);
 
 						return Json(new { Message = ex.Message }, "application/json");
 					}
@@ -350,7 +450,7 @@ namespace HISWebClient.Controllers
 						Response.StatusDescription = message;
 						Response.TrySkipIisCustomErrors = true;	//Tell IIS to use your error text not the 'standard' error text!!
 																//ALSO clues jQuery to add the parsed responseJSON object to the jqXHR object!!
-						dberrorcontext.createLogEntry(System.Web.HttpContext.Current, DateTime.UtcNow, "updateMarkers(...)", ex, message);
+						dberrorcontext.createLogEntry(System.Web.HttpContext.Current, DateTime.UtcNow, "updateMarkers(...)", ex, "Defaults to timeout exception: " + message);
 
 						return Json(new { Message = message }, "application/json");
 					}
@@ -416,8 +516,7 @@ namespace HISWebClient.Controllers
 			Uri uriDefaultIcon = new Uri(ConfigurationManager.AppSettings["uriDefaultIcon"], UriKind.Absolute);
 			Uri uriCuahsiLogo = new Uri(ConfigurationManager.AppSettings["uriCuahsiLogo"], UriKind.Relative);
 
-            var uri = new Uri(ConfigurationManager.AppSettings["ServiceUrl"]);
-            string uriIcon = String.Format("{0}{1}",  "http://" + uri.Host + "/getIcon.aspx?name=", id);
+			string uriIcon = String.Format("{0}{1}", ConfigurationManager.AppSettings["getIconUrl"] + "/getIcon.aspx?name=", id);
 
 			//Download the icon to determine the final URI...
 			HttpResponseMessage response = await DownloadIcon(uriIcon);
@@ -570,7 +669,10 @@ namespace HISWebClient.Controllers
 					if (obj != null) seriesInCluster.Add(obj);
 				}
 
-				var json = JsonConvert.SerializeObject(seriesInCluster);
+				//Order returned series by Organization, Service Title, Keyword
+				var json = JsonConvert.SerializeObject(seriesInCluster.OrderBy(tsvm => tsvm.Organization)
+																	  .ThenBy(tsvm => tsvm.ServTitle)
+																	  .ThenBy(tsvm => tsvm.ConceptKeyword));
 				json = "{ \"data\":" + json + "}";
 				return json;
 			}
@@ -590,7 +692,12 @@ namespace HISWebClient.Controllers
 
 			if (allRetrievedSeries != null)
 			{
-				var allRetrievedSeriesArray = allRetrievedSeries.ToArray();
+				//Order returned series by Organization, Service Title, Keyword
+				//var allRetrievedSeriesArray = allRetrievedSeries.ToArray();
+				var allRetrievedSeriesArray = allRetrievedSeries.OrderBy(tsvm => tsvm.Organization)
+																.ThenBy(tsvm => tsvm.ServTitle)
+																.ThenBy(tsvm => tsvm.ConceptKeyword)
+																.ToArray();
 
 				var seriesInCluster = new List<TimeSeriesViewModel>();
 
@@ -688,19 +795,33 @@ namespace HISWebClient.Controllers
 
 						//Add TimeSeriesViewModel property to LINQ predicate 
 						//NOTE: MUST specify a case-insensitive contains...
-						predicate = predicate.Or(item => item.GetType().GetProperty(source).GetValue(item, null).ToString().Contains(search, StringComparison.CurrentCultureIgnoreCase, new SearchStringComparer()));
+						//		Use null coalescing operator (??) to avoid null reference errors...
+						//		source: http://stackoverflow.com/questions/16490509/how-to-assign-empty-string-if-the-value-is-null-in-linq-query
+						predicate = predicate.Or(item => (item.GetType().GetProperty(source).GetValue(item, null) ?? String.Empty).ToString().Contains(search, StringComparison.CurrentCultureIgnoreCase, new SearchStringComparer()));
 					}
 					else if (null != datasource.title)
 					{
 						//Lookup value from title...
-						predicate = predicate.Or(item => (LookupValueFromTitle(datasource, item)).ToString().Contains(search, StringComparison.CurrentCultureIgnoreCase, new SearchStringComparer()));
-
+						//		Use null coalescing operator (??) to avoid null reference errors...
+						//		source: http://stackoverflow.com/questions/16490509/how-to-assign-empty-string-if-the-value-is-null-in-linq-query
+						predicate = predicate.Or(item => (LookupValueFromTitle(datasource, item) ?? String.Empty).ToString().Contains(search, StringComparison.CurrentCultureIgnoreCase, new SearchStringComparer()));
 					}
 				}
 
 				//Apply search criteria to current timeseries
 				var queryable = series.AsQueryable();
+
+				try
+				{
 				listFiltered = queryable.Where(predicate).ToList();
+			}
+				catch (Exception ex)
+				{
+					string msg = ex.Message;
+					
+					//Error in filtering - set filtered list to unfiltered list...
+					listFiltered = series;
+				}
 			}
 
 			//Apply filters (case-insensitive), if indicated...
@@ -758,6 +879,8 @@ namespace HISWebClient.Controllers
 			obj.DataType = dc.DataType;
 			obj.ValueType = dc.ValueType;
 			obj.SampleMedium = dc.SampleMedium;
+			//BCC - 08-Aug-2016 - Assign view model general category...
+			obj.GeneralCategory = dc.GeneralCategory;
 			obj.TimeUnit = dc.TimeUnit;
 			obj.TimeSupport = dc.TimeSupport;
 			obj.ConceptKeyword = dc.ConceptKeyword;
@@ -765,6 +888,16 @@ namespace HISWebClient.Controllers
 			//obj.IsRegular = dc.IsRegular;
 			obj.VariableUnits = dc.VariableUnits;
 			obj.Organization = dict.FirstOrDefault(x => x.Key == dc.ServCode).Value;
+
+			//BCC - 07-Sep-2016 - Add additional fields for use with GetSeriesCatalogForBox3...
+			obj.QCLID = dc.QCLID;
+			obj.QCLDesc = dc.QCLDesc;
+
+			obj.SourceId = dc.SourceId;
+			obj.SourceOrg = dc.SourceOrg;
+
+			obj.MethodId = dc.MethodId;
+			obj.MethodDesc = dc.MethodDesc;
 
 			return obj;
 		}

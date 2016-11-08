@@ -9,10 +9,13 @@ namespace HISWebClient
         public static void RegisterBundles(BundleCollection bundles)
         {
 			bundles.Add(new ScriptBundle("~/bundles/Google").Include(
-						"~/Scripts/Google/markerwithlabel.js"));
+						"~/Scripts/Google/markerwithlabel.js" 
+                        ));
 
 			bundles.Add(new ScriptBundle("~/bundles/GoogleMapsGithubLibraries").Include(
-						"~/Scripts/GoogleMapsGithubLibraries/infobubble.js"));
+						"~/Scripts/GoogleMapsGithubLibraries/infobubble.js"
+                        //,"~/Scripts/GoogleMapsGithubLibraries/arcgislink.js"
+                        ));
 
 			bundles.UseCdn = true;   //enable CDN support
 
@@ -61,13 +64,15 @@ namespace HISWebClient
 					  //"~/Scripts/Custom/TimeSeriesRequestStatus.min.js",
 					  "~/Scripts/Custom/TimeSeriesRequestStatus.js",
 					  "~/Scripts/Custom/jquery-filedownload.js"
+                      ,"~/Scripts/Custom/LayerControl.js"
                       ));
 
             bundles.Add(new StyleBundle("~/Content/css").Include(
                       "~/Content/bootstrap.css",
                       "~/Content/bootstrap-datepicker3.css",
 					  "~/Content/FancyTree/skin-xp/ui.fancytree.css",
-                      "~/Content/site.css"
+                      "~/Content/site.css",
+                      "~/Content/gDropDownControl.css"
                      ));
 
 			//add link to DataTables CDN

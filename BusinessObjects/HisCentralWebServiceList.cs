@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
+using HISWebClient.Util;
+
 namespace HISWebClient.BusinessObjects
 {
     public class HisCentralWebServicesList : IWebServicesList
@@ -24,8 +26,9 @@ namespace HISWebClient.BusinessObjects
 
         public HisCentralWebServicesList(string webServicesFilename)
         {
-            //_hisCentralUrl = hisCentralUrl;
+            //_hisCentralUrl = hisCentralUrl
             WebServicesFilename = ConfigurationManager.AppSettings["ServiceUrl1_1_Endpoint"]; // "http://hiscentral.cuahsi.org/webservices/hiscentral_1_1.asmx";//Path.Combine(ServicesXmlDirectoryPath, DotSpatial.Data.Properties.Settings.Default.WebServicesFileName);
+			_hisCentralUrl = ConfigurationManager.AppSettings["ServiceUrl1_1_Endpoint"];
         }
 
         #endregion
@@ -50,6 +53,12 @@ namespace HISWebClient.BusinessObjects
                 {
                     if (reader.NodeType == XmlNodeType.Element)
                     {
+						if (XmlContext.AdvanceReaderPastEmptyElement(reader))
+						{
+							//Empty element - advance and continue...
+							continue;
+						}
+
                         if (reader.Name == "ServiceInfo")
                         {
                             string desciptionUrl = null;
@@ -71,6 +80,12 @@ namespace HISWebClient.BusinessObjects
 
                                 if (reader.NodeType == XmlNodeType.Element)
                                 {
+									if (XmlContext.AdvanceReaderPastEmptyElement(reader))
+									{
+										//Empty element - advance and continue...
+										continue;
+									}
+									
                                     switch (reader.Name)
                                     {
                                         case "Title":

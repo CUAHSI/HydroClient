@@ -1,0 +1,195 @@
+
+BCC - 23-Sep-2016 - CUAHSI HydroClient - 
+
+Changes for the display and processing of time series value attributes: Sources, Methods and Quality Control Levels
+
+
+>>> BusinessObjects <<<
+
+- BusinessObjects.csproj 
+ - Add link to XmlContext.cs
+
+- HisCentralSearcher.cs 
+ - Set encoding type per current code page
+ - Add new signature for GetSeriesCatalogForBox - call catalog method GetSeriesCatalogForBox3
+ - Add XmlReader logic to skip self-closed (empty) tags
+ - ReadSeriesFromHisCentral - add logic to read new values: variableunitsabbrev, qclid, qcldesc, sourceorg, sourceid, methodid and methoddesc
+
+- HisCentralWebServicesList.cs 
+ - Add XmlReader logic to skip self-closed (empty) tags
+ - Add code page parameter to GetWebSericesXml calls
+
+- SeriesDataCartModel.cs 
+ - class SeriesDataCart - added new fields:  QCLID, QCLDesc, SourceOrg, SourceId, MethodId and MethodDesc
+
+- Seariessearcher.cs
+ - Update GetSeriesCatalogForBox calls to use new signature
+
+
+>>> CUAHSI.Models <<<
+
+- CUAHSI.Models.csproj
+ - Add link to EnumExtensionMethods.cs
+
+- DataValue.cs
+ - Add new fields: LabSampleCode, MethodCode, QualityControlLevelCode, SourceCode, SeriesData
+
+- SeriesData.cs 
+ - Add new fields: myMethod, myQualityControlLevel
+
+- SeriesMetadata.cs
+ - Removed contstructor tagged: [Obsolete("Deprecated in favor of async object[] result")]
+ - Added field: VariableID
+
+
+>>> DataLayer <<<
+
+- DataWorker.cs
+ - Add XmlReader logic to skip self-closed (empty) tags
+ - Add code page parameter to GetWebSericesXml calls
+
+
+>>> HISWebClient <<<
+
+- HISWebClient.csproj
+ - Add Entity Framework database 'migrations'
+ - Include new files: Models\SeriesValueAttributes.cs, 
+		Utils\EnumExtensionMethods.cs, 
+		Utils\XmlContext.cs, 
+		Web-Deploy.config, 
+		Web-LocalBuild.config, 
+		Views/Home/_DatatableQualityControlLevelsColumns.cshtml,
+		Views/Home/_DatatableMethodDescriptionsColumns.cshtml,
+		Views/Home/_DatatableSourceOrganizationsColumns.cshtml
+- Web.config
+ - Remove outdated comments
+ - Add new <appSettings> keys: for SOLR catalog, debug and release build types, blob storage primary and secondary access
+ - Remove custom session state provider
+ - Remove dependentAssembly: Microsoft,WindowsAzure.Storage
+
+- Areas/HelpPage/Views/Shared/_Layout.cshtml
+ - format change??
+
+- Content/Site.css
+ - Miscellaneous corrections, additions and deletions
+
+- Controllers/AccountController.cs
+ - Remove commented out code
+
+- Controllers/ExportController.cs
+ - Remove misleading comments/ commented out code
+ - Add debug method: GetTaskStatus(...)
+ - Remove all task-related logic for Variable Units retrieval for workspace entries (variable units are now read directly from the catalog)
+ - Revise DownloadFile(...) return type
+ - Replace ASCII encoding calls with UTF-8 encoding calls
+ - Add debug exception code
+ - ConvertWaterMlToCsv(...) include only those values which match current Source, Method and QuailityControlLevel ids...
+ - GetSeriesDataFromSeriesID(...) - for variable units retrieval - remove - no longer needed...
+ -  Revise getStream(...) return type
+ - GetCSVResultAsList(...) - add logic to set values for new fields
+ - Revise getWOFStream(...) return type
+ - GetSeriesDataObjectAndStreamFromSeriesID(...)  include only those values which match current Source, Method and QuailityControlLevel ids...
+ - WriteDataToMemoryStreamAsCsv(...) - revise output format, add values for new fields
+ - getSeriesMetadata(...) - revise call to SeriesMetadata constructor
+
+- Controllers/HomeController.cs
+ - Remove commented out code
+ - UpdateMarkers(...) - add debug code to write data cart and time series objects to files
+ - MapDataCartToTimeseries(...) - add references to new fields
+
+- Controllers/RESTfulInterfaceController.cs
+ - Remove commented out code
+
+
+>>> Models <<<
+
+- ConvertWaterMlToCsvRequest.cs
+ - Add member class WofIds
+
+- DataV alueCsvViewModel.cs
+ - r: Id w: SeriesID
+
+- TaskData.cs
+ - Remove field: SeriesIdsToVariableUnits
+
+- TimeSeriesResponse.cs
+ - Remove field: SeriesIdsToVariableUnits
+
+- TimeSeriesViewModel.cs
+ - Uncomment fields: GeneralCategory, Citation
+ - Add fields: QCLID, QCLDesc, SourceOrg, SourceId, MethodId, MethodDesc
+
+- /DataManager/DM_TimeSeries.cs
+ - Add fields: QCLID, QCLDesc, SourceOrg, SourceId, MethodId, MethodDesc
+
+
+>>> Scripts <<<
+
+- Custom/DownloadHelper.js
+ - Remove commented out code
+
+- Custom/webclient.js
+ - Add functions for text abbreviation
+ - Remove commented out code
+ - Add Data Manager tab 'shown.bs.tab' event handler for table re-draw
+ - Miscellenous DataTable instances - add new fields, add  'render'/'createdCell' calls to show abbrebiated text and tooltips
+ - Add function clearDatatableSelections(...)
+ - Function launchByuHydroshareApp(...) - revise calling logic to include QCLID, MethodId and SourceId parameters
+ - Change status monitoring interval from 1000 to 5000 milliseconds
+ - Function copyDmRecordToServerRecord(...) - Add fields: QCLID, QCLDesc, SourceOrg, SourceId, MethodId, MethodDesc
+ - Function downloadSelections(...) - revise parameter creation logic to include QCLID, MethodId and SourceId
+ - Function copySelectionsToDataManager(...) - Add fields: QCLID, QCLDesc, SourceOrg, SourceId, MethodId, MethodDesc
+ - Function loadDataManager(...) - Add fields: QCLID, QCLDesc, SourceOrg, SourceId, MethodId, MethodDesc
+
+ 
+>>> Util <<<
+
+- Add new source files: EnumExtensionMethods.cs, XmlContext.cs
+
+
+>>> Views <<<
+
+- Home/_DataManagerTimeseriesColumns.cshtml
+ - Add CSS styling for text centering
+ - Add new headers: QCLID, QC Level, MethodId, Method, SourceId, Collector
+
+- Home/_DatatableTimeseriesColumns.cshtml
+ - Add CSS styling for text centering
+ - Add new headers: QCLID, QC Level, MethodId, Method, SourceId, Collector
+
+-Home/Index.cshtml
+ - Add logic to display 'Debug'/'Release' labels per build type
+ - Remove commented out code
+
+-Shared/_Layout.cshtml
+ - Remove commented out code 
+
+
+>>> ServerSideHydroDesktop <<<
+
+- CUAHSI.ServerSideHydroDesktop.csproj
+ - Add link to XmlContext.cs
+
+- WaterOneFlow10Parser.cs 
+ - Add XmlReader logic to skip self-closed (empty) tags
+ - Add code to retrieve attribute: variableID
+
+- WaterOneFlow11Parser.cs 
+ - Add XmlReader logic to skip self-closed (empty) tags
+ - Add code to retrieve attribute: variableID
+ - Add code to check for multiple space-delimited quality level codes
+
+- WaterOneFlowClient.cs
+ - Add semaphore-based logic to serialize calls by multiple threads to non-thread-safe data services
+
+- WaterOneFlowParser.cs
+ - Add XmlReader logic to skip self-closed (empty) tags
+ - Add code to retrieve attribute: siteID
+
+
+ 
+
+
+
+
+

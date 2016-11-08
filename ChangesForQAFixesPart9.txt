@@ -1,0 +1,24 @@
+
+BC - 14-Oct-2016 - Changes for QA Fixes Part 9
+
+>>> HISWebClient/Content <<<
+ - Site.css
+  - corrected class name
+
+
+
+>>> HISWebClient/Scripts/Custom <<<
+ - webclient.js 
+  - updated css class names
+  - createdTooltipText(...)
+   - revised tooltip activation conditions and text formatting
+  - setupToolTips()
+   - added Jon's table heading definitionsl to tooltip array
+   - revised tooltip text formatting
+
+
+
+>>> HISWebClient/Views/Home <<<
+ - _DataManagerTimeseriesColumns.cshtml
+  - in <th> tags replaced ids with class names
+

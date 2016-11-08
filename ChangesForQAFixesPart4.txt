@@ -1,0 +1,47 @@
+
+ BC - 06-Oct-2016 - Changes for QA Fixes - Part 4
+
+>>> BusinessObjects <<<
+ - BusinessObjects.csproj
+  - add EnvironmentContext.cs as link
+ 
+ - HisCentralSearcher.cs
+  - remove commented out code
+
+ - SearchHelper.cs
+  - UpdateDataCardToDateInterval(...)
+   - revise Value Count estimation logic
+
+ - SeriesDataCartModel.cs 
+  - add debug member: ValueCountOriginal
+
+ - Seriessearcher,cs
+  - GetSeriesListForExtent(...)
+   - add debug code to disable parallelism
+
+
+
+>>> HISWebClient/Scripts/Custom <<<
+ - webclient.js
+  - Initialize()
+   - add setup tool tips calls for modal dialog open/close
+ - Datatables setup code 
+   - revise Value Count rendering
+   - revise setup tool tips calls
+ - setupToolTips()
+   - add 'placeholders' for table header tool tips
+ - setUpTooltips()
+  - remove function - never called
+
+
+
+>>> HISWebClient/Views/Home <<<
+ - _DataManagerTimeseriesColumns.cshtml
+   - add ids to <th> tags for use with tool tips
+
+ - _DatatableTimeseriesColumns.cshtml
+  - add classes to <th> tags for use with tool tips
+
+
+
+ 

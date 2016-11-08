@@ -1,0 +1,40 @@
+
+BC - 01-Nov-2016 - Changes for QA Fixes Part 17 
+
+>>> SUMMARY <<<
+ - Tooltips for 'Thumbs-up' and 'Thumbs-down' icons per Liza's e-mail
+ - Liza's additions/revisions to Quick Start Guide
+ - <body> tag revise attributes to allow element inspection via a right-mouse click
+
+
+
+>>> BusinessObjects <<<
+ - HisCentralSearcher.cs
+  - revise file output debug code
+ - SearchHelper.cs 
+  - UpdateDataCartToDateInterval(...) 
+   - update validation criteria...
+
+
+
+>>> HISWebClient/Scripts/Custom <<<
+ - webclient.js
+  - add miscellaneous functions for tooltip processing
+  - convert browser-based tooltip markup to Bootstrap-based tooltip calls
+
+
+
+>>> HISWebClient/Views/Home <<<
+ - Quickstart.cshtml
+   - Revise markup for Quick Start Guide revisions/additions 
+
+
+
+>>> HISWebClient/Views/Shared <<<
+ - _Layout.cshtml
+  - <body> tag - remove attributes: oncontextmenu and onselectstart
+
+
+
+
+

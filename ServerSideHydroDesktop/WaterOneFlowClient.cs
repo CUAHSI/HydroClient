@@ -10,6 +10,10 @@ using ServerSideHydroDesktop.ObjectModel;
 
 using System.Threading;
 
+using Newtonsoft.Json;
+
+using HISWebClient.Util;
+
 namespace ServerSideHydroDesktop
 {
     public class WaterOneFlowClient
@@ -26,7 +30,79 @@ namespace ServerSideHydroDesktop
 		//about the web service including service version
 		private readonly DataServiceInfo _serviceInfo;
 
-		private static SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);	//For synchronization of data service calls...
+		private static SemaphoreSlim _semaphoreDict = new SemaphoreSlim(1, 1);	//For access to semaphore dictionary...
+
+		//Dictionary of service url's and associated semaphores...
+		private static Dictionary<string, SemaphoreSlim> _dict = new Dictionary<string, SemaphoreSlim>();
+			
+
+		#endregion
+
+		#region Utility
+
+		//WaitAsync for the semaphore associated with the input URL
+		private static async Task waitAsyncSemaphore(string url)
+		{
+			if (String.IsNullOrWhiteSpace(url))
+			{
+				return;	//Invalid input parameter - return early...
+			}
+
+			_semaphoreDict.Wait();	//Wait for access to dictionary!!
+
+			try
+			{
+				SemaphoreSlim semaphoreSlim = null;
+
+				if (_dict.ContainsKey(url))
+				{
+					//Associated semaphore exists - assign reference...
+					semaphoreSlim = _dict[url];
+				}
+				else
+				{
+					//Associated semaphore does not exist - create and assign reference
+					semaphoreSlim = new SemaphoreSlim(1, 1);
+					_dict[url] = semaphoreSlim;
+				}
+
+				_semaphoreDict.Release();			//Release the dictionary...
+				await semaphoreSlim.WaitAsync();	
+			}
+			catch (Exception ex)
+			{
+				//Take no action
+				_semaphoreDict.Release();			//Release the dictionary...
+			}
+		}
+
+		//Release the semaphore associated with the input URL
+		private static void releaseSemaphore(string url)
+		{
+			if (String.IsNullOrWhiteSpace(url))
+			{
+				return;	//Invalid input parameter - return early...
+			}
+
+			_semaphoreDict.Wait();	//Wait for access to dictionary!!
+
+			try
+			{
+				if (_dict.ContainsKey(url))
+				{
+					_dict[url].Release();
+				}
+			}
+			catch (Exception ex)
+			{
+				//Take no action...
+			}
+			finally
+			{
+				_semaphoreDict.Release();	//Release the dictionary...
+			}
+
+		}
 
 		#endregion
 
@@ -161,8 +237,7 @@ namespace ServerSideHydroDesktop
         /// <returns></returns>
         public async Task<Tuple<Stream, IList<Series>>> GetValuesAndRawStreamAsync(string siteCode, string variableCode, DateTime startTime, DateTime endTime, int waterOneflowTimeoutMilliseconds)
         {
-			//semaphoreSlim.Wait();	//Wait for access to the semaphore!!
-			await semaphoreSlim.WaitAsync();	//Wait for access to the semaphore!!
+			await waitAsyncSemaphore(_serviceURL);
 
 			try
             {
@@ -188,6 +263,52 @@ namespace ServerSideHydroDesktop
 				Stream s = ReadStreamFromResponse(getTask.Result);
 
 				IList<Series> listSeries = _parser.ParseGetValues(s);
+#if (DEBUG)
+				//BCC - 28-Sep-2016 - TO DO - Code not working - research needed...
+				//Write Series list to a file...
+				//if (EnvironmentContext.LocalEnvironment())
+				//{
+					//using (System.IO.StreamWriter swSeries = System.IO.File.CreateText(@"C:\CUAHSI\Series.json"))
+					//{
+					//	JsonSerializer jsonser = new JsonSerializer();
+
+					//	swSeries.Write('[');	//Write start of array...
+
+					//	if ( listSeries.Count > 0 )
+					//	{
+					//		for (int i = 0; i < listSeries.Count; i++)
+					//		{
+					//			try
+					//			{
+					//				jsonser.Serialize(swSeries, listSeries[i]);
+					//			}
+					//			catch (Exception ex)
+					//			{
+					//				if ((i + 1) < listSeries.Count)
+					//				{
+					//					swSeries.Write(',');
+					//				}
+					//				continue;
+					//			}
+
+					//			if ( (i + 1) < listSeries.Count)
+					//			{
+					//				swSeries.Write(',');
+					//			}
+					//		}
+					//	}
+
+					//	swSeries.Write(']');	//Write end of array...
+					//}
+				//}
+
+				if (1 < listSeries.Count)
+				{
+					int n = 5;
+
+					++n;
+				}
+#endif
 
 				return new Tuple<Stream, IList<Series>>(s, listSeries);
             }
@@ -199,7 +320,7 @@ namespace ServerSideHydroDesktop
 			finally
 			{
 				//ALWAYS release the semaphore...
-				semaphoreSlim.Release();
+				releaseSemaphore(_serviceURL);
 			}
 		}
 
@@ -224,8 +345,7 @@ namespace ServerSideHydroDesktop
         /// <returns></returns>
         public async Task<IList<Series>> GetValuesAsync(string siteCode, string variableCode, DateTime startTime, DateTime endTime)
         {
-			//semaphoreSlim.Wait();		//Wait for access to the semaphore!!
-			await semaphoreSlim.WaitAsync();	//Wait for access to the semaphore!!
+			await waitAsyncSemaphore(_serviceURL);	//Wait for access to the semaphore!!
 
 			try
 			{
@@ -257,7 +377,7 @@ namespace ServerSideHydroDesktop
 			finally
 			{
 				//ALWAYS release the semaphore...
-				semaphoreSlim.Release();
+				releaseSemaphore(_serviceURL); ;
 			}
 		}        
 
@@ -271,21 +391,25 @@ namespace ServerSideHydroDesktop
         {
 			Stream stream = response.GetResponseStream();
 
-
-			//BCC - Test - Here the stream contains data...
-			//using (System.IO.FileStream output = new System.IO.FileStream(@"C:\CUAHSI\ReadFromStreamResponse.xml", FileMode.Create))
-			//{
-			//	stream.CopyTo(output);
-			//}
-
-			//BC TEST - Copy stream contents to a new memory stream and return the memory stream...
+			//Copy stream contents to a new memory stream and return the memory stream...
 			MemoryStream ms = new MemoryStream();
 			stream.CopyTo(ms);
 			ms.Seek(0, SeekOrigin.Begin);
+
+#if (DEBUG)
+			//Here the stream contains data...
+			if (EnvironmentContext.LocalEnvironment())
+			{
+				using (System.IO.FileStream output = new System.IO.FileStream(@"C:\CUAHSI\ReadFromStreamResponse.xml", FileMode.Create))
+				{
+					ms.CopyTo(output);
+					output.Flush();
+					ms.Seek(0, SeekOrigin.Begin);
+				}
+			}
+#endif
+	
 			return ms;
-
-
-            //return stream;
         } 
 
 		#endregion

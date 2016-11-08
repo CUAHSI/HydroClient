@@ -1,0 +1,11 @@
+
+BC - 03-Nov-2016 - Changes for QA Fixes Part 20
+
+ >>> SUMMARY <<<
+ - Miscellaneous proof-reading changes for Quick Start Guide
+
+
+
+>>> HISWebClient/Views/Home <<<
+ - Quickstart.cshtml
+  - Miscellaneous proof-reading changes for Quick Start Guide

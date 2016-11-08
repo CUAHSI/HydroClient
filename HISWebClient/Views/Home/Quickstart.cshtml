@@ -13,7 +13,7 @@
         <div class="panel-heading" role="tab" id="headingOne">
             <h4 class="panel-title">
                 <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                    Overview
+                    Data Types Available
                 </a>
             </h4>
         </div>
@@ -21,37 +21,39 @@
             <div class="panel-body">
                 <div class="container">
                     <div class="row">
-                        <div class="col-sm-3">
+                        <div class="col-sm-3" style="width: 22%; padding-left: 0; padding-right: 0">
                             <h4>Meteorology</h4>
                             <img src="~/Content/Images/QuickStart/meteo.jpg" />
                         </div>
-                        <div class="col-sm-3">
+                        <div class="col-sm-2">
                             <h4>Ground Water</h4>
                             <img src="~/Content/Images/QuickStart/Groundwater.jpg" />
                         </div>
-                        <div class="col-sm-3">
+                        <div class="col-sm-2">
+                            <h4>Surface Water</h4>
+                            <img src="~/Content/Images/QuickStart/WQ.jpg" />
+                        </div>
+                        <div class="col-sm-2">
                             <h4>Water Quality</h4>
                             <img src="~/Content/Images/QuickStart/QaterQuality.jpg" />
                         </div>
                     </div>
                 </div>
 
-                <br />
                 <h4>
-                    HydroClient helps you discover, download, and analyze environmental data from many different sources including U.S. Federal Agencies, International governments, non-profit organizations, and academic projects.
+                    HydroClient helps you discover, download, and analyze environmental data from many different sources including U.S. Federal Agencies, International governments, non-profit organizations and academic projects.
                 </h4>
-                    <br />
-                    <p><a target="_blank" href="https://cuahsi.zendesk.com/hc/en-us/articles/205419147-Overview-of-the-HydroClient-Homepage">For more info please check our User Guide</a></p>
+                <h4>
+                    <a target="_blank" href="https://cuahsi.zendesk.com/hc/en-us/sections/201050037-HydroClient-User-Guide" style="">For more info please check our User Guide</a>
+                </h4>
 
-                    <p>
+                <h4>
                         Tutorials:
-                        <ul>
+                </h4>
+                <ul style="font-size: medium">
                             <li> <a target="_blank" href="https://cuahsi.zendesk.com/hc/en-us/articles/217205098-Tutorial-Examining-Discharge-and-Precipitation-Data-near-Lake-Tahoe-California"> Tutorial-Examining-Discharge-and-Precipitation-Data-near-Lake-Tahoe-California</a></li>
                             <li><a target="_blank" href="https://cuahsi.zendesk.com/hc/en-us/articles/212036357-Tutorial-Investigating-Air-Temperature-with-HydroClient-and-RStudio"> Tutorial-Investigating-Air-Temperature-with-HydroClient-and-RStudio</a></li>
                         </ul>
-                    <p>
-
-
             </div>
         </div>
     </div>
@@ -59,44 +61,141 @@
         <div class="panel-heading" role="tab" id="headingTwo">
             <h4 class="panel-title">
                 <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                    Searching for data
+                    Searching for Data
                 </a>
             </h4>
         </div>
         <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
             <div class="panel-body">
+                <h4>
             Discover data by specifying the :
-                <ul>
-
-                    <li>Time range you are interested in by selecting start and end dates</li>
-                    <li>Parameter you want to observe by using the Keyword selector (leaving this blank will return all parameters)</li>
-                    <li>Your area of interest by navigating to a place on the map</li>
+                </h4>
+                <ul style="margin-top: 1em; font-size: medium;">
+                    <li>Date range you are interested in by selecting start and end dates</li>
+                    <li>Parameter you want to observe by using the <a target="_blank" href="https://cuahsi.zendesk.com/hc/en-us/articles/206867357-Selecting-a-Keyword-in-HydroClient">Keyword selector</a> (leaving this blank will return all parameters)</li>
+                    <li>
+                        Your area of interest by navigating to a place on the map and using
+                        <a target="_blank" href="https://cuahsi.zendesk.com/hc/en-us/articles/216129147-Searching-for-Data">the green thumbs up at the bottom of the map view</a>
+                        as an indicator that the map area is small enough to begin searching
+                    </li>
                 </ul>
-                You can also select one or more data sources if you would like to filter which organizations are returned in your search. Search results are displayed as map markers. Click on a marker to View All Search Results to see detailed information about the data you’ve found.
+                <h4>
+                    You can also select one or more data services if you would like to filter which organizations are returned in your search. Search results are displayed as blue map markers.
+                    Click on an individual blue data marker or click Show Search Results on the side bar to view detailed information on the data you’ve discovered.
+                </h4>
+                <h4>
+                    <a href="https://cuahsi.zendesk.com/hc/en-us/articles/216129147-Searching-for-Data" target="_blank">Click for more information on Searching for data</a>
+                <br />
+                <br />
+                    <a href="mailto:help@cuahsi.org?Subject=Hydroclient" target="_top">For additional questions or feedback email support</a>
+                </h4>
             </div>
-            <a href="https://cuahsi.zendesk.com/hc/en-us/articles/214972448-View-a-Time-Series-in-Your-Workspace" target="_blank">Click for more information on the Google map interface</a>
         </div>
     </div>
+
     <div class="panel panel-default">
         <div class="panel-heading" role="tab" id="headingThree">
             <h4 class="panel-title">
                 <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                    Using the workspace
+                    Using the Layer Control
                 </a>
             </h4>
         </div>
         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
             <div class="panel-body">
-                Once you have discovered data, download it to your computer or save it to your HydroClient Workspace. The HydroClient Workspace contains tools like the Data Viewer that you can use to analyze the data. Login to HydroClient with a Google account to save the contents of your Workspace.
-                <br />
-                <a href="https://cuahsi.zendesk.com/hc/en-us/articles/214972448-View-a-Time-Series-in-Your-Workspace" target="_blank">Click for more information on the workspace</a>
+                <h4>
+                    Click on the Layer Control to open up a list of four layer choices:
+                </h4>
+                <ol type="1" style="margin-top: 1em; font-size: medium;">
+                    <li>USGS Stream Gages</li>
+                    <li>ESRI Hydrology</li>
+                    <li>ESRI HUC</li>
+                    <li>USGS LandCover 2011</li>
+                </ol>
+                <h4>
+                    All four layers can be turned on at once.  To access the legends associated with the USGS LandCover 2011 layer, click on the LEGENDS tab next to the SEARCH tab.
+                </h4>
+                <h4>
+                    <a href="https://cuahsi.zendesk.com/hc/en-us/articles/231574887-Using-the-GIS-Layer-Control" target="_blank">Click for more information on the Layer Control</a>
+                </h4>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="panel panel-default">
+        <div class="panel-heading" role="tab" id="headingFour">
+            <h4 class="panel-title">
+                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                    Using the workspace
+                </a>
+            </h4>
+        </div>
+        <div id="collapseFour" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingFour">
+            <div class="panel-body">
+                <h4>
+                    Once you have discovered data, export it to your computer or save it to your HydroClient Workspace.
+                    The HydroClient Workspace contains tools like the Data Viewer that you can use to analyze the data.
+                    Sign into HydroClient with a Google account to save the contents of your Workspace beyond a single browsing session and access additional exporting capabilities.
+                </h4>
+                <h4>
+                    <a href="https://cuahsi.zendesk.com/hc/en-us/articles/206078888-Understanding-Exported-File-formats-from-HydroClient " target="_blank">Click for more information on the workspace</a>
+                </h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-heading" role="tab" id="headingFive">
+            <h4 class="panel-title">
+                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                    Exporting Data
+                </a>
+            </h4>
+        </div>
+        <div id="collapseFive" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingFive">
+            <div class="panel-body">
+                <h4>
+                    Once you have discovered data, you can export it to your local computer as a .csv.  If you are signed in with your Google Account, you'll see two
+                    options for exporting data series:
+                </h4>
+                <ol type="1" style="margin-top: 1em; font-size: medium;">
+                    <li>Export selection(s) in a combined file</li>
+                    <li>Export each selection in a separate file.</li>
+                </ol>
+                <h4>
+                    Option (1), Export selection(s) in a combined file, is only visible to signed in users.  Combined file formats display the data series stacked on top of one another so
+                    that several series can be viewed at once.
+                </h4>
+                <h4>
+                    <a href="https://cuahsi.zendesk.com/hc/en-us/articles/206078888-Understanding-Exported-File-formats-from-HydroClient" target="_blank">Click for more information about exported file formats</a>
+                </h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-heading" role="tab" id="headingSix">
+            <h4 class="panel-title">
+                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+                    Check out the Help Center
+                </a>
+            </h4>
+        </div>
+        <div id="collapseSix" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingSix">
+            <div class="panel-body">
+                <h4>
+                    Check out the
+                    <a target="_blank" href="https://cuahsi.zendesk.com/hc/en-us/categories/200240268-Accessing-Data-from-the-WDC "> Help Center</a>
+                    or
+                    <a href="mailto:help@cuahsi.org" target="_top">email support</a>
+                    for additional questions and feedback
+                </h4>
   </div>
         </div>
     </div>
+
 </div>
-<p>
-    <a href="emailto:help@cuahsi.org?Subject=Hydroclient" target="_top">For additional questions or feedback email support</a>
-</p>
 
 
 
