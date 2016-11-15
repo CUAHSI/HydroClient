@@ -1613,14 +1613,20 @@ function keywordSelectHandler(event, data) {
 
     var node = data.node;
 
-    //Scan the checkboxes on the 'Common' tab for a matching value...
-    $("input[name='keywords']").each(function (index, element) {
-        var checkbox = $(this);
-        if( node.title.toLowerCase() === checkbox.prop('value').toLowerCase() && node.isSelected() !== checkbox.is(':checked')) {
-                //Matching value found but non-matching states, update checkbox state
-                checkbox.prop('checked', node.isSelected());
-        }
-    });
+
+    //For the current node and each child node...
+    node.visit(function(node) {
+        //console.log(node.title);
+
+        //Scan the checkboxes on the 'Common' tab for a matching value...
+        $("input[name='keywords']").each(function (index, element) {
+            var checkbox = $(this);
+            if( node.title.toLowerCase() === checkbox.prop('value').toLowerCase() && node.isSelected() !== checkbox.is(':checked')) {
+                    //Matching value found but non-matching states, update checkbox state
+                    checkbox.prop('checked', node.isSelected());
+            }
+        });
+    }, true);   //Include the node itself...
 }
 
 //Update the keyword list from the keyword tab entries
