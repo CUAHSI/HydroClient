@@ -544,6 +544,28 @@ ul.fancytree-container {
     max-width: 10em;
 }
 
+/* Media query-based font size class... 
+    NOTE: CSS Feature - Position sensitive!!!
+          - max-width tests: larger sizes must appear before smaller sizes
+          - min-width tests: smaller sizes must appear before larger sizes
+*/
+@media screen and (max-width: 736px) {
+    .mediaFontSize {
+        font-size: 0.5em;
+    }
+}
+
+@media screen and (max-width: 568px) {
+    .mediaFontSize {
+        font-size: 0.4em;
+    }
+}
+
+@media screen and (min-width: 737px) {
+    .mediaFontSize {
+        font-size: 1.0em;
+    }
+}
 
 /*.large.tooltip-inner {
     max-width: 40em;
@@ -574,3 +596,30 @@ thead tr th.th-textalign-center {
     text-align: center;
 }
 
+
+/* Styling for DataTables classes - required for proper alignment on mobile devices... */
+@media screen and (max-width: 1023px) {
+    .dataTables_info, .dataTables_length, .dataTables_paginate {
+        display: inline-block;
+        position: relative;
+        float: left!important;
+        font-size: 0.75em;
+    }
+}
+
+@media screen and (min-width: 1024px) {
+    .dataTables_info, .dataTables_length, .dataTables_paginate {
+        display: inline-block;
+        position: relative;
+        float: left; 
+        font-size: 1.0em;
+    }
+}
+
+.legendClass {
+    height: 400px;     /* Ensure entire legend displays on mobile devices*/
+}
+
+.searchForm {
+    height: 600px;     /* Ensure entire form displays on mobile devices*/
+}

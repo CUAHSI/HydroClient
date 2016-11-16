@@ -4,7 +4,7 @@
         <div id="pageloaddiv"></div>
         <div id="tabSelector" class=""></div>
 
-        <div id="cuahsi-bar" class="nav navbar navbar-inverse navbar-fixed-top" style="min-width: 70em;">
+        <div id="cuahsi-bar" class="nav navbar navbar-inverse navbar-fixed-top">
             <a href="http://www.cuahsi.org" target="_blank"> <img class="img-responsive pull-left" src="~/Content/Images/cuahsi_logo_small.png" /></a>
             @if (HttpContext.Current.IsDebuggingEnabled)
             {
@@ -17,9 +17,9 @@
 
             @if (User.Identity.IsAuthenticated)
             {
-                <div class="panel panel-default col-md-offset-2" style="display: inline-block;">
-                    <div class="panel-heading" style="background-color: lightgray;">
-                        <h3 class="panel-title" style="display: inline; font-weight: bold;"> Welcome: </h3>
+                <div class="panel panel-default" style="display: inline-block; margin: 0 auto;">
+                    <div class="panel-heading mediaFontSize" style="background-color: lightgray;">
+                        <span style="display: inline; font-weight: bold;"> Welcome: </span>
                         <span class="badge" style="font-weight: bold; font-size: larger">@User.Identity.Name</span>
                     </div>
                 </div>
@@ -36,14 +36,14 @@
                     }
                 </script>
             }
-            <ul class="nav nav-tabs pull-right">
-                <li id="liMapTab" class="active navbar-custom hidden" style="margin-right: 1.0em; padding: 0;"> <button class="btn btn-primary" href="#map" id="mapTab" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> Search</button></li>
-                <li id="liTabbedDataMgrTab" class="navbar-custom" style="margin-right: 1.0em; padding: 0;"><button class="btn btn-primary" href="#tabbedDataMgr" id="tabbedDataMgrTab" data-toggle="tab"><span class="glyphicon glyphicon-tasks"></span> Workspace</button></li>
+            <ul class="nav nav-tabs" style="position: relative; float: right;">
+                <li id="liMapTab" class="active navbar-custom hidden" style="padding: 0;"> <button class="btn btn-primary mediaFontSize" href="#map" id="mapTab" data-toggle="tab"><span class="glyphicon glyphicon-globe"></span> Search</button></li>
+                <li id="liTabbedDataMgrTab" class="navbar-custom" style="padding: 0;"><button class="btn btn-primary mediaFontSize" href="#tabbedDataMgr" id="tabbedDataMgrTab" data-toggle="tab"><span class="glyphicon glyphicon-tasks"></span> Workspace</button></li>
 
-                <li id="liHelpTab" class="navbar-custom" style="margin-right: 1.0em; padding: 0;">
+                <li id="liHelpTab" class="navbar-custom" style="padding: 0;">
 
                     <button class="btn btn-primary" data-toggle="dropdown" style="font-size: 1.00em;">
-                        <div id="ddAbout" data-noneselected="true">
+                        <div id="ddAbout" data-noneselected="true" class=" mediaFontSize">
                             <span class="glyphicon glyphicon-question-sign" style="font-weight: bold; max-width: 100%; font-size: 1.0em;"></span>
                             <span style="font-weight: bold; font-size: 1.00em;">&nbsp;Help&nbsp;</span>
                             <span class="caret" style="font-weight: bold; font-size: 1.00em;"></span>
@@ -69,7 +69,7 @@
                     </ul>
                 </li>
 
-                <li id="liGoogleTab" class="navbar-custom" style="margin-right: 1em; padding: 0;">
+                <li id="liGoogleTab" class="navbar-custom" style="padding: 0;">
                     <div style="height: 2em;">
                         <form id="formGoogleLogin" action="/Account/ExternalLogin?ReturnUrl=%2FHome%2FIndex" method="post">
                             <!-- Source: http://forums.asp.net/t/1901949.aspx?The+required+anti+forgery+cookie+__RequestVerificationToken+is+not+present+ -->
@@ -77,8 +77,8 @@
 
                             <!-- Need a 'hidden' input here.  The 'image' input cannot send any values to the server... -->
                             <input type="hidden" id="Google" name="provider" value="Google" />
-                            <button class="btn btn-danger" id="btnSignIn"><span class="glyphicon glyphicon-log-in"></span>&nbsp;Sign in with Google</button>
-                            <button class="btn btn-danger hidden" id="btnSignOut"><span class="glyphicon glyphicon-log-out"></span>&nbsp;Sign Out</button>
+                            <button class="btn btn-danger mediaFontSize" id="btnSignIn"><span class="glyphicon glyphicon-log-in"></span>&nbsp;Sign in with Google</button>
+                            <button class="btn btn-danger hidden mediaFontSize" id="btnSignOut"><span class="glyphicon glyphicon-log-out"></span>&nbsp;Sign Out</button>
                         </form>
                     </div>
 
@@ -230,7 +230,7 @@
 
                                     <div class="form-group">
                                         <div class="col-sm-8">
-                                            <div style="overflow-y: auto; max-height: 10em; margin-left: -1em;" >
+                                            <div style="overflow-y: auto; max-height: 10em; margin-left: -1em;">
                                                 <ol id="olConcepts" style="list-style: circle;">
                                                     <li>All</li>
                                                 </ol>
@@ -274,17 +274,11 @@
                             </div>
                         </div>
                         <div class="tab-pane" id="legend">
-                            <div class="legend" >
-                                 <img width="200" align="middle" src="~/Content/Images/Legend/NLCD_Colour_Classification_Update.jpg" />                              
+                            <div class="legend legendClass">
+                                <img width="200" align="middle" src="~/Content/Images/Legend/NLCD_Colour_Classification_Update.jpg" />
                             </div>
-
-
-                            
                         </div>
-
                     </div>
-                   
-
                 </div>
             </div>
 
@@ -296,7 +290,7 @@
                     <!--Streetview close button-->
                     <button id="StreetViewCloseButton" class="btn" style="display: none;">&times;</button>
                     <input id="pac-input" class="searchbarcontrols" type="text"
-                           placeholder="Enter a location" />
+                            placeholder="Enter a location" />
                     <div id="type-selector" class="searchbarcontrols hidden">
                         <input type="radio" name="type" id="changetype-all" checked="checked">
                         <label for="changetype-all">All</label>
