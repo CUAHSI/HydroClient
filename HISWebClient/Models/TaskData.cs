@@ -12,11 +12,16 @@ namespace HISWebClient.Models
         /// <summary>
         /// Constructors
         /// </summary>
-        public TaskData() {}
+        public TaskData()
+		{
+			TimeSeriesIdsToValueCounts = new Dictionary<int, int>();		
+		}
 
 		//C# 'feature' - new DateTime() same value as DateTIme.MinValue - but you can't use DateTime.MinValue as a default argument!!!
-        public TaskData( TimeSeriesRequestStatus tsrsIn, string statusIn, 
-						 CancellationTokenSource ctsIn, 
+        public TaskData( TimeSeriesRequestStatus tsrsIn, 
+						 string statusIn, 
+						 CancellationTokenSource ctsIn,
+						 List<int> timeseriesIdsIn = null,
 						 String blobUriIn = "", 
 						 DateTime blobTimeStampIn = new DateTime(),
 						 string eMail = "" )
@@ -28,6 +33,14 @@ namespace HISWebClient.Models
             BlobUri = blobUriIn;
 			BlobTimeStamp = blobTimeStampIn;
 			UserEmail = eMail;
+
+			if (null != timeseriesIdsIn)
+			{
+				foreach ( var timeseriesId in timeseriesIdsIn)
+				{
+					TimeSeriesIdsToValueCounts.Add(timeseriesId, 0);
+				}
+			}
         }
 
         /// <summary>
@@ -44,5 +57,7 @@ namespace HISWebClient.Models
 		public DateTime BlobTimeStamp { get; set; }
 
 		public string UserEmail { get; set; }
+
+		public Dictionary<int, int> TimeSeriesIdsToValueCounts { get; set; }
 	}
 }

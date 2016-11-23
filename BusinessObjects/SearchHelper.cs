@@ -180,6 +180,7 @@ namespace HISWebClient.DataLayer
 			if ((null == series) ||
 				(0 >= series.ValueCount) ||				//No values in series
 				(! series.IsRegular) ||					//Data is instantaneous - cannot calculate collection interval
+				( "nwisuv" ==  series.ServCode.ToLower(CultureInfo.InvariantCulture)) ||	//NWISUV service returns # of days in interval not number of values - thus value count estimation is not possible
 				(null == series.BeginDate) ||
 				(null == series.EndDate) ||
 				(series.EndDate <= series.BeginDate) ||	//Series End date earlier than Begin date

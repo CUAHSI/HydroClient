@@ -4268,6 +4268,35 @@ function updateTimeSeriesBlobUri( tableName, requestId, blobUri, blobTimeStamp) 
     }
 }
 
+function updateTimeSeriesValueCount(tableName, requestId, timeSeriesIdsToValueCounts ) {
+
+    var tableId = '#' + tableName;
+    var table = $(tableId).DataTable();
+
+    //Scan table data for input requestId...
+    var reDraw = false;
+    table.rows().every(function () {
+
+        var rowData = this.data();
+        if (requestId === rowData.TimeSeriesRequestId) {
+            //Found - update row with value count 
+            var seriesId = rowData.SeriesId;
+            
+            for (var id in timeSeriesIdsToValueCounts) {
+                if (parseInt(id) === seriesId) {
+                    rowData.ValueCount = timeSeriesIdsToValueCounts[id];
+                    this.invalidate();
+                    reDraw = true;
+                }
+            }
+        }
+    });
+
+    if ( reDraw) {
+        table.draw();
+    }
+}
+
 //Start monitoring all current time series requests, if indicated...
 function startRequestTimeSeriesMonitor() {
 
@@ -4475,6 +4504,7 @@ function startRequestTimeSeriesMonitor() {
                                         var wofFileName = retrieveWaterOneFileArchiveFileName(timeSeriesResponse.BlobUri);
                                         var wofTimeStamp = timeSeriesResponse.BlobTimeStamp;
                                         updateTimeSeriesBlobUri( downloadMonitor.timeSeriesMonitored[requestId].tableName, requestId, wofFileName, wofTimeStamp);
+                                        updateTimeSeriesValueCount( downloadMonitor.timeSeriesMonitored[requestId].tableName, requestId, timeSeriesResponse.TimeSeriesIdsToValueCounts );
                                         delete downloadMonitor.timeSeriesMonitored[timeSeriesResponse.RequestId];
 
                                         //Save the newly completed entry to the database...

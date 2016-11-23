@@ -12,11 +12,10 @@ namespace HISWebClient
     {
         public void Initialize(IAppBuilder app)
         {
-            var ontologyHelper = new OntologyHelper();
-            var defaultOntology = ConfigurationManager.AppSettings["DefaultOntology"];
-            var s = ontologyHelper.getOntology("defaultOntology");
-            
-
+			//Useless code???
+			//var ontologyHelper = new OntologyHelper();
+			//var defaultOntology = ConfigurationManager.AppSettings["DefaultOntology"];
+			//var s = ontologyHelper.getOntology("defaultOntology");
         }
         
     }

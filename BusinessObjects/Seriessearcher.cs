@@ -217,6 +217,8 @@ namespace HISWebClient.DataLayer
 							// Do the web service call
 							var tileSeriesList = new List<BusinessObjects.Models.SeriesDataCartModel.SeriesDataCart>();
 
+							//BCC - 18-Nov-2016 - Useless code ??
+							// As far I can tell - SearchSettings.AndSearch is ALWAYS false... 
 							if (SearchSettings.AndSearch == true)
 							{
 								//CHANGES FOR "AND" SEARCH

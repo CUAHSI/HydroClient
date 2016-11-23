@@ -43,6 +43,31 @@ namespace HISWebClient.Controllers
 
 		private static bool bFirstCall = true;
 
+		private int ontologyCombinedLength = Convert.ToInt32(ConfigurationManager.AppSettings["ontologyCombinedLength"].ToString()); //maximum combined length of ontology titles (in characters)
+		
+		private List<OntologyObject> listOntologyTree = new List<OntologyObject>();
+
+		protected override void Initialize(System.Web.Routing.RequestContext requestContext)
+		{
+			base.Initialize(requestContext);
+
+			//Create an OntologyTree instance...
+			string categories = getOntologyMainCategories();
+
+			List<OntologyCategory> listCategories = JsonConvert.DeserializeObject<List<OntologyCategory>>(categories);
+			foreach (var category in listCategories)
+			{
+				List<OntologyObject> ontology = JsonConvert.DeserializeObject<List<OntologyObject>>(getOntologyByCategory(category.title));
+				OntologyObject obj = new OntologyObject();
+
+				obj.title = category.title;
+				obj.folder = category.folder;
+				obj.children = ontology;
+					
+				listOntologyTree.Add(obj);
+			}
+		}
+
 		private static List<WebServiceNode> getWebServiceList()
 		{
 			var dataWorker = new DataWorker();
@@ -93,7 +118,8 @@ namespace HISWebClient.Controllers
 				ViewBag.ThisSessionGuid = Session["sessionGuid"].ToString();
 			}
 
-			var ontologyHelper = new OntologyHelper();
+			//More useless code?
+			//var ontologyHelper = new OntologyHelper();
 
 			return View();
 		}
@@ -316,7 +342,37 @@ namespace HISWebClient.Controllers
 
 					DateTime startDtUtc = DateTime.UtcNow;
 
-					var series = dataWorker.getSeriesData(box, keywords.ToArray(), tileWidth, tileHeight,
+					//For each keyword...
+					List<string>  listKeywords = new List<string>();
+					foreach (string keyword in keywords)
+					{
+						//Expand each keyword into descendant ontology leaves, if any...
+						List<OntologyObject> leaves = OntologyListScanner.findLeaves(listOntologyTree, keyword);
+
+						if (0 >= leaves.Count)
+						{
+							//No leaves - add keyword to list
+							listKeywords.Add(keyword);
+						}
+						else
+						{
+							//Leaves - check combined length...
+							int length = leaves.Sum(x => x.title.Length);
+							if (ontologyCombinedLength < length)
+							{
+								//Too many search terms - throw error...
+								InvalidOperationException ex = new InvalidOperationException("Too many keywords specified for search...");
+								throw ex;
+							}
+							else
+							{
+								//Combined length within maximum - add keyword to list...
+								listKeywords.Add(keyword);
+							}
+						}
+					}
+
+					var series = dataWorker.getSeriesData(box, listKeywords.ToArray(), tileWidth, tileHeight,
 																	 searchSettings.DateSettings.StartDate,
 																	  searchSettings.DateSettings.EndDate,
 																	  activeWebservices);

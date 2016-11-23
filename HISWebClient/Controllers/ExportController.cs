@@ -163,6 +163,40 @@ namespace HISWebClient.Controllers
 			}
 		}
 
+		//Update the value count for a time series...
+		private void UpdateTaskStatus( string requestId, int timeseriesId, int valueCount )
+		{
+			//Validate/initialize input parameters...
+			if (String.IsNullOrWhiteSpace(requestId))
+			{
+				ArgumentNullException ane = new ArgumentNullException("Empty input parameter(s)!!!");
+
+				dberrorcontext.clearParameters();
+				dberrorcontext.createLogEntry(System.Web.HttpContext.Current,
+											  DateTime.UtcNow, "UpdateTaskStatus(string requestId, int timeseriesId, int valueCount)",
+											  ane,
+											  ane.Message);
+
+				throw ane;
+			}
+
+			//Thread-safe access to dictionary
+			lock (lockObject)
+			{
+				if (_dictTaskStatus.ContainsKey(requestId))
+				{
+					//Task entry found - retrieve dictionary
+					var dict = _dictTaskStatus[requestId].TimeSeriesIdsToValueCounts;
+					
+					if (dict.ContainsKey(timeseriesId))
+					{
+						//Timeseries found - update value count...
+						dict[timeseriesId] = valueCount;
+					}
+				}
+			}
+		}
+
 		// GET: Export
 		public ActionResult Index()
 		{
@@ -262,6 +296,7 @@ namespace HISWebClient.Controllers
 			var requestId = tsrIn.RequestId;
 			var requestName = tsrIn.RequestName;
             var RequestFormat = tsrIn.RequestFormat;
+			var TimeSeriesIds = tsrIn.TimeSeriesIds;
 			TimeSeriesRequestStatus requestStatus = TimeSeriesRequestStatus.Starting;
 			string status = requestStatus.GetEnumDescription();
 			string blobUri = "Not yet available...";
@@ -287,7 +322,7 @@ namespace HISWebClient.Controllers
 				else
 				{
 					//New task - allocate a task status instance - add to dictionary
-					var taskData = new TaskData(requestStatus, status, new CancellationTokenSource(), blobUri, blobTimeStamp);
+					var taskData = new TaskData(requestStatus, status, new CancellationTokenSource(), TimeSeriesIds, blobUri, blobTimeStamp);
 
 					_dictTaskStatus.Add(requestId, taskData);
 					ct = taskData.CTS.Token;
@@ -382,6 +417,15 @@ namespace HISWebClient.Controllers
 								{
 									//Retrieve the time series data in the input format: CSV --OR-- XML
  									Tuple<FileStreamResult, SeriesData, Exception> downloadResult = await DownloadFile(timeSeriesId, currentSeries, tsrIn.RequestFormat);
+
+									//Update status with timeseries value count, if indicated
+									if (null != downloadResult.Item2)
+									{
+										var sd = downloadResult.Item2;
+										var vc = (null != sd.values) ? sd.values.Count : 0;
+										UpdateTaskStatus(requestId, timeSeriesId, vc);
+									}
+
 									FileStreamResult filestreamresult = downloadResult.Item1;
 									Exception exDownload = downloadResult.Item3;
 
@@ -620,7 +664,7 @@ namespace HISWebClient.Controllers
 				else
 				{
 					//New task - allocate a task status instance - add to dictionary
-					var taskData = new TaskData(requestStatus, status, new CancellationTokenSource(), blobUri, blobTimeStamp);
+					var taskData = new TaskData(requestStatus, status, new CancellationTokenSource(), null, blobUri, blobTimeStamp);
 
 					_dictTaskStatus.Add(requestId, taskData);
 					ct = taskData.CTS.Token;
@@ -1102,6 +1146,16 @@ namespace HISWebClient.Controllers
 					tsr.Status = _dictTaskStatus[Id].Status;
 					tsr.BlobUri = _dictTaskStatus[Id].BlobUri;
 					tsr.BlobTimeStamp = _dictTaskStatus[Id].BlobTimeStamp;
+
+					var dict = _dictTaskStatus[Id].TimeSeriesIdsToValueCounts;
+					if (null != dict)
+					{
+						foreach (var key in dict.Keys)
+						{
+							var vc = dict[key];
+							tsr.TimeSeriesIdsToValueCounts.Add(key, vc);
+						}
+					}
 
 					//If task is cancelled or completed, remove associated entry from dictionary
 					if (TimeSeriesRequestStatus.Completed == tsr.RequestStatus ||
