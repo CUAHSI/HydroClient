@@ -39,7 +39,9 @@ namespace HISWebClient.Models.DataManager
 		public DateTime EndDate { get; set; }
 		public int ValueCount { get; set; }
 		public string SiteName { get; set; }
+		public string SiteCode { get; set; }
 		public string VariableName { get; set; }
+		public string VariableCode { get; set; }
 		public double TimeSupport { get; set; }
 		public string TimeUnit { get; set; }
 
@@ -60,6 +62,8 @@ namespace HISWebClient.Models.DataManager
 		public string WaterOneFlowURI { get; set; }
 		public DateTime WaterOneFlowTimeStamp { get; set; }
 		public string TimeSeriesRequestId { get; set; }
+		public double Latitude { get; set; }
+		public double Longitude { get; set; }
 
 		//Reference to associated user
 		//NOTE: To avoid circular references when converting to JSON, you must 

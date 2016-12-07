@@ -995,6 +995,11 @@ function initialize() {
             resizeAndPositionMap(map, slider);
         }, 500);
     });
+
+    ////Add click handler for Zendesk dropdown element...
+
+    //$('#liZendeskTab').on('click', openHelpCenter);
+
 }
 
 //BCC - 09-May-2016 - Separate all map initialization logic into a separate function...
@@ -1167,6 +1172,20 @@ function initializeMap() {
         slider.slideReveal('show');
     }, 1000);
 }
+
+////Open the Zendesk help center...
+//function openHelpCenter() {
+
+//    //Retrieve and call the click event handler for the Zendesk Help button...
+
+//    //Select the bound element...
+//    var elemSelector = 'div.src-component-Launcher-wrapper.src-styles-utils-u-isActionable.src-styles-utils-u-textLeft.src-styles-utils-u-inlineBlock.src-styles-utils-u-textNoWrap.src-styles-utils-Arrange.src-styles-utils-Arrange--middle.u-userBackgroundColor';
+
+//    var elem = $(elemSelector);
+
+//    //Call the click handler...
+//    elem.click();
+//}
 
 //Update the displayed latitude and longitude values per the updated currentPosition value...
 function updateLatLng(event) {
@@ -3258,7 +3277,8 @@ function setupToolTips() {
                  /*30*/ "The units of measure for the variable.",
                  /*31*/ "A unique system identifier for the time series.",
                  /*32*/ "The creation date and time for the entry.",
-                 /*33*/ "Tootip text - TBD" ];
+                 /*33*/ "Open the Help Center",
+                 /*34*/ "Tootip text - TBD" ];
 
     var divs = { 'divZipSelections': {'type': 'id', 'text': texts[0]},
                  'divManageSelections' : {'type': 'id', 'text': texts[1]},
@@ -3267,11 +3287,12 @@ function setupToolTips() {
                  'liMapTab': {'type': 'id', 'text': texts[2]},
                  'liTableTab': {'type': 'id', 'text': texts[3]},
                  'liTabbedDataMgrTab': {'type': 'id', 'text': texts[4]},
-                 'liContactTab': {'type': 'id', 'text': texts[5], 'placement': 'right'},
+                 'liContactTab': {'type': 'id', 'text': texts[5], 'placement': 'auto'},
                  'liHelpTab': {'type': 'id', 'text': texts[6], 'placement': 'right'},
-                 'liQuickStartTab': {'type': 'id', 'text': texts[7], 'placement': 'right'},
+                 'liQuickStartTab': {'type': 'id', 'text': texts[7], 'placement': 'auto'},
                  'liGoogleTab': {'type': 'id', 'text': texts[8]},
-                 'liLicenseTab': {'type': 'id', 'text': texts[9], 'placement': 'right'},
+                 'liLicenseTab': {'type': 'id', 'text': texts[9], 'placement': 'auto'},
+                 'liZendeskTab': {'type': 'id', 'text': texts[33], 'placement': 'auto'},
                  'cl_thPublisher': {'type': 'class', 'text': texts[10], 'thead': true},
                  'cl_thServiceTitle': {'type': 'class', 'text': texts[11], 'thead': true},
                  'cl_thKeyword': {'type': 'class', 'text': texts[12], 'thead': true},
@@ -3649,7 +3670,7 @@ function setupDataManagerTable() {
                                             '<li role="separator" class="divider"></li>' +
 
                                             //Visualization section...
-                                            '<li class="dropdown-header" id="byuApps">' +
+                                            '<li class="dropdown-header" id="byuApps" style="padding-right: 3em;">' +
                                             '</li>' +
 
                                             '<li role="separator" class="divider"></li>' +
@@ -3763,6 +3784,12 @@ function loadByuHydroshareApps() {
 
             if ( 0 < length) {
                 for (var i = 0; i < length; ++i) {
+
+                    //TEMPORARY CODE - Restrict to Data Series Viewer only...
+                    if ( 'Data Series Viewer' !== apps[i].name) {
+                        continue;
+                    }
+
                     //Source(s) for Bootstrap dropdown styling:
                     //    http://jsfiddle.net/KyleMit/5p341amh/
                     //    http://jsfiddle.net/74eu3y15/
@@ -3793,7 +3820,7 @@ function loadByuHydroshareApps() {
             //Failure - Log messsage received from server...
             console.log('BYU Hydroshare API reports error: ' + xmlhttprequest.status + ' (' + message + ')');
         }                
-                    });
+   });
 }
 
 //Update the span text and image with the selection from the Bootstrap 'dropdown'
@@ -3867,12 +3894,22 @@ function ddHydrodataToolDataMgr(event) {
                     }
                 }
             
-                $('#' + event.data.divLaunchId).tooltip({'title': tooltip});    //Set tooltip on the 'launch' button... 
+                //Asyncrhonous nature of tooltip 'destroy' mandates a delay in the tooltip 'create' call as explained here 
+                //Source: http://stackoverflow.com/questions/27238938/bootstrap-popover-destroy-recreate-works-only-every-second-time 
+                setTimeout( function() {
+                    $('#' + event.data.divLaunchId).tooltip({'title': tooltip,
+                                                             'animation': true,
+                                                             'placement': 'auto',
+                                                             'trigger': 'hover',
+                                                             'container': 'body'});    //Set tooltip on the 'launch' button... 
+                }, 500);
             }
 
             break;    
         }
     }
+
+    return;
 }
 
 //Return true to disable the input button Id, false otherwise
@@ -3909,145 +3946,44 @@ function btnDisableCheck(buttonId) {
     return result;
 }
 
-//Old style code...
-//function launchByuHydroshareApp(event) {
+//'GET' or 'POST' input data to input Url...
+//Source: http://stackoverflow.com/questions/17793183/how-to-replace-window-open-with-a-post
+function dataToUrl(verb, url, data, target) {
 
-//    var tableId = '#' + event.data.tableId;
-//    var table = $(tableId).DataTable();
-//    var apps = event.data.getApps().apps;
+    //Validate/initialize input parameters...
+    if ('undefined' === typeof verb || null === verb ||
+        'undefined' === typeof url || null === url) {
+        return; //Invalid parameter(s) return early...    
+    }
 
-//    //Currently selected BYU app
-//    var valueSelected = $('#' + event.data.divId).text().trim();
-//    var byuUrl= null;
+    //Create form for data submission...
+    var form = document.createElement("form");
+    form.action = url;
+    form.method = verb;
+    form.target = target || "_self";
+    if ('undefined' !== data && null !== data) {
+        for (var key in data) {
+            var input = document.createElement("textarea");
+            input.name = key;
+            input.value = typeof data[key] === "object" ? JSON.stringify(data[key]) : data[key];
+            form.appendChild(input);
+        }
+    }
 
-//    //New selection - find the associated app URL...
-//    var length = apps.length;
+    form.style.display = 'none';
+    document.body.appendChild(form);
 
-//    for (var i = 0; i < length; ++i) {
-//        if (valueSelected === apps[i].name) {
-//            byuUrl = apps[i].url;
-//            break;
-//        }
-//    }
+    //Submit form via jQuery to capture submit event...
+    var jqForm = $(form);
+    jqForm.submit(function(event) {
+        //Remove form once submitted...
+        //Source: http://stackoverflow.com/questions/12853123/remove-form-element-from-document-in-javascript
+        jqForm.remove();
+    });
 
-//    if (null !== byuUrl) {
-//        //URL found - find selected water one flow archives...
-//        var selectedRows = table.rows('.selected').data();
-//        var rowsLength = selectedRows.length;
-//        var wofParams = '';
-//        var extension = '.zip';
+    jqForm.submit();
+}
 
-//        for (var ii = 0; ii < rowsLength; ++ii) {
-//            if (timeSeriesRequestStatus.Completed == selectedRows[ii].TimeSeriesRequestStatus) {
-//                if ('' !== wofParams) {
-//                    wofParams += ',';
-//                }
-//                wofParams += (selectedRows[ii].WofUri.split(extension))[0];
-//            }
-//        }
-
-//        if ( '' !== wofParams) {
-//            //Selections found - call BYU app with parameters...
-//            // URL format: [app base name]/?src=cuahsi&res_id=abcdefj+abcdefh+abcedfi+abcdefk 
-//            var fullUrl = byuUrl + '/?src=cuahsi&res_id=' + wofParams;
-
-//            window.open(fullUrl, '_blank', '', false);
-            
-//        }
-//    }
-//}
-
-//New style code - form-based...
-//function launchByuHydroshareApp(event) {
-
-//    var tableId = '#' + event.data.tableId;
-//    var table = $(tableId).DataTable();
-//    var apps = event.data.getApps().apps;
-
-//    //Currently selected BYU app
-//    var valueSelected = $('#' + event.data.divId).text().trim();
-//    var byuUrl= null;
-
-//    //New selection - find the associated app URL...
-//    var length = apps.length;
-
-//    for (var i = 0; i < length; ++i) {
-//        if (valueSelected === apps[i].name) {
-//            byuUrl = apps[i].url;
-//            break;
-//        }
-//    }
-
-//    if (null !== byuUrl) {
-//        //URL found - find selected water one flow archives...
-//        var selectedRows = table.rows('.selected').data();
-//        var rowsLength = selectedRows.length;
-//        var wofParams = [];
-//        var extension = '.zip';
-
-//        for (var ii = 0; ii < rowsLength; ++ii) {
-//            if (timeSeriesRequestStatus.Completed == selectedRows[ii].TimeSeriesRequestStatus) {
-//                var row = selectedRows[ii];
-//                var item = { 'WofUri': (row.WofUri.split(extension))[0],
-//                             'QCLID': row.QCLID,
-//                             'MethodId': row.MethodId,
-//                             'SourceId': row.SourceId
-//                            };
-//                wofParams.push(item);
-//            }
-//        }
-
-//        //Create a dynamic form and submit to BYU URL...
-//        // Sources: http://htmldog.com/guides/javascript/advanced/creatingelements/
-//        //          http://stackoverflow.com/questions/30835990/how-to-submit-form-to-new-window
-//        //          http://jsfiddle.net/qqzxtk67/
-//        //          http://stackoverflow.com/questions/17431760/create-a-form-dynamically-with-jquery-and-submit
-//        //          http://jsfiddle.net/MVXXX/1/
-//        if ( 0 < wofParams.length) {
-//            //Remove/create form...
-//            $('form#dataViewerForm').remove();
-//            var jqForm = $('<form id="dataViewerForm"></form>').appendTo(document.body);
-
-//            //Add method, action and target...
-//            var targetWindow = 'dataViewerWindow';
-
-//            //BCC - Test - 07-Oct-2016 - Try 'get' rather than 'post'
-//            // Form arguments added to URI line as explained in source - however, appsdev server still returns a 301...
-//            //SOURCE: https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Forms/Sending_and_retrieving_form_data
-//            //jqForm.attr('method', 'post');
-//            jqForm.attr('method', 'get');
-//            jqForm.attr('action', byuUrl);
-//            jqForm.attr('target', targetWindow);
-
-//            //Append source...
-//            jqForm.append('<input type="hidden" name="Source" value="cuahsi">');
-
-//            //Append child list...
-//            jqForm.append('<ul id="wofParams"></ul>');
-
-//            //For each wofParams item...
-//            var itemsLength = wofParams.length;
-//            var jqList = $('#wofParams');
-
-
-//            for (var iii = 0; iii < itemsLength; ++iii) {
-//                //Append to child list...
-//                var item = wofParams[iii];
-//                jqList.append('<li>' +
-//                              '<input type="hidden" name="WofUri" value="' + item.WofUri + '">' +
-//                              '<input type="hidden" name="QCLID" value="' + item.QCLID + '">' +
-//                              '<input type="hidden" name="MethodId" value="' + item.MethodId + '">' +
-//                              '<input type="hidden" name="SourceId" value="' + item.SourceId + '">' +
-//                              '</li>'
-//                             ); 
-//            }
-
-//            //Open Data Viewer window, submit form...
-//            window.open('', targetWindow, '', false);    
-//            jqForm.submit();
-//        }
-//    }
-//}
 
 //New style code - expanded URI parameters...
 function launchByuHydroshareApp(event)
@@ -4059,6 +3995,7 @@ function launchByuHydroshareApp(event)
     //Currently selected BYU app
     var valueSelected = $('#' + event.data.divId).text().trim();
     var byuUrl= null;
+    var appName = null;
 
     //New selection - find the associated app URL...
     var length = apps.length;
@@ -4066,35 +4003,93 @@ function launchByuHydroshareApp(event)
     for (var i = 0; i < length; ++i) {
         if (valueSelected === apps[i].name) {
             byuUrl = apps[i].url;
+            appName = apps[i].name;
             break;
         }
     }
 
-    if (null !== byuUrl) {
-        //URL found - find selected water one flow archives...
+    if (null !== byuUrl && null !== appName) {
+        //URL found - process per currently selected app...
         var selectedRows = table.rows('.selected').data();
         var rowsLength = selectedRows.length;
-        var wofParams = '';
-        var extension = '.zip';
+        var fullUrl = null;
+        var row = null;
+        var date = new Date();
 
-        for (var ii = 0; ii < rowsLength; ++ii) {
-            if (timeSeriesRequestStatus.Completed == selectedRows[ii].TimeSeriesRequestStatus) {
-                var row = selectedRows[ii];
+        if (appName === 'Data Series Viewer' ) {
+            //Data Series Viewer - find selected water one flow archives...
+            var wofParams = '';
+            var extension = '.zip';
 
-                var params = 'WofUri=' + (row.WofUri.split(extension))[0] +
-                             '&QCLID=' + row.QCLID +
-                             '&MethodId=' + row.MethodId +
-                             '&SourceId=' + row.SourceId;
-                wofParams += '&' + params;
+            for (var ii = 0; ii < rowsLength; ++ii) {
+                if (timeSeriesRequestStatus.Completed == selectedRows[ii].TimeSeriesRequestStatus) {
+                    row = selectedRows[ii];
+
+                    var params = 'WofUri=' + (row.WofUri.split(extension))[0] +
+                                 '&QCLID=' + row.QCLID +
+                                 '&MethodId=' + row.MethodId +
+                                 '&SourceId=' + row.SourceId;
+                    wofParams += '&' + params;
+                }
             }
+
+            if ( '' !== wofParams) {
+                //Selections found - call BYU app with parameters...
+                // URL format: [app base name]/?Source=cuahsi&WofUri=...&QCLID=...&MethodId=...&SourceId=...[&WofUri=... ...]
+                fullUrl = byuUrl + '/?Source=cuahsi' + wofParams;
+
+                window.open(fullUrl, '_blank', '', false);
+            }    
         }
+        //else if (appName === 'Correlation Tool') {
+        //    bootbox.alert( appName + ' call goes here!!!');
+        //} 
+        //else if (appName === 'Gap Filler Tool') {
+        //    bootbox.alert( appName + ' call goes here!!!');
+        //} 
+        //else if (appName === 'HydroShare Resource Creator') {
+        //    //HydroShare Resource Creator build JSON structure...
+        //    //bootbox.alert( appName + ' call goes here!!!');
+        //    var jsonObj = { "timeSeriesLayerResource": {} };
 
-        if ( '' !== wofParams) {
-            //Selections found - call BYU app with parameters...
-            // URL format: [app base name]/?Source=cuahsi&WofUri=...&QCLID=...&MethodId=...&SourceId=...[&WofUri=... ...]
-            var fullUrl = byuUrl + '/?Source=cuahsi' + wofParams;
+        //    jsonObj.timeSeriesLayerResource = {"fileVersion": 1.0,
+        //                                       "title": "HydroClient-" + date.toISOString(),
+        //                                       "abstract": "Retrieved timeseries...",
+        //                                       "symbol": "http://data.cuahsi.org/content/images/cuahsi_logo_small.png",
+        //                                       "keyWords": ["Time Series", "CUAHSI"],
+        //                                       "REFTS": []};
+        //    //For each selected row...
+        //    for (var iii = 0; iii < rowsLength; ++iii) {
+        //        if (timeSeriesRequestStatus.Completed == selectedRows[iii].TimeSeriesRequestStatus) {
+        //            row = selectedRows[iii];
 
-            window.open(fullUrl, '_blank', '', false);
+        //            //Create REFTS object - add to REFTS array...
+        //            var serviceUrl = getServiceUrl(row.ServiceCode);
+        //            var waterMlLevel = -1 === serviceUrl.indexOf("1_1") ? "1.0" : "1.1";
+
+        //            var reftsObj = {"refType": "WOF",
+        //                            "serviceType": "SOAP",
+        //                            "url": serviceUrl,  
+        //                            "site": row.SiteName,
+        //                            "siteCode": row.SiteCode,
+        //                            "variable": row.VariableName,
+        //                            "variableCode": row.VariableCode,
+        //                            "networkName": row.ServiceCode,
+        //                            "beginDate": row.BeginDate,
+        //                            "endDate": row.EndDate,
+        //                            "returnType": "WaterML " + waterMlLevel,
+        //                            "location": { "latitude": row.Latitude,  
+        //                                          "longitude": row.Longitude}
+        //                            };
+        //            jsonObj.timeSeriesLayerResource.REFTS.push(reftsObj);
+        //        }
+        //    }
+
+        //    //Post data to BYU url in a new window...
+        //    dataToUrl('POST',  byuUrl, jsonObj, '_blank');
+        //}
+        else {
+            bootbox.alert( 'Unknown application: ' + appName);            
         }
     }
 }
@@ -4629,6 +4624,28 @@ function getDescriptionUrl(serviceCode) {
 
     //Processing complete - return
     return descriptionUrl;
+}
+
+//Retrieve the Service Url from the Services DataTable for the input service code- Not found, return null
+//Assumption: The services DataTable is loaded immediately upon page load or refresh!!
+function getServiceUrl(serviceCode) {
+
+    var serviceUrl = null;
+    if (('undefined' !== typeof serviceCode) && (null !== serviceCode)) {
+
+        var table = $('#dtServices').DataTable();
+        var data = table.rows().data();
+
+        $.each(data, function (i, obj) {
+            if (serviceCode === obj.ServiceCode) {
+                serviceUrl = obj.ServiceUrl;
+                return false;
+            }
+        });
+    }
+
+    //Processing complete - return
+    return serviceUrl;
 }
 
 //Create 'select'-based filters for the input tableId and columns array
@@ -5396,7 +5413,9 @@ function copyDmRecordToServerRecord( userEmail, dmRecord) {
 
     serverRecord.ValueCount = dmRecord.ValueCount;
     serverRecord.SiteName = dmRecord.SiteName;
+    serverRecord.SiteCode = dmRecord.SiteCode;
     serverRecord.VariableName = dmRecord.VariableName;
+    serverRecord.VariableCode = dmRecord.VariableCode;
     serverRecord.TimeUnit = dmRecord.TimeUnit;
     serverRecord.TimeSupport = dmRecord.TimeSupport;
 
@@ -5412,6 +5431,9 @@ function copyDmRecordToServerRecord( userEmail, dmRecord) {
     serverRecord.MethodDesc = dmRecord.MethodDesc; 
     serverRecord.SourceId = dmRecord.SourceId;
     serverRecord.SourceOrg = dmRecord.SourceOrg;
+
+    serverRecord.Longitude = dmRecord.Longitude;
+    serverRecord.Latitude = dmRecord.Latitude;
 
     //Processing complete - return Server record
     return serverRecord;
@@ -6050,7 +6072,9 @@ function copySelectionsToDataManager(event) {
         datamgrRecord.EndDate = currentRow.EndDate;
         datamgrRecord.ValueCount = currentRow.ValueCount;
         datamgrRecord.SiteName = currentRow.SiteName;
+        datamgrRecord.SiteCode = currentRow.SiteCode;
         datamgrRecord.VariableName = currentRow.VariableName;
+        datamgrRecord.VariableCode = currentRow.VariableCode;
         datamgrRecord.VariableUnits = currentRow.VariableUnits;
         datamgrRecord.TimeUnit = currentRow.TimeUnit;
         datamgrRecord.TimeSupport = currentRow.TimeSupport;
@@ -6067,6 +6091,9 @@ function copySelectionsToDataManager(event) {
         datamgrRecord.WofTimeStamp = '1901-01-01';
         datamgrRecord.TimeSeriesRequestStatus = timeSeriesRequestStatus.NotStarted;
         datamgrRecord.TimeSeriesRequestId = null;
+
+        datamgrRecord.Latitude = currentRow.Latitude;
+        datamgrRecord.Longitude = currentRow.Longitude;
 
         //Add the newly created record...
         var newRow = datamgrTable.row.add(datamgrRecord);
@@ -6154,7 +6181,9 @@ function loadDataManager() {
 
                     datamgrRecord.ValueCount = serverRecord.ValueCount;
                     datamgrRecord.SiteName = serverRecord.SiteName;
+                    datamgrRecord.SiteCode = serverRecord.SiteCode;
                     datamgrRecord.VariableName = serverRecord.VariableName;
+                    datamgrRecord.VariableCode = serverRecord.VariableCode;
                     datamgrRecord.TimeUnit = serverRecord.TimeUnit;
                     datamgrRecord.TimeSupport = serverRecord.TimeSupport;
 
@@ -6170,6 +6199,9 @@ function loadDataManager() {
                     datamgrRecord.WofTimeStamp = serverRecord.WaterOneFlowTimeStamp;
                     datamgrRecord.TimeSeriesRequestStatus = serverRecord.Status;
                     datamgrRecord.TimeSeriesRequestId = serverRecord.TimeSeriesRequestId;
+
+                    datamgrRecord.Longitude = serverRecord.Longitude;
+                    datamgrRecord.Latitude = serverRecord.Latitude;
 
                     //Add the newly created record...
                     var newRow = datamgrTable.row.add(datamgrRecord);    

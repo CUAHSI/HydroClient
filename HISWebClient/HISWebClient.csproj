@@ -296,6 +296,14 @@
     <Compile Include="Migrations\201609201523250_RemoveSourceDesc.Designer.cs">
       <DependentUpon>201609201523250_RemoveSourceDesc.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201611282027226_AddLatAndLong.cs" />
+    <Compile Include="Migrations\201611282027226_AddLatAndLong.Designer.cs">
+      <DependentUpon>201611282027226_AddLatAndLong.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201612021933467_AddSiteCodeAndVariableCode.cs" />
+    <Compile Include="Migrations\201612021933467_AddSiteCodeAndVariableCode.Designer.cs">
+      <DependentUpon>201612021933467_AddSiteCodeAndVariableCode.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\ClientFilterAndSearchCriteria\clientDataSource.cs" />
@@ -388,6 +396,7 @@
     </Content>
     <Content Include="Content\Images\hydroshare-logo-sm.png" />
     <Content Include="Content\Images\Legend\NLCD_Colour_Classification_Update.jpg" />
+    <Content Include="Content\Images\Legend\USGS_Current_Conditions.png" />
     <Content Include="Content\Images\Markers\ClusterIcons\blue-20.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -544,6 +553,10 @@
     <Content Include="Content\documents\QuickStartGuide\HydroClient Quick Start Guide.2.pdf" />
     <Content Include="Content\documents\QuickStartGuide\HydroClient Quick Start Guide.3.pdf" />
     <Content Include="Content\FancyTree\skin-xp\ui.fancytree.less" />
+    <Content Include="Content\kmz\real_invisible_legend.kmz" />
+    <Content Include="Content\kmz\real_invisible_legend.kml" />
+    <None Include="Properties\PublishProfiles\dev-hiswebclient - FTP.pubxml" />
+    <None Include="Properties\PublishProfiles\dev-hiswebclient - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\qa-hiswebclient - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\qa-hiswebclient - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
@@ -716,6 +729,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201609201523250_RemoveSourceDesc.resx">
       <DependentUpon>201609201523250_RemoveSourceDesc.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201611282027226_AddLatAndLong.resx">
+      <DependentUpon>201611282027226_AddLatAndLong.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201612021933467_AddSiteCodeAndVariableCode.resx">
+      <DependentUpon>201612021933467_AddSiteCodeAndVariableCode.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

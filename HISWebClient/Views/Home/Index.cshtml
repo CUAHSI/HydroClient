@@ -51,19 +51,25 @@
                     </button>
 
                     <ul id="ddAboutList" class="dropdown-menu">
+                        <li id="liZendeskTab">
+                            <span>
+                                @*<a href="https://cuahsi.zendesk.com/hc/en-us" target="_blank"><span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span> WDC Help Center</a>*@
+                                <a href="https://cuahsi.zendesk.com/hc/en-us" target="_blank"><img class="img-responsive pull-left" style="height: 1em; width: 1em;" src="~/Content/Images/cuahsi_logo_no_text_transparent.png" />&nbsp; WDC Help Center</a>
+                            </span>
+                        </li>
                         <li id="liLicenseTab">
                             <span>
-                                <a href="" id="licenseTab" data-toggle="modal" data-target="#licenseModal"><span class="glyphicon glyphicon-info-sign"></span> License Agreement</a>
+                                <a href="" id="licenseTab" data-toggle="modal" data-target="#licenseModal"><span class="glyphicon glyphicon-info-sign"></span>&nbsp; License Agreement</a>
                             </span>
                         </li>
                         <li id="liContactTab">
                             <span>
-                                <a href="" id="contactTab" data-toggle="modal" data-target="#contactModal"><span class="glyphicon glyphicon-earphone"></span> Contact</a>
+                                <a href="" id="contactTab" data-toggle="modal" data-target="#contactModal"><span class="glyphicon glyphicon-earphone"></span>&nbsp; Contact</a>
                             </span>
                         </li>
                         <li id="liQuickStartTab">
                             <span>
-                                <a href="" id="quickStartTab" data-toggle="modal" data-target="#quickStartModal"><span class="glyphicon glyphicon-flash"></span> QuickStart</a>
+                                <a href="" id="quickStartTab" data-toggle="modal" data-target="#quickStartModal"><span class="glyphicon glyphicon-flash"></span>&nbsp; QuickStart</a>
                             </span>
                         </li>
                     </ul>
@@ -275,7 +281,11 @@
                         </div>
                         <div class="tab-pane" id="legend">
                             <div class="legend legendClass">
-                                <img width="200" align="middle" src="~/Content/Images/Legend/NLCD_Colour_Classification_Update.jpg" />
+                                <img id="nlcdColorClassUpdate" width="200" align="middle" style="display: none;" src="~/Content/Images/Legend/NLCD_Colour_Classification_Update.jpg" />
+                                <div id="usgsCurrentConditions" style="width: 200px; display: none; background-color: white; margin-top: 0.25em; padding-top: 0.5em; padding-bottom: 0.5em;">
+                                    <p style="font-family: 'MS Sans Serif'; font-weight: bold; font-size: x-small; font-stretch: condensed;">USGS Stream Gages - Conditions</p>
+                                    <img align="middle" width="200" src="~/Content/Images/Legend/USGS_Current_Conditions.png" />
+                                </div>
                             </div>
                         </div>
                     </div>

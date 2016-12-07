@@ -51,7 +51,6 @@ function addLayerControl() {
             if (visible) {
                 // add if the map was not already added
                 if (i == overlayMaps.length) {
-                    //overlayMaps.push(this._layer);
                     if (typeof this._zIndex === "undefined") {
                         overlayMaps.push(this._layer);
                     }
@@ -182,31 +181,6 @@ function addLayerControl() {
         opacity: 0.8
     });
 
-    //start process to set up custom drop down
-    //create the options that respond to click
-    //var divOptions = {
-    //    gmap: map,
-    //    name: 'Option1',
-    //    title: "This acts like a button or click event",
-    //    id: "mapOpt",
-    //    action: function () {
-    //        alert('option1');
-    //    }
-    //}
-    //var optionDiv1 = new optionDiv(divOptions);
-
-    //var divOptions2 = {
-    //    gmap: map,
-    //    name: 'Option2',
-    //    title: "This acts like a button or click event",
-    //    id: "satelliteOpt",
-    //    action: function () {
-    //        alert('option2');
-    //    }
-    //}
-
-    //var optionDiv2 = new optionDiv(divOptions2);
-
     //create the check box items
     var checkOptions = {
         gmap: map,
@@ -218,24 +192,15 @@ function addLayerControl() {
                 if (gisLayers[i].name === 'USGS_Stream_Gages') {
 
                     if (!gisLayers[i].visible) {
-                        //var layer = new google.maps.KmlLayer({ url: 'http://cuahsiarcgis.cloudapp.net/gisressource/us_states.kmz', preserveViewport: false, map: map })
-                        //layer.setMap(map);
-                        //kml[gisLayers.name].obj = layer;
-
                         gisLayers[i].layer.setMap(map);
                         gisLayers[i].visible = true
                     }
                     else {
-                        //kml[gisLayers.name].obj.setMap(null);
                         gisLayers[i].layer.setMap(null);
                         gisLayers[i].visible = false;
                     }
                 }
             }
-
-
-
-
         }
     }
     var check1 = new checkBox(checkOptions);
@@ -245,15 +210,15 @@ function addLayerControl() {
         title: "This allows for multiple selection/toggling on/off",
         id: "ESRI_Hydrology",
         label: "ESRI Hydrology",
-        action: function (e) {
-             
-            if (!map.overlayMapTypes.getAt(3)) {
-                var tmsLayer = new TMSLayer(map, "http://hydrology.esri.com/arcgis/rest/services/WorldHydroReferenceOverlay/MapServer/tile/$z/$y/$x", true, "ESRI_HYDRO", 3);             
+        action: function (e) {             
+            var myIndex = 2;
+            if (!map.overlayMapTypes.getAt(myIndex)) {
+                var tmsLayer = new TMSLayer(map, "http://hydrology.esri.com/arcgis/rest/services/WorldHydroReferenceOverlay/MapServer/tile/$z/$y/$x", true, "ESRI_HYDRO", myIndex);             
                 tmsLayer.setOpacity(1);
                 tmsLayer.setVisible(true); 
             }
             else {
-                map.overlayMapTypes.removeAt(3)
+                map.overlayMapTypes.setAt(myIndex, null);
             }
         }
     }
@@ -265,16 +230,16 @@ function addLayerControl() {
         id: "ESRI_HUC",
         label: "ESRI HUC",
         action: function () {
-            if (!map.overlayMapTypes.getAt(2))
+            var myIndex = 3;
+            if (!map.overlayMapTypes.getAt(myIndex))
             {
                 map.overlayMapTypes.push(null); // create empty overlay entry
-                map.overlayMapTypes.setAt(2, NHDLayer);            
+                map.overlayMapTypes.setAt(myIndex, NHDLayer);            
             }
             else 
             {
-                map.overlayMapTypes.removeAt(2)
+                map.overlayMapTypes.setAt(myIndex, null);
             }
-            //map.overlayMapTypes.push(NHDLayer);
         }
     }
     var check3 = new checkBox(checkOptions3);
@@ -285,36 +250,20 @@ function addLayerControl() {
         id: "USGC LandCover 2011",
         label: "USGC LandCover 2011",
         action: function () {
-            if (!map.overlayMapTypes.getAt(1)) {
+            var myIndex = 1;
+            if (!map.overlayMapTypes.getAt(myIndex)) {
                 map.overlayMapTypes.push(null); // create empty overlay entry
-                map.overlayMapTypes.setAt(1, NLCDLayer);
-                //Add Legend
-                //var elem = document.createElement("img");
-                //elem.setAttribute("src", "/Content/Images/Legend/NLCD_Colour_Classification_Update.jpg");
-                ////elem.setAttribute("height", "768");
-                ////elem.setAttribute("width", "1024");
-                //elem.style.opacity = "0.7";
-                //elem.setAttribute("alt", "Legend");
-                
-                //var myLegendDiv = document.createElement('div');
-                //myLegendDiv.appendChild(elem);
-                //myLegendDiv.id = "NLCD_Legend"
-                //map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(myLegendDiv);
+                map.overlayMapTypes.setAt(myIndex, NLCDLayer);
+
+                //Display the legend...
+                $('#nlcdColorClassUpdate').show();
             }
             else {
-                map.overlayMapTypes.removeAt(1)
-                //var indexOfControl = -1;
+                map.overlayMapTypes.setAt(myIndex, null);
                 rightCenterControls = map.controls[google.maps.ControlPosition.RIGHT_BOTTOM];
                 
-                
-                //rightCenterControls.forEach(function (element, index) {
-                //    if( element.id === 'NLCD_Legend' ) {
-                //        indexOfControl = index;
-                //    }
-                //} );
-                //if( indexOfControl>-1 ) {
-                //    rightCenterControls.removeAt(indexOfControl);
-                //}
+                //Hide the legend...
+                $('#nlcdColorClassUpdate').hide();
             }           
         }
     }
@@ -441,9 +390,9 @@ function dropDownControl(options) {
     options.gmap.controls[options.position].push(container);
     google.maps.event.addDomListener(container, 'click', function () {
         (document.getElementById('myddOptsDiv').style.display == 'block') ? document.getElementById('myddOptsDiv').style.display = 'none' : document.getElementById('myddOptsDiv').style.display = 'block';
-        setTimeout(function () {
-            //document.getElementById('myddOptsDiv').style.display = 'none';
-        }, 5000);
+        //setTimeout(function () {
+        //    //document.getElementById('myddOptsDiv').style.display = 'none';
+        //}, 5000);
     })
 }
 
