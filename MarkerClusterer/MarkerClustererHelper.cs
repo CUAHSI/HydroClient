@@ -483,6 +483,9 @@ namespace HISWebClient.MarkerClusterer
             for (int index = 0; index < pins.Count; index++)
             {
                
+                    
+                try
+                {
                     if ((!pins[index].IsClustered)) //skip already clusted pins
                     {
                         ClusteredPin currentClusterPin = new ClusteredPin();
@@ -498,6 +501,12 @@ namespace HISWebClient.MarkerClusterer
 
                         clusteredPins.Add(currentClusterPin);
                     }
+                }
+                catch (Exception ex)
+                {
+
+                    throw;
+                }
                 
 
             }
@@ -528,20 +537,28 @@ namespace HISWebClient.MarkerClusterer
                 {
                     if (!pins[searchindex].IsClustered)
                     {
-                        if (Math.Abs(pins[searchindex].GetPixelX(zoomLevel) - pins[index].GetPixelX(zoomLevel)) < clusterWidth) //within the same x range
+                        try
                         {
-                            if (Math.Abs(pins[searchindex].GetPixelY(zoomLevel) - pins[index].GetPixelY(zoomLevel)) < clusterHeight) //within the same y range = cluster needed
+                            if (Math.Abs(pins[searchindex].GetPixelX(zoomLevel) - pins[index].GetPixelX(zoomLevel)) < clusterWidth) //within the same x range
                             {
-                                //add to cluster
-                                currentClusterPin.AddPin(pins[searchindex]);
+                                if (Math.Abs(pins[searchindex].GetPixelY(zoomLevel) - pins[index].GetPixelY(zoomLevel)) < clusterHeight) //within the same y range = cluster needed
+                                {
+                                    //add to cluster
+                                    currentClusterPin.AddPin(pins[searchindex]);
 
-                                //stop any further clustering
-                                pins[searchindex].IsClustered = true;
+                                    //stop any further clustering
+                                    pins[searchindex].IsClustered = true;
+                                }
+                            }
+                            else
+                            {
+                                finished = true;
                             }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            finished = true;
+
+                            throw;
                         }
                     };
                     searchindex += direction;

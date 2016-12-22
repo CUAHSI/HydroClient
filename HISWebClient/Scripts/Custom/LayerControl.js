@@ -247,8 +247,8 @@ function addLayerControl() {
     var checkOptions4 = {
         gmap: map,
         title: "This allows for multiple selection/toggling on/off",
-        id: "USGC LandCover 2011",
-        label: "USGC LandCover 2011",
+        id: "USGS LandCover 2011",
+        label: "USGS LandCover 2011",
         action: function () {
             var myIndex = 1;
             if (!map.overlayMapTypes.getAt(myIndex)) {

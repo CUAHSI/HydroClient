@@ -4180,7 +4180,7 @@ function requestTimeSeries(tableName, timeSeriesRequest, modalDialogName) {
             console.log('RequestTimeSeries reports error: ' + xmlhttprequest.status + ' (' + message + ')');
 
             //Set monitor status...
-            var requestId = timeSeriesRequest.requestId;
+            var requestId = timeSeriesRequest.RequestId;
             downloadMonitor.timeSeriesMonitored[requestId].timeSeriesRequestStatus = timeSeriesRequestStatus.RequestTimeSeriesError;
 
             //Update Data Manager row...
